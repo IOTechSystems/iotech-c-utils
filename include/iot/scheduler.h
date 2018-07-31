@@ -8,8 +8,8 @@
 #define SCHD_SEC2NS(SECONDS) (SECONDS * BILLION)
 #define SCHD_MIN2NS(MINUTES) (MINUTES * BILLION * 60)
 
-typedef void * edgex_scheduler;
-typedef void * edgex_schedule;
+typedef void * iot_scheduler;
+typedef void * iot_schedule;
 
 
 /**
@@ -23,10 +23,10 @@ typedef void * edgex_schedule;
  *    edgex_schedule_queue myqueue = scheduler_init();
  *    ..
  *
- * @return edgex_scheduler      A pointer to the created scheduler
+ * @return iot_scheduler      A pointer to the created scheduler
  *                              NULL on error
  */
-edgex_scheduler edgex_scheduler_init(threadpool * thpool);
+iot_scheduler iot_scheduler_init(threadpool * thpool);
 
 
 /**
@@ -37,10 +37,10 @@ edgex_scheduler edgex_scheduler_init(threadpool * thpool);
  * @example
  *
  *    ..
- *    edgex_scheduler_start(schd);
+ *    iot_scheduler_start(schd);
  *    ..
  */
-void edgex_scheduler_start(edgex_scheduler * scheduler);
+void iot_scheduler_start(iot_scheduler * scheduler);
 
 
 /**
@@ -51,10 +51,10 @@ void edgex_scheduler_start(edgex_scheduler * scheduler);
  * @example
  *
  *    ..
- *    edgex_schedule mySchedule = edgex_create_schedule(schd,"TestSchedule",testFunc,NULL,1,1,1);
+ *    iot_schedule mySchedule = edgex_create_schedule(schd,"TestSchedule",testFunc,NULL,1,1,1);
  *    ..
  *
- * @param  schd                     A pointer to the edgex_scheduler.
+ * @param  schd                     A pointer to the iot_scheduler.
  * @param  function                 The function that should be called when the
  *                                  schedule is triggered.
  * @param  arg                      The argument to be passed to the function.
@@ -62,12 +62,12 @@ void edgex_scheduler_start(edgex_scheduler * scheduler);
  * @param  start                    The start time of the schedule.
  * @param  repeat                   The number of times the schedule should
  *                                  repeat, (0 = infinite)
- * @return edgex_schedule           A pointer to the created edgex schedule
+ * @return iot_schedule           A pointer to the created edgex schedule
  *                                  NULL on error.
  */
-edgex_schedule edgex_schedule_create
+iot_schedule iot_schedule_create
 (
-    edgex_scheduler schd,
+    iot_scheduler schd,
     void (*function)(void* arg), 
     void * arg, 
     uint64_t period, 
@@ -84,15 +84,15 @@ edgex_schedule edgex_schedule_create
  * @example
  *
  *    ..
- *    int return = edgex_schedule_delete(schd,schedule);
+ *    int return = iot_schedule_delete(schd,schedule);
  *    ..
  *
- * @param  queue                    A pointer to the edgex_scheduler. 
- * @param  edgex_schedule           A pointer to the edgex_schedule to be deleted.
+ * @param  queue                    A pointer to the iot_scheduler. 
+ * @param  iot_schedule           A pointer to the iot_schedule to be deleted.
  * @return                          1 on success.
  *                                  0 on error.
  */
-int edgex_schedule_delete(edgex_scheduler scheduler, edgex_schedule schedule);
+int iot_schedule_delete(iot_scheduler scheduler, iot_schedule schedule);
 
 
 /**
@@ -104,10 +104,10 @@ int edgex_schedule_delete(edgex_scheduler scheduler, edgex_schedule schedule);
  * @example
  *
  *    ..
- *    edgex_scheduler_stop(schd);
+ *    iot_scheduler_stop(schd);
  *    ..
  */
-void edgex_scheduler_stop(edgex_scheduler * scheduler);
+void iot_scheduler_stop(iot_scheduler * scheduler);
 
 
 /**
@@ -118,10 +118,10 @@ void edgex_scheduler_stop(edgex_scheduler * scheduler);
  * @example
  *
  *    ..
- *    edgex_scheduler_fini(schd);
+ *    iot_scheduler_fini(schd);
  *    ..
  */
-void edgex_scheduler_fini(edgex_scheduler * scheduler);
+void iot_scheduler_fini(iot_scheduler * scheduler);
 
 
 #endif
