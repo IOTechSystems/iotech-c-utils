@@ -1,5 +1,5 @@
-#ifndef _EDGEX_DEVICE_SCHEDULER_H_
-#define _EDGEX_DEVICE_SCHEDULER_H_ 1
+#ifndef _IOT_SCHEDULER_H_
+#define _IOT_SCHEDULER_H_
 #include "thpool.h"
 #include <stdint.h>
 

@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <semaphore.h>
 #include <time.h>
  
@@ -119,41 +118,51 @@ void * edgex_scheduler_thread(void * params_i)
             pthread_mutex_unlock(&scheduler->iot_mutex);
         }
         else
-        {
+        {   
             pthread_mutex_lock(&scheduler->iot_mutex);
             
-            /* Get the schedule at the front of the queue */
-            iot_schd_t * current_schd = queue->front;
-            
-            /* Post the work to the threadpool */
-            thpool_add_work(*(threadpool*)queue->iot_thpool, current_schd->function, current_schd->arg);
-            
-            clock_gettime(CLOCK_REALTIME, &currentTime);
-            uint64_t time_now = (uint64_t) currentTime.tv_sec * BILLION + (uint64_t) currentTime.tv_nsec;
-            
-            /* Recalculate the next start time for the schedule */
-            current_schd->start = time_now+current_schd->period;
-            
-            if (current_schd->repeat!=0)
+            /* Check if the queue is populated */
+            if (queue->length>0)
             {
-                current_schd->repeat-=1;
-                /* If the number of repetitions has just become 0 */
-                if (current_schd->repeat==0)
+                /* Get the schedule at the front of the queue */
+                iot_schd_t * current_schd = queue->front;
+                
+                /* Post the work to the threadpool */
+                thpool_add_work(*(threadpool*)queue->iot_thpool, current_schd->function, current_schd->arg);
+                
+                clock_gettime(CLOCK_REALTIME, &currentTime);
+                uint64_t time_now = (uint64_t) currentTime.tv_sec * BILLION + (uint64_t) currentTime.tv_nsec;
+                
+                /* Recalculate the next start time for the schedule */
+                current_schd->start = time_now+current_schd->period;
+                
+                if (current_schd->repeat!=0)
                 {
-                    /* Remove the schedule from the queue */
-                    remove_schedule_from_queue(queue,current_schd);
+                    current_schd->repeat-=1;
+                    /* If the number of repetitions has just become 0 */
+                    if (current_schd->repeat==0)
+                    {
+                        /* Remove the schedule from the queue */
+                        remove_schedule_from_queue(queue,current_schd);
+                    }
                 }
+                else 
+                {
+                    /* Remove from current position and add in new location */
+                    remove_schedule_from_queue(queue,current_schd);
+                    add_schedule_to_queue(queue,current_schd);
+                }
+                
+                /* Convert the next execution time (in MS) to timespec */
+                nsToTimespec(queue->front->start,&schdTime);
             }
-            else 
+            else
             {
-                /* Remove from current position and add in new location */
-                remove_schedule_from_queue(queue,current_schd);
-                add_schedule_to_queue(queue,current_schd);
+                /* Set the wait time to 1 second if the queue is not populated */
+                clock_gettime(CLOCK_REALTIME, &currentTime);
+                uint64_t time_now = (uint64_t) currentTime.tv_sec * BILLION + (uint64_t) currentTime.tv_nsec;
+                nsToTimespec(time_now+SCHD_SEC2NS(1),&schdTime);   
             }
-            
-            /* Convert the next execution time (in MS) to timespec */
-            nsToTimespec(queue->front->start,&schdTime);
-            
             pthread_mutex_unlock(&scheduler->iot_mutex);
         }
     }
@@ -474,7 +483,6 @@ int delete_schedule(iot_schd_t * schedule_i)
     }
     else
     {
-        printf("N\n");
         return 0;
     }
 }
