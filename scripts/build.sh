@@ -65,7 +65,7 @@ fi
 
 mkdir $ROOT/debug
 cd $ROOT/debug
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCSDK_BUILD_DEBUG=ON ../src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCUTILS_BUILD_DEBUG=ON ../src
 
 if [ "$OS" = "Linux" ]
 then
