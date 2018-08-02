@@ -1,12 +1,15 @@
+/** @file
+ *  @brief Scheduler API
+ */
 #ifndef _IOT_SCHEDULER_H_
 #define _IOT_SCHEDULER_H_
-#include "thpool.h"
-#include <stdint.h>
 
-#define BILLION  1000000000L
-#define SCHD_MILSEC2NS(MILLISECONDS) (MILLISECONDS * 1000000)
-#define SCHD_SEC2NS(SECONDS) (SECONDS * BILLION)
-#define SCHD_MIN2NS(MINUTES) (MINUTES * BILLION * 60)
+#include "thpool.h"
+
+#define BILLION 1000000000L
+#define IOT_MS_TO_NS(MILLISECONDS) (MILLISECONDS * 1000000)
+#define IOT_SEC_TO_NS(SECONDS) (SECONDS * BILLION)
+#define IOT_MIN_TO_NS(MINUTES) (MINUTES * BILLION * 60)
 
 typedef void * iot_scheduler;
 typedef void * iot_schedule;
@@ -17,14 +20,14 @@ typedef void * iot_schedule;
  *
  * This function initialises the scheduler.
  *
- * @example
+ * @code
  *
- *    ..
- *    edgex_schedule_queue myqueue = scheduler_init();
- *    ..
+ *    iot_scheduler myScheduler  = iot_scheduler_init(&thpool);
  *
- * @return iot_scheduler      A pointer to the created scheduler
- *                              NULL on error
+ * @endcode
+ *
+ * @return iot_scheduler        A pointer to the created scheduler.
+ *                              NULL on error.
  */
 iot_scheduler iot_scheduler_init(threadpool * thpool);
 
@@ -34,11 +37,11 @@ iot_scheduler iot_scheduler_init(threadpool * thpool);
  *
  * This function starts the scheduler.
  *
- * @example
+ * @code
  *
- *    ..
- *    iot_scheduler_start(schd);
- *    ..
+ *    iot_scheduler_start(myScheduler);
+ *
+ * @endcode
  */
 void iot_scheduler_start(iot_scheduler * scheduler);
 
@@ -48,12 +51,11 @@ void iot_scheduler_start(iot_scheduler * scheduler);
  *
  * This function creates a new schedule and adds it to the schedule queue.
  *
- * @example
+ * @code
  *
- *    ..
  *    iot_schedule mySchedule = edgex_create_schedule(schd,"TestSchedule",testFunc,NULL,1,1,1);
- *    ..
  *
+ * @endcode
  * @param  schd                     A pointer to the iot_scheduler.
  * @param  function                 The function that should be called when the
  *                                  schedule is triggered.
@@ -61,8 +63,8 @@ void iot_scheduler_start(iot_scheduler * scheduler);
  * @param  period                   The period of the schedule.
  * @param  start                    The start time of the schedule.
  * @param  repeat                   The number of times the schedule should
- *                                  repeat, (0 = infinite)
- * @return iot_schedule           A pointer to the created edgex schedule
+ *                                  repeat, (0 = infinite).
+ * @return iot_schedule             A pointer to the created edgex schedule.
  *                                  NULL on error.
  */
 iot_schedule iot_schedule_create
@@ -70,9 +72,9 @@ iot_schedule iot_schedule_create
     iot_scheduler schd,
     void (*function)(void* arg), 
     void * arg, 
-    uint64_t period, 
-    uint64_t start, 
-    uint32_t repeat
+    unsigned long long  period, 
+    unsigned long long  start, 
+    unsigned long repeat
 );
 
 
@@ -81,14 +83,13 @@ iot_schedule iot_schedule_create
  *
  * This function removes a schedule from the queue and deletes it.
  *
- * @example
+ * @code
  *
- *    ..
  *    int return = iot_schedule_delete(schd,schedule);
- *    ..
  *
+ * @endcode
  * @param  queue                    A pointer to the iot_scheduler. 
- * @param  iot_schedule           A pointer to the iot_schedule to be deleted.
+ * @param  iot_schedule             A pointer to the iot_schedule to be deleted.
  * @return                          1 on success.
  *                                  0 on error.
  */
@@ -101,11 +102,11 @@ int iot_schedule_delete(iot_scheduler scheduler, iot_schedule schedule);
  * This function stops the scheduler. The schedule queue may be updated while 
  * the scheduler is stopped.
  *
- * @example
+ * @code
  *
- *    ..
  *    iot_scheduler_stop(schd);
- *    ..
+ *
+ * @endcode
  */
 void iot_scheduler_stop(iot_scheduler * scheduler);
 
@@ -115,11 +116,11 @@ void iot_scheduler_stop(iot_scheduler * scheduler);
  *
  * This function destroys the scheduler and all associated data.
  *
- * @example
+ * @code
  *
- *    ..
  *    iot_scheduler_fini(schd);
- *    ..
+ *
+ * @endcode
  */
 void iot_scheduler_fini(iot_scheduler * scheduler);
 
