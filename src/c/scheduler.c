@@ -322,7 +322,7 @@ static int delete_scheduler(iot_schd_thread_t * scheduler_i)
     if (scheduler_i == NULL)
     {   
         /* ERROR: Scheduler is NULL */
-	    printf("ERROR: Failed to free scheduler, Scheduler is NULL\n");
+        printf("ERROR: Failed to free scheduler, Scheduler is NULL\n");
         return 0;
     }
     else
@@ -360,7 +360,7 @@ static int delete_schedule_queue(iot_schd_queue_t * queue_i)
     if (queue_i == NULL)
     {   
         /* ERROR: Schedule queue is NULL */
-	    printf("ERROR: Failed to free schedule queue, Schedule queue is NULL\n");
+        printf("ERROR: Failed to free schedule queue, Schedule queue is NULL\n");
         return 0;
     }
     else
@@ -388,9 +388,9 @@ static iot_schd_t * create_schedule
     schedule=(struct iot_schd_t*)malloc(sizeof(struct iot_schd_t));
     if (schedule==NULL)
     {
-	    /* ERROR: Failed to allocate the schedule */
-	    printf("ERROR: Failed to allocate the schedule\n");
-		return NULL;
+        /* ERROR: Failed to allocate the schedule */
+        printf("ERROR: Failed to allocate the schedule\n");
+        return NULL;
     }
     schedule->next=NULL;
     schedule->previous=NULL;
@@ -512,7 +512,7 @@ static int delete_schedule(iot_schd_t * schedule_i)
     if (schedule_i == NULL)
     {
         /* ERROR: Schedule queue is NULL */
-	    printf("ERROR: Failed to free schedule, Schedule is NULL\n");
+        printf("ERROR: Failed to free schedule, Schedule is NULL\n");
         return 0;
     }
     
