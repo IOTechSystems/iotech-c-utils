@@ -1,0 +1,14 @@
+*.o
+*.dylib
+*.swp
+.DS_Store
+.idea/
+core*
+debug
+release
+build
+deps
+src/c/thpool.c
+include/thpool.h
+*~
+TAGS
