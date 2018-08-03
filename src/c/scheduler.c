@@ -52,7 +52,7 @@ typedef struct iot_schd_thread_t
 /* ========================== PROTOTYPES ============================ */
 
 
-static iot_schd_queue_t *  create_schedule_queue();
+static iot_schd_queue_t *  create_schedule_queue(void);
 static int delete_schedule_queue(iot_schd_queue_t * schd_queue_ex);
 static void add_schedule_to_queue
 (
