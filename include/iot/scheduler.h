@@ -49,19 +49,19 @@ void iot_scheduler_start(iot_scheduler * scheduler);
 /**
  * @brief  Create a new schedule
  *
- * This function creates a new schedule and adds it to the schedule queue.
+ * This function creates a new schedule.
  *
  * @code
  *
- *    iot_schedule mySchedule = edgex_create_schedule(schd,"TestSchedule",testFunc,NULL,1,1,1);
+ *    iot_schedule mySchedule = edgex_create_schedule(myScheduler,myFunc,NULL,IOT_SEC_TO_NS(1),0,0);
  *
  * @endcode
  * @param  schd                     A pointer to the iot_scheduler.
  * @param  function                 The function that should be called when the
  *                                  schedule is triggered.
  * @param  arg                      The argument to be passed to the function.
- * @param  period                   The period of the schedule.
- * @param  start                    The start time of the schedule.
+ * @param  period                   The period of the schedule (in nanoseconds).
+ * @param  start                    The start time of the schedule (in nanoseconds).
  * @param  repeat                   The number of times the schedule should
  *                                  repeat, (0 = infinite).
  * @return iot_schedule             A pointer to the created edgex schedule.
@@ -77,19 +77,52 @@ iot_schedule iot_schedule_create
     unsigned long repeat
 );
 
+/**
+ * @brief  Delete a schedule
+ *
+ * This function adds a schedule to the queue.
+ *
+ * @code
+ *
+ *    int return = iot_schedule_add(myScheduler,mySchedule);
+ *
+ * @endcode
+ * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  schedule                 A pointer to the iot_schedule to be deleted.
+ * @return                          1 on success.
+ *                                  0 on error.
+ */
+int iot_schedule_add(iot_scheduler scheduler, iot_schedule schedule);
 
 /**
  * @brief  Delete a schedule
  *
- * This function removes a schedule from the queue and deletes it.
+ * This function removes a schedule from the queue.
  *
  * @code
  *
- *    int return = iot_schedule_delete(schd,schedule);
+ *    int return = iot_schedule_remove(myScheduler,mySchedule);
  *
  * @endcode
- * @param  queue                    A pointer to the iot_scheduler. 
- * @param  iot_schedule             A pointer to the iot_schedule to be deleted.
+ * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  schedule                 A pointer to the iot_schedule to be deleted.
+ * @return                          1 on success.
+ *                                  0 on error.
+ */
+int iot_schedule_remove(iot_scheduler scheduler, iot_schedule schedule);
+
+/**
+ * @brief  Delete a schedule
+ *
+ * This function deletes a schedule.
+ *
+ * @code
+ *
+ *    int return = iot_schedule_delete(myScheduler,mySchedule);
+ *
+ * @endcode
+ * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  schedule                 A pointer to the iot_schedule to be deleted.
  * @return                          1 on success.
  *                                  0 on error.
  */
@@ -104,7 +137,7 @@ int iot_schedule_delete(iot_scheduler scheduler, iot_schedule schedule);
  *
  * @code
  *
- *    iot_scheduler_stop(schd);
+ *    iot_scheduler_stop(myScheduler);
  *
  * @endcode
  */
@@ -118,7 +151,7 @@ void iot_scheduler_stop(iot_scheduler * scheduler);
  *
  * @code
  *
- *    iot_scheduler_fini(schd);
+ *    iot_scheduler_fini(myScheduler);
  *
  * @endcode
  */

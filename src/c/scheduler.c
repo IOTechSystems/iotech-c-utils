@@ -23,6 +23,7 @@ typedef struct iot_schd_t
     unsigned  long long period;         /* The period of the schedule, in ns */
     unsigned  long long start;          /* The start time of the schedule, in ns, */
     unsigned long repeat;               /* The number of repetitions, 0 = infinite */
+    bool scheduled;                     /* A flag to indicate schedule status */
 }iot_schd_t;
 
 
@@ -32,7 +33,6 @@ typedef struct iot_schd_queue_t
     struct iot_schd_t * front;          /* Pointer to the front of queue */
     struct iot_schd_t * back;           /* Pointer to the back of queue */
     unsigned long length;               /* Number of jobs in the queue   */
-    threadpool * iot_thpool;            /* Threadpool to post jobs to */
 }iot_schd_queue_t;
 
 
@@ -41,16 +41,18 @@ typedef struct iot_schd_thread_t
 {
     pthread_t iot_thread;               /* Scheduler thread */
     iot_schd_queue_t * iot_queue;       /* Schedule queue */
+    iot_schd_queue_t * iot_idle_queue;  /* The queue of idle schedules */
     pthread_mutex_t iot_mutex;          /* Mutex to control access to the scheduler */
     sem_t iot_sem;                      /* Semaphore to control schedule execution */
     bool running;                       /* Flag to indicate if the scheduler is running */
+    threadpool * iot_thpool;            /* Threadpool to post jobs to */
 }iot_schd_thread_t;
 
 
 /* ========================== PROTOTYPES ============================ */
 
 
-static iot_schd_queue_t *  create_schedule_queue(threadpool * thpool_ex);
+static iot_schd_queue_t *  create_schedule_queue();
 static int delete_schedule_queue(iot_schd_queue_t * schd_queue_ex);
 static void add_schedule_to_queue
 (
@@ -77,7 +79,7 @@ static int delete_scheduler(iot_schd_thread_t * scheduler_i);
 
 static void * iot_scheduler_thread(void * params);
 static void nsToTimespec(unsigned  long long ns, struct timespec * ts);
-
+static unsigned long long getTimeAsUInt64(struct timespec * ts_i);
 
 /* ========================== Scheduler ============================ */
 
@@ -88,6 +90,13 @@ static void nsToTimespec(unsigned  long long ns, struct timespec * ts_i)
     ts_i->tv_nsec = IOT_NS_REMAINING(ns);
 }
 
+/* Get the current time as an unsigned 64bit int */
+static unsigned long long getTimeAsUInt64(struct timespec * ts_i)
+{
+    clock_gettime(CLOCK_REALTIME, ts_i);
+    return (unsigned  long long) ts_i->tv_sec * 
+        BILLION + (unsigned  long long) ts_i->tv_nsec;
+}
 /* Scheduler Thread */
 static void * iot_scheduler_thread(void * params_i)
 {
@@ -98,6 +107,7 @@ static void * iot_scheduler_thread(void * params_i)
     
     iot_schd_thread_t * scheduler = (iot_schd_thread_t*)params_i;
     iot_schd_queue_t * queue = (iot_schd_queue_t*)scheduler->iot_queue;
+    iot_schd_queue_t * idle_queue = (iot_schd_queue_t*)scheduler->iot_idle_queue;
     
     clock_gettime(CLOCK_REALTIME, &schdTime);
     while (alive)
@@ -130,10 +140,9 @@ static void * iot_scheduler_thread(void * params_i)
                 iot_schd_t * current_schd = queue->front;
                 
                 /* Post the work to the threadpool */
-                thpool_add_work(*(threadpool*)queue->iot_thpool, current_schd->function, current_schd->arg);
+                thpool_add_work(*(threadpool*)scheduler->iot_thpool, current_schd->function, current_schd->arg);
                 
-                clock_gettime(CLOCK_REALTIME, &currentTime);
-                unsigned  long long time_now = (unsigned  long long) currentTime.tv_sec * BILLION + (unsigned  long long) currentTime.tv_nsec;
+                unsigned long long time_now = getTimeAsUInt64(&currentTime);
                 
                 /* Recalculate the next start time for the schedule */
                 current_schd->start = time_now+current_schd->period;
@@ -146,6 +155,15 @@ static void * iot_scheduler_thread(void * params_i)
                     {
                         /* Remove the schedule from the queue */
                         remove_schedule_from_queue(queue,current_schd);
+                        /* Add schedule to idle queue */
+                        add_schedule_to_queue(idle_queue,current_schd);
+                        current_schd->scheduled=false;
+                    }
+                    else
+                    {
+                        /* Remove from current position and add in new location */
+                        remove_schedule_from_queue(queue,current_schd);
+                        add_schedule_to_queue(queue,current_schd);
                     }
                 }
                 else 
@@ -156,19 +174,23 @@ static void * iot_scheduler_thread(void * params_i)
                 }
                 
                 /* Convert the next execution time (in MS) to timespec */
-                nsToTimespec(queue->front->start,&schdTime);
+                if (queue->length>0)
+                {
+                    nsToTimespec(queue->front->start,&schdTime);
+                }
+                else
+                {
+                    nsToTimespec(getTimeAsUInt64(&currentTime)+IOT_SEC_TO_NS(1),&schdTime);   
+                }
             }
             else
             {
                 /* Set the wait time to 1 second if the queue is not populated */
-                clock_gettime(CLOCK_REALTIME, &currentTime);
-                unsigned  long long time_now = (unsigned  long long) currentTime.tv_sec * BILLION + (unsigned  long long) currentTime.tv_nsec;
-                nsToTimespec(time_now+IOT_SEC_TO_NS(1),&schdTime);   
+                nsToTimespec(getTimeAsUInt64(&currentTime)+IOT_SEC_TO_NS(1),&schdTime);   
             }
             pthread_mutex_unlock(&scheduler->iot_mutex);
         }
     }
-    pthread_detach(pthread_self());
     pthread_exit(NULL);
 }
 
@@ -192,11 +214,15 @@ void * iot_scheduler_init(threadpool * thpool_i)
     pthread_mutex_init(&(scheduler->iot_mutex), NULL);
     pthread_mutex_lock(&scheduler->iot_mutex);
     
-    /* Create the schedule queue */
-    scheduler->iot_queue = create_schedule_queue(thpool_i);
+    /* Create the queues */
+    scheduler->iot_queue = create_schedule_queue();
+    scheduler->iot_idle_queue = create_schedule_queue();
     
     /* Set the running state */
     scheduler->running=false;
+    
+    /* Add the threadpool */
+    scheduler->iot_thpool=thpool_i;
     
     /* Init semaphore */
     sem_init(&scheduler->iot_sem, 0, 0);
@@ -214,8 +240,8 @@ void iot_scheduler_start(iot_scheduler * scheduler_i)
     scheduler->running=true;
     
     /* Start scheduler thread, pass in threadpool provided */
-    pthread_create(&scheduler->iot_thread, NULL, iot_scheduler_thread, (void*)scheduler);
-    
+    pthread_create(&scheduler->iot_thread, NULL, &iot_scheduler_thread, (void*)scheduler);
+
     pthread_mutex_unlock(&scheduler->iot_mutex);
 }
 
@@ -230,41 +256,99 @@ iot_schedule iot_schedule_create
     unsigned long repeat_i
 )
 {
-    iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
     
-    /* Create the schedule */
     iot_schd_t * schedule = create_schedule(function_i,arg_i,period_i,start_i,repeat_i);
-    
-    /* Inset new schedule into queue */
-    iot_schd_queue_t * queue = (iot_schd_queue_t*)scheduler->iot_queue;
+  
+    iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
+    iot_schd_queue_t * idle_queue = (iot_schd_queue_t*)scheduler->iot_idle_queue;
     
     pthread_mutex_lock(&scheduler->iot_mutex);
-    
-    add_schedule_to_queue(queue,schedule);
-    /* If the schedule was placed and the front of the queue & the scheduler is running */
-    if (queue->front==schedule&&scheduler->running==true)
-    {
-        /* Post on the semaphore */
-        sem_post(&scheduler->iot_sem);
-    }
-    
+    /* Add schedule to idle queue */
+    add_schedule_to_queue(idle_queue,schedule);
     pthread_mutex_unlock(&scheduler->iot_mutex);
     
     return schedule;
 }
 
-/* Remove a schedule from the queue and delete it */
-int iot_schedule_delete(iot_scheduler scheduler_i, iot_schedule schedule_i)
+/* Add a schedule to the queue */
+int iot_schedule_add(iot_scheduler scheduler_i, iot_schedule schedule_i)
 {
+    iot_schd_t * schedule  = (iot_schd_t*)schedule_i;
     iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
-    
     iot_schd_queue_t * queue = (iot_schd_queue_t*)scheduler->iot_queue;
+    iot_schd_queue_t * idle_queue = (iot_schd_queue_t*)scheduler->iot_idle_queue;
     
     pthread_mutex_lock(&scheduler->iot_mutex);
     
-    remove_schedule_from_queue(queue,schedule_i);
-    int success = delete_schedule(schedule_i);
+    if (!schedule->scheduled)
+    {
+        /* Remove from idle queue, add to scheduled queue */
+        remove_schedule_from_queue(idle_queue,schedule);
+        add_schedule_to_queue(queue,schedule);
+        /* If the schedule was placed and the front of the queue & the scheduler is running */
+        if (queue->front==schedule&&scheduler->running==true)
+        {
+            /* Post on the semaphore */
+            sem_post(&scheduler->iot_sem);
+        }
+        
+        /* Set the schedules status as scheduled */
+        schedule->scheduled=true;
+    }
+    else
+    {
+        /* ERROR Schedule is already scheduled */
+        pthread_mutex_unlock(&scheduler->iot_mutex);
+        return 0;
+    }
+    pthread_mutex_unlock(&scheduler->iot_mutex);
+    return 1;
+}
+
+/* Remove a schedule from the queue */
+int iot_schedule_remove(iot_scheduler scheduler_i, iot_schedule schedule_i)
+{
+    iot_schd_t * schedule  = (iot_schd_t*)schedule_i;
+    iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
+    iot_schd_queue_t * queue = (iot_schd_queue_t*)scheduler->iot_queue;
+    iot_schd_queue_t * idle_queue = (iot_schd_queue_t*)scheduler->iot_idle_queue;
     
+    pthread_mutex_lock(&scheduler->iot_mutex);
+    if (schedule->scheduled)
+    {
+        remove_schedule_from_queue(queue,schedule);
+        add_schedule_to_queue(idle_queue,schedule);
+        schedule->scheduled=false;
+    }
+    else
+    {
+        pthread_mutex_unlock(&scheduler->iot_mutex);
+        return 0;
+    }
+    pthread_mutex_unlock(&scheduler->iot_mutex);
+    return 1;
+}
+
+/* Delete a schedule */
+int iot_schedule_delete(iot_scheduler scheduler_i, iot_schedule schedule_i)
+{
+    iot_schd_t * schedule  = (iot_schd_t*)schedule_i;
+    iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
+    iot_schd_queue_t * queue = (iot_schd_queue_t*)scheduler->iot_queue;
+    iot_schd_queue_t * idle_queue = (iot_schd_queue_t*)scheduler->iot_idle_queue;
+    
+    int success=0;
+    pthread_mutex_lock(&scheduler->iot_mutex);
+    if (schedule->scheduled)
+    {
+        remove_schedule_from_queue(queue,schedule);
+        success = delete_schedule(schedule);
+    }
+    else
+    {
+        remove_schedule_from_queue(idle_queue,schedule);
+        success = delete_schedule(schedule);
+    }
     pthread_mutex_unlock(&scheduler->iot_mutex);
     
     return success;
@@ -281,10 +365,10 @@ void iot_scheduler_stop(iot_scheduler * scheduler_i)
     sem_post(&scheduler->iot_sem);
     
     /* wait for threadpool processing to complete */
-    thpool_wait(*(threadpool*)scheduler->iot_queue->iot_thpool);
-    
+    thpool_wait(*(threadpool*)scheduler->iot_thpool);
     pthread_mutex_unlock(&scheduler->iot_mutex);
-    pthread_join(*(pthread_t*)scheduler->iot_thread,NULL);
+    
+    pthread_join(scheduler->iot_thread,NULL);
 }
 
 /* Destroy all remaining scheduler resouces */
@@ -292,23 +376,30 @@ void iot_scheduler_fini(iot_scheduler * scheduler_i)
 {
     iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
     iot_schd_queue_t * queue = (iot_schd_queue_t*)scheduler->iot_queue;
+    iot_schd_queue_t * idle_queue = (iot_schd_queue_t*)scheduler->iot_idle_queue;
     
     iot_scheduler_stop(scheduler_i);
     
-    /* Empty the queue */
+    /* Empty the scheduled queue */
     while (queue->length>0)
     {
         iot_schedule_delete(scheduler,queue->front);
     }
     
-    /* Delete the queue */
+    /* Empty the idle queue */
+    while (idle_queue->length>0)
+    {
+        iot_schedule_delete(scheduler,idle_queue->front);
+    }
+    
+    /* Delete the queues */
     pthread_mutex_lock(&scheduler->iot_mutex);
     
     delete_schedule_queue(queue);
+    delete_schedule_queue(idle_queue);
     
     pthread_mutex_unlock(&scheduler->iot_mutex);
-    
-    
+
     /* Delete the scheduler */
     delete_scheduler(scheduler);
 }
@@ -336,7 +427,7 @@ static int delete_scheduler(iot_schd_thread_t * scheduler_i)
 
 
 /* Create a schedule queue */
-static iot_schd_queue_t * create_schedule_queue(threadpool * thpool_i)
+static iot_schd_queue_t * create_schedule_queue()
 {
     iot_schd_queue_t * queue;
     queue=(struct iot_schd_queue_t*)malloc(sizeof(struct iot_schd_queue_t));
@@ -349,7 +440,6 @@ static iot_schd_queue_t * create_schedule_queue(threadpool * thpool_i)
     queue->front=NULL;
     queue->back=NULL;
     queue->length=0;
-    queue->iot_thpool=thpool_i;
     return queue;
 }
 
@@ -399,6 +489,7 @@ static iot_schd_t * create_schedule
     schedule->period=period_i;
     schedule->start=start_i;
     schedule->repeat=repeat_i;
+    schedule->scheduled=false;
     return schedule;
 }
 
@@ -415,7 +506,7 @@ static void add_schedule_to_queue
     iot_schd_t * previous_schedule = NULL;
     
     iot_schd_t * current_sched = queue_i->front;
-    for (int i = 0;  i<queue_i->length ; i++)
+    for (unsigned long i = 0;  i<queue_i->length ; i++)
     {
         if (schedule_i->start<current_sched->start)
         {
@@ -516,14 +607,6 @@ static int delete_schedule(iot_schd_t * schedule_i)
         return 0;
     }
     
-    /* Check that the schedule isn't in the queue */
-    if (schedule_i->next==NULL&&schedule_i->previous==NULL)
-    {
-        free(schedule_i);
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+    free(schedule_i);
+    return 1;
 }
