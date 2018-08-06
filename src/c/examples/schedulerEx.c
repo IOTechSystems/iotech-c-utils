@@ -23,7 +23,7 @@ void testFunc3(void * in)
 }
 
 
-int main()
+int main(void)
 {
     /* Create a threadpool */
     printf("Create the threadpool\n");
