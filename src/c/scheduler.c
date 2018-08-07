@@ -1,3 +1,9 @@
+//
+// Copyright (c) 2017
+// IoTech
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 #include "iot/scheduler.h"
 
 #include <stdlib.h>

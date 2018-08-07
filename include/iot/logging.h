@@ -1,5 +1,11 @@
-#ifndef _EDGEX_LOGGING_H_
-#define _EDGEX_LOGGING_H_ 1
+//
+// Copyright (c) 2017
+// IoTech
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+#ifndef _IOT_LOGGING_H_
+#define _IOT_LOGGING_H_ 1
 
 #include <stdbool.h>
 #include <stdio.h>
