@@ -50,7 +50,7 @@ iot_scheduler iot_scheduler_init(threadpool * thpool);
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler. 
  */
-void iot_scheduler_start(iot_scheduler * scheduler);
+void iot_scheduler_start(iot_scheduler scheduler);
 
 
 /**
@@ -149,7 +149,7 @@ int iot_schedule_delete(iot_scheduler scheduler, iot_schedule schedule);
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler. 
  */
-void iot_scheduler_stop(iot_scheduler * scheduler);
+void iot_scheduler_stop(iot_scheduler scheduler);
 
 
 /**
@@ -164,7 +164,7 @@ void iot_scheduler_stop(iot_scheduler * scheduler);
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler. 
  */
-void iot_scheduler_fini(iot_scheduler * scheduler);
+void iot_scheduler_fini(iot_scheduler scheduler);
 
 
 #endif

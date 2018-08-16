@@ -239,7 +239,7 @@ void * iot_scheduler_init(threadpool * thpool_i)
 } 
 
 /* Start the scheduler thread */
-void iot_scheduler_start(iot_scheduler * scheduler_i)
+void iot_scheduler_start(iot_scheduler scheduler_i)
 {
     iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
     pthread_mutex_lock(&scheduler->iot_mutex);
@@ -362,7 +362,7 @@ int iot_schedule_delete(iot_scheduler scheduler_i, iot_schedule schedule_i)
 }
 
 /* Stop the scheduler thread */
-void iot_scheduler_stop(iot_scheduler * scheduler_i)
+void iot_scheduler_stop(iot_scheduler scheduler_i)
 {   
     iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
     pthread_mutex_lock(&scheduler->iot_mutex);
@@ -379,7 +379,7 @@ void iot_scheduler_stop(iot_scheduler * scheduler_i)
 }
 
 /* Destroy all remaining scheduler resouces */
-void iot_scheduler_fini(iot_scheduler * scheduler_i)
+void iot_scheduler_fini(iot_scheduler scheduler_i)
 {
     iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
     iot_schd_queue_t * queue = (iot_schd_queue_t*)scheduler->iot_queue;
