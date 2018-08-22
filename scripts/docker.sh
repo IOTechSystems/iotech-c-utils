@@ -12,10 +12,10 @@ build_dist()
   docker rmi iotech-c-utils-${DIST}:${VER}
 }
 
-#build_dist debian-9
-#build_dist debian-8
+build_dist debian-9
+build_dist debian-8
 build_dist ubuntu-18.04
-#build_dist ubuntu-16.04
+build_dist ubuntu-16.04
 build_dist alpine-3.7
 build_dist alpine-3.8
 #if [ "$ARCH" != "arm" ]
