@@ -1,0 +1,9 @@
+FROM alpine:3.8
+MAINTAINER Steve Osselton <steve@iotechsys.com>
+RUN apk add --update --no-cache build-base wget git gcc cmake make && mkdir -p /iotech-c-utils/build
+COPY VERSION /iotech-c-utils/
+COPY src /iotech-c-utils/src/
+COPY include /iotech-c-utils/include/
+COPY scripts /iotech-c-utils/scripts
+WORKDIR /iotech-c-utils
+ENTRYPOINT ["/iotech-c-utils/scripts/entrypoint.sh"]

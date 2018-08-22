@@ -16,7 +16,8 @@ build_dist()
 #build_dist debian-8
 build_dist ubuntu-18.04
 #build_dist ubuntu-16.04
-#build_dist alpine-3.8
+build_dist alpine-3.7
+build_dist alpine-3.8
 #if [ "$ARCH" != "arm" ]
 #then
 #  build_dist centos-7
