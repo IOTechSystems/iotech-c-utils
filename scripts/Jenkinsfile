@@ -11,12 +11,25 @@ node ("${env.SLAVE}")
   }
   stage ("Build")
   {
-    sh "./scripts/docker.sh ${arch}"
+    sh "./scripts/docker.sh ${arch} ${env.QUICK}"
   }
   stage ("Metrics")
   {
     archiveArtifacts artifacts: "build/ubuntu-18.04/release/release.log"
     archiveArtifacts artifacts: "build/ubuntu-18.04/debug/debug.log"
+    if (env.QUICK == "false")
+    {
+      archiveArtifacts artifacts: "build/ubuntu-16.04/release/release.log"
+      archiveArtifacts artifacts: "build/ubuntu-16.04/debug/debug.log"
+      archiveArtifacts artifacts: "build/debian-9/release/release.log"
+      archiveArtifacts artifacts: "build/debian-9/debug/debug.log"
+      archiveArtifacts artifacts: "build/debian-8/release/release.log"
+      archiveArtifacts artifacts: "build/debian-8/debug/debug.log"
+      archiveArtifacts artifacts: "build/alpine-3.8/release/release.log"
+      archiveArtifacts artifacts: "build/alpine-3.8/debug/debug.log"
+      archiveArtifacts artifacts: "build/alpine-3.7/release/release.log"
+      archiveArtifacts artifacts: "build/alpine-3.7/debug/debug.log"
+    }
   }
   stage ("Archive")
   {
