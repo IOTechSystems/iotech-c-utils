@@ -31,9 +31,9 @@ struct iot_logging_client
 };
 
 static void logthis
-   (iot_logging_client *svc, loglevel l, const char *fmt, va_list ap);
+   (iot_logging_client *svc, iot_loglevel l, const char *fmt, va_list ap);
 
-static void logtofd (FILE *, const char *, loglevel, time_t, const char *);
+static void logtofd (FILE *, const char *, iot_loglevel, time_t, const char *);
 
 static iot_logging_client dfl = (iot_logging_client)
 {
@@ -88,7 +88,7 @@ void logtofd
 (
    FILE *dest,
    const char *subsystem,
-   loglevel l,
+   iot_loglevel l,
    time_t timestamp,
    const char *message
 )
@@ -101,7 +101,7 @@ bool iot_log_tofile
 (
    const char *destination,
    const char *subsystem,
-   loglevel l,
+   iot_loglevel l,
    time_t timestamp,
    const char *message
 )
@@ -120,7 +120,7 @@ bool iot_log_tofile
 }
 
 
-void logthis (iot_logging_client *lc, loglevel l, const char *fmt, va_list ap)
+void logthis (iot_logging_client *lc, iot_loglevel l, const char *fmt, va_list ap)
 {
    char *str = alloca (1024);
    bool ok = false;

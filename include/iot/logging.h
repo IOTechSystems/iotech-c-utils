@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-typedef enum loglevel { INFO = 0, TRACE, DEBUG, WARNING, ERROR } loglevel;
+typedef enum iot_loglevel { INFO = 0, TRACE, DEBUG, WARNING, ERROR } iot_loglevel;
 
 struct iot_logging_client;
 typedef struct iot_logging_client iot_logging_client;
@@ -33,7 +33,7 @@ typedef bool (*iot_log_function)
 (
    const char *destination,
    const char *subsystem,
-   loglevel l,
+   iot_loglevel l,
    time_t timestamp,
    const char *message
 );
@@ -44,7 +44,7 @@ extern bool iot_log_tofile
 (
    const char *destination,
    const char *subsystem,
-   loglevel l,
+   iot_loglevel l,
    time_t timestamp,
    const char *message
 );
