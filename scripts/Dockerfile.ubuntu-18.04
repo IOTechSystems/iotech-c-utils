@@ -1,0 +1,9 @@
+FROM ubuntu:18.04
+MAINTAINER Steve Osselton <steve@iotechsys.com>
+RUN apt-get update && apt-get install -y build-essential wget git gcc cmake make valgrind cppcheck lcov gcovr && mkdir -p /iotech-c-utils/build
+COPY VERSION /iotech-c-utils/
+COPY src /iotech-c-utils/src/
+COPY include /iotech-c-utils/include/
+COPY scripts /iotech-c-utils/scripts
+WORKDIR /iotech-c-utils
+ENTRYPOINT ["/iotech-c-utils/scripts/entrypoint.sh", "-cppcheck"]

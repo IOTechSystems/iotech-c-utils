@@ -39,9 +39,9 @@ fi
 
 # Cmake release build
 
-mkdir $ROOT/release
-cd $ROOT/release
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ../src
+mkdir -p $ROOT/build/release
+cd $ROOT/build/release
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $ROOT/src
 
 if [ "$OS" = "Linux" ]
 then
@@ -63,9 +63,9 @@ fi
 
 # Cmake debug build
 
-mkdir $ROOT/debug
-cd $ROOT/debug
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCUTILS_BUILD_DEBUG=ON ../src
+mkdir $ROOT/build/debug
+cd $ROOT/build/debug
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCUTILS_BUILD_DEBUG=ON $ROOT/src
 
 if [ "$OS" = "Linux" ]
 then
@@ -76,4 +76,3 @@ else
     echo "Visual Studio build"
   fi
 fi
-

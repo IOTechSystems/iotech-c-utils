@@ -1,0 +1,44 @@
+#!/usr/bin/env groovy
+
+node ("${env.SLAVE}")
+{
+  def arch
+  stage ("Checkout")
+  {
+    checkout scm
+    arch = sh (script: './scripts/arch.sh', returnStdout: true)
+    currentBuild.displayName = "IOTech C Utils ${arch}: ${env.BUILD_ID}"
+  }
+  stage ("Build")
+  {
+    sh "./scripts/docker.sh ${arch}"
+  }
+  stage ("Metrics")
+  {
+    archiveArtifacts artifacts: "build/ubuntu-18.04/release/release.log"
+    archiveArtifacts artifacts: "build/ubuntu-18.04/debug/debug.log"
+  }
+  stage ("Archive")
+  {
+    if (env.ARCHIVE)
+    {
+      def server = Artifactory.server 'iotech-artifactory'
+      def ext = "tar.gz"
+      def uploadSpec = 
+      """{
+        "files":
+        [
+          {
+            "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
+            "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
+          }
+        ]
+      }"""
+      server.upload (uploadSpec)
+    }
+  }
+  stage ("Clean")
+  {
+    cleanWs ()
+  }
+}
