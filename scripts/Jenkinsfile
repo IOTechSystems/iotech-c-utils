@@ -21,39 +21,30 @@ node ("${env.SLAVE}")
     {
       archiveArtifacts artifacts: "build/ubuntu-16.04/release/release.log"
       archiveArtifacts artifacts: "build/ubuntu-16.04/debug/debug.log"
-      archiveArtifacts artifacts: "build/ubuntu-16.04/release/junit-Results.xml"
       archiveArtifacts artifacts: "build/debian-9/release/release.log"
       archiveArtifacts artifacts: "build/debian-9/debug/debug.log"
-      archiveArtifacts artifacts: "build/debian-9/release/junit-Results.xml"
       archiveArtifacts artifacts: "build/alpine-3.7/release/release.log"
       archiveArtifacts artifacts: "build/alpine-3.7/debug/debug.log"
-      archiveArtifacts artifacts: "build/alpine-3.7/release/junit-Results.xml"
       archiveArtifacts artifacts: "build/alpine-3.8/release/release.log"
       archiveArtifacts artifacts: "build/alpine-3.8/debug/debug.log"
-      archiveArtifacts artifacts: "build/alpine-3.8/release/junit-Results.xml"
       archiveArtifacts artifacts: "build/fedora-27/release/release.log"
       archiveArtifacts artifacts: "build/fedora-27/debug/debug.log"
-      archiveArtifacts artifacts: "build/fedora-27/release/junit-Results.xml"
       if (arch != "arm64")
       {
         archiveArtifacts artifacts: "build/debian-8/release/release.log"
         archiveArtifacts artifacts: "build/debian-8/debug/debug.log"
-        archiveArtifacts artifacts: "build/debian-8/release/junit-Results.xml"
       }
       if (arch != "arm")
       {
         archiveArtifacts artifacts: "build/centos-7/release/release.log"
         archiveArtifacts artifacts: "build/centos-7/debug/debug.log"
-        archiveArtifacts artifacts: "build/centos-7/release/junit-Results.xml"
         archiveArtifacts artifacts: "build/opensuse-42.3/release/release.log"
         archiveArtifacts artifacts: "build/opensuse-42.3/debug/debug.log"
-        archiveArtifacts artifacts: "build/opensuse-42.3/release/junit-Results.xml"
       }
       if (arch == "x86_64")
       {
         archiveArtifacts artifacts: "build/photon-2.0/release/release.log"
         archiveArtifacts artifacts: "build/photon-2.0/debug/debug.log"
-        archiveArtifacts artifacts: "build/photon-2.0/release/junit-Results.xml"
       }
     }
   }
