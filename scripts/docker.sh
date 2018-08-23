@@ -13,8 +13,7 @@ build_dist()
   docker rmi iotech-c-utils-${DIST}:${VER}
 }
 
-#build_dist ubuntu-18.04
-build_dist photon-2.0
+build_dist ubuntu-18.04
 
 if [ "$QUICK" != "true" ]
 then
