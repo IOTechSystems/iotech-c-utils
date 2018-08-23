@@ -1,0 +1,9 @@
+FROM opensuse:42.3
+MAINTAINER Steve Osselton <steve@iotechsys.com>
+RUN zypper --non-interactive in git tar gcc cmake make wget rpm-build
+COPY VERSION /iotech-c-utils/
+COPY src /iotech-c-utils/src/
+COPY include /iotech-c-utils/include/
+COPY scripts /iotech-c-utils/scripts
+WORKDIR /iotech-c-utils
+ENTRYPOINT ["/iotech-c-utils/scripts/entrypoint.sh"]

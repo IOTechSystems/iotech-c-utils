@@ -1,8 +1,6 @@
-FROM centos:7
+FROM photon:2.0
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN yum -y install --setopt=tsflags=nodocs epel-release \
-  && yum -y install --setopt=tsflags=nodocs wget git gcc cmake3 make rpm-build \
-  && yum clean all && rm -rf /var/cache/yum && ln -s /usr/bin/cmake3 /usr/bin/cmake \
+RUN tdnf update -y && tdnf install -y wget gcc glibc-devel linux-api-headers binutils make git cmake \
   && mkdir -p /iotech-c-utils/build
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/

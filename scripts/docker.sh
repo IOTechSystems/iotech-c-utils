@@ -26,10 +26,14 @@ then
   if [ "$ARCH" != "arm" ]
   then
     build_dist centos-7
-#    build_dist opensuse-42.3 
+    build_dist opensuse-42.3 
   fi
   if [ "$ARCH" != "arm64" ]
   then
     build_dist debian-8
+  fi
+  if [ "$ARCH" = "x86_64" ]
+  then
+    build_dist photon-2.0
   fi
 fi

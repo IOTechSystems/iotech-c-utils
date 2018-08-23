@@ -18,11 +18,9 @@ do
   esac
 done
 
-# Find root directory and system type
+# Find root directory
 
 ROOT=$(dirname $(dirname $(readlink -f $0)))
-OS=$($ROOT/scripts/ostype.sh)
-
 cd $ROOT
 
 # Dependencies
@@ -44,16 +42,8 @@ mkdir -p $ROOT/build/release
 cd $ROOT/build/release
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $ROOT/src
 
-if [ "$OS" = "Linux" ]
-then
-  make 2>&1 | tee release.log
-  make package
-else
-  if [ "$OS" = "Windows" ]
-  then
-    echo "Visual Studio build"
-  fi
-fi
+make 2>&1 | tee release.log
+make package
 
 # Run cppcheck if configured
 
@@ -67,13 +57,4 @@ fi
 mkdir -p $ROOT/build/debug
 cd $ROOT/build/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCUTILS_BUILD_DEBUG=ON $ROOT/src
-
-if [ "$OS" = "Linux" ]
-then
-  make 2>&1 | tee debug.log
-else
-  if [ "$OS" = "Windows" ]
-  then
-    echo "Visual Studio build"
-  fi
-fi
+make 2>&1 | tee debug.log
