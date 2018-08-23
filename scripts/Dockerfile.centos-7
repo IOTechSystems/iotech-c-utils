@@ -1,8 +1,8 @@
-FROM fedora:27
+FROM centos:7
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN yum -y update \
-  && yum -y install --setopt=tsflags=nodocs wget git gcc cmake3 make valgrind rpm-build \
-  && yum clean all && rm -rf /var/cache/yum && mkdir -p /iotech-c-utils/build
+RUN yum -y install --setopt=tsflags=nodocs wget git gcc cmake3 make rpm-build \
+  && yum clean all && rm -rf /var/cache/yum && ln -s /usr/bin/cmake3 /usr/bin/cmake \
+  && mkdir -p /iotech-c-utils/build
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/

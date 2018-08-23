@@ -23,6 +23,11 @@ then
   build_dist debian-9
   build_dist fedora-27
 
+  if [ "$ARCH" != "arm" ]
+  then
+    build_dist centos-7
+#    build_dist opensuse-42.3 
+  fi
   if [ "$ARCH" != "arm64" ]
   then
     build_dist debian-8
