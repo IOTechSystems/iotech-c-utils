@@ -35,12 +35,7 @@ static void logthis
 
 static void logtofd (FILE *, const char *, iot_loglevel, time_t, const char *);
 
-static iot_logging_client dfl = (iot_logging_client)
-{
-   .subsystem = NULL,
-   .loggers = NULL,
-   .lock = PTHREAD_MUTEX_INITIALIZER
-};
+static iot_logging_client dfl = { NULL, NULL, PTHREAD_MUTEX_INITIALIZER };
 
 iot_logging_client *iot_log_default = &dfl;
 
