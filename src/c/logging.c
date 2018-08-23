@@ -37,7 +37,7 @@ static void logtofd (FILE *, const char *, iot_loglevel, time_t, const char *);
 
 static iot_logging_client dfl = (iot_logging_client)
 {
-   .subsystem = "(default)",
+   .subsystem = NULL,
    .loggers = NULL,
    .lock = PTHREAD_MUTEX_INITIALIZER
 };
@@ -93,8 +93,7 @@ void logtofd
    const char *message
 )
 {
-   fprintf
-      (dest, "%ld %s: %s: %s\n", timestamp, subsystem, levelstrs [l], message);
+   fprintf (dest, "%ld %s: %s: %s\n", timestamp, subsystem ? subsystem : "(default)", levelstrs [l], message);
 }
 
 bool iot_log_tofile
@@ -113,10 +112,7 @@ bool iot_log_tofile
       fclose (f);
       return true;
    }
-   else
-   {
-      return false;
-   }
+   return false;
 }
 
 

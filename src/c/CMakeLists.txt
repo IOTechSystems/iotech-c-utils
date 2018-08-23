@@ -35,7 +35,6 @@ endif ()
 
 file (GLOB C_FILES *.c)
 file (GLOB H_FILES "../../include/iotech/*.h")
-set (LINK_LIBRARIES ${LIBMICROHTTP_LIBRARIES} ${CURL_LIBRARIES})
 
 # Main sdk library
 
