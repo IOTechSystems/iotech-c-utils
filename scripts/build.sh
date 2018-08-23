@@ -64,7 +64,7 @@ fi
 
 # Cmake debug build
 
-mkdir $ROOT/build/debug
+mkdir -p $ROOT/build/debug
 cd $ROOT/build/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCUTILS_BUILD_DEBUG=ON $ROOT/src
 

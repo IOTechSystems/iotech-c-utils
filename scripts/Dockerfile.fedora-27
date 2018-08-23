@@ -1,6 +1,8 @@
-FROM ubuntu:16.04
+FROM fedora:27
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN apt-get update && apt-get install -y build-essential wget git gcc cmake make && mkdir -p /iotech-c-utils/build
+RUN yum -y update \
+  && yum -y install --setopt=tsflags=nodocs git gcc cmake3 make valgrind rpm-build \
+  && yum clean all && rm -rf /var/cache/yum && mkdir -p /iotech-c-utils/build
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/

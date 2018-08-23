@@ -21,6 +21,7 @@ then
   build_dist alpine-3.7
   build_dist alpine-3.8
   build_dist debian-9
+  build_dist fedora-27
 
   if [ "$ARCH" != "arm64" ]
   then
