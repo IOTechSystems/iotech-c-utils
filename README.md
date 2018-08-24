@@ -5,6 +5,7 @@ A C99 compliant compiler is required to build the code. The code has been tested
 The following Utilities are provided:
 * Scheduling
 * Logging
+* Thread Pool
 
 ## License
 [Apache-2.0](LICENSE)
