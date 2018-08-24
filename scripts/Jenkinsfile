@@ -50,9 +50,9 @@ node ("${env.SLAVE}")
   }
   stage ("Archive")
   {
-    if (env.ARCHIVE)
+    if (env.ARCHIVE && (env.ARTIFACTORY != "none"))
     {
-      def server = Artifactory.server 'iotech-artifactory'
+      def server = Artifactory.server '${env.ARTIFACTORY}'
       def ext = "tar.gz"
       def uploadSpec = 
       """{
