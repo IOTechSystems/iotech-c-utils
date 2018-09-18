@@ -34,11 +34,10 @@ endif ()
 # Set default files to compile and libraries
 
 file (GLOB C_FILES *.c)
-file (GLOB H_FILES "../../include/iotech/*.h")
 
 # Main sdk library
 
-add_library (cutils SHARED ${C_FILES} ${H_FILES} )
+add_library (cutils SHARED ${C_FILES})
 target_include_directories (cutils PRIVATE ../../include)
 target_link_libraries (cutils PUBLIC ${LINK_LIBRARIES})
 set_target_properties (cutils PROPERTIES DEFINE_SYMBOL "IOTECHUTILS_EXPORTS")
@@ -52,4 +51,5 @@ add_subdirectory (examples)
 # Configure installer
 
 install (TARGETS cutils LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
-install (FILES ${H_FILES} DESTINATION include/edgex)
+install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION include )
+
