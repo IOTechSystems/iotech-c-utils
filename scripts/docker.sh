@@ -15,11 +15,11 @@ build_dist()
 
 build_dist ubuntu-18.04
 build_dist alpine-3.8
+build_dist alpine-3.7
 
 if [ "$QUICK" != "true" ]
 then
   build_dist ubuntu-16.04
-  build_dist alpine-3.7 
   build_dist debian-9
   build_dist fedora-27
 

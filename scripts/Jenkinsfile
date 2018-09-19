@@ -70,7 +70,11 @@ node ("${env.SLAVE}")
           },
           {
             "pattern": "apk/alpine-3.8/packager/${real_arch}/*.apk",
-            "target": "alpine-local/${real_arch}/"
+            "target": "alpine/alpine-3.8/${real_arch}/"
+          },
+          {
+            "pattern": "apk/alpine-3.7/packager/${real_arch}/*.apk",
+            "target": "alpine/alpine-3.7/${real_arch}/"
           }
         ]
       }"""

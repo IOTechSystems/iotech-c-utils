@@ -18,3 +18,4 @@ build_apk()
 }
 
 build_apk alpine-3.8
+build_apk alpine-3.7
