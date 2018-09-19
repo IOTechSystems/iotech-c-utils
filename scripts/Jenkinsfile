@@ -3,15 +3,21 @@
 node ("${env.SLAVE}")
 {
   def arch
+  def real_arch
   stage ("Checkout")
   {
     checkout scm
     arch = sh (script: './scripts/arch.sh', returnStdout: true)
+    real_arch = sh (script: './scripts/arch.sh true', returnStdout: true)
     currentBuild.displayName = "IOTech C Utils ${arch}: ${env.BUILD_ID}"
   }
   stage ("Build")
   {
     sh "./scripts/docker.sh ${arch} ${env.QUICK}"
+  }
+  stage ("Package")
+  {
+    sh "./scripts/package.sh ${arch} ${env.QUICK}"
   }
   stage ("Metrics")
   {
@@ -61,11 +67,20 @@ node ("${env.SLAVE}")
           {
             "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
             "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
+          },
+          {
+            "pattern": "apk/alpine-3.8/packager/${real_arch}/*.apk",
+            "target": "alpine-local/${real_arch}/"
           }
         ]
       }"""
       server.upload (uploadSpec)
     }
+  }
+  stage ("Index")
+  {
+    build (job: 'APK-Packaging-INDEX', parameters: [string (name: 'SLAVE', value: 'docker-x86_64'), string (name: 'BUILD', value: 
+'heads/master')])
   }
   stage ("Clean")
   {

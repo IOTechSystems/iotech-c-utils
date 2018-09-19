@@ -1,0 +1,21 @@
+# Contributor: IoTech <support@iotechsys.com>
+# Maintainer: IoTech <support@iotechsys.com>
+pkgname=iotech-c-utils
+pkgver="$VER"
+pkgrel=0
+pkgdesc="IOTech C utilities"
+url="www.iotechsys.com"
+arch="$ARCH"
+license="Apache-2.0"
+depends=""
+install=""
+source="cutils-$VER.tar.gz"
+builddir="$srcdir/"
+options="!check !strip !tracedeps"
+
+package() {
+    cd "$builddir"
+    install -Dm755 cutils-"$VER"/lib/libcutils.so "$pkgdir"/usr/lib/libcutils.so
+    mkdir -p "$pkgdir"/usr/include/iot/
+    cp -r cutils-"$VER"/include/* "$pkgdir"/usr/include/
+}
