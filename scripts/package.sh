@@ -7,7 +7,6 @@ export VER=`cat VERSION`
 build_apk()
 {
   DIST=$1
-  rm -rf apk
   mkdir -p apk/${DIST}
   cp build/${DIST}/release/cutils-${VER}.tar.gz apk/${DIST}/.
   cp scripts/APKBUILD apk/${DIST}/.
