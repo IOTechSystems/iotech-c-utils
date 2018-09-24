@@ -27,7 +27,7 @@ node ("${env.SLAVE}")
       archiveArtifacts artifacts: "build/ubuntu-18.04/debug/debug.log"
     }
     
-    if (env.TYPE = "alpine")
+    if (env.TYPE == "alpine")
     {
       archiveArtifacts artifacts: "build/alpine-3.7/release/release.log"
       archiveArtifacts artifacts: "build/alpine-3.7/debug/debug.log"
