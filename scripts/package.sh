@@ -1,7 +1,7 @@
 #!/bin/sh
 set -x -e
 ARCH=$1
-QUICK=$2
+TYPE=$2
 export VER=`cat VERSION`
 
 build_apk()

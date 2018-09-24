@@ -21,18 +21,26 @@ node ("${env.SLAVE}")
   }
   stage ("Metrics")
   {
-    archiveArtifacts artifacts: "build/ubuntu-18.04/release/release.log"
-    archiveArtifacts artifacts: "build/ubuntu-18.04/debug/debug.log"
-    if (env.QUICK == "false")
+    if (env.TYPE == "quick")
+    {
+      archiveArtifacts artifacts: "build/ubuntu-18.04/release/release.log"
+      archiveArtifacts artifacts: "build/ubuntu-18.04/debug/debug.log"
+    }
+    
+    if (env.TYPE = "alpine")
+    {
+      archiveArtifacts artifacts: "build/alpine-3.7/release/release.log"
+      archiveArtifacts artifacts: "build/alpine-3.7/debug/debug.log"
+      archiveArtifacts artifacts: "build/alpine-3.8/release/release.log"
+      archiveArtifacts artifacts: "build/alpine-3.8/debug/debug.log"
+    }
+    
+    if (env.TYPE == "all")
     {
       archiveArtifacts artifacts: "build/ubuntu-16.04/release/release.log"
       archiveArtifacts artifacts: "build/ubuntu-16.04/debug/debug.log"
       archiveArtifacts artifacts: "build/debian-9/release/release.log"
       archiveArtifacts artifacts: "build/debian-9/debug/debug.log"
-      archiveArtifacts artifacts: "build/alpine-3.7/release/release.log"
-      archiveArtifacts artifacts: "build/alpine-3.7/debug/debug.log"
-      archiveArtifacts artifacts: "build/alpine-3.8/release/release.log"
-      archiveArtifacts artifacts: "build/alpine-3.8/debug/debug.log"
       archiveArtifacts artifacts: "build/fedora-27/release/release.log"
       archiveArtifacts artifacts: "build/fedora-27/debug/debug.log"
       if (arch != "arm64")
