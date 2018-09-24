@@ -13,18 +13,18 @@ build_dist()
   docker rmi iotech-c-utils-${DIST}:${VER}
 }
 
-if [ "$TYPE" != "quick" || "$TYPE" != "all" ]
+if [ "$TYPE" = "quick" -o "$TYPE" = "all" ]
 then
   build_dist ubuntu-18.04
 fi
 
-if [ "$TYPE" != "alpine" || "$TYPE" != "all"  ]
+if [ "$TYPE" = "alpine" -o "$TYPE" = "all"  ]
 then
   build_dist alpine-3.8
   build_dist alpine-3.7
 fi
 
-if [ "$TYPE" != "all" ]
+if [ "$TYPE" = "all" ]
 then
   build_dist ubuntu-16.04
   build_dist debian-9
