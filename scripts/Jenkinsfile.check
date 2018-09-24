@@ -1,0 +1,24 @@
+#!/usr/bin/env groovy
+
+node ("docker-x86_64")
+{
+  stage ("Checkout")
+  {
+    cleanWs ()
+    checkout scm
+    currentBuild.displayName = "IoT C Utils GitHub"
+  }
+  stage ("Build")
+  {
+    sh "./scripts/docker.sh x86_64 quick"
+  }
+  stage ("Metrics")
+  {
+    archiveArtifacts artifacts: "build/ubuntu-18.04/release/release.log"
+    archiveArtifacts artifacts: "build/ubuntu-18.04/debug/debug.log"
+  }
+  stage ("Clean")
+  {
+    cleanWs ()
+  }
+}
