@@ -64,7 +64,7 @@ node ("${env.SLAVE}")
   }
   stage ("Archive")
   {
-    if (env.ARCHIVE)
+    if (env.ARCHIVE == "true")
     {
       def server = Artifactory.server 'artifactory'
       def ext = "tar.gz"
@@ -109,7 +109,7 @@ node ("${env.SLAVE}")
   }
   stage ("Index")
   {
-    if ((env.TYPE == "alpine" || env.TYPE == "all") && env.ARCHIVE)
+    if ((env.TYPE == "alpine" || env.TYPE == "all") && env.ARCHIVE == "true")
     {
       build (job: 'APK-Packaging-INDEX', parameters: [string (name: 'SLAVE', value: 'docker-x86_64'), string (name: 'BUILD', value: 'heads/master')])
     }
