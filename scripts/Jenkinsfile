@@ -68,9 +68,10 @@ node ("${env.SLAVE}")
     {
       def server = Artifactory.server 'artifactory'
       def ext = "tar.gz"
+      def uploadSpec
       if (env.TYPE == "alpine" || env.TYPE == "all")
       {
-        def uploadSpec = 
+        uploadSpec = 
         """{
           "files":
           [
@@ -89,9 +90,9 @@ node ("${env.SLAVE}")
           ]
         }"""
       }
-      if (env.TYPE == "quick")
+      if (env.TYPE == "quick" || env.TYPE == "all")
       {
-        def uploadSpec = 
+        uploadSpec = 
         """{
           "files":
           [
