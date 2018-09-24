@@ -69,16 +69,12 @@ node ("${env.SLAVE}")
       def server = Artifactory.server 'artifactory'
       def ext = "tar.gz"
       def uploadSpec
-      if (env.TYPE == "alpine" || env.TYPE == "all")
+      if (env.TYPE == "alpine" )
       {
         uploadSpec = 
         """{
           "files":
           [
-            {
-              "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
-              "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
-            },
             {
               "pattern": "apk/alpine-3.8/packager/${real_arch}/*.apk",
               "target": "alpine/alpine-3.8/${real_arch}/"
@@ -99,6 +95,27 @@ node ("${env.SLAVE}")
             {
               "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
               "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
+            }
+          ]
+        }"""
+      }
+      if ( env.TYPE == "all")
+      {
+        uploadSpec = 
+        """{
+          "files":
+          [
+            {
+              "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
+              "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
+            },
+            {
+              "pattern": "apk/alpine-3.8/packager/${real_arch}/*.apk",
+              "target": "alpine/alpine-3.8/${real_arch}/"
+            },
+            {
+              "pattern": "apk/alpine-3.7/packager/${real_arch}/*.apk",
+              "target": "alpine/alpine-3.7/${real_arch}/"
             }
           ]
         }"""
