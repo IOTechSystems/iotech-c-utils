@@ -93,7 +93,7 @@ node ("${env.SLAVE}")
           "files":
           [
             {
-              "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
+              "pattern": "build/ubuntu-18.04/release/cutils*.${ext}",
               "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
             }
           ]
@@ -106,7 +106,7 @@ node ("${env.SLAVE}")
           "files":
           [
             {
-              "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
+              "pattern": "build/ubuntu-18.04/release/cutils*.${ext}",
               "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
             },
             {
