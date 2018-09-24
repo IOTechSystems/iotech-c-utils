@@ -13,11 +13,11 @@ node ("${env.SLAVE}")
   }
   stage ("Build")
   {
-    sh "./scripts/docker.sh ${arch} ${env.QUICK}"
+    sh "./scripts/docker.sh ${arch} ${env.TYPE}"
   }
   stage ("Package")
   {
-    sh "./scripts/package.sh ${arch} ${env.QUICK}"
+    sh "./scripts/package.sh ${arch} ${env.TYPE}"
   }
   stage ("Metrics")
   {
@@ -60,24 +60,41 @@ node ("${env.SLAVE}")
     {
       def server = Artifactory.server 'artifactory'
       def ext = "tar.gz"
-      def uploadSpec = 
-      """{
-        "files":
-        [
-          {
-            "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
-            "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
-          },
-          {
-            "pattern": "apk/alpine-3.8/packager/${real_arch}/*.apk",
-            "target": "alpine/alpine-3.8/${real_arch}/"
-          },
-          {
-            "pattern": "apk/alpine-3.7/packager/${real_arch}/*.apk",
-            "target": "alpine/alpine-3.7/${real_arch}/"
-          }
-        ]
-      }"""
+      if (env.TYPE == "alpine" || env.TYPE == "all")
+      {
+        def uploadSpec = 
+        """{
+          "files":
+          [
+            {
+              "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
+              "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
+            },
+            {
+              "pattern": "apk/alpine-3.8/packager/${real_arch}/*.apk",
+              "target": "alpine/alpine-3.8/${real_arch}/"
+            },
+            {
+              "pattern": "apk/alpine-3.7/packager/${real_arch}/*.apk",
+              "target": "alpine/alpine-3.7/${real_arch}/"
+            }
+          ]
+        }"""
+      }
+      if (env.TYPE == "quick")
+      {
+        def uploadSpec = 
+        """{
+          "files":
+          [
+            {
+              "pattern": "build/ubuntu-18.04/release/iotech-c-util*.${ext}",
+              "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
+            }
+          ]
+        }"""
+      }
+      
       server.upload (uploadSpec)
     }
   }

@@ -11,21 +11,21 @@ pipeline
         {
           steps
           {
-            build (job: 'IOTech_C_Utils_Build', parameters: [string(name: 'SLAVE', value: 'docker-x86_64'), booleanParam(name: 'ARCHIVE', value: params.ARCHIVE), string(name: 'BUILD', value: params.BUILD), booleanParam(name: 'QUICK', value: params.QUICK)])
+            build (job: 'IOTech_C_Utils_Build', parameters: [string(name: 'SLAVE', value: 'docker-x86_64'), booleanParam(name: 'ARCHIVE', value: params.ARCHIVE), string(name: 'BUILD', value: params.BUILD), string(name: 'TYPE', value: params.TYPE)])
           }
         }
         stage ('Build arm')
         {
           steps
           {
-            build (job: 'IOTech_C_Utils_Build', parameters: [string(name: 'SLAVE', value: 'docker-arm'), booleanParam(name: 'ARCHIVE', value: params.ARCHIVE), string(name: 'BUILD', value: params.BUILD), booleanParam(name: 'QUICK', value: params.QUICK)])
+            build (job: 'IOTech_C_Utils_Build', parameters: [string(name: 'SLAVE', value: 'docker-arm'), booleanParam(name: 'ARCHIVE', value: params.ARCHIVE), string(name: 'BUILD', value: params.BUILD), string(name: 'TYPE', value: params.TYPE)])
           }
         }
         stage ('Build arm64')
         {
           steps
           {
-            build (job: 'IOTech_C_Utils_Build', parameters: [string(name: 'SLAVE', value: 'docker-arm64'), booleanParam(name: 'ARCHIVE', value: params.ARCHIVE), string(name: 'BUILD', value: params.BUILD), booleanParam(name: 'QUICK', value: params.QUICK)])
+            build (job: 'IOTech_C_Utils_Build', parameters: [string(name: 'SLAVE', value: 'docker-arm64'), booleanParam(name: 'ARCHIVE', value: params.ARCHIVE), string(name: 'BUILD', value: params.BUILD), string(name: 'TYPE', value: params.TYPE)])
           }
         }
       }

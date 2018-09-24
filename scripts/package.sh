@@ -16,5 +16,8 @@ build_apk()
   docker rmi docker.iotechsys.com/services/iotech-apk-builder-${ARCH}:0.2.0
 }
 
-build_apk alpine-3.8
-build_apk alpine-3.7
+if [ "$TYPE" != "alpine" || "$TYPE" != "all"  ]
+then
+  build_apk alpine-3.8
+  build_apk alpine-3.7
+fi

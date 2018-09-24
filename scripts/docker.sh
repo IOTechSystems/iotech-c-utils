@@ -1,7 +1,7 @@
 #!/bin/sh
 set -x -e
 ARCH=$1
-QUICK=$2
+TYPE=$2
 export VER=`cat VERSION`
 
 build_dist()
@@ -13,11 +13,18 @@ build_dist()
   docker rmi iotech-c-utils-${DIST}:${VER}
 }
 
-build_dist ubuntu-18.04
-build_dist alpine-3.8
-build_dist alpine-3.7
+if [ "$TYPE" != "quick" || "$TYPE" != "all" ]
+then
+  build_dist ubuntu-18.04
+fi
 
-if [ "$QUICK" != "true" ]
+if [ "$TYPE" != "alpine" || "$TYPE" != "all"  ]
+then
+  build_dist alpine-3.8
+  build_dist alpine-3.7
+fi
+
+if [ "$TYPE" != "all" ]
 then
   build_dist ubuntu-16.04
   build_dist debian-9
