@@ -109,8 +109,10 @@ node ("${env.SLAVE}")
   }
   stage ("Index")
   {
-    build (job: 'APK-Packaging-INDEX', parameters: [string (name: 'SLAVE', value: 'docker-x86_64'), string (name: 'BUILD', value: 
-'heads/master')])
+    if (env.TYPE == "alpine" || env.TYPE == "all")
+    {
+      build (job: 'APK-Packaging-INDEX', parameters: [string (name: 'SLAVE', value: 'docker-x86_64'), string (name: 'BUILD', value: 'heads/master')])
+    }
   }
   stage ("Clean")
   {
