@@ -366,16 +366,22 @@ void iot_scheduler_stop(iot_scheduler scheduler_i)
 {   
     iot_schd_thread_t * scheduler = (iot_schd_thread_t*)scheduler_i;
     pthread_mutex_lock(&scheduler->iot_mutex);
-    
-    scheduler->running=false;
-    /* Post on the semaphore */
-    sem_post(&scheduler->iot_sem);
-    
-    /* wait for threadpool processing to complete */
-    thpool_wait(*(threadpool*)scheduler->iot_thpool);
-    pthread_mutex_unlock(&scheduler->iot_mutex);
-    
-    pthread_join(scheduler->iot_thread,NULL);
+    if (scheduler->running==true)
+    {
+        scheduler->running=false;
+        /* Post on the semaphore */
+        sem_post(&scheduler->iot_sem);
+        
+        /* wait for threadpool processing to complete */
+        thpool_wait(*(threadpool*)scheduler->iot_thpool);
+        pthread_mutex_unlock(&scheduler->iot_mutex);
+        
+        pthread_join(scheduler->iot_thread,NULL);
+    }
+    else
+    {
+        pthread_mutex_unlock(&scheduler->iot_mutex);
+    }
 }
 
 /* Destroy all remaining scheduler resouces */
