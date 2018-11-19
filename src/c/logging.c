@@ -100,7 +100,15 @@ bool iot_log_tofile
    const char *message
 )
 {
-   FILE *f = fopen (destination, "a");
+   FILE *f;
+   if (strcmp (destination, "-") == 0)
+   {
+     f = stdout;
+   }
+   else
+   {
+     f = fopen (destination, "a");
+   }
    if (f)
    {
       logtofd (f, subsystem, l, timestamp, message);
