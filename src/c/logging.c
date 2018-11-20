@@ -112,7 +112,10 @@ bool iot_log_tofile
    if (f)
    {
       logtofd (f, subsystem, l, timestamp, message);
-      fclose (f);
+      if (f != stdout)
+      {
+        fclose (f);
+      }
       return true;
    }
    return false;
