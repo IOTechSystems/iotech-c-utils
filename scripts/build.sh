@@ -57,7 +57,7 @@ then
   cp deps/C-Thread-Pool-SDK-0.1/thpool.h include/
 fi
 
-# Cmake release build
+# Release build
 
 mkdir -p ${BROOT}/release
 cd ${BROOT}/release
@@ -65,7 +65,15 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release $ROOT/src
 make 2>&1 | tee release.log
 make package
 
-# Cmake debug build
+# Static release build
+
+mkdir -p ${BROOT}/static
+cd ${BROOT}/static
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DCUTILS_BUILD_STATIC=ON $ROOT/src
+make 2>&1 | tee static.log
+make package
+
+# Debug build
 
 mkdir -p ${BROOT}/debug
 cd ${BROOT}/debug
@@ -77,6 +85,6 @@ make 2>&1 | tee debug.log
 if [ "$CPPCHK" = "true" ]
 then
   cd ${ROOT}
-  cppcheck -DTHRIFT_BIG_ENDIAN=0 -DNDEBUG -D_GNU_SOURCE --std=c99 --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
+  cppcheck -DNDEBUG -D_GNU_SOURCE --std=c99 --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
 fi
 
