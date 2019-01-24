@@ -1,7 +1,33 @@
 #!/bin/sh
 set -e -x
 
-CPPCHECK=false
+ARCH=`uname -m`
+ROOT=$(dirname $(dirname $(readlink -f $0)))
+
+CPPCHK=false
+
+case ${ARCH} in
+  armv6l)
+    BROOT=${ROOT}/arm32/build
+    break
+  ;;
+  armv7l)
+    BROOT=${ROOT}/arm32/build
+    break
+  ;;
+  aarch64)
+    BROOT=${ROOT}/arm64/build
+    break
+  ;;
+  x86_64)
+    BROOT=${ROOT}/x86_64/build
+    break
+  ;;
+  *)
+    echo "Unsupported: ${ARCH}"
+    exit 2
+  ;;
+esac
 
 # Process arguments
 
@@ -9,7 +35,7 @@ while [ $# -gt 0 ]
 do
   case $1 in
     -cppcheck)
-      CPPCHECK=true
+      CPPCHK=true
       shift 1
     ;;
     *)
@@ -17,11 +43,6 @@ do
     ;;
   esac
 done
-
-# Find root directory
-
-ROOT=$(dirname $(dirname $(readlink -f $0)))
-cd $ROOT
 
 # Dependencies
 
@@ -38,23 +59,24 @@ fi
 
 # Cmake release build
 
-mkdir -p $ROOT/build/release
-cd $ROOT/build/release
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $ROOT/src
-
+mkdir -p ${BROOT}/release
+cd ${BROOT}/release
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release $ROOT/src
 make 2>&1 | tee release.log
 make package
 
-# Run cppcheck if configured
-
-if [ "$CPPCHECK" = "true" ]
-then
-  echo cppcheck --project=compile_commands.json --xml-version=2 --enable=style --output-file=cppcheck.xml
-fi
-
 # Cmake debug build
 
-mkdir -p $ROOT/build/debug
-cd $ROOT/build/debug
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCUTILS_BUILD_DEBUG=ON $ROOT/src
+mkdir -p ${BROOT}/debug
+cd ${BROOT}/debug
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug $ROOT/src
 make 2>&1 | tee debug.log
+
+# Run cppcheck if configured
+
+if [ "$CPPCHK" = "true" ]
+then
+  cd ${ROOT}
+  cppcheck -DTHRIFT_BIG_ENDIAN=0 -DNDEBUG -D_GNU_SOURCE --std=c99 --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
+fi
+
