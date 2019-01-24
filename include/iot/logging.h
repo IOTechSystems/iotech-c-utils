@@ -7,10 +7,7 @@
 #ifndef _IOT_LOGGING_H_
 #define _IOT_LOGGING_H_ 1
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "iot/os.h"
 
 typedef enum iot_loglevel { INFO = 0, TRACE, DEBUG, WARNING, ERROR } iot_loglevel;
 

@@ -6,12 +6,8 @@
 //
 #include "iot/scheduler.h"
 
-#include <stdlib.h>
 #include <pthread.h>
-#include <stdbool.h>
 #include <semaphore.h>
-#include <time.h>
-#include <stdio.h>
  
 #define IOT_NS_TO_SEC(SECONDS) (SECONDS / BILLION)
 #define IOT_NS_REMAINING(SECONDS) (SECONDS % BILLION)

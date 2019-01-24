@@ -10,6 +10,7 @@
 #ifndef _IOT_SCHEDULER_H_
 #define _IOT_SCHEDULER_H_
 
+#include "iot/os.h"
 #include "thpool.h"
 
 #define BILLION 1000000000L

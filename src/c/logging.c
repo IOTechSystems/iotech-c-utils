@@ -6,10 +6,8 @@
 //
 #include "iot/logging.h"
 
-#include <string.h>
 #include <pthread.h>
 #include <stdarg.h>
-
 
 // TODO: allow an array of labels in a log message
 
