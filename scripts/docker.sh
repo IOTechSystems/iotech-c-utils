@@ -13,3 +13,5 @@ build_dist()
   docker run --rm -e UID=`id -u $USER` -e GID=`id -g $USER` -v "$(pwd)"/${ARCH}/build/${SYSTEM}:/iotech-c-utils/${ARCH}/build iotech-c-utils-${SYSTEM}-${RAND}:${VER}
   docker rmi iotech-c-utils-${SYSTEM}-${RAND}:${VER}
 }
+
+build_dist $SYSTEM
