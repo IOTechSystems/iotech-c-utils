@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.0)
-project (CUTILS LANGUAGES C)
+cmake_minimum_required (VERSION 3.1)
+project (CUtils LANGUAGES C)
 
 # Package support
 
