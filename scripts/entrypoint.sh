@@ -7,4 +7,4 @@ set -x -e
 
 # Set ownership of generated files
 
-chown -R $UID:$GID /iotech-c-utils/build
+chmod -R a+rw  /iotech-c-utils/build
