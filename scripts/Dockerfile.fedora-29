@@ -1,4 +1,4 @@
-FROM fedora:27
+FROM fedora:29
 MAINTAINER Steve Osselton <steve@iotechsys.com>
 RUN yum -y update \
   && yum -y install --setopt=tsflags=nodocs wget git gcc cmake3 make valgrind rpm-build \
