@@ -54,7 +54,7 @@ def publishCoreMetrics (systems, arch)
       archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/release/release.log")
       archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/debug/debug.log")
       archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/static/static.log")
-      archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/release/junit-Results.xml")
+//      archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/release/junit-Results.xml")
     }
   }
 }
