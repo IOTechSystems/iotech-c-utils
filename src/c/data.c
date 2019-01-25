@@ -130,7 +130,7 @@ void iot_data_free (iot_data_t * data)
         while (map->pairs)
         {
           pair = map->pairs;
-          iot_data_free ((iot_data_t*) pair->key);
+          iot_data_free (pair->key);
           iot_data_free (pair->value);
           map->pairs = pair->next;
           free (pair);
@@ -353,7 +353,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   if (pair)
   {
     iot_data_free (pair->value);
-    iot_data_free ((iot_data_t*) pair->key);
+    iot_data_free (pair->key);
   }
   else
   {
