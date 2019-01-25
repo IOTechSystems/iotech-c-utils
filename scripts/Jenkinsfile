@@ -64,7 +64,7 @@ def publishAdvancedMetrics (system, arch)
   archiveArtifacts (artifacts: 'src/c/**/*.c')
   archiveArtifacts (artifacts: 'include/iot/**/*.h')
 //  archiveArtifacts (artifacts: "${arch}/build/${system}/release/c/tests/**/*.c")
-  archiveArtifacts (artifacts: "${arch}/build/${system}/release/c/examples/**/*.c")
+  archiveArtifacts (artifacts: "${arch}/build/${system}/release/c/examples/*.c")
   archiveArtifacts (artifacts: "${arch}/build/${system}/lcov/html/**")
 // archiveArtifacts (artifacts: "${arch}/build/${system}/release/cppcheck.xml")
 //  publishValgrind (
