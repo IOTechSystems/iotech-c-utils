@@ -28,28 +28,27 @@ typedef struct iot_logging_client iot_logging_client;
 
 typedef bool (*iot_log_function)
 (
-   const char *destination,
-   const char *subsystem,
-   iot_loglevel l,
-   time_t timestamp,
-   const char *message
+  const char *destination,
+  const char *subsystem,
+  iot_loglevel l,
+  time_t timestamp,
+  const char *message
 );
 
 /* Built-in logger: append to a file */
 
 extern bool iot_log_tofile
 (
-   const char *destination,
-   const char *subsystem,
-   iot_loglevel l,
-   time_t timestamp,
-   const char *message
+  const char *dest,
+  const char *subsystem,
+  iot_loglevel l,
+  time_t timestamp,
+  const char *message
 );
 
 /* Create and destroy logging clients */
 
-extern iot_logging_client *iot_logging_client_create
-   (const char *subsystem);
+extern iot_logging_client *iot_logging_client_create (const char *subsystem);
 extern void iot_logging_client_destroy (iot_logging_client *lc);
 
 /* Default logging client: logs to stderr only */
@@ -59,9 +58,9 @@ extern iot_logging_client *iot_log_default;
 /* Plug in and remove logger implementations */
 
 extern void iot_log_addlogger
-   (iot_logging_client *lc, iot_log_function fn, const char *destination);
+  (iot_logging_client *lc, iot_log_function fn, const char *destination);
 extern bool iot_log_dellogger
-   (iot_logging_client *lc, iot_log_function fn, const char *destination);
+  (iot_logging_client *lc, iot_log_function fn, const char *destination);
 
 /* Functions to generate logs */
 

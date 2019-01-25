@@ -13,10 +13,10 @@
 #include "iot/os.h"
 #include "thpool.h"
 
-#define BILLION 1000000000L
+#define IOT_BILLION 1000000000L
 #define IOT_MS_TO_NS(MILLISECONDS) (MILLISECONDS * 1000000)
-#define IOT_SEC_TO_NS(SECONDS) (SECONDS * BILLION)
-#define IOT_MIN_TO_NS(MINUTES) (MINUTES * BILLION * 60)
+#define IOT_SEC_TO_NS(SECONDS) (SECONDS * IOT_BILLION)
+#define IOT_MIN_TO_NS(MINUTES) (MINUTES * IOT_BILLION * 60)
 
 typedef void * iot_scheduler;
 typedef void * iot_schedule;
@@ -36,7 +36,7 @@ typedef void * iot_schedule;
  * @return iot_scheduler        A pointer to the created scheduler.
  *                              NULL on error.
  */
-iot_scheduler iot_scheduler_init(threadpool * thpool);
+iot_scheduler iot_scheduler_init (threadpool * thpool);
 
 
 /**
@@ -51,7 +51,7 @@ iot_scheduler iot_scheduler_init(threadpool * thpool);
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler. 
  */
-void iot_scheduler_start(iot_scheduler scheduler);
+void iot_scheduler_start (iot_scheduler scheduler);
 
 
 /**
@@ -77,12 +77,12 @@ void iot_scheduler_start(iot_scheduler scheduler);
  */
 iot_schedule iot_schedule_create
 (
-    iot_scheduler schd,
-    void (*function)(void* arg), 
-    void * arg, 
-    unsigned long long  period, 
-    unsigned long long  start, 
-    unsigned long repeat
+  iot_scheduler schd,
+  void (*function)(void* arg),
+  void * arg,
+  unsigned long long  period,
+  unsigned long long  start,
+  unsigned long repeat
 );
 
 /**
@@ -100,7 +100,7 @@ iot_schedule iot_schedule_create
  * @return                          1 on success.
  *                                  0 on error.
  */
-int iot_schedule_add(iot_scheduler scheduler, iot_schedule schedule);
+int iot_schedule_add (iot_scheduler scheduler, iot_schedule schedule);
 
 /**
  * @brief  Delete a schedule
@@ -117,7 +117,7 @@ int iot_schedule_add(iot_scheduler scheduler, iot_schedule schedule);
  * @return                          1 on success.
  *                                  0 on error.
  */
-int iot_schedule_remove(iot_scheduler scheduler, iot_schedule schedule);
+int iot_schedule_remove (iot_scheduler scheduler, iot_schedule schedule);
 
 /**
  * @brief  Delete a schedule
@@ -134,7 +134,7 @@ int iot_schedule_remove(iot_scheduler scheduler, iot_schedule schedule);
  * @return                          1 on success.
  *                                  0 on error.
  */
-int iot_schedule_delete(iot_scheduler scheduler, iot_schedule schedule);
+int iot_schedule_delete (iot_scheduler scheduler, iot_schedule schedule);
 
 
 /**
@@ -150,7 +150,7 @@ int iot_schedule_delete(iot_scheduler scheduler, iot_schedule schedule);
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler. 
  */
-void iot_scheduler_stop(iot_scheduler scheduler);
+void iot_scheduler_stop (iot_scheduler scheduler);
 
 
 /**
@@ -165,7 +165,6 @@ void iot_scheduler_stop(iot_scheduler scheduler);
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler. 
  */
-void iot_scheduler_fini(iot_scheduler scheduler);
-
+void iot_scheduler_fini (iot_scheduler scheduler);
 
 #endif
