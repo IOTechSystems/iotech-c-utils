@@ -65,11 +65,11 @@ def publishAdvancedMetrics (system, arch)
   archiveArtifacts (artifacts: 'include/iot/**/*.h')
   archiveArtifacts (artifacts: "${arch}/build/${system}/lcov/html/**")
   archiveArtifacts (artifacts: "${arch}/build/${system}/release/cppcheck.xml")
-//  publishValgrind (
-//    failBuildOnInvalidReports: false, failBuildOnMissingReports: false,
-//    pattern: '**/*_vg.xml', publishResultsForAbortedBuilds: false, publishResultsForFailedBuilds: false,
-//    sourceSubstitutionPaths: '/thrift/src:src'
-//  )
+  publishValgrind (
+    failBuildOnInvalidReports: false, failBuildOnMissingReports: false,
+    pattern: '**/*_vg.xml', publishResultsForAbortedBuilds: false, publishResultsForFailedBuilds: false,
+    sourceSubstitutionPaths: '/iotech-c-utils/src:src'
+  )
   publishCppcheck (pattern: "${arch}/build/${system}/release/cppcheck.xml")
   openTasks (pattern: '**/*.c,**/*.h', high: 'FIXME', normal: 'TODO')
 //  junit (testResults: "${arch}/build/${system}/release/junit-Results.xml")

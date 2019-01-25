@@ -4,6 +4,7 @@ set -e -x
 ARCH=`uname -m`
 ROOT=$(dirname $(dirname $(readlink -f $0)))
 
+VALG=false
 CPPCHK=false
 LCOV=false
 
@@ -35,6 +36,10 @@ esac
 while [ $# -gt 0 ]
 do
   case $1 in
+    -valgrind)
+      VALG=true
+      shift 1
+    ;;
     -cppcheck)
       CPPCHK=true
       shift 1
@@ -116,6 +121,16 @@ if [ "$CPPCHK" = "true" ]
 then
   cd ${ROOT}
   cppcheck -DNDEBUG -D_GNU_SOURCE --std=c99 --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
+fi
+
+# Valgrind
+
+if [ "$VALG" = "true" ]
+then
+  cd ${BROOT}/debug
+  VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
+  valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/schedulerEx
+  valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/dataEx
 fi
 
 # Allow deletion of generated files in mounted volume
