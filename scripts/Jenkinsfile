@@ -11,7 +11,7 @@ def checkoutStage (arch)
   deleteDir ()
   cleanWs (cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: false)
   checkout scm
-  currentBuild.displayName = "C Utils ${arch}: ${env.BUILD_ID}"
+  currentBuild.displayName = "C Utils ${arch}:${env.BUILD_ID}"
 }
 
 def buildStage (systems, arch)
@@ -68,7 +68,7 @@ def publishAdvancedMetrics (system, arch)
   archiveArtifacts (artifacts: "${arch}/${system}/release/cppcheck.xml")
   publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-c-utils/src:src')
   publishCppcheck (pattern: "${arch}/${system}/release/cppcheck.xml")
-  openTasks (pattern: '**/*.c,**/*.h', high: 'FIXME', normal: 'TODO')
+//  openTasks (pattern: '**/*.c,**/*.h', high: 'FIXME', normal: 'TODO')
 //  junit (testResults: "${arch}/${system}/release/junit-Results.xml")
   cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
   def gcc = scanForIssues (tool: [$class: 'Gcc4'], pattern: "${arch}/${system}/release/release.log")
