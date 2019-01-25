@@ -6,4 +6,4 @@ COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
 COPY scripts /iotech-c-utils/scripts
 WORKDIR /iotech-c-utils
-ENTRYPOINT ["/iotech-c-utils/scripts/entrypoint.sh", "-cppcheck"]
+ENTRYPOINT ["/iotech-c-utils/scripts/entrypoint.sh", "-cppcheck", "-lcov"]

@@ -5,6 +5,7 @@ ARCH=`uname -m`
 ROOT=$(dirname $(dirname $(readlink -f $0)))
 
 CPPCHK=false
+LCOV=false
 
 case ${ARCH} in
   armv6l)
@@ -36,6 +37,10 @@ do
   case $1 in
     -cppcheck)
       CPPCHK=true
+      shift 1
+    ;;
+    -lcov)
+      LCOV=true
       shift 1
     ;;
     *)
@@ -79,6 +84,31 @@ mkdir -p ${BROOT}/debug
 cd ${BROOT}/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug $ROOT/src
 make 2>&1 | tee debug.log
+
+# Coverage
+
+if [ "$LCOV" = "true" ]
+then
+
+  # Build with profiling enabled
+
+  mkdir -p ${BROOT}/lcov
+  cd ${BROOT}/lcov
+  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DCUTILS_BUILD_LCOV=ON $ROOT/src
+  make
+
+  # Run executables
+
+  c/examples/schedulerEx
+  c/examples/dataEx
+
+  # Generate coverage html report
+
+  lcov --capture --no-external -d . -b $ROOT/src -o lcov.tmp1
+  genhtml -o html lcov.tmp1
+  gcovr --xml > cobertura.xml
+
+fi
 
 # Run cppcheck if configured
 

@@ -30,7 +30,7 @@ def metricsStage (systems, arch)
   publishCoreMetrics (systems, arch)
   if ("${params.System}" == 'ubuntu-18.04' || "${params.System}" == 'all')
   {
-//    publishAdvancedMetrics ('ubuntu-18.04', arch)
+    publishAdvancedMetrics ('ubuntu-18.04', arch)
   }
 }
 
@@ -57,6 +57,27 @@ def publishCoreMetrics (systems, arch)
 //      archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/release/junit-Results.xml")
     }
   }
+}
+
+def publishAdvancedMetrics (system, arch)
+{
+  archiveArtifacts (artifacts: 'src/c/**/*.c')
+  archiveArtifacts (artifacts: 'include/iot/**/*.h')
+//  archiveArtifacts (artifacts: "${arch}/build/${system}/release/c/tests/**/*.c")
+  archiveArtifacts (artifacts: "${arch}/build/${system}/release/c/examples/**/*.c")
+  archiveArtifacts (artifacts: "${arch}/build/${system}/lcov/html/**")
+// archiveArtifacts (artifacts: "${arch}/build/${system}/release/cppcheck.xml")
+//  publishValgrind (
+//    failBuildOnInvalidReports: false, failBuildOnMissingReports: false,
+//    pattern: '**/*_vg.xml', publishResultsForAbortedBuilds: false, publishResultsForFailedBuilds: false,
+//    sourceSubstitutionPaths: '/thrift/src:src'
+//  )
+//  publishCppcheck (pattern: "${arch}/build/${system}/release/cppcheck.xml")
+//  openTasks (pattern: '**/*.c,**/*.h', high: 'FIXME', normal: 'TODO')
+//  junit (testResults: "${arch}/build/${system}/release/junit-Results.xml")
+  cobertura (coberturaReportFile: "${arch}/build/${system}/lcov/cobertura.xml")
+  def gcc = scanForIssues (tool: [$class: 'Gcc4'], pattern: "${arch}/build/${system}/release/release.log")
+  publishIssues (issues: [gcc])
 }
 
 def publishDebs (arch, server)
