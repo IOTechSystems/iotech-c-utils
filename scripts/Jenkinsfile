@@ -52,10 +52,10 @@ def publishCoreMetrics (systems, arch)
   {
     if ("${params.System}" == "${systems[i]}" || "${params.System}" == 'all')
     {
-      archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/release/release.log")
-      archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/debug/debug.log")
-      archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/static/static.log")
-//      archiveArtifacts (artifacts: "${arch}/build/${systems[i]}/release/junit-Results.xml")
+      archiveArtifacts (artifacts: "${arch}/${systems[i]}/release/release.log")
+      archiveArtifacts (artifacts: "${arch}/${systems[i]}/debug/debug.log")
+      archiveArtifacts (artifacts: "${arch}/${systems[i]}/static/static.log")
+//      archiveArtifacts (artifacts: "${arch}/${systems[i]}/release/junit-Results.xml")
     }
   }
 }
@@ -64,18 +64,18 @@ def publishAdvancedMetrics (system, arch)
 {
   archiveArtifacts (artifacts: 'src/c/**/*.c')
   archiveArtifacts (artifacts: 'include/iot/**/*.h')
-  archiveArtifacts (artifacts: "${arch}/build/${system}/lcov/html/**")
-  archiveArtifacts (artifacts: "${arch}/build/${system}/release/cppcheck.xml")
+  archiveArtifacts (artifacts: "${arch}/${system}/lcov/html/**")
+  archiveArtifacts (artifacts: "${arch}/${system}/release/cppcheck.xml")
   publishValgrind (
     failBuildOnInvalidReports: false, failBuildOnMissingReports: false,
     pattern: '**/*_vg.xml', publishResultsForAbortedBuilds: false, publishResultsForFailedBuilds: false,
     sourceSubstitutionPaths: '/iotech-c-utils/src:src'
   )
-  publishCppcheck (pattern: "${arch}/build/${system}/release/cppcheck.xml")
+  publishCppcheck (pattern: "${arch}/${system}/release/cppcheck.xml")
   openTasks (pattern: '**/*.c,**/*.h', high: 'FIXME', normal: 'TODO')
-//  junit (testResults: "${arch}/build/${system}/release/junit-Results.xml")
-  cobertura (coberturaReportFile: "${arch}/build/${system}/lcov/cobertura.xml")
-  def gcc = scanForIssues (tool: [$class: 'Gcc4'], pattern: "${arch}/build/${system}/release/release.log")
+//  junit (testResults: "${arch}/${system}/release/junit-Results.xml")
+  cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
+  def gcc = scanForIssues (tool: [$class: 'Gcc4'], pattern: "${arch}/${system}/release/release.log")
   publishIssues (issues: [gcc])
 }
 
@@ -97,7 +97,7 @@ def publishDebs (arch, server)
     {
       def name = deb_name[debs[i]]
       def uploadSpec = """{"files":[{
-        "pattern": "${arch}/build/${debs[i]}/release/cutils*.deb",
+        "pattern": "${arch}/${debs[i]}/release/cutils*.deb",
         "target": "${repo}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }]}"""
@@ -124,7 +124,7 @@ def publishApks (arch, server)
       sh "./scripts/package.sh ${apks[i]} ${arch}"
       def uploadSpec = """{"files":[
       {
-        "pattern": "${arch}/build/${apks[i]}/release/cutils*.tar.gz",
+        "pattern": "${arch}/${apks[i]}/release/cutils*.tar.gz",
         "target": "${repo}/${apks[i]}/",
         "props": "distribution=${apks[i]};architecture=${apk_archs[arch]}"
       },
@@ -153,7 +153,7 @@ def publishRpms (arch, server)
     if ("${params.System}" == "${rpms[i]}" || "${params.System}" == 'all')
     {
       def uploadSpec = """{"files":[{
-        "pattern": "${arch}/build/${rpms[i]}/release/cutils*.rpm",
+        "pattern": "${arch}/${rpms[i]}/release/cutils*.rpm",
         "target": "${rpm_repo[rpms[i]]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }]}"""

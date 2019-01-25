@@ -10,19 +10,19 @@ LCOV=false
 
 case ${ARCH} in
   armv6l)
-    BROOT=${ROOT}/arm32/build
+    BROOT=${ROOT}/arm32
     break
   ;;
   armv7l)
-    BROOT=${ROOT}/arm32/build
+    BROOT=${ROOT}/arm32
     break
   ;;
   aarch64)
-    BROOT=${ROOT}/arm64/build
+    BROOT=${ROOT}/arm64
     break
   ;;
   x86_64)
-    BROOT=${ROOT}/x86_64/build
+    BROOT=${ROOT}/x86_64
     break
   ;;
   *)
@@ -120,7 +120,7 @@ fi
 if [ "$CPPCHK" = "true" ]
 then
   cd ${ROOT}
-  cppcheck -DNDEBUG -D_GNU_SOURCE --std=c99 --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
+  cppcheck -DNDEBUG -D_GNU_SOURCE --std=c99 --xml --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
 fi
 
 # Valgrind
