@@ -71,7 +71,9 @@ def publishAdvancedMetrics (system, arch)
 //  openTasks (pattern: '**/*.c,**/*.h', high: 'FIXME', normal: 'TODO')
 //  junit (testResults: "${arch}/${system}/release/junit-Results.xml")
   cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
-  def gcc = scanForIssues (tool: [$class: 'Gcc4'], pattern: "${arch}/${system}/release/release.log")
+  def tasks = scanForIssues (tool: [$class: 'open-tasks'], pattern: '**/*.c,**/*.h')
+  publishIssues (issues: [tasks])
+  def gcc = scanForIssues (tool: [$class: 'gcc4'], pattern: "${arch}/${system}/release/release.log")
   publishIssues (issues: [gcc])
 }
 
