@@ -72,7 +72,7 @@ def publishAdvancedMetrics (system, arch)
   cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
 //  def tasks = scanForIssues (tool: [$class: 'taskScanner'], includePattern: '**/*.c,**/*.h')
 //  publishIssues (issues: [tasks])
-  def gcc = scanForIssues (tool: [$class: 'gcc4'], pattern: "${arch}/${system}/release/release.log")
+  def gcc = scanForIssues (tool: [$class: 'Gcc4'], pattern: "${arch}/${system}/release/release.log")
   publishIssues (issues: [gcc])
 }
 
