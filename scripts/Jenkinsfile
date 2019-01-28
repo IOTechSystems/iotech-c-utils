@@ -62,8 +62,8 @@ def publishCoreMetrics (systems, arch)
 
 def publishAdvancedMetrics (system, arch)
 {
-  fileOperations: [[$class: 'FileCopyOperation', includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/']]
-  fileOperations: [[$class: 'FileCopyOperation', includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/']]
+  fileOperations: ([fileCopyOperation (includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/'),
+    fileCopyOperation (includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/')])
   archiveArtifacts (artifacts: 'src/c/**/*.c')
   archiveArtifacts (artifacts: 'include/iot/**/*.h')
   archiveArtifacts (artifacts: "${arch}/${system}/lcov/html/**")
