@@ -1,12 +1,10 @@
 //
-// Copyright (c) 2018
+// Copyright (c) 2019
 // IoTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-/** @file
- *  @brief Data API
- */
+
 #ifndef _IOT_DATA_H_
 #define _IOT_DATA_H_
 

@@ -1,3 +1,10 @@
+//
+// Copyright (c) 2019
+// IoTech
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
 #include "iot/data.h"
 
 typedef union iot_data_union_t
