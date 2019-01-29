@@ -70,7 +70,7 @@ int main (void)
   key = iot_data_alloc_string ("STR");
   value = iot_data_alloc_string ("Hi");
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("BLOB");
+  key = iot_data_alloc_string ("Mr");
   value = iot_data_alloc_blob (blob, sizeof (blob), true);
   iot_data_map_add (map2, key, value);
 
