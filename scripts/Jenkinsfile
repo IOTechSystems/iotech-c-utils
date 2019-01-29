@@ -75,7 +75,7 @@ def publishAdvancedMetrics (system, arch)
   cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
   def tasks = scanForIssues (tool: taskScanner (highTags: 'FIXME', includePattern: '**/*.c,**/*.h', lowTags: 'COMMENT', normalTags: 'TODO'))
   publishIssues (issues: [tasks])
-  def gcc = scanForIssues (tool: gcc4 (pattern: '"${arch}/${system}/release/release.log"'))
+  def gcc = scanForIssues (tool: gcc4 (pattern: "${arch}/${system}/release/release.log"))
   publishIssues (issues: [gcc])
 }
 
