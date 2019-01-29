@@ -32,6 +32,7 @@ typedef struct iot_data_blob_t
   iot_data_t base;
   uint8_t * data;
   uint32_t size;
+  bool release;
 } iot_data_blob_t;
 
 typedef struct iot_data_array_t
@@ -122,7 +123,12 @@ void iot_data_free (iot_data_t * data)
     switch (data->type)
     {
       case IOT_DATA_STRING: free (((iot_data_value_t*) data)->value.str); break;
-      case IOT_DATA_BLOB: free (((iot_data_blob_t*) data)->data); break;
+      case IOT_DATA_BLOB:
+      {
+        iot_data_blob_t * blob = (iot_data_blob_t*) data;
+        if (blob->release) free (blob->data);
+        break;
+      }
       case IOT_DATA_MAP:
       {
         iot_data_map_t * map = (iot_data_map_t*) data;
@@ -238,14 +244,23 @@ iot_data_t * iot_data_alloc_string (const char * val)
   return (iot_data_t*) data;
 }
 
-iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size)
+iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, bool copy)
 {
   assert (data);
   assert (size);
   iot_data_blob_t * blob = malloc (sizeof (*blob));
   blob->base.type = IOT_DATA_BLOB;
   blob->size = size;
-  blob->data = data;
+  blob->release = copy;
+  if (copy)
+  {
+    blob->data = malloc (size);
+    memcpy (blob->data, data, size);
+  }
+  else
+  {
+    blob->data = data;
+  }
   return (iot_data_t*) blob;
 }
 
