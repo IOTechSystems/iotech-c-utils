@@ -54,23 +54,6 @@ do
   esac
 done
 
-# Dependencies
-
-if [ ! -d deps ]
-then
-  mkdir deps
-  mkdir -p ${BROOT}/src/c
-  mkdir ${BROOT}/include
-  
-  # Thread Pool
-  
-  wget -O - https://github.com/IOTechSystems/C-Thread-Pool/archive/SDK-0.1.tar.gz | tar -C deps -z -x -f -
-  cp deps/C-Thread-Pool-SDK-0.1/thpool.c src/c
-  cp deps/C-Thread-Pool-SDK-0.1/thpool.h include/
-  cp deps/C-Thread-Pool-SDK-0.1/thpool.c ${BROOT}/src/c
-  cp deps/C-Thread-Pool-SDK-0.1/thpool.h ${BROOT}/include/
-fi
-
 # Release build
 
 mkdir -p ${BROOT}/release
