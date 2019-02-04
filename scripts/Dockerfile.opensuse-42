@@ -1,8 +1,6 @@
-FROM fedora:27
+FROM opensuse:42.3
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN yum -y update \
-  && yum -y install --setopt=tsflags=nodocs wget git gcc cmake3 make valgrind rpm-build \
-  && yum clean all && rm -rf /var/cache/yum && mkdir -p /iotech-c-utils/build
+RUN zypper --non-interactive in git tar gcc glibc-static cmake make wget rpm-build
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/

@@ -1,5 +1,15 @@
-cmake_minimum_required (VERSION 3.0)
-project (CUTILS LANGUAGES C)
+cmake_minimum_required (VERSION 3.1)
+project (CUtils LANGUAGES C)
+
+# Download dependencies
+
+set (TPOOL_URL https://github.com/IOTechSystems/C-Thread-Pool/archive/SDK-0.1.tar.gz)
+set (TPOOL_DOWNLOAD ${CMAKE_SOURCE_DIR}/deps/SDK-0.1.tar.gz)
+
+if (NOT EXISTS "${TPOOL_DOWNLOAD}")
+  file (DOWNLOAD ${TPOOL_URL} ${TPOOL_DOWNLOAD})
+  message (STATUS "Downloaded ${TPOOL_URL}")
+endif ()
 
 # Package support
 

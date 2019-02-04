@@ -12,3 +12,6 @@ src/c/thpool.c
 include/thpool.h
 *~
 TAGS
+src/cmake-build-debug/
+src/cmake-build-release/
+src/cmake-build-static

@@ -1,138 +1,196 @@
 #!/usr/bin/env groovy
 
-node ("${env.SLAVE}")
+def systems_x86_64 = ['ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','debian-9','debian-8','centos-7','fedora-29','opensuse-42','photon-2.0','photon-3.0'] as String[]
+def systems_arm64 = ['ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','debian-9','centos-7','fedora-29','opensuse-42','photon-3.0'] as String[]
+def systems_arm32 = ['ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','debian-9','debian-8','fedora-29'] as String[]
+def targets = ['x86_64', 'arm64', 'arm32'] as String[]
+def systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32]
+
+def checkoutStage (arch)
 {
-  def arch
-  def real_arch
-  stage ("Checkout")
+  deleteDir ()
+  cleanWs (cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: false)
+  checkout scm
+  currentBuild.displayName = "C Utils ${arch}:${env.BUILD_ID}"
+}
+
+def buildStage (systems, arch)
+{
+  for (int i = 0; i < systems.size(); ++i)
   {
-    checkout scm
-    arch = sh (script: './scripts/arch.sh', returnStdout: true)
-    real_arch = sh (script: './scripts/arch.sh true', returnStdout: true)
-    currentBuild.displayName = "IOTech C Utils ${arch}: ${env.BUILD_ID}"
-  }
-  stage ("Build")
-  {
-    sh "./scripts/docker.sh ${arch} ${env.TYPE}"
-  }
-  stage ("Package")
-  {
-    sh "./scripts/package.sh ${arch} ${env.TYPE}"
-  }
-  stage ("Metrics")
-  {
-    if (env.TYPE == "quick" || env.TYPE == "all")
+    def system = systems[i]
+    if ("${params.System}" == "${system}" || "${params.System}" == 'all')
     {
-      archiveArtifacts artifacts: "build/ubuntu-18.04/release/release.log"
-      archiveArtifacts artifacts: "build/ubuntu-18.04/debug/debug.log"
-    }
-    
-    if (env.TYPE == "alpine" || env.TYPE == "all")
-    {
-      archiveArtifacts artifacts: "build/alpine-3.7/release/release.log"
-      archiveArtifacts artifacts: "build/alpine-3.7/debug/debug.log"
-      archiveArtifacts artifacts: "build/alpine-3.8/release/release.log"
-      archiveArtifacts artifacts: "build/alpine-3.8/debug/debug.log"
-    }
-    
-    if (env.TYPE == "all")
-    {
-      archiveArtifacts artifacts: "build/ubuntu-16.04/release/release.log"
-      archiveArtifacts artifacts: "build/ubuntu-16.04/debug/debug.log"
-      archiveArtifacts artifacts: "build/debian-9/release/release.log"
-      archiveArtifacts artifacts: "build/debian-9/debug/debug.log"
-      archiveArtifacts artifacts: "build/fedora-27/release/release.log"
-      archiveArtifacts artifacts: "build/fedora-27/debug/debug.log"
-      if (arch != "arm64")
-      {
-        archiveArtifacts artifacts: "build/debian-8/release/release.log"
-        archiveArtifacts artifacts: "build/debian-8/debug/debug.log"
-      }
-      if (arch != "arm")
-      {
-        archiveArtifacts artifacts: "build/centos-7/release/release.log"
-        archiveArtifacts artifacts: "build/centos-7/debug/debug.log"
-        archiveArtifacts artifacts: "build/opensuse-42.3/release/release.log"
-        archiveArtifacts artifacts: "build/opensuse-42.3/debug/debug.log"
-      }
-      if (arch == "x86_64")
-      {
-        archiveArtifacts artifacts: "build/photon-2.0/release/release.log"
-        archiveArtifacts artifacts: "build/photon-2.0/debug/debug.log"
-      }
+      sh "./scripts/docker.sh ${system} ${arch} ${env.BUILD_ID}"
     }
   }
-  stage ("Archive")
+}
+
+def metricsStage (systems, arch)
+{
+  publishCoreMetrics (systems, arch)
+  if ("${params.System}" == 'ubuntu-18.04' || "${params.System}" == 'all')
   {
-    if (env.ARCHIVE == "true")
+    publishAdvancedMetrics ('ubuntu-18.04', arch)
+  }
+}
+
+def archiveStage (arch)
+{
+  if ("${params.Archive}" != 'None')
+  {
+    def server = Artifactory.server 'artifactory'
+    publishDebs (arch, server)
+    publishApks (arch, server)
+    publishRpms (arch, server)
+  }
+}
+
+def publishCoreMetrics (systems, arch)
+{
+  for (int i = 0; i < systems.size(); ++i)
+  {
+    if ("${params.System}" == "${systems[i]}" || "${params.System}" == 'all')
     {
-      def server = Artifactory.server 'artifactory'
-      def ext = "tar.gz"
-      def uploadSpec
-      if (env.TYPE == "alpine" )
-      {
-        uploadSpec = 
-        """{
-          "files":
-          [
-            {
-              "pattern": "apk/alpine-3.8/packager/${real_arch}/*.apk",
-              "target": "alpine/alpine-3.8/${real_arch}/"
-            },
-            {
-              "pattern": "apk/alpine-3.7/packager/${real_arch}/*.apk",
-              "target": "alpine/alpine-3.7/${real_arch}/"
-            }
-          ]
-        }"""
-      }
-      if (env.TYPE == "quick")
-      {
-        uploadSpec = 
-        """{
-          "files":
-          [
-            {
-              "pattern": "build/ubuntu-18.04/release/cutils*.${ext}",
-              "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
-            }
-          ]
-        }"""
-      }
-      if ( env.TYPE == "all")
-      {
-        uploadSpec = 
-        """{
-          "files":
-          [
-            {
-              "pattern": "build/ubuntu-18.04/release/cutils*.${ext}",
-              "target": "generic-local/iotech-c-util/ubuntu-18.04/${arch}/"
-            },
-            {
-              "pattern": "apk/alpine-3.8/packager/${real_arch}/*.apk",
-              "target": "alpine/alpine-3.8/${real_arch}/"
-            },
-            {
-              "pattern": "apk/alpine-3.7/packager/${real_arch}/*.apk",
-              "target": "alpine/alpine-3.7/${real_arch}/"
-            }
-          ]
-        }"""
-      }
-      
+      archiveArtifacts (artifacts: "${arch}/${systems[i]}/release/release.log")
+      archiveArtifacts (artifacts: "${arch}/${systems[i]}/debug/debug.log")
+      archiveArtifacts (artifacts: "${arch}/${systems[i]}/static/static.log")
+//      archiveArtifacts (artifacts: "${arch}/${systems[i]}/release/junit-Results.xml")
+    }
+  }
+}
+
+def publishAdvancedMetrics (system, arch)
+{
+  fileOperations ([fileCopyOperation (includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/', flattenFiles: true),
+    fileCopyOperation (includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/', flattenFiles: true)])
+  archiveArtifacts (artifacts: "${arch}/${system}/lcov/html/**")
+  publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-c-utils/src:src')
+  def cppc = scanForIssues (tool: cppCheck (pattern: "${arch}/${system}/release/cppcheck.xml"))
+  publishIssues (issues: [cppc])
+//  junit (testResults: "${arch}/${system}/release/junit-Results.xml")
+  cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
+  def tasks = scanForIssues (tool: taskScanner (highTags: 'FIXME', includePattern: '**/*.c,**/*.h', lowTags: 'COMMENT', normalTags: 'TODO'))
+  publishIssues (issues: [tasks])
+  def gcc = scanForIssues (tool: gcc4 (pattern: "${arch}/${system}/release/release.log"))
+  publishIssues (issues: [gcc])
+}
+
+def publishDebs (arch, server)
+{
+  def debs_x86_64 = ['ubuntu-18.04','ubuntu-16.04','debian-9','debian-8']
+  def debs_arm64 = ['ubuntu-18.04','ubuntu-16.04','debian-9']
+  def debs_arm32 = ['ubuntu-18.04','ubuntu-16.04','debian-9']
+  def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32]
+  def deb_archs = [x86_64: 'x86_64', arm64: 'arm64', arm32: 'armhf']
+  def deb_name = ['ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-9':'stretch','debian-8':'jessie']
+  def repos = ['Release':'debian-local','Development':'debian-dev']
+  def repo = repos["${params.Archive}"]
+  def debs = deb_lists[arch]
+
+  for (int i = 0; i < debs.size(); ++i)
+  {
+    if ("${params.System}" == "${debs[i]}" || "${params.System}" == 'all')
+    {
+      def name = deb_name[debs[i]]
+      def uploadSpec = """{"files":[{
+        "pattern": "${arch}/${debs[i]}/release/cutils*.deb",
+        "target": "${repo}/pool/${name}/",
+        "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
+      }]}"""
       server.upload (uploadSpec)
     }
   }
-  stage ("Index")
+}
+
+def publishApks (arch, server)
+{
+  def apks_x86_64 = ['alpine-3.7','alpine-3.8']
+  def apks_arm64 = ['alpine-3.7','alpine-3.8']
+  def apks_arm32 = ['alpine-3.7','alpine-3.8']
+  def apk_lists = [x86_64: apks_x86_64, arm64: apks_arm64, arm32: apks_arm32]
+  def apk_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
+  def apks = apk_lists[arch]
+  def repos = ['Release':'generic-local','Development':'generic-dev']
+  def repo = repos["${params.Archive}"]
+
+  for (int i = 0; i < apks.size(); ++i)
   {
-    if ((env.TYPE == "alpine" || env.TYPE == "all") && env.ARCHIVE == "true")
+    if ("${params.System}" == "${apks[i]}" || "${params.System}" == 'all')
     {
-      build (job: 'APK-Packaging-INDEX', parameters: [string (name: 'SLAVE', value: 'docker-x86_64'), string (name: 'BUILD', value: 'heads/master')])
+      sh "./scripts/package.sh ${apks[i]} ${arch}"
+      def uploadSpec = """{"files":[
+      {
+        "pattern": "${arch}/${apks[i]}/release/cutils*.tar.gz",
+        "target": "${repo}/${apks[i]}/",
+        "props": "distribution=${apks[i]};architecture=${apk_archs[arch]}"
+      },
+      {
+        "pattern": "apk/${apks[i]}/packager/${arch}/*.apk",
+        "target": "alpine/${apks[i]}/${arch}/"
+      }
+      ]}"""
+      server.upload (uploadSpec)
     }
   }
-  stage ("Clean")
+}
+
+def publishRpms (arch, server)
+{
+  def rpms_x86_64 = ['centos-7','fedora-29','opensuse-42','photon-2.0','photon-3.0']
+  def rpms_arm64 = ['centos-7','fedora-29','opensuse-42','photon-3.0']
+  def rpms_arm32 = ['centos-7','fedora-29','opensuse-42']
+  def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32]
+  def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
+  def rpms = rpm_lists[arch]
+  def rpm_repo = ['centos-7':'rpm-centos7','fedora-29':'rpm-fedora29','opensuse-42':'rpm-opensuse42','photon-2.0':'rpm-photon20','photon-3.0':'rpm-photon30']
+
+  for (int i = 0; i < rpms.size(); ++i)
   {
-    cleanWs ()
+    if ("${params.System}" == "${rpms[i]}" || "${params.System}" == 'all')
+    {
+      def uploadSpec = """{"files":[{
+        "pattern": "${arch}/${rpms[i]}/release/cutils*.rpm",
+        "target": "${rpm_repo[rpms[i]]}",
+        "props": "rpm.metadata.release=${env.BUILD_ID}"
+      }]}"""
+      server.upload (uploadSpec)
+    }
   }
+}
+
+def buildStages (target, systems)
+{
+  node ("docker-${target}")
+  {
+    stage ("Checkout ${target}") { checkoutStage (target)}
+    stage ("Build ${target}") { buildStage (systems, target) }
+    stage ("Metrics ${target}") { metricsStage (systems, target) }
+    stage ("Archive ${target}") { archiveStage (target) }
+  }
+}
+
+buildMap = [:]
+for (t in targets)
+{
+  def target = t
+  def systems = systemMap["${target}"]
+  if (("${params.Arch}" == target || "${params.Arch}" == 'all') &&
+    (systems.count ("${params.System}") != 0 || "${params.System}" == 'all'))
+  {
+    buildMap[target] = { buildStages (target, systems) }
+  }
+}
+buildMap.failFast = false
+
+pipeline
+{
+  agent none
+  parameters
+  {
+    choice (choices: ['None','Development','Release'], description: 'Build Archive Type', name: 'Archive')
+    choice (choices: ['ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','debian-9','debian-8','centos-7','fedora-29','opensuse-42','photon-2.0','photon-3.0','all'], description: 'System to Build', name: 'System')
+    choice (choices: ['x86_64','arm64','arm32', 'all'], description: 'Build Architecture', name: 'Arch')
+  }
+  stages { stage ('All') { steps { script { parallel buildMap }}}}
 }

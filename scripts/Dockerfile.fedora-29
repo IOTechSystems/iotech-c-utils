@@ -1,6 +1,6 @@
-FROM alpine:3.7
+FROM fedora:29
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN apk add --update --no-cache build-base wget git gcc cmake make
+RUN yum -y update && yum -y install --setopt=tsflags=nodocs wget git gcc glibc-static cmake3 make valgrind rpm-build
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
