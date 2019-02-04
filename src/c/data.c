@@ -26,6 +26,7 @@ typedef union iot_data_union_t
 struct iot_data_t
 {
   iot_data_type_t type;
+  bool release;
 };
 
 typedef struct iot_data_value_t
@@ -39,7 +40,6 @@ typedef struct iot_data_blob_t
   iot_data_t base;
   uint8_t * data;
   uint32_t size;
-  bool release;
 } iot_data_blob_t;
 
 typedef struct iot_data_array_t
@@ -63,10 +63,11 @@ typedef struct iot_data_map_t
   iot_data_pair_t * pairs;
 } iot_data_map_t;
 
-static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type)
+static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
 {
   iot_data_value_t * val = calloc (1, sizeof (*val));
   val->base.type = type;
+  val->base.release = copy;
   return val;
 }
 
@@ -129,11 +130,11 @@ void iot_data_free (iot_data_t * data)
   {
     switch (data->type)
     {
-      case IOT_DATA_STRING: free (((iot_data_value_t*) data)->value.str); break;
+      case IOT_DATA_STRING: if (data->release) free (((iot_data_value_t*) data)->value.str); break;
       case IOT_DATA_BLOB:
       {
         iot_data_blob_t * blob = (iot_data_blob_t*) data;
-        if (blob->release) free (blob->data);
+        if (blob->base.release) free (blob->data);
         break;
       }
       case IOT_DATA_MAP:
@@ -168,86 +169,86 @@ void iot_data_free (iot_data_t * data)
 
 iot_data_t * iot_data_alloc_i8 (int8_t val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT8);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT8, false);
   data->value.i8 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_ui8 (uint8_t val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT8);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT8, false);
   data->value.ui8 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_i16 (int16_t val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT16);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT16, false);
   data->value.i16 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_ui16 (uint16_t val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT16);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT16, false);
   data->value.ui16 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_i32 (int32_t val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT32);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT32, false);
   data->value.i32 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_ui32 (uint32_t val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT32);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT32, false);
   data->value.ui32 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_i64 (int64_t val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT64);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT64, false);
   data->value.i64 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_ui64 (uint64_t val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT64);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT64, false);
   data->value.ui64 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_f32 (float val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT32);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT32, false);
   data->value.f32 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_f64 (double val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT64);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT64, false);
   data->value.f64 = val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_bool (bool val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_BOOL);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_BOOL, false);
   data->value.bl = val;
   return (iot_data_t*) data;
 }
 
-iot_data_t * iot_data_alloc_string (const char * val)
+iot_data_t * iot_data_alloc_string (const char * val, bool copy)
 {
   assert (val);
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING);
-  data->value.str = strdup (val);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, copy);
+  data->value.str = copy ? strdup (val) : (char*) val;
   return (iot_data_t*) data;
 }
 
@@ -258,7 +259,7 @@ iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, bool copy)
   iot_data_blob_t * blob = malloc (sizeof (*blob));
   blob->base.type = IOT_DATA_BLOB;
   blob->size = size;
-  blob->release = copy;
+  blob->base.release = copy;
   if (copy)
   {
     blob->data = malloc (size);

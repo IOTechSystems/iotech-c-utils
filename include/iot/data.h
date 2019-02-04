@@ -58,7 +58,7 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
 extern iot_data_t * iot_data_alloc_f32 (float val);
 extern iot_data_t * iot_data_alloc_f64 (double val);
 extern iot_data_t * iot_data_alloc_bool (bool val);
-extern iot_data_t * iot_data_alloc_string (const char * val);
+extern iot_data_t * iot_data_alloc_string (const char * val, bool copy);
 extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, bool copy);
 extern iot_data_t * iot_data_map_alloc (iot_data_type_t key_type);
 extern iot_data_t * iot_data_array_alloc (const uint32_t size);

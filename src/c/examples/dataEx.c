@@ -28,49 +28,49 @@ int main (void)
   }
   for (uint32_t i = 0; i < ARRAY_SIZE; i++)
   {
-    value = iot_data_alloc_string ("Hello");
+    value = iot_data_alloc_string ("Hello", false);
     iot_data_array_add (array, i, value);
   }
   key = iot_data_alloc_i16 (22);
   iot_data_map_add (map, key, array);
 
-  key = iot_data_alloc_string ("I8");
+  key = iot_data_alloc_string ("I8", true);
   value = iot_data_alloc_i8 (-1);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("UI8");
+  key = iot_data_alloc_string ("UI8", false);
   value = iot_data_alloc_ui8 (1);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("I16");
+  key = iot_data_alloc_string ("I16", false);
   value = iot_data_alloc_i16 (-22);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("UI16");
+  key = iot_data_alloc_string ("UI16", false);
   value = iot_data_alloc_ui16 (22);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("I32");
+  key = iot_data_alloc_string ("I32", false);
   value = iot_data_alloc_i32 (-333);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("UI32");
+  key = iot_data_alloc_string ("UI32", false);
   value = iot_data_alloc_ui32 (333);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("I64");
+  key = iot_data_alloc_string ("I64", false);
   value = iot_data_alloc_i64 (-4444);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("UI64");
+  key = iot_data_alloc_string ("UI64", false);
   value = iot_data_alloc_ui64 (4444);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("F32");
+  key = iot_data_alloc_string ("F32", false);
   value = iot_data_alloc_f32 (55555.5);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("F64");
+  key = iot_data_alloc_string ("F64", false);
   value = iot_data_alloc_f64 (666666.6);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("BL");
+  key = iot_data_alloc_string ("BL", false);
   value = iot_data_alloc_bool (true);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("STR");
-  value = iot_data_alloc_string ("Hi");
+  key = iot_data_alloc_string ("STR", false);
+  value = iot_data_alloc_string ("Hi", false);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("Mr");
+  key = iot_data_alloc_string ("Mr", false);
   value = iot_data_alloc_blob (blob, sizeof (blob), true);
   iot_data_map_add (map2, key, value);
 
