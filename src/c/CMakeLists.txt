@@ -58,7 +58,7 @@ set_target_properties (cutils PROPERTIES DEFINE_SYMBOL "IOTECHUTILS_EXPORTS")
 
 # Build modules
 
-# add_subdirectory (cunit)
+add_subdirectory (cunit)
 add_subdirectory (examples)
 # add_subdirectory (utests)
  
