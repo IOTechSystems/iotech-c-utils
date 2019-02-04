@@ -64,10 +64,7 @@ def publishAdvancedMetrics (system, arch)
 {
   fileOperations ([fileCopyOperation (includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/', flattenFiles: true),
     fileCopyOperation (includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/', flattenFiles: true)])
-  archiveArtifacts (artifacts: 'src/c/**/*.c')
-  archiveArtifacts (artifacts: 'include/iot/**/*.h')
   archiveArtifacts (artifacts: "${arch}/${system}/lcov/html/**")
-  archiveArtifacts (artifacts: "${arch}/${system}/release/cppcheck.xml")
   publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-c-utils/src:src')
   def cppc = scanForIssues (tool: cppCheck (pattern: "${arch}/${system}/release/cppcheck.xml"))
   publishIssues (issues: [cppc])
