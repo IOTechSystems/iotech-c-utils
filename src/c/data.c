@@ -5,7 +5,15 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#include <pthread.h>
 #include "iot/data.h"
+
+#define IOT_DATA_MAX_SIZE 64
+
+typedef struct iot_data_base_t
+{
+  struct iot_data_base_t * next;
+} iot_data_base_t;
 
 typedef union iot_data_union_t
 {
@@ -25,6 +33,7 @@ typedef union iot_data_union_t
 
 struct iot_data_t
 {
+  iot_data_t * next;
   iot_data_type_t type;
   bool release;
 };
@@ -51,10 +60,10 @@ typedef struct iot_data_array_t
 
 typedef struct iot_data_pair_t
 {
+  struct iot_data_pair_t * next;
   iot_data_t * key;
   iot_data_t * value;
-  struct iot_data_pair_t * next;
-} iot_data_pair_t ;
+} iot_data_pair_t;
 
 typedef struct iot_data_map_t
 {
@@ -63,9 +72,34 @@ typedef struct iot_data_map_t
   iot_data_pair_t * pairs;
 } iot_data_map_t;
 
+static iot_data_base_t * iot_data_cache = NULL;
+static pthread_mutex_t iot_data_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void * iot_data_factory_alloc (size_t size)
+{
+  assert (size <= IOT_DATA_MAX_SIZE);
+  pthread_mutex_lock (&iot_data_mutex);
+  iot_data_base_t * data = iot_data_cache;
+  if (data)
+  {
+    iot_data_cache = data->next;
+    memset (data, 0, size);
+  }
+  pthread_mutex_unlock (&iot_data_mutex);
+  return data ? data : calloc (1, IOT_DATA_MAX_SIZE);
+}
+
+static void iot_data_factory_free (iot_data_base_t * data)
+{
+  pthread_mutex_lock (&iot_data_mutex);
+  data->next = iot_data_cache;
+  iot_data_cache = data;
+  pthread_mutex_unlock (&iot_data_mutex);
+}
+
 static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
 {
-  iot_data_value_t * val = calloc (1, sizeof (*val));
+  iot_data_value_t * val = iot_data_factory_alloc (sizeof (*val));
   val->base.type = type;
   val->base.release = copy;
   return val;
@@ -102,16 +136,16 @@ const char * iot_data_type_name (const iot_data_t * data)
 iot_data_t * iot_data_map_alloc (iot_data_type_t key_type)
 {
   assert (key_type < IOT_DATA_MAP);
-  iot_data_map_t * map = calloc (1, sizeof (*map));
+  iot_data_map_t * map = iot_data_factory_alloc (sizeof (*map));
   map->base.type = IOT_DATA_MAP;
   map->key_type = key_type;
   return (iot_data_t*) map;
 }
 
-iot_data_t * iot_data_array_alloc (const uint32_t size)
+iot_data_t * iot_data_array_alloc (uint32_t size)
 {
   assert (size);
-  iot_data_array_t * array = calloc (1, sizeof (iot_data_array_t));
+  iot_data_array_t * array = iot_data_factory_alloc (sizeof (*array));
   array->base.type = IOT_DATA_ARRAY;
   array->size = size;
   array->values = calloc (size, sizeof (iot_data_t*));
@@ -147,7 +181,7 @@ void iot_data_free (iot_data_t * data)
           iot_data_free (pair->key);
           iot_data_free (pair->value);
           map->pairs = pair->next;
-          free (pair);
+          iot_data_factory_free ((iot_data_base_t*) pair);
         }
         break;
       }
@@ -163,7 +197,7 @@ void iot_data_free (iot_data_t * data)
       }
       default: break;
     }
-    free (data);
+    iot_data_factory_free ((iot_data_base_t*) data);
   }
 }
 
@@ -256,7 +290,7 @@ iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, bool copy)
 {
   assert (data);
   assert (size);
-  iot_data_blob_t * blob = malloc (sizeof (*blob));
+  iot_data_blob_t * blob = iot_data_factory_alloc (sizeof (*blob));
   blob->base.type = IOT_DATA_BLOB;
   blob->size = size;
   blob->base.release = copy;
@@ -380,7 +414,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   }
   else
   {
-    pair = (iot_data_pair_t*) calloc (1, sizeof (iot_data_pair_t));
+    pair = (iot_data_pair_t*) iot_data_factory_alloc (sizeof (*pair));
     pair->next = mp->pairs;
     mp->pairs = pair;
   }
@@ -399,7 +433,7 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   return (iot_data_t*) (pair ? &pair->value : NULL);
 }
 
-void iot_data_array_add (iot_data_t * array, const uint32_t index, iot_data_t * val)
+void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val)
 {
   iot_data_array_t * arr = (iot_data_array_t*) array;
   assert (array && (array->type == IOT_DATA_ARRAY));
@@ -410,7 +444,7 @@ void iot_data_array_add (iot_data_t * array, const uint32_t index, iot_data_t * 
   arr->values[index] = val;
 }
 
-const iot_data_t * iot_data_array_get (const iot_data_t * array, const uint32_t index)
+const iot_data_t * iot_data_array_get (const iot_data_t * array, uint32_t index)
 {
   iot_data_array_t * arr = (iot_data_array_t*) array;
   assert (array && (array->type == IOT_DATA_ARRAY));
