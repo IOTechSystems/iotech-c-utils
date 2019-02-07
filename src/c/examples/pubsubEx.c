@@ -11,6 +11,26 @@
 #define PUB_ITERS 1000000
 
 static void data_dump (const iot_data_t * data);
+static void publish (iot_coredata_pub_t * pub, uint32_t iters);
+static void subscriber_callback (iot_data_t * data, void * self, const char * match);
+
+int main (void)
+{
+  time_t stamp;
+  iot_coredata_t * cd = iot_coredata_alloc ();
+  iot_coredata_sub_t * sub = iot_coredata_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
+  iot_coredata_pub_t * pub = iot_coredata_pub_alloc (cd, NULL, NULL, "test/tube");
+
+  iot_data_init ();
+  stamp = time (NULL);
+  printf (" Samples: %d\n Start: %s", PUB_ITERS, ctime (&stamp));
+  publish (pub, PUB_ITERS);
+  stamp = time (NULL);
+  printf (" Stop: %s", ctime (&stamp));
+  (void) sub;
+  iot_coredata_free (cd);
+  iot_data_fini ();
+}
 
 static void publish (iot_coredata_pub_t * pub, uint32_t iters)
 {
@@ -59,24 +79,6 @@ static void subscriber_callback (iot_data_t * data, void * self, const char * ma
 //  printf ("Sub (%s): ", match);
 //  data_dump (data);
 //  printf ("\n");
-}
-
-int main (void)
-{
-  time_t stamp;
-  iot_coredata_t * cd = iot_coredata_alloc ();
-  iot_coredata_sub_t * sub = iot_coredata_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
-  iot_coredata_pub_t * pub = iot_coredata_pub_alloc (cd, NULL, NULL, "test/tube");
-
-  iot_data_init ();
-  stamp = time (NULL);
-  printf (" Samples: %d\n Start: %s", PUB_ITERS, ctime (&stamp));
-  publish (pub, PUB_ITERS);
-  stamp = time (NULL);
-  printf (" Stop: %s", ctime (&stamp));
-  (void) sub;
-  iot_coredata_free (cd);
-  iot_data_fini ();
 }
 
 static void data_dump (const iot_data_t * data)
