@@ -9,14 +9,13 @@
 
 #define ARRAY_SIZE 6
 
-#ifdef NDEBUG
-#define PUB_ITERS 1000000
-#else
+#ifndef NDEBUG
 #define PUB_ITERS 10
 static void data_dump (const iot_data_t * data);
+#else
+#define PUB_ITERS 1000000
 #endif
 
-static void data_dump (const iot_data_t * data);
 static void publish (iot_coredata_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
 
