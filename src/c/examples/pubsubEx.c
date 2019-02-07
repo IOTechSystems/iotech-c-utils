@@ -7,13 +7,13 @@
 
 #include "iot/coredata.h"
 
-#define ARRAY_SIZE 6
+#define ARRAY_SIZE 3
 
 #ifndef NDEBUG
 #define PUB_ITERS 10
 static void data_dump (const iot_data_t * data);
 #else
-#define PUB_ITERS 1000000
+#define PUB_ITERS 10000000
 #endif
 
 static void publish (iot_coredata_pub_t * pub, uint32_t iters);
@@ -39,33 +39,31 @@ int main (void)
 
 static void publish (iot_coredata_pub_t * pub, uint32_t iters)
 {
-  iot_data_t * map = iot_data_map_alloc (IOT_DATA_INT16);
+  iot_data_t * map = iot_data_map_alloc (IOT_DATA_STRING);
   iot_data_t * array = iot_data_array_alloc (ARRAY_SIZE);
   iot_data_t * key;
   iot_data_t * value;
 
   // Create fixed part of sample
 
-  for (uint16_t k = 1; k < 10; k++)
-  {
-    key = iot_data_alloc_i16 (k);
-    value = iot_data_alloc_i32 (k * 2);
-    iot_data_map_add (map, key, value);
-  }
-  for (uint32_t i = 0; i < ARRAY_SIZE; i++)
-  {
-    value = iot_data_alloc_string ("Hello", false);
-    iot_data_array_add (array, i, value);
-  }
-  key = iot_data_alloc_i16 (22);
+  value = iot_data_alloc_i32 (11);
+  iot_data_array_add (array, 0, value);
+  value = iot_data_alloc_i32 (22);
+  iot_data_array_add (array, 1, value);
+  value = iot_data_alloc_i32 (33);
+  iot_data_array_add (array, 2, value);
+  key = iot_data_alloc_string ("Coords", false);
   iot_data_map_add (map, key, array);
+  key = iot_data_alloc_string ("Origin", false);
+  value = iot_data_alloc_string ("Sensor-54", false);
+  iot_data_map_add (map, key, value);
 
   while (iters--)
   {
     // Update first field for each iteration
 
-    key = iot_data_alloc_i16 (0);
-    value = iot_data_alloc_i32 (iters);
+    key = iot_data_alloc_string ("#", false);
+    value = iot_data_alloc_i32 (PUB_ITERS - iters);
     iot_data_map_add (map, key, value);
 
     // Increment map ref count or publish will delete
