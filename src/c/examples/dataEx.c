@@ -13,6 +13,8 @@ static void data_dump (const iot_data_t * data);
 
 int main (void)
 {
+  iot_data_init ();
+
   iot_data_t * map = iot_data_map_alloc (IOT_DATA_INT16);
   iot_data_t * map2 = iot_data_map_alloc (IOT_DATA_STRING);
   iot_data_t * array = iot_data_array_alloc (ARRAY_SIZE);
@@ -80,6 +82,7 @@ int main (void)
   data_dump (map);
   printf ("\n");
   iot_data_free (map);
+  iot_data_fini ();
 }
 
 static void data_dump (const iot_data_t * data)
