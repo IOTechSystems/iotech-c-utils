@@ -18,21 +18,25 @@ static void data_dump (const iot_data_t * data);
 
 static void publish (iot_coredata_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
+static iot_data_t * publisher_callback (void * self);
 
 int main (void)
 {
   time_t stamp;
   iot_coredata_t * cd = iot_coredata_alloc ();
   iot_coredata_sub_t * sub = iot_coredata_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
-  iot_coredata_pub_t * pub = iot_coredata_pub_alloc (cd, NULL, NULL, "test/tube");
+  iot_coredata_pub_t * pub = iot_coredata_pub_alloc (cd, NULL, publisher_callback, "test/tube");
 
   iot_data_init ();
+  iot_coredata_start (cd);
   stamp = time (NULL);
   printf ("Samples: %d\nStart: %s", PUB_ITERS, ctime (&stamp));
   publish (pub, PUB_ITERS);
   stamp = time (NULL);
   printf ("Stop: %s", ctime (&stamp));
   (void) sub;
+  sleep (10);
+  iot_coredata_stop (cd);
   iot_coredata_free (cd);
   iot_data_fini ();
 }
@@ -85,6 +89,18 @@ static void subscriber_callback (iot_data_t * data, void * self, const char * ma
   data_dump (data);
   printf ("\n");
 #endif
+}
+
+static iot_data_t * publisher_callback (void * self)
+{
+  iot_data_t * map = iot_data_map_alloc (IOT_DATA_STRING);
+  iot_data_t * key = iot_data_alloc_string ("Origin", false);
+  iot_data_t * value = iot_data_alloc_string ("Sensor-7", false);
+  iot_data_map_add (map, key, value);
+  key = iot_data_alloc_string ("Temp", false);
+  value = iot_data_alloc_f32 (27.34);
+  iot_data_map_add (map, key, value);
+  return map;
 }
 
 #ifndef NDEBUG

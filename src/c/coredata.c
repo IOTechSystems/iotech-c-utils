@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include "iot/scheduler.h"
 #include "iot/coredata.h"
 
 typedef struct iot_coredata_pubsub_t
@@ -15,6 +16,7 @@ struct iot_coredata_pub_t
   iot_coredata_pubsub_t base;
   char * topic;
   iot_data_pub_cb_fn_t callback;
+  iot_schedule sc;
 };
 
 struct iot_coredata_sub_t
@@ -37,6 +39,8 @@ struct iot_coredata_t
   iot_coredata_sub_t * subscribers;
   iot_coredata_pub_t * publishers;
   iot_coredata_match_t * matches;
+  threadpool thpool;
+  iot_scheduler schd;
   pthread_rwlock_t lock;
 };
 
@@ -145,11 +149,32 @@ static inline bool iot_coredata_pubsub_match_locked (iot_coredata_pub_t * pub, i
   return strcmp (pub->topic, sub->pattern) == 0; // TODO: Implement pattern match
 }
 
+static void iot_coredata_sched_fn (void * arg)
+{
+  iot_coredata_pub_t * pub = (iot_coredata_pub_t*) arg;
+  iot_data_t * data = (pub->callback) (pub->base.self);
+  iot_coredata_publish (pub, data);
+}
+
 iot_coredata_t * iot_coredata_alloc (void)
 {
   iot_coredata_t * cd = calloc (1, sizeof (*cd));
   pthread_rwlock_init (&cd->lock, NULL);
+  cd->thpool = thpool_init (4);
+  cd->schd = iot_scheduler_init (&cd->thpool);
   return cd;
+}
+
+void iot_coredata_start (iot_coredata_t * cd)
+{
+  assert (cd);
+  iot_scheduler_start (cd->schd);
+}
+
+void iot_coredata_stop (iot_coredata_t * cd)
+{
+  assert (cd);
+  iot_scheduler_stop (cd->schd);
 }
 
 void iot_coredata_free (iot_coredata_t * cd)
@@ -168,6 +193,9 @@ void iot_coredata_free (iot_coredata_t * cd)
       iot_coredata_sub_free_locked (cd->subscribers);
       pthread_rwlock_unlock (&cd->lock);
     }
+    iot_scheduler_fini (cd->schd);
+    sleep (1);
+    thpool_destroy (cd->thpool);
     pthread_rwlock_destroy (&cd->lock);
     free (cd);
   }
@@ -234,7 +262,6 @@ iot_coredata_sub_t * iot_coredata_sub_alloc (iot_coredata_t * cd, void * self, i
   return sub;
 }
 
-
 void iot_coredata_sub_free (iot_coredata_sub_t * sub)
 {
   if (sub)
@@ -263,6 +290,12 @@ iot_coredata_pub_t * iot_coredata_pub_alloc (iot_coredata_t * cd, void * self, i
       cd->publishers->base.prev = &pub->base;
     }
     cd->publishers = pub;
+    if (callback)
+    {
+      pub->callback = callback;
+      pub->sc = iot_schedule_create (cd->schd, iot_coredata_sched_fn, pub, IOT_MS_TO_NS (500), 0, 0);
+      iot_schedule_add (cd->schd, pub->sc);
+    }
     iot_coredata_match_pub_locked (cd, pub);
   }
   pthread_rwlock_unlock (&cd->lock);
@@ -273,6 +306,10 @@ void iot_coredata_pub_free (iot_coredata_pub_t * pub)
 {
   if (pub)
   {
+    if (pub->sc)
+    {
+      iot_schedule_remove (pub->base.coredata->schd, pub->sc);
+    }
     pthread_rwlock_wrlock (&pub->base.coredata->lock);
     iot_coredata_pub_free_locked (pub);
     pthread_rwlock_unlock (&pub->base.coredata->lock);
