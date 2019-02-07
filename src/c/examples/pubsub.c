@@ -20,14 +20,25 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
 static iot_data_t * publisher_callback (void * self);
 
+static iot_data_t * get_config (void)
+{
+  iot_data_init ();
+  iot_data_t * config = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * key = iot_data_alloc_string ("Interval", false);
+  iot_data_t * value = iot_data_alloc_ui64 (1000000000);
+  iot_data_map_add (config, key, value);
+  return config;
+}
+
 int main (void)
 {
   time_t stamp;
+  iot_data_t * config = get_config ();
   iot_coredata_t * cd = iot_coredata_alloc ();
+  iot_coredata_init (cd, config);
+  iot_data_free (config);
   iot_coredata_sub_t * sub = iot_coredata_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
   iot_coredata_pub_t * pub = iot_coredata_pub_alloc (cd, NULL, publisher_callback, "test/tube");
-
-  iot_data_init ();
   iot_coredata_start (cd);
   stamp = time (NULL);
   printf ("Samples: %d\nStart: %s", PUB_ITERS, ctime (&stamp));
@@ -43,8 +54,8 @@ int main (void)
 
 static void publish (iot_coredata_pub_t * pub, uint32_t iters)
 {
-  iot_data_t * map = iot_data_map_alloc (IOT_DATA_STRING);
-  iot_data_t * array = iot_data_array_alloc (ARRAY_SIZE);
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * array = iot_data_alloc_array (ARRAY_SIZE);
   iot_data_t * key;
   iot_data_t * value;
   uint32_t index = 0;
@@ -93,7 +104,7 @@ static void subscriber_callback (iot_data_t * data, void * self, const char * ma
 
 static iot_data_t * publisher_callback (void * self)
 {
-  iot_data_t * map = iot_data_map_alloc (IOT_DATA_STRING);
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * key = iot_data_alloc_string ("Origin", false);
   iot_data_t * value = iot_data_alloc_string ("Sensor-7", false);
   iot_data_map_add (map, key, value);

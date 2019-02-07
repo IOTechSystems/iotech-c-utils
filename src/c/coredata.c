@@ -41,6 +41,7 @@ struct iot_coredata_t
   iot_coredata_match_t * matches;
   threadpool thpool;
   iot_scheduler schd;
+  uint64_t interval;
   pthread_rwlock_t lock;
 };
 
@@ -162,7 +163,23 @@ iot_coredata_t * iot_coredata_alloc (void)
   pthread_rwlock_init (&cd->lock, NULL);
   cd->thpool = thpool_init (4);
   cd->schd = iot_scheduler_init (&cd->thpool);
+  cd->interval = IOT_MS_TO_NS (500);
   return cd;
+}
+
+void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
+{
+  assert (cd);
+  if (config)
+  {
+    iot_data_t * key = iot_data_alloc_string ("Interval", false);
+    const iot_data_t * value = iot_data_map_get (config, key);
+    iot_data_free (key);
+    if (value)
+    {
+      cd->interval = iot_data_get_ui64 (value);
+    }
+  }
 }
 
 void iot_coredata_start (iot_coredata_t * cd)
@@ -293,7 +310,7 @@ iot_coredata_pub_t * iot_coredata_pub_alloc (iot_coredata_t * cd, void * self, i
     if (callback)
     {
       pub->callback = callback;
-      pub->sc = iot_schedule_create (cd->schd, iot_coredata_sched_fn, pub, IOT_MS_TO_NS (500), 0, 0);
+      pub->sc = iot_schedule_create (cd->schd, iot_coredata_sched_fn, pub, cd->interval, 0, 0);
       iot_schedule_add (cd->schd, pub->sc);
     }
     iot_coredata_match_pub_locked (cd, pub);

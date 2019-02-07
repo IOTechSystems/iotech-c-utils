@@ -156,7 +156,7 @@ const char * iot_data_type_name (const iot_data_t * data)
   return type_names[data->type];
 }
 
-iot_data_t * iot_data_map_alloc (iot_data_type_t key_type)
+iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)
 {
   assert (key_type < IOT_DATA_MAP);
   iot_data_map_t * map = iot_data_factory_alloc (sizeof (*map));
@@ -165,7 +165,7 @@ iot_data_t * iot_data_map_alloc (iot_data_type_t key_type)
   return (iot_data_t*) map;
 }
 
-iot_data_t * iot_data_array_alloc (uint32_t size)
+iot_data_t * iot_data_alloc_array (uint32_t size)
 {
   assert (size);
   iot_data_array_t * array = iot_data_factory_alloc (sizeof (*array));
@@ -465,7 +465,7 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   assert (key && key->type == mp->key_type);
 
   iot_data_pair_t * pair = iot_data_map_find (mp, key);
-  return (iot_data_t*) (pair ? &pair->value : NULL);
+  return pair ? pair->value : NULL;
 }
 
 void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val)
