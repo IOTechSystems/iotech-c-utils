@@ -8,7 +8,13 @@
 #include "iot/coredata.h"
 
 #define ARRAY_SIZE 6
+
+#ifdef NDEBUG
 #define PUB_ITERS 1000000
+#else
+#define PUB_ITERS 10
+static void data_dump (const iot_data_t * data);
+#endif
 
 static void data_dump (const iot_data_t * data);
 static void publish (iot_coredata_pub_t * pub, uint32_t iters);
@@ -76,10 +82,14 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters)
 
 static void subscriber_callback (iot_data_t * data, void * self, const char * match)
 {
-//  printf ("Sub (%s): ", match);
-//  data_dump (data);
-//  printf ("\n");
+#ifndef NDEBUG
+  printf ("Sub (%s): ", match);
+  data_dump (data);
+  printf ("\n");
+#endif
 }
+
+#ifndef NDEBUG
 
 static void data_dump (const iot_data_t * data)
 {
@@ -143,3 +153,4 @@ static void data_dump (const iot_data_t * data)
     }
   }
 }
+#endif

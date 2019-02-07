@@ -93,6 +93,7 @@ then
 
   c/examples/schedulerEx
   c/examples/dataEx
+  c/examples/pubsubEx
 
   # Generate coverage html report
 
@@ -118,6 +119,7 @@ then
   VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/schedulerEx
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/dataEx
+  valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/pubsubEx
 fi
 
 # Allow deletion of generated files in mounted volume
