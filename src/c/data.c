@@ -68,6 +68,8 @@ typedef struct iot_data_map_t
   iot_data_pair_t * pairs;
 } iot_data_map_t;
 
+// Data cache and guard mutex
+
 static iot_data_t * iot_data_cache = NULL;
 static pthread_mutex_t iot_data_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -218,8 +220,7 @@ static void iot_data_free_locked (iot_data_t * data)
         free (array->values);
         break;
       }
-      default:
-        break;
+      default: break;
     }
     iot_data_factory_free_locked (data);
   }

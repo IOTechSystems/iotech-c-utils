@@ -28,10 +28,10 @@ int main (void)
 
   iot_data_init ();
   stamp = time (NULL);
-  printf (" Samples: %d\n Start: %s", PUB_ITERS, ctime (&stamp));
+  printf ("Samples: %d\nStart: %s", PUB_ITERS, ctime (&stamp));
   publish (pub, PUB_ITERS);
   stamp = time (NULL);
-  printf (" Stop: %s", ctime (&stamp));
+  printf ("Stop: %s", ctime (&stamp));
   (void) sub;
   iot_coredata_free (cd);
   iot_data_fini ();
@@ -43,15 +43,16 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters)
   iot_data_t * array = iot_data_array_alloc (ARRAY_SIZE);
   iot_data_t * key;
   iot_data_t * value;
+  uint32_t index = 0;
 
   // Create fixed part of sample
 
   value = iot_data_alloc_i32 (11);
-  iot_data_array_add (array, 0, value);
+  iot_data_array_add (array, index++, value);
   value = iot_data_alloc_i32 (22);
-  iot_data_array_add (array, 1, value);
+  iot_data_array_add (array, index++, value);
   value = iot_data_alloc_i32 (33);
-  iot_data_array_add (array, 2, value);
+  iot_data_array_add (array, index++, value);
   key = iot_data_alloc_string ("Coords", false);
   iot_data_map_add (map, key, array);
   key = iot_data_alloc_string ("Origin", false);
