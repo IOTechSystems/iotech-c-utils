@@ -10,11 +10,6 @@
 
 #define IOT_DATA_MAX_SIZE 64
 
-typedef struct iot_data_base_t
-{
-  struct iot_data_base_t * next;
-} iot_data_base_t;
-
 typedef union iot_data_union_t
 {
   int8_t i8;
@@ -34,6 +29,7 @@ typedef union iot_data_union_t
 struct iot_data_t
 {
   iot_data_t * next;
+  uint32_t refs;
   iot_data_type_t type;
   bool release;
 };
@@ -60,7 +56,7 @@ typedef struct iot_data_array_t
 
 typedef struct iot_data_pair_t
 {
-  struct iot_data_pair_t * next;
+  iot_data_t base;
   iot_data_t * key;
   iot_data_t * value;
 } iot_data_pair_t;
@@ -72,29 +68,29 @@ typedef struct iot_data_map_t
   iot_data_pair_t * pairs;
 } iot_data_map_t;
 
-static iot_data_base_t * iot_data_cache = NULL;
+static iot_data_t * iot_data_cache = NULL;
 static pthread_mutex_t iot_data_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void * iot_data_factory_alloc (size_t size)
 {
   assert (size <= IOT_DATA_MAX_SIZE);
   pthread_mutex_lock (&iot_data_mutex);
-  iot_data_base_t * data = iot_data_cache;
+  iot_data_t * data = iot_data_cache;
   if (data)
   {
     iot_data_cache = data->next;
     memset (data, 0, size);
   }
   pthread_mutex_unlock (&iot_data_mutex);
-  return data ? data : calloc (1, IOT_DATA_MAX_SIZE);
+  data = data ? data : calloc (1, IOT_DATA_MAX_SIZE);
+  data->refs = 1;
+  return data;
 }
 
-static void iot_data_factory_free (iot_data_base_t * data)
+static inline void iot_data_factory_free_locked (iot_data_t * data)
 {
-  pthread_mutex_lock (&iot_data_mutex);
   data->next = iot_data_cache;
   iot_data_cache = data;
-  pthread_mutex_unlock (&iot_data_mutex);
 }
 
 static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
@@ -123,6 +119,31 @@ static bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
     }
   }
   return false;
+}
+
+void iot_data_init (void)
+{
+}
+
+void iot_data_fini (void)
+{
+  iot_data_t *data;
+  pthread_mutex_lock (&iot_data_mutex);
+  while (iot_data_cache)
+  {
+    data = iot_data_cache;
+    iot_data_cache = data->next;
+    free (data);
+  }
+  pthread_mutex_unlock (&iot_data_mutex);
+}
+
+void iot_data_addref (iot_data_t * data)
+{
+  assert (data);
+  pthread_mutex_lock (&iot_data_mutex);
+  data->refs++;
+  pthread_mutex_unlock (&iot_data_mutex);
 }
 
 const char * iot_data_type_name (const iot_data_t * data)
@@ -158,46 +179,59 @@ iot_data_type_t iot_data_type (const iot_data_t * data)
   return data->type;
 }
 
-void iot_data_free (iot_data_t * data)
+static void iot_data_free_locked (iot_data_t * data)
 {
-  if (data)
+  if (--data->refs <= 0)
   {
     switch (data->type)
     {
-      case IOT_DATA_STRING: if (data->release) free (((iot_data_value_t*) data)->value.str); break;
+      case IOT_DATA_STRING:
+        if (data->release) free (((iot_data_value_t *) data)->value.str);
+        break;
       case IOT_DATA_BLOB:
       {
-        iot_data_blob_t * blob = (iot_data_blob_t*) data;
+        iot_data_blob_t *blob = (iot_data_blob_t *) data;
         if (blob->base.release) free (blob->data);
         break;
       }
       case IOT_DATA_MAP:
       {
-        iot_data_map_t * map = (iot_data_map_t*) data;
-        iot_data_pair_t * pair;
+        iot_data_map_t *map = (iot_data_map_t *) data;
+        iot_data_pair_t *pair;
         while (map->pairs)
         {
           pair = map->pairs;
-          iot_data_free (pair->key);
-          iot_data_free (pair->value);
-          map->pairs = pair->next;
-          iot_data_factory_free ((iot_data_base_t*) pair);
+          iot_data_free_locked (pair->key);
+          iot_data_free_locked (pair->value);
+          map->pairs = (iot_data_pair_t *) pair->base.next;
+          iot_data_factory_free_locked (&pair->base);
         }
         break;
       }
       case IOT_DATA_ARRAY:
       {
-        iot_data_array_t * array = (iot_data_array_t*) data;
+        iot_data_array_t *array = (iot_data_array_t *) data;
         for (uint32_t i = 0; i < array->size; i++)
         {
-          iot_data_free (array->values[i]);
+          iot_data_free_locked (array->values[i]);
         }
         free (array->values);
         break;
       }
-      default: break;
+      default:
+        break;
     }
-    iot_data_factory_free ((iot_data_base_t*) data);
+    iot_data_factory_free_locked (data);
+  }
+}
+
+void iot_data_free (iot_data_t * data)
+{
+  if (data)
+  {
+    pthread_mutex_lock (&iot_data_mutex);
+    iot_data_free_locked (data);
+    pthread_mutex_unlock (&iot_data_mutex);
   }
 }
 
@@ -394,7 +428,7 @@ static iot_data_pair_t * iot_data_map_find (iot_data_map_t * map, const iot_data
     {
       break;
     }
-    pair = pair->next;
+    pair = (iot_data_pair_t*) pair->base.next;
   }
   return pair;
 }
@@ -415,7 +449,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   else
   {
     pair = (iot_data_pair_t*) iot_data_factory_alloc (sizeof (*pair));
-    pair->next = mp->pairs;
+    pair->base.next = &mp->pairs->base;
     mp->pairs = pair;
   }
   pair->value = val;
@@ -468,7 +502,7 @@ void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
 
 bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
 {
-  iter->pair = iter->pair ? iter->pair->next : iter->map->pairs;
+  iter->pair = iter->pair ? (iot_data_pair_t*) iter->pair->base.next : iter->map->pairs;
   return (iter->pair != NULL);
 }
 

@@ -298,4 +298,5 @@ void iot_coredata_publish (iot_coredata_pub_t * pub, iot_data_t * data)
     match = match->next;
   }
   pthread_rwlock_unlock (&cd->lock);
+  iot_data_free (data);
 }
