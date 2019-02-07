@@ -107,11 +107,11 @@ bool iot_log_tofile (const char *dest, const char *subsystem, iot_loglevel l, ti
 
 void logthis (iot_logging_client *lc, iot_loglevel l, const char *fmt, va_list ap)
 {
-  char *str = alloca (1024);
+  char str [1024];
   bool ok = false;
   time_t created = time (NULL);
 
-  vsnprintf (str, 1024, fmt, ap);
+  vsnprintf (str, sizeof (str), fmt, ap);
 
   // TODO: Queue this log message and signal the processing thread
 
