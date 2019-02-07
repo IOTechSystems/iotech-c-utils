@@ -9,7 +9,7 @@ def systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_ar
 def checkoutStage (arch)
 {
   deleteDir ()
-  cleanWs (cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: false)
+  cleanWs (cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true)
   checkout scm
   currentBuild.displayName = "C Utils ${arch}:${env.BUILD_ID}"
 }
