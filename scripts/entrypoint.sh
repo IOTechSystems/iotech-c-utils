@@ -91,9 +91,9 @@ then
 
   # Run executables
 
-  c/examples/schedulerEx
-  c/examples/dataEx
-  c/examples/pubsubEx
+  c/examples/scheduler
+  c/examples/data
+  c/examples/pubsub
 
   # Generate coverage html report
 
@@ -117,9 +117,9 @@ if [ "$VALG" = "true" ]
 then
   cd ${BROOT}/debug
   VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
-  valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/schedulerEx
-  valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/dataEx
-  valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/pubsubEx
+  valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler
+  valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data
+  valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/pubsub
 fi
 
 # Allow deletion of generated files in mounted volume

@@ -15,6 +15,7 @@ add_executable(iotech_c_utils
         scripts/docker.sh
         scripts/Dockerfile.alpine-3.7
         scripts/Dockerfile.alpine-3.8
+        scripts/Dockerfile.alpine-3.9
         scripts/Dockerfile.centos-7
         scripts/Dockerfile.debian-8
         scripts/Dockerfile.debian-9
@@ -28,7 +29,9 @@ add_executable(iotech_c_utils
         scripts/Jenkinsfile.all
         scripts/Jenkinsfile.check
         scripts/package.sh
-        src/c/examples/schedulerEx.c
+        src/c/examples/scheduler.c
+        src/c/examples/data.c
+        src/c/examples/pubsub.c
         src/c/logging.c
         src/c/scheduler.c
         src/CMakeLists.txt
