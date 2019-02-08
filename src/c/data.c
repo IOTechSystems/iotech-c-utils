@@ -468,6 +468,12 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   return pair ? pair->value : NULL;
 }
 
+iot_data_type_t iot_data_map_get_key_type (const iot_data_t * map)
+{
+  assert (map);
+  return ((iot_data_map_t*) map)->key_type;
+}
+
 void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val)
 {
   iot_data_array_t * arr = (iot_data_array_t*) array;

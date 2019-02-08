@@ -82,7 +82,8 @@ extern const char * iot_data_get_string (const iot_data_t * data);
 extern const uint8_t * iot_data_get_blob (const iot_data_t * data, uint32_t * size);
 
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
-extern const iot_data_t * iot_data_map_get (const iot_data_t * , const iot_data_t * key);
+extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key);
+extern iot_data_type_t iot_data_map_get_key_type (const iot_data_t * map);
 
 extern void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val);
 extern const iot_data_t * iot_data_array_get (const iot_data_t * array, uint32_t index);
