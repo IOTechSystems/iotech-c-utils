@@ -341,79 +341,79 @@ iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, bool copy)
   return (iot_data_t*) blob;
 }
 
-int8_t iot_data_get_i8 (const iot_data_t * data)
+int8_t iot_data_i8 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT8));
   return ((iot_data_value_t*) data)->value.i8;
 }
 
-uint8_t iot_data_get_ui8 (const iot_data_t * data)
+uint8_t iot_data_ui8 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT8));
   return ((iot_data_value_t*) data)->value.ui8;
 }
 
-int16_t iot_data_get_i16 (const iot_data_t * data)
+int16_t iot_data_i16 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT16));
   return ((iot_data_value_t*) data)->value.i16;
 }
 
-uint16_t iot_data_get_ui16 (const iot_data_t * data)
+uint16_t iot_data_ui16 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT16));
   return ((iot_data_value_t*) data)->value.ui16;
 }
 
-int32_t iot_data_get_i32 (const iot_data_t * data)
+int32_t iot_data_i32 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT32));
   return ((iot_data_value_t*) data)->value.i32;
 }
 
-uint32_t iot_data_get_ui32 (const iot_data_t * data)
+uint32_t iot_data_ui32 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT32));
   return ((iot_data_value_t*) data)->value.ui32;
 }
 
-int64_t iot_data_get_i64 (const iot_data_t * data)
+int64_t iot_data_i64 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT64));
   return ((iot_data_value_t*) data)->value.i64;
 }
 
-uint64_t iot_data_get_ui64 (const iot_data_t * data)
+uint64_t iot_data_ui64 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT64));
   return ((iot_data_value_t*) data)->value.ui64;
 }
 
-float iot_data_get_f32 (const iot_data_t * data)
+float iot_data_f32 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_FLOAT32));
   return ((iot_data_value_t*) data)->value.f32;
 }
 
-double iot_data_get_f64 (const iot_data_t * data)
+double iot_data_f64 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_FLOAT64));
   return ((iot_data_value_t*) data)->value.f64;
 }
 
-bool iot_data_get_bool (const iot_data_t * data)
+bool iot_data_bool (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_BOOL));
   return ((iot_data_value_t*) data)->value.bl;
 }
 
-const char * iot_data_get_string (const iot_data_t * data)
+const char * iot_data_string (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_STRING));
   return ((iot_data_value_t*) data)->value.str;
 }
 
-const uint8_t * iot_data_get_blob (const iot_data_t * data, uint32_t * size)
+const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size)
 {
   assert (data && (data->type == IOT_DATA_BLOB));
   if (size) *size =  ((iot_data_blob_t*) data)->size;
@@ -468,7 +468,7 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   return pair ? pair->value : NULL;
 }
 
-iot_data_type_t iot_data_map_get_key_type (const iot_data_t * map)
+iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 {
   assert (map);
   return ((iot_data_map_t*) map)->key_type;
@@ -513,12 +513,12 @@ bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
   return (iter->pair != NULL);
 }
 
-const iot_data_t * iot_data_map_iter_get_key (const iot_data_map_iter_t * iter)
+const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * iter)
 {
   return (iot_data_t*)((iter->pair) ? iter->pair->key : NULL);
 }
 
-const iot_data_t * iot_data_map_iter_get_value (const iot_data_map_iter_t * iter)
+const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter)
 {
   return (iot_data_t*)((iter->pair) ? iter->pair->value : NULL);
 }
@@ -537,12 +537,12 @@ bool iot_data_array_iter_next (iot_data_array_iter_t * iter)
   return (iter->index <= iter->array->size);
 }
 
-uint32_t iot_data_array_iter_get_index (const iot_data_array_iter_t * iter)
+uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter)
 {
   return (iter->index - 1);
 }
 
-const iot_data_t * iot_data_array_iter_get_value (const iot_data_array_iter_t * iter)
+const iot_data_t * iot_data_array_iter_value (const iot_data_array_iter_t * iter)
 {
   return (iter->index <= iter->array->size) ? iter->array->values[iter->index - 1] : NULL;
 }

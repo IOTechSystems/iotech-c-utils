@@ -177,7 +177,7 @@ void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
     iot_data_free (key);
     if (value)
     {
-      cd->interval = iot_data_get_ui64 (value);
+      cd->interval = iot_data_ui64 (value);
     }
   }
 }

@@ -120,22 +120,22 @@ static void data_dump (const iot_data_t * data)
 {
   switch (iot_data_type (data))
   {
-    case IOT_DATA_INT8: printf ("%d", iot_data_get_i8 (data)); break;
-    case IOT_DATA_UINT8: printf ("%u", iot_data_get_ui8 (data)); break;
-    case IOT_DATA_INT16: printf ("%d", iot_data_get_i16 (data)); break;
-    case IOT_DATA_UINT16: printf ("%u", iot_data_get_ui16 (data)); break;
-    case IOT_DATA_INT32: printf ("%d", iot_data_get_i32 (data)); break;
-    case IOT_DATA_UINT32: printf ("%u", iot_data_get_ui32 (data)); break;
-    case IOT_DATA_INT64: printf ("%"PRId64, iot_data_get_i64 (data)); break;
-    case IOT_DATA_UINT64: printf ("%"PRIu64, iot_data_get_ui64 (data)); break;
-    case IOT_DATA_FLOAT32: printf ("%f", iot_data_get_f32 (data)); break;
-    case IOT_DATA_FLOAT64: printf ("%lf", iot_data_get_f64 (data)); break;
-    case IOT_DATA_BOOL: printf ("%s", iot_data_get_bool (data) ? "true" : "false"); break;
-    case IOT_DATA_STRING: printf ("%s", iot_data_get_string (data)); break;
+    case IOT_DATA_INT8: printf ("%d", iot_data_i8 (data)); break;
+    case IOT_DATA_UINT8: printf ("%u", iot_data_ui8 (data)); break;
+    case IOT_DATA_INT16: printf ("%d", iot_data_i16 (data)); break;
+    case IOT_DATA_UINT16: printf ("%u", iot_data_ui16 (data)); break;
+    case IOT_DATA_INT32: printf ("%d", iot_data_i32 (data)); break;
+    case IOT_DATA_UINT32: printf ("%u", iot_data_ui32 (data)); break;
+    case IOT_DATA_INT64: printf ("%"PRId64, iot_data_i64 (data)); break;
+    case IOT_DATA_UINT64: printf ("%"PRIu64, iot_data_ui64 (data)); break;
+    case IOT_DATA_FLOAT32: printf ("%f", iot_data_f32 (data)); break;
+    case IOT_DATA_FLOAT64: printf ("%lf", iot_data_f64 (data)); break;
+    case IOT_DATA_BOOL: printf ("%s", iot_data_bool (data) ? "true" : "false"); break;
+    case IOT_DATA_STRING: printf ("%s", iot_data_string (data)); break;
     case IOT_DATA_BLOB:
     {
       uint32_t size;
-      iot_data_get_blob (data, &size);
+      iot_data_blob (data, &size);
       printf ("BLOB(%u)", size); break;
     }
     case IOT_DATA_MAP:
@@ -147,8 +147,8 @@ static void data_dump (const iot_data_t * data)
       printf ("{ ");
       while (iot_data_map_iter_next (&iter))
       {
-        key = iot_data_map_iter_get_key (&iter);
-        value = iot_data_map_iter_get_value (&iter);
+        key = iot_data_map_iter_key (&iter);
+        value = iot_data_map_iter_value (&iter);
         data_dump (key);
         printf (":");
         data_dump (value);
@@ -166,8 +166,8 @@ static void data_dump (const iot_data_t * data)
       printf ("[");
       while (iot_data_array_iter_next (&iter))
       {
-        index = iot_data_array_iter_get_index (&iter);
-        value = iot_data_array_iter_get_value (&iter);
+        index = iot_data_array_iter_index (&iter);
+        value = iot_data_array_iter_value (&iter);
         printf ("%u", index);
         printf ("-");
         data_dump (value);
