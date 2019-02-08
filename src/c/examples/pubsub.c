@@ -54,31 +54,21 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters)
 {
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * array = iot_data_alloc_array (ARRAY_SIZE);
-  iot_data_t * key;
-  iot_data_t * value;
   uint32_t index = 0;
 
   // Create fixed part of sample
 
-  value = iot_data_alloc_i32 (11);
-  iot_data_array_add (array, index++, value);
-  value = iot_data_alloc_i32 (22);
-  iot_data_array_add (array, index++, value);
-  value = iot_data_alloc_i32 (33);
-  iot_data_array_add (array, index++, value);
-  key = iot_data_alloc_string ("Coords", false);
-  iot_data_map_add (map, key, array);
-  key = iot_data_alloc_string ("Origin", false);
-  value = iot_data_alloc_string ("Sensor-54", false);
-  iot_data_map_add (map, key, value);
+  iot_data_array_add (array, index++, iot_data_alloc_i32 (11));
+  iot_data_array_add (array, index++, iot_data_alloc_i32 (22));
+  iot_data_array_add (array, index, iot_data_alloc_i32 (33));
+  iot_data_string_map_add (map, "Coords", array);
+  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-54", false));
 
   while (iters--)
   {
     // Update first field for each iteration
 
-    key = iot_data_alloc_string ("#", false);
-    value = iot_data_alloc_i32 (PUB_ITERS - iters);
-    iot_data_map_add (map, key, value);
+    iot_data_string_map_add (map, "#", iot_data_alloc_i32 (PUB_ITERS - iters));
 
     // Increment map ref count or publish will delete
 
@@ -103,12 +93,8 @@ static void subscriber_callback (iot_data_t * data, void * self, const char * ma
 static iot_data_t * publisher_callback (void * self)
 {
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_t * key = iot_data_alloc_string ("Origin", false);
-  iot_data_t * value = iot_data_alloc_string ("Sensor-7", false);
-  iot_data_map_add (map, key, value);
-  key = iot_data_alloc_string ("Temp", false);
-  value = iot_data_alloc_f32 (27.34);
-  iot_data_map_add (map, key, value);
+  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-7", false));
+  iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (27.34));
   return map;
 }
 
