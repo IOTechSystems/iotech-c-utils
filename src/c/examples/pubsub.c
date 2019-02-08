@@ -36,7 +36,7 @@ int main (void)
   iot_coredata_t * cd = iot_coredata_alloc ();
   iot_coredata_init (cd, config);
   iot_data_free (config);
-  iot_coredata_sub_t * sub = iot_coredata_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
+  iot_coredata_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
   iot_coredata_pub_t * pub = iot_coredata_pub_alloc (cd, NULL, publisher_callback, "test/tube");
   iot_coredata_start (cd);
   stamp = time (NULL);
@@ -44,7 +44,6 @@ int main (void)
   publish (pub, PUB_ITERS);
   stamp = time (NULL);
   printf ("Stop: %s", ctime (&stamp));
-  (void) sub;
   sleep (5);
   iot_coredata_stop (cd);
   iot_coredata_free (cd);
