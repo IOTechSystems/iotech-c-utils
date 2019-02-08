@@ -434,6 +434,12 @@ static iot_data_pair_t * iot_data_map_find (iot_data_map_t * map, const iot_data
   return pair;
 }
 
+void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val)
+{
+  assert (key);
+  iot_data_map_add (map, iot_data_alloc_string (key, false), val);
+}
+
 void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
 {
   iot_data_map_t * mp = (iot_data_map_t*) map;
@@ -472,7 +478,7 @@ extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const
 {
   assert (key);
   iot_data_t * dkey = iot_data_alloc_string (key, false);
-  iot_data_t * value = iot_data_map_get (map, dkey);
+  const iot_data_t * value = iot_data_map_get (map, dkey);
   iot_data_free (dkey);
   return value;
 }

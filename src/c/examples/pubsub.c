@@ -24,12 +24,8 @@ static iot_data_t * get_config (void)
 {
   iot_data_init ();
   iot_data_t * config = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_t * key = iot_data_alloc_string ("Interval", false);
-  iot_data_t * value = iot_data_alloc_ui64 (1000000000);
-  iot_data_map_add (config, key, value);
-  key = iot_data_alloc_string ("Threads", false);
-  value = iot_data_alloc_ui32 (2);
-  iot_data_map_add (config, key, value);
+  iot_data_string_map_add (config, "Interval", iot_data_alloc_ui64 (200000000u));
+  iot_data_string_map_add (config, "Threads", iot_data_alloc_ui32 (2u) );
   return config;
 }
 
@@ -49,7 +45,7 @@ int main (void)
   stamp = time (NULL);
   printf ("Stop: %s", ctime (&stamp));
   (void) sub;
-  sleep (10);
+  sleep (5);
   iot_coredata_stop (cd);
   iot_coredata_free (cd);
   iot_data_fini ();
