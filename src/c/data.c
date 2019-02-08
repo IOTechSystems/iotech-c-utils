@@ -468,6 +468,15 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   return pair ? pair->value : NULL;
 }
 
+extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key)
+{
+  assert (key);
+  iot_data_t * dkey = iot_data_alloc_string (key, false);
+  iot_data_t * value = iot_data_map_get (map, dkey);
+  iot_data_free (dkey);
+  return value;
+}
+
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 {
   assert (map);

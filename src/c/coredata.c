@@ -2,6 +2,9 @@
 #include "iot/scheduler.h"
 #include "iot/coredata.h"
 
+#define IOT_COREDATA_DEFAULT_INTERVAL 500000000
+#define IOT_COREDATA_DEFAULT_THREADS 2
+
 typedef struct iot_coredata_pubsub_t
 {
   iot_coredata_t * coredata;
@@ -40,7 +43,7 @@ struct iot_coredata_t
   iot_coredata_pub_t * publishers;
   iot_coredata_match_t * matches;
   threadpool thpool;
-  iot_scheduler schd;
+  iot_scheduler scheduler;
   uint64_t interval;
   pthread_rwlock_t lock;
 };
@@ -161,37 +164,41 @@ iot_coredata_t * iot_coredata_alloc (void)
 {
   iot_coredata_t * cd = calloc (1, sizeof (*cd));
   pthread_rwlock_init (&cd->lock, NULL);
-  cd->thpool = thpool_init (4);
-  cd->schd = iot_scheduler_init (&cd->thpool);
-  cd->interval = IOT_MS_TO_NS (500);
   return cd;
 }
 
 void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
 {
   assert (cd);
+  uint32_t threads = IOT_COREDATA_DEFAULT_THREADS;
+  cd->interval = IOT_COREDATA_DEFAULT_INTERVAL;
   if (config)
   {
-    iot_data_t * key = iot_data_alloc_string ("Interval", false);
-    const iot_data_t * value = iot_data_map_get (config, key);
-    iot_data_free (key);
+    const iot_data_t * value = iot_data_string_map_get (config, "Interval");
     if (value)
     {
       cd->interval = iot_data_ui64 (value);
     }
+    value = iot_data_string_map_get (config, "Threads");
+    if (value)
+    {
+      threads = iot_data_ui32 (value);
+    }
   }
+  cd->thpool = thpool_init (threads);
+  cd->scheduler = iot_scheduler_init (&cd->thpool);
 }
 
 void iot_coredata_start (iot_coredata_t * cd)
 {
   assert (cd);
-  iot_scheduler_start (cd->schd);
+  iot_scheduler_start (cd->scheduler);
 }
 
 void iot_coredata_stop (iot_coredata_t * cd)
 {
   assert (cd);
-  iot_scheduler_stop (cd->schd);
+  iot_scheduler_stop (cd->scheduler);
 }
 
 void iot_coredata_free (iot_coredata_t * cd)
@@ -210,7 +217,7 @@ void iot_coredata_free (iot_coredata_t * cd)
       iot_coredata_sub_free_locked (cd->subscribers);
       pthread_rwlock_unlock (&cd->lock);
     }
-    iot_scheduler_fini (cd->schd);
+    iot_scheduler_fini (cd->scheduler);
     sleep (1);
     thpool_destroy (cd->thpool);
     pthread_rwlock_destroy (&cd->lock);
@@ -310,8 +317,8 @@ iot_coredata_pub_t * iot_coredata_pub_alloc (iot_coredata_t * cd, void * self, i
     if (callback)
     {
       pub->callback = callback;
-      pub->sc = iot_schedule_create (cd->schd, iot_coredata_sched_fn, pub, cd->interval, 0, 0);
-      iot_schedule_add (cd->schd, pub->sc);
+      pub->sc = iot_schedule_create (cd->scheduler, iot_coredata_sched_fn, pub, cd->interval, 0, 0);
+      iot_schedule_add (cd->scheduler, pub->sc);
     }
     iot_coredata_match_pub_locked (cd, pub);
   }
@@ -325,7 +332,7 @@ void iot_coredata_pub_free (iot_coredata_pub_t * pub)
   {
     if (pub->sc)
     {
-      iot_schedule_remove (pub->base.coredata->schd, pub->sc);
+      iot_schedule_remove (pub->base.coredata->scheduler, pub->sc);
     }
     pthread_rwlock_wrlock (&pub->base.coredata->lock);
     iot_coredata_pub_free_locked (pub);

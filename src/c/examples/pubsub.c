@@ -27,6 +27,9 @@ static iot_data_t * get_config (void)
   iot_data_t * key = iot_data_alloc_string ("Interval", false);
   iot_data_t * value = iot_data_alloc_ui64 (1000000000);
   iot_data_map_add (config, key, value);
+  key = iot_data_alloc_string ("Threads", false);
+  value = iot_data_alloc_ui32 (2);
+  iot_data_map_add (config, key, value);
   return config;
 }
 
