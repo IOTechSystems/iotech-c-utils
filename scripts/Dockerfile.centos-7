@@ -1,8 +1,9 @@
 FROM centos:7
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN yum -y install --setopt=tsflags=nodocs epel-release \
-  && yum -y install --setopt=tsflags=nodocs wget git gcc glibc-static cmake3 make rpm-build \
-  && yum clean all && rm -rf /var/cache/yum && ln -s /usr/bin/cmake3 /usr/bin/cmake
+RUN yum -y install --setopt=tsflags=nodocs epel-release centos-release-scl \
+  && yum -y install --setopt=tsflags=nodocs wget git devtoolset-7 cmake3 make rpm-build \
+  && yum clean all && rm -rf /var/cache/yum && ln -s /usr/bin/cmake3 /usr/bin/cmake \
+  && /opt/rh/devtoolset-7/enable
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
