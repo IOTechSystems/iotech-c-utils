@@ -6,6 +6,7 @@
 //
 
 #include <pthread.h>
+#include <stdatomic.h>
 #include "iot/data.h"
 
 #define IOT_DATA_MAX_SIZE 64
@@ -29,7 +30,7 @@ typedef union iot_data_union_t
 struct iot_data_t
 {
   iot_data_t * next;
-  uint32_t refs;
+  atomic_uint_fast32_t refs;
   iot_data_type_t type;
   bool release;
 };
@@ -143,9 +144,7 @@ void iot_data_fini (void)
 void iot_data_addref (iot_data_t * data)
 {
   assert (data);
-  pthread_mutex_lock (&iot_data_mutex);
   data->refs++;
-  pthread_mutex_unlock (&iot_data_mutex);
 }
 
 const char * iot_data_type_name (const iot_data_t * data)
