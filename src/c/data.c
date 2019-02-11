@@ -90,10 +90,12 @@ static void * iot_data_factory_alloc (size_t size)
   return data;
 }
 
-static inline void iot_data_factory_free_locked (iot_data_t * data)
+static inline void iot_data_factory_free (iot_data_t * data)
 {
+  pthread_mutex_lock (&iot_data_mutex);
   data->next = iot_data_cache;
   iot_data_cache = data;
+  pthread_mutex_unlock (&iot_data_mutex);
 }
 
 static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
@@ -180,9 +182,9 @@ iot_data_type_t iot_data_type (const iot_data_t * data)
   return data->type;
 }
 
-static void iot_data_free_locked (iot_data_t * data)
+void iot_data_free (iot_data_t * data)
 {
-  if (--data->refs <= 0)
+  if (data && --data->refs <= 0)
   {
     switch (data->type)
     {
@@ -202,10 +204,10 @@ static void iot_data_free_locked (iot_data_t * data)
         while (map->pairs)
         {
           pair = map->pairs;
-          iot_data_free_locked (pair->key);
-          iot_data_free_locked (pair->value);
+          iot_data_free (pair->key);
+          iot_data_free (pair->value);
           map->pairs = (iot_data_pair_t *) pair->base.next;
-          iot_data_factory_free_locked (&pair->base);
+          iot_data_factory_free (&pair->base);
         }
         break;
       }
@@ -214,24 +216,14 @@ static void iot_data_free_locked (iot_data_t * data)
         iot_data_array_t *array = (iot_data_array_t *) data;
         for (uint32_t i = 0; i < array->size; i++)
         {
-          iot_data_free_locked (array->values[i]);
+          iot_data_free (array->values[i]);
         }
         free (array->values);
         break;
       }
       default: break;
     }
-    iot_data_factory_free_locked (data);
-  }
-}
-
-void iot_data_free (iot_data_t * data)
-{
-  if (data)
-  {
-    pthread_mutex_lock (&iot_data_mutex);
-    iot_data_free_locked (data);
-    pthread_mutex_unlock (&iot_data_mutex);
+    iot_data_factory_free (data);
   }
 }
 
