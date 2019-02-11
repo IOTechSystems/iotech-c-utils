@@ -137,9 +137,9 @@ def publishApks (arch, server)
 
 def publishRpms (arch, server)
 {
-  def rpms_x86_64 = [fedora-29','opensuse-42','photon-2.0','photon-3.0']
-  def rpms_arm64 = [fedora-29','opensuse-42','photon-3.0']
-  def rpms_arm32 = [fedora-29','opensuse-42']
+  def rpms_x86_64 = ['fedora-29','opensuse-42','photon-2.0','photon-3.0']
+  def rpms_arm64 = ['fedora-29','opensuse-42','photon-3.0']
+  def rpms_arm32 = ['fedora-29','opensuse-42']
   def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32]
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def rpms = rpm_lists[arch]
