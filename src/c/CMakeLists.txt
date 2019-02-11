@@ -8,12 +8,7 @@ add_custom_command (OUTPUT ${TPOOL_C_FILE} COMMAND cp C-Thread-Pool-SDK-0.1/thpo
 
 # Configure for different target systems
 
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-  set (CPACK_GENERATOR TGZ)
-endif ()
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-  set (CPACK_GENERATOR TGZ)
-endif ()
+set (CPACK_GENERATOR TGZ)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set (CPACK_GENERATOR ZIP)
 endif ()
