@@ -6,13 +6,6 @@ add_custom_command (OUTPUT ${TPOOL_SRC} COMMAND tar -xzf ${TPOOL_DOWNLOAD} WORKI
 add_custom_command (OUTPUT ${TPOOL_H_FILE} COMMAND cp C-Thread-Pool-SDK-0.1/thpool.h ${TPOOL_H_FILE} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} DEPENDS ${TPOOL_SRC})
 add_custom_command (OUTPUT ${TPOOL_C_FILE} COMMAND cp C-Thread-Pool-SDK-0.1/thpool.c ${TPOOL_C_FILE} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} DEPENDS ${TPOOL_SRC})
 
-# Configure for different target systems
-
-set (CPACK_GENERATOR TGZ)
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-  set (CPACK_GENERATOR ZIP)
-endif ()
-
 if (CUTILS_BUILD_STATIC)
   set (CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set (BUILD_SHARED_LIBS OFF)
@@ -27,7 +20,7 @@ endif ()
 if (DEFINED CMAKE_C_COMPILER_ID)
   if (CMAKE_C_COMPILER_ID MATCHES GNU)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Wmissing-prototypes")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -pthread -pipe")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -pthread -pipe")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
     set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb -O0")
     set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -ggdb -O0")
