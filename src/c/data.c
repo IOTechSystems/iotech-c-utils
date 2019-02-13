@@ -667,7 +667,6 @@ char * iot_data_to_json (const iot_data_t * data, bool wrap)
 {
   iot_string_holder_t holder;
   assert (data);
-  assert (data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_MAP);
   holder.str = calloc (1, 512);
   holder.size = 512;
   holder.free = 511;

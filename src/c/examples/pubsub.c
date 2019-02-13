@@ -83,7 +83,7 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters)
 static void subscriber_callback (iot_data_t * data, void * self, const char * match)
 {
 #ifndef NDEBUG
-  printf ("Sub (%s): ", match);
+  printf ("Subscription (%s): ", match);
   char * json = iot_data_to_json (data, true);
   printf ("%s\n", json);
   free (json);
