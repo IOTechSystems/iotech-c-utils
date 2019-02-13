@@ -7,6 +7,8 @@ The following Utilities are provided:
 * Scheduling
 * Logging
 * Thread Pool
+* Data
+* Pub/Sub
 
 ## License
 [Apache-2.0](LICENSE)
