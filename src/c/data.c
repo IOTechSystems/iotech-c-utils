@@ -9,7 +9,8 @@
 #include <stdatomic.h>
 #include "iot/data.h"
 
-#define IOT_DATA_MAX_SIZE 64
+#define IOT_DATA_BLOCK_SIZE 64
+#define IOT_JSON_BUFF_SIZE 512
 
 typedef union iot_data_union_t
 {
@@ -83,7 +84,7 @@ static pthread_mutex_t iot_data_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void * iot_data_factory_alloc (size_t size)
 {
-  assert (size <= IOT_DATA_MAX_SIZE);
+  assert (size <= IOT_DATA_BLOCK_SIZE);
   pthread_mutex_lock (&iot_data_mutex);
   iot_data_t * data = iot_data_cache;
   if (data)
@@ -92,7 +93,7 @@ static void * iot_data_factory_alloc (size_t size)
     memset (data, 0, size);
   }
   pthread_mutex_unlock (&iot_data_mutex);
-  data = data ? data : calloc (1, IOT_DATA_MAX_SIZE);
+  data = data ? data : calloc (1, IOT_DATA_BLOCK_SIZE);
   data->refs = 1;
   return data;
 }
@@ -667,9 +668,9 @@ char * iot_data_to_json (const iot_data_t * data, bool wrap)
 {
   iot_string_holder_t holder;
   assert (data);
-  holder.str = calloc (1, 512);
-  holder.size = 512;
-  holder.free = 511;
+  holder.str = calloc (1, IOT_JSON_BUFF_SIZE);
+  holder.size = IOT_JSON_BUFF_SIZE;
+  holder.free = IOT_JSON_BUFF_SIZE - 1;
   iot_data_print (&holder, data, wrap);
   return holder.str;
 }
