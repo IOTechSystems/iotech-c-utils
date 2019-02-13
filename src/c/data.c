@@ -69,6 +69,13 @@ typedef struct iot_data_map_t
   iot_data_pair_t * pairs;
 } iot_data_map_t;
 
+typedef struct iot_string_holder_t
+{
+  char * str;
+  size_t size;
+  size_t free;
+} iot_string_holder_t;
+
 // Data cache and guard mutex
 
 static iot_data_t * iot_data_cache = NULL;
@@ -551,4 +558,119 @@ uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter)
 const iot_data_t * iot_data_array_iter_value (const iot_data_array_iter_t * iter)
 {
   return (iter->index <= iter->array->size) ? iter->array->values[iter->index - 1] : NULL;
+}
+
+static void iot_data_strcat (iot_string_holder_t * holder, const char * add)
+{
+  size_t len = strlen (add);
+  if (holder->free < len)
+  {
+    holder->size += len;
+    holder->free += len;
+    holder->str = realloc (holder->str, holder->size);
+  }
+  strcat (holder->str, add);
+  holder->free -= len;
+}
+
+static void iot_data_print_raw (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
+{
+  char buff [128];
+  wrap = wrap || data->type == IOT_DATA_BOOL;
+
+  switch (data->type)
+  {
+    case IOT_DATA_INT8: sprintf (buff, "%d", iot_data_i8 (data)); break;
+    case IOT_DATA_UINT8: sprintf (buff, "%u", iot_data_ui8 (data)); break;
+    case IOT_DATA_INT16: sprintf (buff, "%d", iot_data_i16 (data)); break;
+    case IOT_DATA_UINT16: sprintf (buff, "%u", iot_data_ui16 (data)); break;
+    case IOT_DATA_INT32: sprintf (buff, "%d", iot_data_i32 (data)); break;
+    case IOT_DATA_UINT32: sprintf (buff, "%u", iot_data_ui32 (data)); break;
+    case IOT_DATA_INT64: sprintf (buff, "%" PRId64, iot_data_i64 (data)); break;
+    case IOT_DATA_UINT64: sprintf (buff, "%" PRIu64, iot_data_ui64 (data)); break;
+    case IOT_DATA_FLOAT32: sprintf (buff, "%f", iot_data_f32 (data)); break;
+    case IOT_DATA_FLOAT64: sprintf (buff, "%lf", iot_data_f64 (data)); break;
+    case IOT_DATA_BOOL: sprintf (buff, "%s", iot_data_bool (data) ? "true" : "false"); break;
+    default: assert (0);
+  }
+  if (wrap)
+  {
+    iot_data_strcat (holder, "\"");
+    strcat (buff, "\"");
+  }
+  iot_data_strcat (holder, buff);
+}
+
+static void iot_data_print (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
+{
+  switch (data->type)
+  {
+    case IOT_DATA_STRING:
+    {
+      iot_data_strcat (holder, "\"");
+      iot_data_strcat (holder, iot_data_string (data));
+      iot_data_strcat (holder, "\"");
+      break;
+    }
+    case IOT_DATA_BLOB:
+    {
+      uint32_t size;
+      iot_data_blob (data, &size);
+      iot_data_strcat (holder, "\"BLOB\""); // FIXME: base64 encode as string
+      break;
+    }
+    case IOT_DATA_MAP:
+    {
+      iot_data_map_iter_t iter;
+      iot_data_map_iter (data, &iter);
+      const iot_data_t * key;
+      const iot_data_t * value;
+      iot_data_strcat (holder, "{");
+      while (iot_data_map_iter_next (&iter))
+      {
+        key = iot_data_map_iter_key (&iter);
+        value = iot_data_map_iter_value (&iter);
+        iot_data_print (holder, key, true);
+        iot_data_strcat (holder, ":");
+        iot_data_print (holder, value, wrap);
+        if (iter.pair->base.next)
+        {
+          iot_data_strcat (holder, ",");
+        }
+      }
+      iot_data_strcat (holder, "}");
+      break;
+    }
+    case IOT_DATA_ARRAY:
+    {
+      iot_data_array_iter_t iter;
+      iot_data_array_iter (data, &iter);
+      const iot_data_t * value;
+      iot_data_strcat (holder, "[");
+      while (iot_data_array_iter_next (&iter))
+      {
+        value = iot_data_array_iter_value (&iter);
+        iot_data_print (holder, value, wrap);
+        if (iter.index < iter.array->size)
+        {
+          iot_data_strcat (holder, ",");
+        }
+      }
+      iot_data_strcat (holder, "]");
+      break;
+    }
+    default: iot_data_print_raw (holder, data, wrap);
+  }
+}
+
+char * iot_data_to_json (const iot_data_t * data, bool wrap)
+{
+  iot_string_holder_t holder;
+  assert (data);
+  assert (data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_MAP);
+  holder.str = calloc (1, 512);
+  holder.size = 512;
+  holder.free = 511;
+  iot_data_print (&holder, data, wrap);
+  return holder.str;
 }

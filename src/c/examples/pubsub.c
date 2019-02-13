@@ -11,7 +11,6 @@
 
 #ifndef NDEBUG
 #define PUB_ITERS 10
-static void data_dump (const iot_data_t * data);
 #else
 #define PUB_ITERS 10000000
 #endif
@@ -85,8 +84,9 @@ static void subscriber_callback (iot_data_t * data, void * self, const char * ma
 {
 #ifndef NDEBUG
   printf ("Sub (%s): ", match);
-  data_dump (data);
-  printf ("\n");
+  char * json = iot_data_to_json (data, true);
+  printf ("%s\n", json);
+  free (json);
 #endif
 }
 
@@ -97,69 +97,3 @@ static iot_data_t * publisher_callback (void * self)
   iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (27.34));
   return map;
 }
-
-#ifndef NDEBUG
-
-static void data_dump (const iot_data_t * data)
-{
-  switch (iot_data_type (data))
-  {
-    case IOT_DATA_INT8: printf ("%d", iot_data_i8 (data)); break;
-    case IOT_DATA_UINT8: printf ("%u", iot_data_ui8 (data)); break;
-    case IOT_DATA_INT16: printf ("%d", iot_data_i16 (data)); break;
-    case IOT_DATA_UINT16: printf ("%u", iot_data_ui16 (data)); break;
-    case IOT_DATA_INT32: printf ("%d", iot_data_i32 (data)); break;
-    case IOT_DATA_UINT32: printf ("%u", iot_data_ui32 (data)); break;
-    case IOT_DATA_INT64: printf ("%"PRId64, iot_data_i64 (data)); break;
-    case IOT_DATA_UINT64: printf ("%"PRIu64, iot_data_ui64 (data)); break;
-    case IOT_DATA_FLOAT32: printf ("%f", iot_data_f32 (data)); break;
-    case IOT_DATA_FLOAT64: printf ("%lf", iot_data_f64 (data)); break;
-    case IOT_DATA_BOOL: printf ("%s", iot_data_bool (data) ? "true" : "false"); break;
-    case IOT_DATA_STRING: printf ("%s", iot_data_string (data)); break;
-    case IOT_DATA_BLOB:
-    {
-      uint32_t size;
-      iot_data_blob (data, &size);
-      printf ("BLOB(%u)", size); break;
-    }
-    case IOT_DATA_MAP:
-    {
-      iot_data_map_iter_t iter;
-      iot_data_map_iter (data, &iter);
-      const iot_data_t * key;
-      const iot_data_t * value;
-      printf ("{ ");
-      while (iot_data_map_iter_next (&iter))
-      {
-        key = iot_data_map_iter_key (&iter);
-        value = iot_data_map_iter_value (&iter);
-        data_dump (key);
-        printf (":");
-        data_dump (value);
-        printf (" ");
-      }
-      printf ("}");
-      break;
-    }
-    case IOT_DATA_ARRAY:
-    {
-      iot_data_array_iter_t iter;
-      iot_data_array_iter (data, &iter);
-      uint32_t index;
-      const iot_data_t * value;
-      printf ("[");
-      while (iot_data_array_iter_next (&iter))
-      {
-        index = iot_data_array_iter_index (&iter);
-        value = iot_data_array_iter_value (&iter);
-        printf ("%u", index);
-        printf ("-");
-        data_dump (value);
-        printf (" ");
-      }
-      printf ("]");
-      break;
-    }
-  }
-}
-#endif
