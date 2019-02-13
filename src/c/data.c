@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <pthread.h>
+#include "iot/os.h"
 #include "iot/data.h"
 
 #define IOT_DATA_MAX_SIZE 64
@@ -71,7 +71,8 @@ typedef struct iot_data_map_t
 // Data cache and guard mutex
 
 static iot_data_t * iot_data_cache = NULL;
-static pthread_mutex_t iot_data_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_mutex_t iot_data_mutex;
 
 static void * iot_data_factory_alloc (size_t size)
 {
@@ -125,6 +126,7 @@ static bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 
 void iot_data_init (void)
 {
+  pthread_mutex_init (&iot_data_mutex, NULL);
 }
 
 void iot_data_fini (void)

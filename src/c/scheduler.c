@@ -4,6 +4,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+#include "iot/os.h"
 #include "iot/scheduler.h"
 
 #include <pthread.h>
@@ -201,6 +202,7 @@ static void *iot_scheduler_thread (void *params_i)
     }
   }
   pthread_exit (NULL);
+  return NULL;
 }
 
 
