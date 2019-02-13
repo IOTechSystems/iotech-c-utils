@@ -670,7 +670,7 @@ char * iot_data_to_json (const iot_data_t * data, bool wrap)
   assert (data);
   holder.str = calloc (1, IOT_JSON_BUFF_SIZE);
   holder.size = IOT_JSON_BUFF_SIZE;
-  holder.free = IOT_JSON_BUFF_SIZE - 1;
+  holder.free = IOT_JSON_BUFF_SIZE - 1; // Allowing for string terminator
   iot_data_print (&holder, data, wrap);
   return holder.str;
 }
