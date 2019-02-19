@@ -108,7 +108,7 @@ fi
 if [ "$CPPCHK" = "true" ]
 then
   cd ${ROOT}
-  cppcheck -DNDEBUG -D_GNU_SOURCE --std=c99 --xml --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
+  cppcheck -DNDEBUG -D_GNU_SOURCE --std=c11 --xml --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
 fi
 
 # Valgrind
