@@ -8,7 +8,11 @@
 #include "iot/scheduler.h"
 
 #include <pthread.h>
+#ifdef __ZEPHYR__
+#include <posix/semaphore.h>
+#else
 #include <semaphore.h>
+#endif
 
 #define IOT_NS_TO_SEC(SECONDS) (SECONDS / IOT_BILLION)
 #define IOT_NS_REMAINING(SECONDS) (SECONDS % IOT_BILLION)

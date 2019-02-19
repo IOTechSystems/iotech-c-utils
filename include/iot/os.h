@@ -12,11 +12,12 @@
 
 #ifdef __ZEPHYR__
 #include <zephyr.h>
+#include <posix/sys/types.h>
+#include <posix/pthread.h>
+#include <posix/unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <pthread.h>
 #include <string.h>
 #include "iot/strdup.h"
 #else
