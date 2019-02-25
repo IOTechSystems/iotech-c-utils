@@ -26,11 +26,11 @@ int main (void)
 {
   /* Create a threadpool */
   printf ("Create the threadpool\n");
-  threadpool thpool = iot_thpool_init (4);
+  iot_threadpool thpool = iot_thpool_init (4);
 
   /* Initialise the scheduler */
   printf ("Initialise the scheduler\n");
-  iot_scheduler schd = iot_scheduler_init (&thpool);
+  iot_scheduler schd = iot_scheduler_init (thpool);
 
   /* Create two schedules */
   printf ("Create two schedules\n");

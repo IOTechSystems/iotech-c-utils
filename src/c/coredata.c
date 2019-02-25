@@ -42,7 +42,7 @@ struct iot_coredata_t
   iot_coredata_sub_t * subscribers;
   iot_coredata_pub_t * publishers;
   iot_coredata_match_t * matches;
-  threadpool thpool;
+  iot_threadpool thpool;
   iot_scheduler scheduler;
   uint64_t interval;
   pthread_rwlock_t lock;
@@ -186,7 +186,7 @@ void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
     }
   }
   cd->thpool = iot_thpool_init (threads);
-  cd->scheduler = iot_scheduler_init (&cd->thpool);
+  cd->scheduler = iot_scheduler_init (cd->thpool);
 }
 
 void iot_coredata_start (iot_coredata_t * cd)
