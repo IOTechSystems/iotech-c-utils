@@ -7,8 +7,6 @@ debug
 release
 build
 deps
-src/c/thpool.c
-include/thpool.h
 *~
 TAGS
 src/cmake-build-debug/

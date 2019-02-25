@@ -185,7 +185,7 @@ void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
       threads = iot_data_ui32 (value);
     }
   }
-  cd->thpool = thpool_init (threads);
+  cd->thpool = iot_thpool_init (threads);
   cd->scheduler = iot_scheduler_init (&cd->thpool);
 }
 
@@ -219,7 +219,7 @@ void iot_coredata_free (iot_coredata_t * cd)
     }
     iot_scheduler_fini (cd->scheduler);
     sleep (1);
-    thpool_destroy (cd->thpool);
+    iot_thpool_destroy (cd->thpool);
     pthread_rwlock_destroy (&cd->lock);
     free (cd);
   }

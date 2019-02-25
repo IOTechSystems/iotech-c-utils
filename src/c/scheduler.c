@@ -153,8 +153,8 @@ static void *iot_scheduler_thread (void *params_i)
         iot_schd_t *current_schd = queue->front;
 
         /* Post the work to the threadpool */
-        thpool_add_work (*(threadpool *) scheduler->iot_thpool,
-                         current_schd->function, current_schd->arg);
+        iot_thpool_add_work (*(threadpool *) scheduler->iot_thpool,
+                             current_schd->function, current_schd->arg);
 
         unsigned long long time_now = getTimeAsUInt64 (&currentTime);
 
@@ -374,7 +374,7 @@ void iot_scheduler_stop (iot_scheduler scheduler_i)
     sem_post (&scheduler->iot_sem);
 
     /* wait for threadpool processing to complete */
-    thpool_wait (*(threadpool *) scheduler->iot_thpool);
+    iot_thpool_wait (*(threadpool *) scheduler->iot_thpool);
     pthread_mutex_unlock (&scheduler->iot_mutex);
 
     pthread_join (scheduler->iot_thread, NULL);
