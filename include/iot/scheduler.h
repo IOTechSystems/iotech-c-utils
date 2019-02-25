@@ -11,7 +11,7 @@
 #define _IOT_SCHEDULER_H_
 
 #include "iot/os.h"
-#include "thpool.h"
+#include "iot/thpool.h"
 
 #define IOT_BILLION 1000000000L
 #define IOT_MS_TO_NS(MILLISECONDS) (MILLISECONDS * 1000000)
