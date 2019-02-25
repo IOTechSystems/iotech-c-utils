@@ -51,9 +51,8 @@ threadpool iot_thpool_init (unsigned num_threads);
  * @param  threadpool    threadpool to which the work will be added
  * @param  function_p    pointer to function to add as work
  * @param  arg_p         pointer to an argument
- * @return 0 on successs, -1 otherwise.
  */
-int iot_thpool_add_work (threadpool, void (*function_p)(void*), void* arg_p);
+void iot_thpool_add_work (threadpool, void (*function_p)(void*), void* arg_p);
 
 
 /**

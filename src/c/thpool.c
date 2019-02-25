@@ -141,7 +141,7 @@ struct iot_thpool_* iot_thpool_init (unsigned num_threads)
 }
 
 /* Add work to the thread pool */
-int iot_thpool_add_work (iot_thpool_* thpool_p, void (*function_p)(void*), void* arg_p)
+void iot_thpool_add_work (iot_thpool_* thpool_p, void (*function_p)(void*), void* arg_p)
 {
 	job* newjob = (struct job*) malloc (sizeof (struct job));
 
@@ -151,7 +151,6 @@ int iot_thpool_add_work (iot_thpool_* thpool_p, void (*function_p)(void*), void*
 
 	/* add job to queue */
 	jobqueue_push (&thpool_p->jobqueue, newjob);
-	return 0;
 }
 
 /* Wait until all jobs have finished */
