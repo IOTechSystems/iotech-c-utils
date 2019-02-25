@@ -290,9 +290,10 @@ void iot_coredata_sub_free (iot_coredata_sub_t * sub)
 {
   if (sub)
   {
-    pthread_rwlock_wrlock (&sub->base.coredata->lock);
+    pthread_rwlock_t *lock = &sub->base.coredata->lock;
+    pthread_rwlock_wrlock (lock);
     iot_coredata_sub_free_locked (sub);
-    pthread_rwlock_unlock (&sub->base.coredata->lock);
+    pthread_rwlock_unlock (lock);
   }
 }
 
@@ -330,13 +331,14 @@ void iot_coredata_pub_free (iot_coredata_pub_t * pub)
 {
   if (pub)
   {
+    pthread_rwlock_t *lock = &pub->base.coredata->lock;
     if (pub->sc)
     {
       iot_schedule_remove (pub->base.coredata->scheduler, pub->sc);
     }
-    pthread_rwlock_wrlock (&pub->base.coredata->lock);
+    pthread_rwlock_wrlock (lock);
     iot_coredata_pub_free_locked (pub);
-    pthread_rwlock_unlock (&pub->base.coredata->lock);
+    pthread_rwlock_unlock (lock);
   }
 }
 
