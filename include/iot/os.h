@@ -33,6 +33,11 @@
 #include <errno.h>
 #include <time.h>
 #include <stdatomic.h>
+#include <pthread.h>
+#include <signal.h>
+#if defined(__linux__)
+#include <sys/prctl.h>
+#endif
 #endif
 
 #endif
