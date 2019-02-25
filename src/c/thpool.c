@@ -41,7 +41,6 @@ typedef struct bsem
 	int v;
 } bsem;
 
-
 /* Job */
 typedef struct job
 {
@@ -104,17 +103,11 @@ static void  bsem_wait (struct bsem *bsem_p);
 
 /* ========================== THREADPOOL ============================ */
 
-
 /* Initialise thread pool */
-struct iot_thpool_* iot_thpool_init(int num_threads){
-
+struct iot_thpool_* iot_thpool_init (unsigned num_threads)
+{
 	threads_on_hold   = 0;
 	threads_keepalive = 1;
-
-	if (num_threads < 0)
-	{
-		num_threads = 0;
-	}
 
 	/* Make new thread pool */
 	iot_thpool_* thpool_p;
@@ -162,7 +155,8 @@ int iot_thpool_add_work (iot_thpool_* thpool_p, void (*function_p)(void*), void*
 }
 
 /* Wait until all jobs have finished */
-void iot_thpool_wait(iot_thpool_* thpool_p){
+void iot_thpool_wait(iot_thpool_* thpool_p)
+{
 	pthread_mutex_lock (&thpool_p->thcount_lock);
 	while (thpool_p->jobqueue.len || thpool_p->num_threads_working)
 	{
@@ -225,34 +219,10 @@ void iot_thpool_destroy (iot_thpool_* thpool_p)
 	free (thpool_p);
 }
 
-/* Pause all threads in threadpool */
-void iot_thpool_pause (iot_thpool_* thpool_p)
-{
-	for (int n=0; n < thpool_p->num_threads_alive; n++)
-	{
-#ifdef __ZEPHYR__
-    pthread_cancel (thpool_p->threads[n]->pthread);
-#else
-    pthread_kill (thpool_p->threads[n]->pthread, SIGUSR1);
-#endif
-	}
-}
-
-/* Resume all threads in threadpool */
-void iot_thpool_resume(iot_thpool_* thpool_p)
-{
-  // resuming a single threadpool hasn't been
-  // implemented yet, meanwhile this supresses
-  // the warnings
-  (void) thpool_p;
-  threads_on_hold = 0;
-}
-
-int iot_thpool_num_threads_working(iot_thpool_* thpool_p)
+int iot_thpool_num_threads_working (iot_thpool_* thpool_p)
 {
 	return thpool_p->num_threads_working;
 }
-
 
 /* ============================ THREAD ============================== */
 

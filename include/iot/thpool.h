@@ -1,9 +1,3 @@
-/**********************************
- * @author      Johan Hanssen Seferidis
- * License:     MIT
- *
- **********************************/
-
 #ifndef _IOT_THPOOL_H_
 #define _IOT_THPOOL_H_
 
@@ -29,7 +23,7 @@ typedef struct iot_thpool_ * threadpool;
  * @return threadpool    created threadpool on success,
  *                       NULL on error
  */
-threadpool iot_thpool_init(int num_threads);
+threadpool iot_thpool_init (unsigned num_threads);
 
 
 /**
@@ -59,7 +53,7 @@ threadpool iot_thpool_init(int num_threads);
  * @param  arg_p         pointer to an argument
  * @return 0 on successs, -1 otherwise.
  */
-int iot_thpool_add_work(threadpool, void (*function_p)(void*), void* arg_p);
+int iot_thpool_add_work (threadpool, void (*function_p)(void*), void* arg_p);
 
 
 /**
@@ -89,48 +83,7 @@ int iot_thpool_add_work(threadpool, void (*function_p)(void*), void* arg_p);
  * @param threadpool     the threadpool to wait for
  * @return nothing
  */
-void iot_thpool_wait(threadpool);
-
-
-/**
- * @brief Pauses all threads immediately
- *
- * The threads will be paused no matter if they are idle or working.
- * The threads return to their previous states once iot_thpool_resume
- * is called.
- *
- * While the thread is being paused, new work can be added.
- *
- * @example
- *
- *    threadpool thpool = iot_thpool_init(4);
- *    iot_thpool_pause(thpool);
- *    ..
- *    // Add a bunch of work
- *    ..
- *    iot_thpool_resume(thpool); // Let the threads start their magic
- *
- * @param threadpool    the threadpool where the threads should be paused
- * @return nothing
- */
-void iot_thpool_pause(threadpool);
-
-
-/**
- * @brief Unpauses all threads if they are paused
- *
- * @example
- *    ..
- *    iot_thpool_pause(thpool);
- *    sleep(10);              // Delay execution 10 seconds
- *    iot_thpool_resume(thpool);
- *    ..
- *
- * @param threadpool     the threadpool where the threads should be unpaused
- * @return nothing
- */
-void iot_thpool_resume(threadpool);
-
+void iot_thpool_wait (threadpool);
 
 /**
  * @brief Destroy the threadpool
@@ -151,7 +104,7 @@ void iot_thpool_resume(threadpool);
  * @param threadpool     the threadpool to destroy
  * @return nothing
  */
-void iot_thpool_destroy(threadpool);
+void iot_thpool_destroy (threadpool);
 
 
 /**
@@ -172,6 +125,6 @@ void iot_thpool_destroy(threadpool);
  * @param threadpool     the threadpool of interest
  * @return integer       number of threads working
  */
-int iot_thpool_num_threads_working(threadpool);
+int iot_thpool_num_threads_working (threadpool);
 
 #endif
