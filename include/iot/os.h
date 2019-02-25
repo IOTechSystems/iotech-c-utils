@@ -10,6 +10,18 @@
 #ifndef _IOT_OS_H_
 #define _IOT_OS_H_
 
+#ifdef __ZEPHYR__
+#include <zephyr.h>
+#include <posix/sys/types.h>
+#include <posix/pthread.h>
+#include <posix/unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <stdatomic.h>
+#include "iot/strdup.h"
+#else
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
@@ -20,5 +32,12 @@
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
+#include <stdatomic.h>
+#include <pthread.h>
+#include <signal.h>
+#if defined(__linux__)
+#include <sys/prctl.h>
+#endif
+#endif
 
 #endif

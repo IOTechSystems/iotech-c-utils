@@ -12,3 +12,5 @@ The following Utilities are provided:
 
 ## License
 [Apache-2.0](LICENSE)
+
+Thread pool code is [MIT Licensed](thpool/LICENSE).

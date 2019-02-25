@@ -5,8 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <pthread.h>
-#include <stdatomic.h>
+#include "iot/os.h"
 #include "iot/data.h"
 
 #define IOT_DATA_BLOCK_SIZE 64
@@ -80,7 +79,8 @@ typedef struct iot_string_holder_t
 // Data cache and guard mutex
 
 static iot_data_t * iot_data_cache = NULL;
-static pthread_mutex_t iot_data_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_mutex_t iot_data_mutex;
 
 static void * iot_data_factory_alloc (size_t size)
 {
@@ -94,7 +94,7 @@ static void * iot_data_factory_alloc (size_t size)
   }
   pthread_mutex_unlock (&iot_data_mutex);
   data = data ? data : calloc (1, IOT_DATA_BLOCK_SIZE);
-  data->refs = 1;
+  atomic_store (&data->refs, 1);
   return data;
 }
 
@@ -136,6 +136,7 @@ static bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 
 void iot_data_init (void)
 {
+  pthread_mutex_init (&iot_data_mutex, NULL);
 }
 
 void iot_data_fini (void)
@@ -154,7 +155,7 @@ void iot_data_fini (void)
 void iot_data_addref (iot_data_t * data)
 {
   assert (data);
-  data->refs++;
+  atomic_fetch_add (&data->refs, 1);
 }
 
 const char * iot_data_type_name (const iot_data_t * data)
@@ -192,7 +193,7 @@ iot_data_type_t iot_data_type (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && --data->refs <= 0)
+  if (data && atomic_fetch_add (&data->refs, -1) <= 1)
   {
     switch (data->type)
     {
@@ -585,8 +586,8 @@ static void iot_data_print_raw (iot_string_holder_t * holder, const iot_data_t *
     case IOT_DATA_UINT8: sprintf (buff, "%u", iot_data_ui8 (data)); break;
     case IOT_DATA_INT16: sprintf (buff, "%d", iot_data_i16 (data)); break;
     case IOT_DATA_UINT16: sprintf (buff, "%u", iot_data_ui16 (data)); break;
-    case IOT_DATA_INT32: sprintf (buff, "%d", iot_data_i32 (data)); break;
-    case IOT_DATA_UINT32: sprintf (buff, "%u", iot_data_ui32 (data)); break;
+    case IOT_DATA_INT32: sprintf (buff, "%" PRId32, iot_data_i32 (data)); break;
+    case IOT_DATA_UINT32: sprintf (buff, "%" PRIu32, iot_data_ui32 (data)); break;
     case IOT_DATA_INT64: sprintf (buff, "%" PRId64, iot_data_i64 (data)); break;
     case IOT_DATA_UINT64: sprintf (buff, "%" PRIu64, iot_data_ui64 (data)); break;
     case IOT_DATA_FLOAT32: sprintf (buff, "%f", iot_data_f32 (data)); break;

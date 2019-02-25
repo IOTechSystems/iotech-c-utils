@@ -4,6 +4,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+#include "iot/os.h"
 #include "iot/logging.h"
 
 #include <pthread.h>
@@ -33,7 +34,14 @@ static void logthis
 
 static void logtofd (FILE *, const char *, iot_loglevel, time_t, const char *);
 
-static iot_logging_client dfl = {NULL, NULL, PTHREAD_MUTEX_INITIALIZER};
+static iot_logging_client dfl;
+
+void iot_log_init ()
+{
+  dfl.subsystem = NULL;
+  dfl.loggers = NULL;
+  pthread_mutex_init (&dfl.lock, NULL);
+}
 
 iot_logging_client *iot_log_default = &dfl;
 
@@ -104,6 +112,13 @@ bool iot_log_tofile (const char *dest, const char *subsystem, iot_loglevel l, ti
   }
   return false;
 }
+
+#ifdef __ZEPHYR__
+static time_t time (time_t *t)
+{
+  return k_uptime_get () / 1000;
+}
+#endif
 
 void logthis (iot_logging_client *lc, iot_loglevel l, const char *fmt, va_list ap)
 {

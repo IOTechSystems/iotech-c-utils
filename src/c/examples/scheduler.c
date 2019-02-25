@@ -29,7 +29,7 @@ int main (void)
 {
   /* Create a threadpool */
   printf ("Create the threadpool\n");
-  threadpool thpool = thpool_init (4);
+  threadpool thpool = iot_thpool_init (4);
 
   /* Initialise the scheduler */
   printf ("Initialise the scheduler\n");
@@ -72,5 +72,5 @@ int main (void)
   sleep (1);
   /* Destroy the threadpool */
   printf ("Destroy the threadpool\n");
-  thpool_destroy (thpool);
+  iot_thpool_destroy (thpool);
 }
