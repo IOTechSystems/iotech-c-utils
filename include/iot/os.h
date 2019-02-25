@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <stdatomic.h>
 #include "iot/strdup.h"
 #else
 #include <stddef.h>
@@ -31,6 +32,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
+#include <stdatomic.h>
 #endif
 
 #endif
