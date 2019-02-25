@@ -64,7 +64,7 @@ extern bool iot_log_dellogger
 
 /* Functions to generate logs */
 
-extern void iot_log_init ();
+extern void iot_log_init (void);
 extern void iot_log_info (iot_logging_client *lc, const char *fmt, ...);
 extern void iot_log_trace (iot_logging_client *lc, const char *fmt, ...);
 extern void iot_log_debug (iot_logging_client *lc, const char *fmt, ...);
