@@ -5,10 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 #include "iot/scheduler.h"
-
-#include <stdio.h>
 #include <unistd.h>
-#include <stdbool.h>
 
 static void testFunc (void *in)
 {

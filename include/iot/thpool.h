@@ -9,7 +9,7 @@
 
 #include "iot/os.h"
 
-typedef struct iot_thpool_* threadpool;
+typedef struct iot_thpool_ * threadpool;
 
 
 /**
