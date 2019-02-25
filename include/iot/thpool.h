@@ -114,10 +114,10 @@ void iot_thpool_destroy (threadpool);
  *
  * @example
  * int main() {
- *    threadpool thpool1 = iot_thpool_init(2);
- *    threadpool thpool2 = iot_thpool_init(2);
+ *    threadpool thpool1 = iot_thpool_init (2);
+ *    threadpool thpool2 = iot_thpool_init (2);
  *    ..
- *    printf("Working threads: %d\n", iot_thpool_num_threads_working(thpool1));
+ *    printf ("Working threads: %d\n", iot_thpool_num_threads_working (thpool1));
  *    ..
  *    return 0;
  * }
@@ -125,6 +125,6 @@ void iot_thpool_destroy (threadpool);
  * @param threadpool     the threadpool of interest
  * @return integer       number of threads working
  */
-int iot_thpool_num_threads_working (threadpool);
+unsigned iot_thpool_num_threads_working (threadpool);
 
 #endif
