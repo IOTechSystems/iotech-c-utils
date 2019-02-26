@@ -11,13 +11,7 @@
 #include "iot/thpool.h"
 
 #ifdef THPOOL_DEBUG
-#define THPOOL_DEBUG 1
-#else
-#define THPOOL_DEBUG 0
-#endif
-
-#if !defined(DISABLE_PRINT) || defined(THPOOL_DEBUG)
-#define err(str) fprintf(stderr, str)
+#define err(str) fprintf (stderr, str)
 #else
 #define err(str)
 #endif
@@ -53,22 +47,22 @@ typedef struct iot_job
 typedef struct iot_jobqueue
 {
 	pthread_mutex_t rwmutex;             /* used for queue r/w access */
-	iot_job *front;                      /* pointer to front of queue */
-	iot_job *rear;                       /* pointer to rear  of queue */
-	iot_bsem *has_jobs;                      /* flag as binary semaphore  */
+	iot_job * front;                      /* pointer to front of queue */
+	iot_job * rear;                       /* pointer to rear  of queue */
+	iot_bsem * has_jobs;                  /* flag as binary semaphore  */
 	unsigned len;                        /* number of jobs in queue   */
 } iot_jobqueue;
 
 /* Thread */
 typedef struct iot_thread
 {
-	int id;                              /* friendly id               */
+	unsigned id;                         /* friendly id               */
 	pthread_t pthread;                   /* pointer to actual thread  */
-	struct iot_thpool * thpool_p;        /* access to thpool          */
+	struct iot_threadpool * thpool;      /* thread pool               */
 } iot_thread;
 
 /* Threadpool */
-typedef struct iot_thpool
+typedef struct iot_threadpool
 {
 	iot_thread **   threads;               /* pointer to threads        */
 	volatile unsigned num_threads_alive;   /* threads currently alive   */
@@ -76,85 +70,82 @@ typedef struct iot_thpool
 	pthread_mutex_t  thcount_lock;         /* used for thread count etc */
 	pthread_cond_t  threads_all_idle;      /* signal to iot_thpool_wait */
 	iot_jobqueue  jobqueue;                /* job queue                 */
-} iot_thpool;
+} iot_threadpool;
 
 
 /* ========================== PROTOTYPES ============================ */
 
-static int thread_init (iot_thpool * thpool_p, iot_thread ** thread_p, int id);
+static iot_thread * thread_init (iot_threadpool * thpool, unsigned id);
 static void* thread_do (iot_thread* thread_p);
 #ifndef __ZEPHYR__
 static void thread_hold (int sig_id);
 #endif
-static void thread_destroy (iot_thread * thread_p);
 
-static int jobqueue_init (iot_jobqueue * jobqueue_p);
-static void jobqueue_clear (iot_jobqueue * jobqueue_p);
-static void jobqueue_push (iot_jobqueue * jobqueue_p, iot_job * newjob_p);
-static struct iot_job * jobqueue_pull (iot_jobqueue * jobqueue_p);
-static void jobqueue_destroy (iot_jobqueue * jobqueue_p);
+static void jobqueue_init (iot_jobqueue * jobqueue);
+static void jobqueue_clear (iot_jobqueue * jobqueue);
+static void jobqueue_push (iot_jobqueue * jobqueue, iot_job * newjob);
+static struct iot_job * jobqueue_pull (iot_jobqueue * jobqueue);
+static void jobqueue_destroy (iot_jobqueue * jobqueue);
 
-static void bsem_init (iot_bsem *bsem_p, int value);
-static void bsem_reset (iot_bsem *bsem_p);
-static void bsem_post (iot_bsem *bsem_p);
-static void bsem_post_all (iot_bsem *bsem_p);
-static void bsem_wait (iot_bsem *bsem_p);
+static void bsem_init (iot_bsem *bsem, int value);
+static void bsem_reset (iot_bsem *bsem);
+static void bsem_post (iot_bsem *bsem);
+static void bsem_post_all (iot_bsem *bsem);
+static void bsem_wait (iot_bsem *bsem);
 
 
 /* ========================== THREADPOOL ============================ */
 
 /* Initialise thread pool */
-iot_threadpool iot_thpool_init (unsigned num_threads)
+iot_threadpool * iot_thpool_init (unsigned num_threads)
 {
 	threads_on_hold   = 0;
 	threads_keepalive = 1;
 
 	/* Make new thread pool */
-	iot_thpool * thpool_p;
-	thpool_p = (struct iot_thpool *) malloc (sizeof (*thpool_p));
-	thpool_p->num_threads_alive   = 0;
-	thpool_p->num_threads_working = 0;
+	iot_threadpool * thpool = (iot_threadpool*) malloc (sizeof (*thpool));
+	thpool->num_threads_alive   = 0;
+	thpool->num_threads_working = 0;
 
 	/* Initialise the job queue */
-	jobqueue_init (&thpool_p->jobqueue);
+	jobqueue_init (&thpool->jobqueue);
 
 	/* Make threads in pool */
-	thpool_p->threads = (iot_thread**) malloc (num_threads * sizeof (struct thread *));
+	thpool->threads = (iot_thread**) malloc (num_threads * sizeof (struct thread *));
 
-	pthread_mutex_init (&(thpool_p->thcount_lock), NULL);
-	pthread_cond_init (&thpool_p->threads_all_idle, NULL);
+	pthread_mutex_init (&(thpool->thcount_lock), NULL);
+	pthread_cond_init (&thpool->threads_all_idle, NULL);
 
 	/* Thread init */
-	int n;
-	for (n=0; n<num_threads; n++)
+
+	for (unsigned n = 0; n < num_threads; n++)
 	{
-		thread_init(thpool_p, &thpool_p->threads[n], n);
+		thpool->threads[n] = thread_init(thpool, n);
 #if THPOOL_DEBUG
-		printf("THPOOL_DEBUG: Created thread %d in pool \n", n);
+		printf ("THPOOL_DEBUG: Created thread %u in pool \n", n);
 #endif
 	}
 
 	/* Wait for threads to initialize */
-	while (thpool_p->num_threads_alive != num_threads) {}
+	while (thpool->num_threads_alive != num_threads)
+	{
+	  usleep (10000);
+	}
 
-	return thpool_p;
+	return thpool;
 }
 
 /* Add work to the thread pool */
-void iot_thpool_add_work (iot_threadpool thpool_p, void (*function_p)(void*), void* arg_p)
+void iot_thpool_add_work (iot_threadpool * thpool_p, void (*function_p)(void*), void* arg_p)
 {
 	iot_job * newjob = (iot_job*) malloc (sizeof (*newjob));
-
-	/* add function and argument */
-	newjob->function=function_p;
-	newjob->arg=arg_p;
-
-	/* add job to queue */
+	newjob->function = function_p;
+	newjob->arg = arg_p;
 	jobqueue_push (&thpool_p->jobqueue, newjob);
 }
 
 /* Wait until all jobs have finished */
-void iot_thpool_wait (iot_thpool * thpool_p)
+void iot_thpool_wait (iot_threadpool * thpool_p)
 {
 	pthread_mutex_lock (&thpool_p->thcount_lock);
 	while (thpool_p->jobqueue.len || thpool_p->num_threads_working)
@@ -177,7 +168,7 @@ static double difftime (time_t end, time_t start)
 #endif
 
 /* Destroy the threadpool */
-void iot_thpool_destroy (iot_threadpool thpool_p)
+void iot_thpool_destroy (iot_threadpool * thpool_p)
 {
 	/* No need to destory if it's NULL */
 	if (thpool_p == NULL) return ;
@@ -196,7 +187,7 @@ void iot_thpool_destroy (iot_threadpool thpool_p)
 	{
 		bsem_post_all (thpool_p->jobqueue.has_jobs);
 		time (&end);
-		tpassed = difftime (end,start);
+		tpassed = difftime (end, start);
 	}
 
 	/* Poll remaining threads */
@@ -211,15 +202,15 @@ void iot_thpool_destroy (iot_threadpool thpool_p)
 	/* Deallocs */
 	for (unsigned n = 0; n < threads_total; n++)
 	{
-		thread_destroy (thpool_p->threads[n]);
+		free (thpool_p->threads[n]);
 	}
 	free (thpool_p->threads);
 	free (thpool_p);
 }
 
-unsigned iot_thpool_num_threads_working (iot_threadpool thpool_p)
+unsigned iot_thpool_num_threads_working (iot_threadpool * thpool)
 {
-	return thpool_p->num_threads_working;
+	return thpool->num_threads_working;
 }
 
 /* ============================ THREAD ============================== */
@@ -231,12 +222,12 @@ unsigned iot_thpool_num_threads_working (iot_threadpool thpool_p)
  * @param id            id to be given to the thread
  * @return 0 on success, -1 otherwise.
  */
-static int thread_init (iot_threadpool thpool_p, struct iot_thread ** thread_p, int id)
+static struct iot_thread * thread_init (iot_threadpool * thpool, unsigned id)
 {
-	*thread_p = (struct iot_thread*) malloc (sizeof (*thread_p));
+	iot_thread * th = (iot_thread*) malloc (sizeof (*th));
 
-	(*thread_p)->thpool_p = thpool_p;
-	(*thread_p)->id = id;
+	th->thpool = thpool;
+	th->id = id;
 #ifdef __ZEPHYR__
 	pthread_attr_t attr;
 	struct sched_param schedparam;
@@ -245,11 +236,11 @@ static int thread_init (iot_threadpool thpool_p, struct iot_thread ** thread_p, 
 	schedparam.sched_priority = CONFIG_NUM_COOP_PRIORITIES - 1;
 	pthread_attr_setschedparam (&attr, &schedparam);
 	pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
-	pthread_create (&(*thread_p)->pthread, &attr, (void *)thread_do, (*thread_p));
+	pthread_create (&th->pthread, &attr, (void *)thread_do, (*thread_p));
 #else
-	pthread_create (&(*thread_p)->pthread, NULL, (void*) thread_do, (*thread_p));
+	pthread_create (&th->pthread, NULL, (void*) thread_do, th);
 #endif
-	pthread_detach ((*thread_p)->pthread);
+	pthread_detach (th->pthread);
 	return 0;
 }
 
@@ -258,11 +249,11 @@ static int thread_init (iot_threadpool thpool_p, struct iot_thread ** thread_p, 
 /* Sets the calling thread on hold */
 static void thread_hold (int sig_id)
 {
-  (void)sig_id;
+  (void) sig_id;
 	threads_on_hold = 1;
 	while (threads_on_hold)
 	{
-		sleep(1);
+		sleep (1);
 	}
 }
 #endif
@@ -279,7 +270,7 @@ static void* thread_do (iot_thread * thread_p)
 {
 	/* Set thread name for profiling and debuging */
 	char thread_name[128] = {0};
-	sprintf (thread_name, "thread-pool-%d", thread_p->id);
+	sprintf (thread_name, "thread-pool-%u", thread_p->id);
 
 #if defined(__linux__)
 	/* Use prctl instead to prevent using _GNU_SOURCE flag and implicit declaration */
@@ -291,7 +282,7 @@ static void* thread_do (iot_thread * thread_p)
 #endif
 
 	/* Assure all threads have been created before starting serving */
-	iot_thpool * thpool_p = thread_p->thpool_p;
+	iot_threadpool * thpool_p = thread_p->thpool;
 
 #ifndef __ZEPHYR__
 	/* Register signal handler */
@@ -347,152 +338,136 @@ static void* thread_do (iot_thread * thread_p)
 	return NULL;
 }
 
-/* Frees a thread  */
-static void thread_destroy (iot_thread * thread_p)
-{
-	free (thread_p);
-}
-
 
 /* ============================ JOB QUEUE =========================== */
 
 
 /* Initialize queue */
-static int jobqueue_init (iot_jobqueue* jobqueue_p)
+static void jobqueue_init (iot_jobqueue * jobqueue)
 {
-	jobqueue_p->len = 0;
-	jobqueue_p->front = NULL;
-	jobqueue_p->rear  = NULL;
-
-	jobqueue_p->has_jobs = (iot_bsem*) malloc (sizeof (iot_bsem));
-	if (jobqueue_p->has_jobs == NULL)
-	{
-		return -1;
-	}
-	pthread_mutex_init (&(jobqueue_p->rwmutex), NULL);
-	bsem_init (jobqueue_p->has_jobs, 0);
-
-	return 0;
+	jobqueue->len = 0;
+	jobqueue->front = NULL;
+	jobqueue->rear  = NULL;
+	jobqueue->has_jobs = (iot_bsem*) malloc (sizeof (iot_bsem));
+	pthread_mutex_init (&(jobqueue->rwmutex), NULL);
+	bsem_init (jobqueue->has_jobs, 0);
 }
 
 /* Clear the queue */
-static void jobqueue_clear (iot_jobqueue* jobqueue_p)
+static void jobqueue_clear (iot_jobqueue * jobqueue)
 {
-	while(jobqueue_p->len)
+	while (jobqueue->len)
 	{
-		free (jobqueue_pull(jobqueue_p));
+		free (jobqueue_pull (jobqueue));
 	}
-
-	jobqueue_p->front = NULL;
-	jobqueue_p->rear  = NULL;
-	bsem_reset(jobqueue_p->has_jobs);
-	jobqueue_p->len = 0;
+	jobqueue->front = NULL;
+	jobqueue->rear  = NULL;
+	bsem_reset (jobqueue->has_jobs);
 }
 
 
 /* Add (allocated) job to queue
  */
-static void jobqueue_push (iot_jobqueue * jobqueue_p, iot_job * newjob)
+static void jobqueue_push (iot_jobqueue * jobqueue, iot_job * newjob)
 {
-	pthread_mutex_lock (&jobqueue_p->rwmutex);
+	pthread_mutex_lock (&jobqueue->rwmutex);
 	newjob->prev = NULL;
 
-	switch (jobqueue_p->len)
+	if (jobqueue->len == 0)
+  {
+    jobqueue->front = newjob;
+  }
+	else
 	{
-		case 0:  /* if no jobs in queue */
-		  jobqueue_p->front = newjob;
-		  jobqueue_p->rear  = newjob;
-		  break;
-		default: /* if jobs in queue */
-		  jobqueue_p->rear->prev = newjob;
-		  jobqueue_p->rear = newjob;
+	  jobqueue->rear->prev = newjob;
 	}
-	jobqueue_p->len++;
+	jobqueue->rear = newjob;
+	jobqueue->len++;
 
-	bsem_post (jobqueue_p->has_jobs);
-	pthread_mutex_unlock (&jobqueue_p->rwmutex);
+	bsem_post (jobqueue->has_jobs);
+	pthread_mutex_unlock (&jobqueue->rwmutex);
 }
 
-static struct iot_job * jobqueue_pull (iot_jobqueue * jobqueue_p)
+static struct iot_job * jobqueue_pull (iot_jobqueue * jobqueue)
 {
-	pthread_mutex_lock (&jobqueue_p->rwmutex);
-	iot_job* job_p = jobqueue_p->front;
+	pthread_mutex_lock (&jobqueue->rwmutex);
+	iot_job* job = jobqueue->front;
 
-	switch (jobqueue_p->len)
+	switch (jobqueue->len)
 	{
 		case 0:  /* if no jobs in queue */
 		  break;
 		case 1:  /* if one job in queue */
-		  jobqueue_p->front = NULL;
-		  jobqueue_p->rear  = NULL;
-		  jobqueue_p->len = 0;
+		  jobqueue->front = NULL;
+		  jobqueue->rear  = NULL;
+		  jobqueue->len = 0;
 		  break;
 		default: /* if >1 jobs in queue */
-		  jobqueue_p->front = job_p->prev;
-		  jobqueue_p->len--;
+		  jobqueue->front = job->prev;
+		  jobqueue->len--;
 		  /* more than one job in queue -> post it */
-		  bsem_post (jobqueue_p->has_jobs);
+		  bsem_post (jobqueue->has_jobs);
 	}
 
-	pthread_mutex_unlock (&jobqueue_p->rwmutex);
-	return job_p;
+	pthread_mutex_unlock (&jobqueue->rwmutex);
+	return job;
 }
 
 /* Free all queue resources back to the system */
-static void jobqueue_destroy (iot_jobqueue* jobqueue_p)
+static void jobqueue_destroy (iot_jobqueue * jobqueue)
 {
-	jobqueue_clear (jobqueue_p);
-	free (jobqueue_p->has_jobs);
+	jobqueue_clear (jobqueue);
+	free (jobqueue->has_jobs);
 }
 
 
 /* ======================== SYNCHRONISATION ========================= */
 
 /* Init semaphore to 1 or 0 */
-static void bsem_init (iot_bsem * bsem_p, int value)
+static void bsem_init (iot_bsem * bsem, int value)
 {
 	if (value < 0 || value > 1)
 	{
 		err ("bsem_init(): Binary semaphore can take only values 1 or 0");
 		exit (1);
 	}
-	pthread_mutex_init (&(bsem_p->mutex), NULL);
-	pthread_cond_init (&(bsem_p->cond), NULL);
-	bsem_p->v = value;
+	pthread_mutex_init (&(bsem->mutex), NULL);
+	pthread_cond_init (&(bsem->cond), NULL);
+	bsem->v = value;
 }
 
 /* Reset semaphore to 0 */
-static void bsem_reset (iot_bsem * bsem_p)
+static void bsem_reset (iot_bsem * bsem)
 {
-	bsem_init (bsem_p, 0);
+	bsem_init (bsem, 0);
 }
 
 /* Post to at least one thread */
-static void bsem_post (iot_bsem * bsem_p)
+static void bsem_post (iot_bsem * bsem)
 {
-	pthread_mutex_lock (&bsem_p->mutex);
-	bsem_p->v = 1;
-	pthread_cond_signal (&bsem_p->cond);
-	pthread_mutex_unlock (&bsem_p->mutex);
+	pthread_mutex_lock (&bsem->mutex);
+	bsem->v = 1;
+	pthread_cond_signal (&bsem->cond);
+	pthread_mutex_unlock (&bsem->mutex);
 }
 
 /* Post to all threads */
-static void bsem_post_all (iot_bsem * bsem_p)
+static void bsem_post_all (iot_bsem * bsem)
 {
-	pthread_mutex_lock (&bsem_p->mutex);
-	bsem_p->v = 1;
-	pthread_cond_broadcast (&bsem_p->cond);
-	pthread_mutex_unlock (&bsem_p->mutex);
+	pthread_mutex_lock (&bsem->mutex);
+	bsem->v = 1;
+	pthread_cond_broadcast (&bsem->cond);
+	pthread_mutex_unlock (&bsem->mutex);
 }
 
 /* Wait on semaphore until semaphore has value 0 */
-static void bsem_wait (iot_bsem * bsem_p)
+static void bsem_wait (iot_bsem * bsem)
 {
-	pthread_mutex_lock (&bsem_p->mutex);
-	while (bsem_p->v != 1)
+	pthread_mutex_lock (&bsem->mutex);
+	while (bsem->v != 1)
 	{
-		pthread_cond_wait (&bsem_p->cond, &bsem_p->mutex);
+		pthread_cond_wait (&bsem->cond, &bsem->mutex);
 	}
-	bsem_p->v = 0;
-	pthread_mutex_unlock (&bsem_p->mutex);
+	bsem->v = 0;
+	pthread_mutex_unlock (&bsem->mutex);
 }

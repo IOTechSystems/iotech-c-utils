@@ -3,7 +3,7 @@
 
 #include "iot/os.h"
 
-typedef struct iot_thpool * iot_threadpool;
+typedef struct iot_threadpool iot_threadpool;
 
 
 /**
@@ -22,7 +22,7 @@ typedef struct iot_thpool * iot_threadpool;
  * @param  num_threads   number of threads to be created in the threadpool
  * @return iot_threadpool    created threadpool on success, NULL on error
  */
-iot_threadpool iot_thpool_init (unsigned num_threads);
+iot_threadpool * iot_thpool_init (unsigned num_threads);
 
 
 /**
@@ -48,10 +48,10 @@ iot_threadpool iot_thpool_init (unsigned num_threads);
  *    }
  *
  * @param  iot_threadpool  threadpool to which the work will be added
- * @param  function_p      pointer to function to add as work
- * @param  arg_p           pointer to an argument
+ * @param  function        pointer to function to add as work
+ * @param  arg             pointer to an argument
  */
-void iot_thpool_add_work (iot_threadpool, void (*function_p)(void*), void* arg_p);
+void iot_thpool_add_work (iot_threadpool * thpool, void (*function) (void*), void * arg);
 
 
 /**
@@ -81,7 +81,7 @@ void iot_thpool_add_work (iot_threadpool, void (*function_p)(void*), void* arg_p
  * @param iot_threadpool the threadpool to wait for
  * @return nothing
  */
-void iot_thpool_wait (iot_threadpool);
+void iot_thpool_wait (iot_threadpool * thpool);
 
 /**
  * @brief Destroy the threadpool
@@ -102,7 +102,7 @@ void iot_thpool_wait (iot_threadpool);
  * @param iot_threadpool the threadpool to destroy
  * @return nothing
  */
-void iot_thpool_destroy (iot_threadpool);
+void iot_thpool_destroy (iot_threadpool * thpool);
 
 
 /**
@@ -123,6 +123,6 @@ void iot_thpool_destroy (iot_threadpool);
  * @param iot_threadpool the threadpool of interest
  * @return integer       number of threads working
  */
-unsigned iot_thpool_num_threads_working (iot_threadpool);
+unsigned iot_thpool_num_threads_working (iot_threadpool * thpool);
 
 #endif

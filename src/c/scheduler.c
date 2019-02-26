@@ -52,7 +52,7 @@ typedef struct iot_schd_thread_t
   pthread_mutex_t mutex;         /* Mutex to control access to the scheduler */
   sem_t sem;                     /* Semaphore to control schedule execution */
   bool running;                  /* Flag to indicate if the scheduler is running */
-  iot_threadpool thpool;         /* Threadpool to post jobs to */
+  iot_threadpool * thpool;       /* Threadpool to post jobs to */
 } iot_schd_thread_t;
 
 
@@ -199,9 +199,9 @@ static void *iot_scheduler_thread (void *params_i)
 
 
 /* Initialise the schedule queue and processing thread */
-void *iot_scheduler_init (iot_threadpool thpool_i)
+void * iot_scheduler_init (iot_threadpool * thpool)
 {
-  iot_schd_thread_t *scheduler = (struct iot_schd_thread_t *) malloc (sizeof (*scheduler));
+  iot_schd_thread_t * scheduler = (iot_schd_thread_t*) malloc (sizeof (*scheduler));
 
   /* Init mutex */
   pthread_mutex_init (&(scheduler->mutex), NULL);
@@ -215,7 +215,7 @@ void *iot_scheduler_init (iot_threadpool thpool_i)
   scheduler->running = false;
 
   /* Add the threadpool */
-  scheduler->thpool = thpool_i;
+  scheduler->thpool = thpool;
 
   /* Init semaphore */
   sem_init (&scheduler->sem, 0, 0);

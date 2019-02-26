@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include "iot/scheduler.h"
 #include "iot/coredata.h"
 
@@ -42,7 +41,7 @@ struct iot_coredata_t
   iot_coredata_sub_t * subscribers;
   iot_coredata_pub_t * publishers;
   iot_coredata_match_t * matches;
-  iot_threadpool thpool;
+  iot_threadpool * thpool;
   iot_scheduler scheduler;
   uint64_t interval;
   pthread_rwlock_t lock;
@@ -308,7 +307,6 @@ iot_coredata_pub_t * iot_coredata_pub_alloc (iot_coredata_t * cd, void * self, i
     pub->base.self = self;
     pub->base.coredata = cd;
     pub->topic = strdup (topic);
-    pub->callback = callback;
     if (cd->publishers)
     {
       pub->base.next = &cd->publishers->base;

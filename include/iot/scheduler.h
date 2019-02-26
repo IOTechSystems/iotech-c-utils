@@ -36,7 +36,7 @@ typedef void * iot_schedule;
  * @return iot_scheduler        A pointer to the created scheduler.
  *                              NULL on error.
  */
-iot_scheduler iot_scheduler_init (iot_threadpool thpool);
+iot_scheduler iot_scheduler_init (iot_threadpool * thpool);
 
 
 /**

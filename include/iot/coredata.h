@@ -10,12 +10,16 @@
 
 #include "iot/data.h"
 
+/* Types */
+
 typedef struct iot_coredata_t iot_coredata_t;
 typedef struct iot_coredata_sub_t iot_coredata_sub_t;
 typedef struct iot_coredata_pub_t iot_coredata_pub_t;
-
+typedef struct iot_coredata_topic_t iot_coredata_topic_t;
 typedef iot_data_t * (*iot_data_pub_cb_fn_t) (void * self);
 typedef void (*iot_data_sub_fn_t) (iot_data_t * data, void * self, const char * match);
+
+/* Lifecycle operations */
 
 extern iot_coredata_t * iot_coredata_alloc (void);
 extern void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config);
