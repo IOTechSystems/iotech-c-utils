@@ -75,7 +75,6 @@ typedef struct iot_threadpool
 
 /* ========================== PROTOTYPES ============================ */
 
-static iot_thread * thread_init (iot_threadpool * thpool, unsigned id);
 static void* thread_do (iot_thread* thread_p);
 #ifndef __ZEPHYR__
 static void thread_hold (int sig_id);
@@ -99,15 +98,11 @@ static void bsem_wait (iot_bsem *bsem);
 /* Initialise thread pool */
 iot_threadpool * iot_thpool_init (unsigned num_threads)
 {
-	threads_on_hold   = 0;
+	threads_on_hold = 0;
 	threads_keepalive = 1;
 
-	/* Make new thread pool */
-	iot_threadpool * thpool = (iot_threadpool*) malloc (sizeof (*thpool));
-	thpool->num_threads_alive   = 0;
-	thpool->num_threads_working = 0;
+	iot_threadpool * thpool = (iot_threadpool*) calloc (1, sizeof (*thpool));
 
-	/* Initialise the job queue */
 	jobqueue_init (&thpool->jobqueue);
 
 	/* Make threads in pool */
@@ -120,7 +115,25 @@ iot_threadpool * iot_thpool_init (unsigned num_threads)
 
 	for (unsigned n = 0; n < num_threads; n++)
 	{
-		thpool->threads[n] = thread_init(thpool, n);
+	  iot_thread * th = (iot_thread*) calloc (1, sizeof (*th));
+	  th->thpool = thpool;
+	  th->id = n;
+    thpool->threads[n] = th;
+
+#ifdef __ZEPHYR__
+    pthread_attr_t attr;
+	struct sched_param schedparam;
+	pthread_attr_init (&attr);
+	pthread_attr_setstack (&attr, thread_stacks[id], STACK_SIZE);
+	schedparam.sched_priority = CONFIG_NUM_COOP_PRIORITIES - 1;
+	pthread_attr_setschedparam (&attr, &schedparam);
+	pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
+	pthread_create (&th->pthread, &attr, (void*) thread_do, th);
+#else
+    pthread_create (&th->pthread, NULL, (void*) thread_do, th);
+#endif
+    pthread_detach (th->pthread);
+
 #if THPOOL_DEBUG
 		printf ("THPOOL_DEBUG: Created thread %u in pool \n", n);
 #endif
@@ -129,7 +142,7 @@ iot_threadpool * iot_thpool_init (unsigned num_threads)
 	/* Wait for threads to initialize */
 	while (thpool->num_threads_alive != num_threads)
 	{
-	  usleep (10000);
+	  usleep (100000);
 	}
 
 	return thpool;
@@ -214,36 +227,6 @@ unsigned iot_thpool_num_threads_working (iot_threadpool * thpool)
 }
 
 /* ============================ THREAD ============================== */
-
-
-/* Initialize a thread in the thread pool
- *
- * @param thread        address to the pointer of the thread to be created
- * @param id            id to be given to the thread
- * @return 0 on success, -1 otherwise.
- */
-static struct iot_thread * thread_init (iot_threadpool * thpool, unsigned id)
-{
-	iot_thread * th = (iot_thread*) malloc (sizeof (*th));
-
-	th->thpool = thpool;
-	th->id = id;
-#ifdef __ZEPHYR__
-	pthread_attr_t attr;
-	struct sched_param schedparam;
-	pthread_attr_init (&attr);
-	pthread_attr_setstack (&attr, thread_stacks[id], STACK_SIZE);
-	schedparam.sched_priority = CONFIG_NUM_COOP_PRIORITIES - 1;
-	pthread_attr_setschedparam (&attr, &schedparam);
-	pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
-	pthread_create (&th->pthread, &attr, (void *)thread_do, (*thread_p));
-#else
-	pthread_create (&th->pthread, NULL, (void*) thread_do, th);
-#endif
-	pthread_detach (th->pthread);
-	return 0;
-}
-
 
 #ifndef __ZEPHYR__
 /* Sets the calling thread on hold */
