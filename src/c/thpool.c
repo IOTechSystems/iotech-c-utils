@@ -32,7 +32,7 @@ typedef struct iot_bsem
 {
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
-	int v;
+	bool val;
 } iot_bsem;
 
 /* Job */
@@ -84,7 +84,7 @@ static void jobqueue_push (iot_jobqueue * jobqueue, iot_job * newjob);
 static struct iot_job * jobqueue_pull (iot_jobqueue * jobqueue);
 static void jobqueue_destroy (iot_jobqueue * jobqueue);
 
-static void bsem_init (iot_bsem * bsem, int value);
+static void bsem_init (iot_bsem * bsem, bool value);
 static void bsem_reset (iot_bsem * bsem);
 static void bsem_post (iot_bsem * bsem);
 static void bsem_post_all (iot_bsem * bsem);
@@ -284,7 +284,7 @@ static void jobqueue_init (iot_jobqueue * jobqueue)
 	jobqueue->rear  = NULL;
 	jobqueue->has_jobs = (iot_bsem*) malloc (sizeof (iot_bsem));
 	pthread_mutex_init (&(jobqueue->rwmutex), NULL);
-	bsem_init (jobqueue->has_jobs, 0);
+	bsem_init (jobqueue->has_jobs, false);
 }
 
 /* Clear the queue */
@@ -358,29 +358,24 @@ static void jobqueue_destroy (iot_jobqueue * jobqueue)
 /* ======================== SYNCHRONISATION ========================= */
 
 /* Init semaphore to 1 or 0 */
-static void bsem_init (iot_bsem * bsem, int value)
+static void bsem_init (iot_bsem * bsem, bool value)
 {
-	if (value < 0 || value > 1)
-	{
-		err ("bsem_init(): Binary semaphore can take only values 1 or 0");
-		exit (1);
-	}
 	pthread_mutex_init (&(bsem->mutex), NULL);
 	pthread_cond_init (&(bsem->cond), NULL);
-	bsem->v = value;
+	bsem->val = value;
 }
 
-/* Reset semaphore to 0 */
+/* Reset semaphore */
 static void bsem_reset (iot_bsem * bsem)
 {
-	bsem_init (bsem, 0);
+	bsem_init (bsem, false);
 }
 
 /* Post to at least one thread */
 static void bsem_post (iot_bsem * bsem)
 {
 	pthread_mutex_lock (&bsem->mutex);
-	bsem->v = 1;
+	bsem->val = true;
 	pthread_cond_signal (&bsem->cond);
 	pthread_mutex_unlock (&bsem->mutex);
 }
@@ -389,19 +384,19 @@ static void bsem_post (iot_bsem * bsem)
 static void bsem_post_all (iot_bsem * bsem)
 {
 	pthread_mutex_lock (&bsem->mutex);
-	bsem->v = 1;
+	bsem->val = true;
 	pthread_cond_broadcast (&bsem->cond);
 	pthread_mutex_unlock (&bsem->mutex);
 }
 
-/* Wait on semaphore until semaphore has value 0 */
+/* Wait on semaphore until semaphore true */
 static void bsem_wait (iot_bsem * bsem)
 {
 	pthread_mutex_lock (&bsem->mutex);
-	while (bsem->v != 1)
+	while (! bsem->val)
 	{
 		pthread_cond_wait (&bsem->cond, &bsem->mutex);
 	}
-	bsem->v = 0;
+	bsem->val = false;
 	pthread_mutex_unlock (&bsem->mutex);
 }
