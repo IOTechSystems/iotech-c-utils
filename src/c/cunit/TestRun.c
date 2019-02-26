@@ -566,7 +566,6 @@ CU_EXPORT void CU_print_run_results(FILE *file)
 
 /*------------------------------------------------------------------------*/
 CU_EXPORT char * CU_get_run_results_string(void)
-
 {
   CU_pRunSummary pRunSummary = &f_run_summary;
   CU_pTestRegistry pRegistry = CU_get_registry();
