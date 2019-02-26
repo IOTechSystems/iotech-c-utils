@@ -115,13 +115,13 @@ iot_threadpool * iot_thpool_init (unsigned num_threads)
 
 #ifdef __ZEPHYR__
     pthread_attr_t attr;
-	struct sched_param schedparam;
-	pthread_attr_init (&attr);
-	pthread_attr_setstack (&attr, thread_stacks[id], STACK_SIZE);
-	schedparam.sched_priority = CONFIG_NUM_COOP_PRIORITIES - 1;
-	pthread_attr_setschedparam (&attr, &schedparam);
-	pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
-	pthread_create (&th->pthread, &attr, (void*) thread_do, th);
+  	struct sched_param schedparam;
+	  pthread_attr_init (&attr);
+	  pthread_attr_setstack (&attr, thread_stacks[n], STACK_SIZE);
+  	schedparam.sched_priority = CONFIG_NUM_COOP_PRIORITIES - 1;
+	  pthread_attr_setschedparam (&attr, &schedparam);
+	  pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
+	  pthread_create (&th->pthread, &attr, (void*) thread_do, th);
 #else
     pthread_create (&th->pthread, NULL, (void*) thread_do, th);
 #endif
