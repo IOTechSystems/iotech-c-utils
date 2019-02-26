@@ -10,4 +10,4 @@ COPY scripts /iotech-c-utils/scripts
 RUN /opt/rh/devtoolset-7/enable
 ENV CC /opt/rh/devtoolset-7/root/bin/gcc
 WORKDIR /iotech-c-utils
-ENTRYPOINT ["/iotech-c-utils/scripts/entrypoint.sh"]
+ENTRYPOINT ["/iotech-c-utils/scripts/linux.sh"]

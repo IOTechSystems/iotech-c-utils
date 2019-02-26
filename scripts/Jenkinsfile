@@ -43,6 +43,7 @@ def archiveStage (arch)
     publishDebs (arch, server)
     publishApks (arch, server)
     publishRpms (arch, server)
+    publishTars (arch, server)
   }
 }
 
@@ -121,11 +122,6 @@ def publishApks (arch, server)
       sh "./scripts/package.sh ${apks[i]} ${arch}"
       def uploadSpec = """{"files":[
       {
-        "pattern": "${arch}/${apks[i]}/release/cutils*.tar.gz",
-        "target": "${repo}/${apks[i]}/",
-        "props": "distribution=${apks[i]};architecture=${apk_archs[arch]}"
-      },
-      {
         "pattern": "apk/${apks[i]}/packager/${arch}/*.apk",
         "target": "alpine/${apks[i]}/${arch}/"
       }
@@ -154,6 +150,33 @@ def publishRpms (arch, server)
         "target": "${rpm_repo[rpms[i]]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }]}"""
+      server.upload (uploadSpec)
+    }
+  }
+}
+
+def publishTars (arch, server)
+{
+  def tars_x86_64 = ['alpine-3.7','alpine-3.8','alpine-3.9','zephyr-1.14']
+  def tars_arm64 = ['alpine-3.7','alpine-3.8','alpine-3.9']
+  def tars_arm32 = ['alpine-3.7','alpine-3.8','alpine-3.9']
+  def tar_lists = [x86_64: tars_x86_64, arm64: tars_arm64, arm32: tars_arm32]
+  def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
+  def tars = tar_lists[arch]
+  def repos = ['Release':'generic-local','Development':'generic-dev']
+  def repo = repos["${params.Archive}"]
+
+  for (int i = 0; i < tars.size(); ++i)
+  {
+    if ("${params.System}" == "${tars[i]}" || "${params.System}" == 'all')
+    {
+      def uploadSpec = """{"files":[
+      {
+        "pattern": "${arch}/${tars[i]}/release/cutils*.tar.gz",
+        "target": "${repo}/${tars[i]}/",
+        "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
+      }
+      ]}"""
       server.upload (uploadSpec)
     }
   }
