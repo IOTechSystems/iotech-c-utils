@@ -575,7 +575,7 @@ static void iot_data_strcat (iot_string_holder_t * holder, const char * add)
   holder->free -= len;
 }
 
-static void iot_data_print_raw (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
+static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
 {
   char buff [128];
   wrap = wrap || data->type == IOT_DATA_BOOL;
@@ -603,7 +603,7 @@ static void iot_data_print_raw (iot_string_holder_t * holder, const iot_data_t *
   iot_data_strcat (holder, buff);
 }
 
-static void iot_data_print (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
+static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
 {
   switch (data->type)
   {
@@ -632,9 +632,9 @@ static void iot_data_print (iot_string_holder_t * holder, const iot_data_t * dat
       {
         key = iot_data_map_iter_key (&iter);
         value = iot_data_map_iter_value (&iter);
-        iot_data_print (holder, key, true);
+        iot_data_dump (holder, key, true);
         iot_data_strcat (holder, ":");
-        iot_data_print (holder, value, wrap);
+        iot_data_dump (holder, value, wrap);
         if (iter.pair->base.next)
         {
           iot_data_strcat (holder, ",");
@@ -652,7 +652,7 @@ static void iot_data_print (iot_string_holder_t * holder, const iot_data_t * dat
       while (iot_data_array_iter_next (&iter))
       {
         value = iot_data_array_iter_value (&iter);
-        iot_data_print (holder, value, wrap);
+        iot_data_dump (holder, value, wrap);
         if (iter.index < iter.array->size)
         {
           iot_data_strcat (holder, ",");
@@ -661,7 +661,7 @@ static void iot_data_print (iot_string_holder_t * holder, const iot_data_t * dat
       iot_data_strcat (holder, "]");
       break;
     }
-    default: iot_data_print_raw (holder, data, wrap);
+    default: iot_data_dump_raw (holder, data, wrap);
   }
 }
 
@@ -672,6 +672,6 @@ char * iot_data_to_json (const iot_data_t * data, bool wrap)
   holder.str = calloc (1, IOT_JSON_BUFF_SIZE);
   holder.size = IOT_JSON_BUFF_SIZE;
   holder.free = IOT_JSON_BUFF_SIZE - 1; // Allowing for string terminator
-  iot_data_print (&holder, data, wrap);
+  iot_data_dump (&holder, data, wrap);
   return holder.str;
 }
