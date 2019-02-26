@@ -9,6 +9,9 @@
  ********************************/
 
 #include "iot/thpool.h"
+#if defined(__linux__)
+#include <sys/prctl.h>
+#endif
 
 #ifdef THPOOL_DEBUG
 #define err(str) fprintf (stderr, str)
@@ -95,36 +98,28 @@ iot_threadpool * iot_thpool_init (unsigned num_threads)
 {
 	iot_threadpool * thpool = (iot_threadpool*) calloc (1, sizeof (*thpool));
 	thpool->running = true;
-
 	jobqueue_init (&thpool->jobqueue);
-
-	/* Make threads in pool */
-	thpool->threads = (iot_thread**) malloc (num_threads * sizeof (iot_thread*));
-
-	pthread_mutex_init (&(thpool->thcount_lock), NULL);
+  pthread_mutex_init (&(thpool->thcount_lock), NULL);
 	pthread_cond_init (&thpool->threads_all_idle, NULL);
 
-	/* Thread init */
-
+	/* Create and start threads */
+	thpool->threads = (iot_thread**) malloc (num_threads * sizeof (iot_thread*));
 	for (unsigned n = 0; n < num_threads; n++)
 	{
+	  pthread_attr_t attr;
 	  iot_thread * th = (iot_thread*) calloc (1, sizeof (*th));
 	  th->thpool = thpool;
 	  th->id = n;
     thpool->threads[n] = th;
 
+    pthread_attr_init (&attr);
 #ifdef __ZEPHYR__
-    pthread_attr_t attr;
-  	struct sched_param schedparam;
-	  pthread_attr_init (&attr);
+  	struct sched_param schedparam = { .sched_priority = CONFIG_NUM_COOP_PRIORITIES - 1 };
 	  pthread_attr_setstack (&attr, thread_stacks[n], STACK_SIZE);
-  	schedparam.sched_priority = CONFIG_NUM_COOP_PRIORITIES - 1;
 	  pthread_attr_setschedparam (&attr, &schedparam);
 	  pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
-	  pthread_create (&th->pthread, &attr, (void*) thread_do, th);
-#else
-    pthread_create (&th->pthread, NULL, (void*) thread_do, th);
 #endif
+    pthread_create (&th->pthread, &attr, (void*) thread_do, th);
     pthread_detach (th->pthread);
 
 #if THPOOL_DEBUG
