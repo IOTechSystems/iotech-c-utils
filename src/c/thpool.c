@@ -16,9 +16,6 @@
 #define err(str)
 #endif
 
-static volatile unsigned threads_keepalive;
-static volatile unsigned threads_on_hold;
-
 #ifdef __ZEPHYR__
 #define STACK_SIZE 4096
 #define MAX_THREADS 5
@@ -70,15 +67,13 @@ typedef struct iot_threadpool
 	pthread_mutex_t  thcount_lock;         /* used for thread count etc */
 	pthread_cond_t  threads_all_idle;      /* signal to iot_thpool_wait */
 	iot_jobqueue  jobqueue;                /* job queue                 */
+	volatile bool running;                 /* state of pool             */
 } iot_threadpool;
 
 
 /* ========================== PROTOTYPES ============================ */
 
-static void* thread_do (iot_thread* thread_p);
-#ifndef __ZEPHYR__
-static void thread_hold (int sig_id);
-#endif
+static void * thread_do (iot_thread * th);
 
 static void jobqueue_init (iot_jobqueue * jobqueue);
 static void jobqueue_clear (iot_jobqueue * jobqueue);
@@ -86,11 +81,11 @@ static void jobqueue_push (iot_jobqueue * jobqueue, iot_job * newjob);
 static struct iot_job * jobqueue_pull (iot_jobqueue * jobqueue);
 static void jobqueue_destroy (iot_jobqueue * jobqueue);
 
-static void bsem_init (iot_bsem *bsem, int value);
-static void bsem_reset (iot_bsem *bsem);
-static void bsem_post (iot_bsem *bsem);
-static void bsem_post_all (iot_bsem *bsem);
-static void bsem_wait (iot_bsem *bsem);
+static void bsem_init (iot_bsem * bsem, int value);
+static void bsem_reset (iot_bsem * bsem);
+static void bsem_post (iot_bsem * bsem);
+static void bsem_post_all (iot_bsem * bsem);
+static void bsem_wait (iot_bsem * bsem);
 
 
 /* ========================== THREADPOOL ============================ */
@@ -98,15 +93,13 @@ static void bsem_wait (iot_bsem *bsem);
 /* Initialise thread pool */
 iot_threadpool * iot_thpool_init (unsigned num_threads)
 {
-	threads_on_hold = 0;
-	threads_keepalive = 1;
-
 	iot_threadpool * thpool = (iot_threadpool*) calloc (1, sizeof (*thpool));
+	thpool->running = true;
 
 	jobqueue_init (&thpool->jobqueue);
 
 	/* Make threads in pool */
-	thpool->threads = (iot_thread**) malloc (num_threads * sizeof (struct thread *));
+	thpool->threads = (iot_thread**) malloc (num_threads * sizeof (iot_thread*));
 
 	pthread_mutex_init (&(thpool->thcount_lock), NULL);
 	pthread_cond_init (&thpool->threads_all_idle, NULL);
@@ -189,7 +182,7 @@ void iot_thpool_destroy (iot_threadpool * thpool_p)
 	volatile unsigned threads_total = thpool_p->num_threads_alive;
 
 	/* End each thread 's infinite loop */
-	threads_keepalive = 0;
+	thpool_p->running = false;
 
 	/* Give one second to kill idle threads */
 	double TIMEOUT = 1.0;
@@ -228,19 +221,6 @@ unsigned iot_thpool_num_threads_working (iot_threadpool * thpool)
 
 /* ============================ THREAD ============================== */
 
-#ifndef __ZEPHYR__
-/* Sets the calling thread on hold */
-static void thread_hold (int sig_id)
-{
-  (void) sig_id;
-	threads_on_hold = 1;
-	while (threads_on_hold)
-	{
-		sleep (1);
-	}
-}
-#endif
-
 /* What each thread is doing
 *
 * In principle this is an endless loop. The only time this loop gets interuppted is once
@@ -249,53 +229,33 @@ static void thread_hold (int sig_id)
 * @param  thread        thread that will run this function
 * @return nothing
 */
-static void* thread_do (iot_thread * thread_p)
+static void* thread_do (iot_thread * th)
 {
-	/* Set thread name for profiling and debuging */
-	char thread_name[128] = {0};
-	sprintf (thread_name, "thread-pool-%u", thread_p->id);
+  iot_threadpool * thpool = th->thpool;
 
-#if defined(__linux__)
+#if defined (__linux__)
+	char thread_name[128] = {0};
+	sprintf (thread_name, "thread-pool-%u", th->id);
 	/* Use prctl instead to prevent using _GNU_SOURCE flag and implicit declaration */
 	prctl (PR_SET_NAME, thread_name);
-#elif defined(__APPLE__) && defined(__MACH__)
-	pthread_setname_np (thread_name);
-#else
-	err("thread_do(): pthread_setname_np is not supported on this system");
-#endif
-
-	/* Assure all threads have been created before starting serving */
-	iot_threadpool * thpool_p = thread_p->thpool;
-
-#ifndef __ZEPHYR__
-	/* Register signal handler */
-	struct sigaction act;
-	sigemptyset (&act.sa_mask);
-	act.sa_flags = 0;
-	act.sa_handler = thread_hold;
-	if (sigaction (SIGUSR1, &act, NULL) == -1)
-	{
-		err ("thread_do(): cannot handle SIGUSR1");
-	}
 #endif
 
 	/* Mark thread as alive (initialized) */
-	pthread_mutex_lock (&thpool_p->thcount_lock);
-	thpool_p->num_threads_alive += 1;
-	pthread_mutex_unlock (&thpool_p->thcount_lock);
+	pthread_mutex_lock (&thpool->thcount_lock);
+	thpool->num_threads_alive += 1;
+	pthread_mutex_unlock (&thpool->thcount_lock);
 
-	while (threads_keepalive)
+	while (thpool->running)
 	{
-		bsem_wait (thpool_p->jobqueue.has_jobs);
-
-		if (threads_keepalive)
+		bsem_wait (thpool->jobqueue.has_jobs);
+		if (thpool->running)
 		{
-			pthread_mutex_lock (&thpool_p->thcount_lock);
-			thpool_p->num_threads_working++;
-			pthread_mutex_unlock (&thpool_p->thcount_lock);
+			pthread_mutex_lock (&thpool->thcount_lock);
+			thpool->num_threads_working++;
+			pthread_mutex_unlock (&thpool->thcount_lock);
 
 			/* Read job from queue and execute it */
-			iot_job * job_p = jobqueue_pull (&thpool_p->jobqueue);
+			iot_job * job_p = jobqueue_pull (&thpool->jobqueue);
 			if (job_p)
 			{
 				void (*func_buff) (void*) = job_p->function;
@@ -304,19 +264,19 @@ static void* thread_do (iot_thread * thread_p)
 				free (job_p);
 			}
 
-			pthread_mutex_lock (&thpool_p->thcount_lock);
-			thpool_p->num_threads_working--;
-			if (!thpool_p->num_threads_working)
+			pthread_mutex_lock (&thpool->thcount_lock);
+			thpool->num_threads_working--;
+			if (!thpool->num_threads_working)
 			{
-				pthread_cond_signal (&thpool_p->threads_all_idle);
+				pthread_cond_signal (&thpool->threads_all_idle);
 			}
-			pthread_mutex_unlock (&thpool_p->thcount_lock);
+			pthread_mutex_unlock (&thpool->thcount_lock);
 
 		}
 	}
-	pthread_mutex_lock (&thpool_p->thcount_lock);
-	thpool_p->num_threads_alive --;
-	pthread_mutex_unlock (&thpool_p->thcount_lock);
+	pthread_mutex_lock (&thpool->thcount_lock);
+	thpool->num_threads_alive--;
+	pthread_mutex_unlock (&thpool->thcount_lock);
 
 	return NULL;
 }
