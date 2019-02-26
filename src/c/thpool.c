@@ -44,10 +44,10 @@ typedef struct iot_job
 typedef struct iot_jobqueue
 {
 	pthread_mutex_t rwmutex;             /* used for queue r/w access */
-	iot_job * front;                      /* pointer to front of queue */
-	iot_job * rear;                       /* pointer to rear  of queue */
-	iot_bsem * has_jobs;                  /* flag as binary semaphore  */
-	unsigned len;                        /* number of jobs in queue   */
+	iot_job * front;                     /* pointer to front of queue */
+	iot_job * rear;                      /* pointer to rear  of queue */
+	iot_bsem * has_jobs;                 /* flag as binary semaphore  */
+	volatile unsigned len;               /* number of jobs in queue   */
 } iot_jobqueue;
 
 /* Thread */
@@ -255,23 +255,19 @@ static void* thread_do (iot_thread * th)
 			pthread_mutex_unlock (&thpool->thcount_lock);
 
 			/* Read job from queue and execute it */
-			iot_job * job_p = jobqueue_pull (&thpool->jobqueue);
-			if (job_p)
+			iot_job * job = jobqueue_pull (&thpool->jobqueue);
+			if (job)
 			{
-				void (*func_buff) (void*) = job_p->function;
-				void * arg_buff  = job_p->arg;
-				func_buff (arg_buff);
-				free (job_p);
+        (job->function) (job->arg);
+				free (job);
 			}
 
 			pthread_mutex_lock (&thpool->thcount_lock);
-			thpool->num_threads_working--;
-			if (!thpool->num_threads_working)
+			if (--thpool->num_threads_working == 0)
 			{
 				pthread_cond_signal (&thpool->threads_all_idle);
 			}
 			pthread_mutex_unlock (&thpool->thcount_lock);
-
 		}
 	}
 	pthread_mutex_lock (&thpool->thcount_lock);
