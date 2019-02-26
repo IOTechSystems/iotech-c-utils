@@ -47,16 +47,24 @@ def archiveStage (arch)
   }
 }
 
+def publishMetric (file)
+{
+  if (fileExists (file))
+  {
+    archiveArtifacts (artifacts: file)
+  }
+}
+
 def publishCoreMetrics (systems, arch)
 {
   for (int i = 0; i < systems.size(); ++i)
   {
     if ("${params.System}" == "${systems[i]}" || "${params.System}" == 'all')
     {
-      archiveArtifacts (artifacts: "${arch}/${systems[i]}/release/release.log")
-      archiveArtifacts (artifacts: "${arch}/${systems[i]}/debug/debug.log")
-      archiveArtifacts (artifacts: "${arch}/${systems[i]}/static/static.log")
-//      archiveArtifacts (artifacts: "${arch}/${systems[i]}/release/junit-Results.xml")
+      publishMetric ("${arch}/${systems[i]}/release/release.log")
+      publishMetric ("${arch}/${systems[i]}/debug/debug.log")
+      publishMetric ("${arch}/${systems[i]}/static/static.log")
+      publishMetric ("${arch}/${systems[i]}/release/junit-Results.xml")
     }
   }
 }
