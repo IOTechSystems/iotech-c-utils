@@ -21,7 +21,7 @@ def buildStage (systems, arch)
     def system = systems[i]
     if ("${params.System}" == "${system}" || "${params.System}" == 'all')
     {
-      sh "./scripts/docker.sh ${system} ${arch} ${env.BUILD_ID}"
+      sh "./scripts/docker.sh ${system} ${arch} ${env.BUILD_ID} ${params.Board}"
     }
   }
 }
