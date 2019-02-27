@@ -96,7 +96,7 @@ extern bool iot_data_map_iter_next (iot_data_map_iter_t * iter);
 extern const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * iter);
 extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter);
 
-extern void iot_data_array_iter (const iot_data_t * map, iot_data_array_iter_t * iter);
+extern void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter);
 extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 extern uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter);
 extern const iot_data_t * iot_data_array_iter_value (const iot_data_array_iter_t * iter);

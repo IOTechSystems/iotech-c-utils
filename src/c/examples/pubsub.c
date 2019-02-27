@@ -19,12 +19,26 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
 static iot_data_t * publisher_callback (void * self);
 
+/*
+      {
+        Interval: 200000000,
+        Threads: 10,
+        Topics: [ { Topic: "test/tube", Priority: 10 } ]
+      }
+ */
+
 static iot_data_t * get_config (void)
 {
   iot_data_init ();
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * array = iot_data_alloc_array (1u);
   iot_data_t * config = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_string_map_add (config, "Interval", iot_data_alloc_ui64 (200000000u));
-  iot_data_string_map_add (config, "Threads", iot_data_alloc_ui32 (2u) );
+  iot_data_string_map_add (config, "Interval", iot_data_alloc_ui64 (200000000));
+  iot_data_string_map_add (config, "Threads", iot_data_alloc_ui32 (2u));
+  iot_data_string_map_add (map, "Topic", iot_data_alloc_string ("test/tube", false));
+  iot_data_string_map_add (map, "Priority", iot_data_alloc_i32 (10));
+  iot_data_array_add (array, 0, map);
+  iot_data_string_map_add (config, "Topics", array);
   return config;
 }
 
@@ -92,8 +106,11 @@ static void subscriber_callback (iot_data_t * data, void * self, const char * ma
 
 static iot_data_t * publisher_callback (void * self)
 {
+  static float f32 = 20.00;
+
+  f32 = f32 * 1.02;
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-7", false));
-  iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (27.34));
+  iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (f32));
   return map;
 }

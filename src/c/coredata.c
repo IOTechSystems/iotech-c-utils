@@ -216,6 +216,8 @@ void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
 {
   assert (cd);
   uint32_t threads = IOT_COREDATA_DEFAULT_THREADS;
+
+  pthread_rwlock_wrlock (&cd->lock);
   cd->interval = IOT_COREDATA_DEFAULT_INTERVAL;
   if (config)
   {
@@ -229,9 +231,28 @@ void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
     {
       threads = iot_data_ui32 (value);
     }
+    value = iot_data_string_map_get (config, "Topics");
+    if (value)
+    {
+      iot_data_array_iter_t iter;
+      const iot_data_t * map;
+      const char * name;
+      int32_t prio;
+      iot_data_array_iter (value, &iter);
+      while (iot_data_array_iter_next (&iter))
+      {
+        map = iot_data_array_iter_value (&iter);
+        value = iot_data_string_map_get (map, "Topic");
+        name = iot_data_string (value);
+        value = iot_data_string_map_get (map, "Priority");
+        prio = iot_data_i32 (value);
+        iot_coredata_topic_create_locked (cd, name, &prio);
+      }
+    }
   }
   cd->thpool = iot_thpool_init (threads);
   cd->scheduler = iot_scheduler_init (cd->thpool);
+  pthread_rwlock_unlock (&cd->lock);
 }
 
 void iot_coredata_start (iot_coredata_t * cd)
