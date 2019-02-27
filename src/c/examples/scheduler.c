@@ -30,12 +30,12 @@ int main (void)
 
   /* Initialise the scheduler */
   printf ("Initialise the scheduler\n");
-  iot_scheduler schd = iot_scheduler_init (thpool);
+  iot_scheduler_t * schd = iot_scheduler_init (thpool);
 
   /* Create two schedules */
   printf ("Create two schedules\n");
-  iot_schedule test1 = iot_schedule_create (schd, testFunc, NULL, IOT_MS_TO_NS(500), 0, 0);
-  iot_schedule test2 = iot_schedule_create (schd, testFunc2, NULL, IOT_SEC_TO_NS(1), 0, 0);
+  iot_schedule_t * test1 = iot_schedule_create (schd, testFunc, NULL, IOT_MS_TO_NS(500), 0, 0);
+  iot_schedule_t * test2 = iot_schedule_create (schd, testFunc2, NULL, IOT_SEC_TO_NS(1), 0, 0);
 
   /* Add two schedules to the scheduler */
   printf ("Add two schedules\n");
@@ -50,7 +50,7 @@ int main (void)
 
   /* Create and add a third schedule */
   printf ("\nCreate and add schedule 3\n");
-  iot_schedule test3 = iot_schedule_create (schd, testFunc3, NULL, IOT_SEC_TO_NS(2), 0, 2);
+  iot_schedule_t * test3 = iot_schedule_create (schd, testFunc3, NULL, IOT_SEC_TO_NS(2), 0, 2);
   iot_schedule_add (schd, test3);
   sleep (5);
 

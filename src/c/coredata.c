@@ -18,7 +18,7 @@ struct iot_coredata_pub_t
   iot_coredata_pubsub_t base;
   char * topic;
   iot_data_pub_cb_fn_t callback;
-  iot_schedule sc;
+  iot_schedule_t * sc;
 };
 
 struct iot_coredata_sub_t
@@ -42,7 +42,7 @@ struct iot_coredata_t
   iot_coredata_pub_t * publishers;
   iot_coredata_match_t * matches;
   iot_threadpool * thpool;
-  iot_scheduler scheduler;
+  iot_scheduler_t * scheduler;
   uint64_t interval;
   pthread_rwlock_t lock;
 };

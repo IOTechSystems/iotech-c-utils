@@ -18,9 +18,8 @@
 #define IOT_SEC_TO_NS(SECONDS) (SECONDS * IOT_BILLION)
 #define IOT_MIN_TO_NS(MINUTES) (MINUTES * IOT_BILLION * 60)
 
-typedef void * iot_scheduler;
-typedef void * iot_schedule;
-
+typedef struct iot_scheduler_t iot_scheduler_t;
+typedef struct iot_schedule_t iot_schedule_t;
 
 /**
  * @brief  Initialise the scheduler
@@ -29,14 +28,14 @@ typedef void * iot_schedule;
  *
  * @code
  *
- *    iot_scheduler myScheduler  = iot_scheduler_init(&thpool);
+ *    iot_scheduler_t * myScheduler  = iot_scheduler_init (&thpool);
  *
  * @endcode
  *
- * @return iot_scheduler        A pointer to the created scheduler.
- *                              NULL on error.
+ * @param  thpool            A pointer to the asspciated thread pool.
+ * @return iot_scheduler_t   A pointer to the created scheduler. NULL on error.
  */
-iot_scheduler iot_scheduler_init (iot_threadpool * thpool);
+iot_scheduler_t * iot_scheduler_init (iot_threadpool * thpool);
 
 
 /**
@@ -46,12 +45,12 @@ iot_scheduler iot_scheduler_init (iot_threadpool * thpool);
  *
  * @code
  *
- *    iot_scheduler_start(myScheduler);
+ *    iot_scheduler_start (myScheduler);
  *
  * @endcode
- * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  scheduler  A pointer to the iot_scheduler_t.
  */
-void iot_scheduler_start (iot_scheduler scheduler);
+void iot_scheduler_start (iot_scheduler_t * scheduler);
 
 
 /**
@@ -61,23 +60,20 @@ void iot_scheduler_start (iot_scheduler scheduler);
  *
  * @code
  *
- *    iot_schedule mySchedule = edgex_create_schedule(myScheduler,myFunc,NULL,IOT_SEC_TO_NS(1),0,0);
+ *    iot_schedule_t * mySchedule = iot_schedule_create (sched, func, NULL,IOT_SEC_TO_NS(1),0,0);
  *
  * @endcode
- * @param  schd                     A pointer to the iot_scheduler.
- * @param  function                 The function that should be called when the
- *                                  schedule is triggered.
- * @param  arg                      The argument to be passed to the function.
- * @param  period                   The period of the schedule (in nanoseconds).
- * @param  start                    The start time of the schedule (in nanoseconds).
- * @param  repeat                   The number of times the schedule should
- *                                  repeat, (0 = infinite).
- * @return iot_schedule             A pointer to the created edgex schedule.
- *                                  NULL on error.
+ * @param  schd               A pointer to the iot_scheduler_t.
+ * @param  function           The function that should be called when the schedule is triggered.
+ * @param  arg                The argument to be passed to the function.
+ * @param  period             The period of the schedule (in nanoseconds).
+ * @param  start              The start time of the schedule (in nanoseconds).
+ * @param  repeat             The number of times the schedule should repeat, (0 = infinite).
+ * @return iot_schedule       A pointer to the created edgex schedule. NULL on error.
  */
-iot_schedule iot_schedule_create
+iot_schedule_t * iot_schedule_create
 (
-  iot_scheduler schd,
+  iot_scheduler_t * schd,
   void (*function)(void* arg),
   void * arg,
   unsigned long long  period,
@@ -95,12 +91,12 @@ iot_schedule iot_schedule_create
  *    int return = iot_schedule_add(myScheduler,mySchedule);
  *
  * @endcode
- * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  scheduler                A pointer to the iot_scheduler_t. 
  * @param  schedule                 A pointer to the iot_schedule to be deleted.
  * @return                          1 on success.
  *                                  0 on error.
  */
-int iot_schedule_add (iot_scheduler scheduler, iot_schedule schedule);
+int iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 /**
  * @brief  Delete a schedule
@@ -112,12 +108,12 @@ int iot_schedule_add (iot_scheduler scheduler, iot_schedule schedule);
  *    int return = iot_schedule_remove(myScheduler,mySchedule);
  *
  * @endcode
- * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  scheduler                A pointer to the iot_scheduler_t. 
  * @param  schedule                 A pointer to the iot_schedule to be deleted.
  * @return                          1 on success.
  *                                  0 on error.
  */
-int iot_schedule_remove (iot_scheduler scheduler, iot_schedule schedule);
+int iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 /**
  * @brief  Delete a schedule
@@ -129,12 +125,10 @@ int iot_schedule_remove (iot_scheduler scheduler, iot_schedule schedule);
  *    int return = iot_schedule_delete(myScheduler,mySchedule);
  *
  * @endcode
- * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  scheduler                A pointer to the iot_scheduler_t. 
  * @param  schedule                 A pointer to the iot_schedule to be deleted.
- * @return                          1 on success.
- *                                  0 on error.
  */
-int iot_schedule_delete (iot_scheduler scheduler, iot_schedule schedule);
+void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 
 /**
@@ -145,12 +139,12 @@ int iot_schedule_delete (iot_scheduler scheduler, iot_schedule schedule);
  *
  * @code
  *
- *    iot_scheduler_stop(myScheduler);
+ *    iot_scheduler_t_stop(myScheduler);
  *
  * @endcode
- * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  scheduler                A pointer to the iot_scheduler_t. 
  */
-void iot_scheduler_stop (iot_scheduler scheduler);
+void iot_scheduler_stop (iot_scheduler_t * scheduler);
 
 
 /**
@@ -160,11 +154,11 @@ void iot_scheduler_stop (iot_scheduler scheduler);
  *
  * @code
  *
- *    iot_scheduler_fini(myScheduler);
+ *    iot_scheduler_t_fini(myScheduler);
  *
  * @endcode
- * @param  scheduler                A pointer to the iot_scheduler. 
+ * @param  scheduler                A pointer to the iot_scheduler_t. 
  */
-void iot_scheduler_fini (iot_scheduler scheduler);
+void iot_scheduler_fini (iot_scheduler_t * scheduler);
 
 #endif
