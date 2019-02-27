@@ -4,116 +4,157 @@
 #define IOT_COREDATA_DEFAULT_INTERVAL 500000000
 #define IOT_COREDATA_DEFAULT_THREADS 2
 
-typedef struct iot_coredata_pubsub_t
+typedef struct iot_coredata_topic_t
 {
-  iot_coredata_t * coredata;
-  struct iot_coredata_pubsub_t * next;
-  struct iot_coredata_pubsub_t * prev;
-  void * self;
-}
-iot_coredata_pubsub_t;
+  struct iot_coredata_topic_t * next;
+  char * name;
+  int priority;
+  bool prio_set;
+} iot_coredata_topic_t;
+
+typedef struct iot_coredata_match_t
+{
+  iot_coredata_sub_t * sub;
+  struct iot_coredata_match_t * next;
+} iot_coredata_match_t;
 
 struct iot_coredata_pub_t
 {
-  iot_coredata_pubsub_t base;
-  char * topic;
+  iot_coredata_t * coredata;
+  struct iot_coredata_pub_t * next;
+  const iot_coredata_topic_t * topic;
+  void * self;
+  iot_coredata_match_t * matches;
   iot_data_pub_cb_fn_t callback;
   iot_schedule_t * sc;
 };
 
 struct iot_coredata_sub_t
 {
-  iot_coredata_pubsub_t base;
+  iot_coredata_t * coredata;
+  struct iot_coredata_sub_t * next;
+  void * self;
   char * pattern;
   iot_data_sub_fn_t callback;
 };
-
-typedef struct iot_coredata_match_t
-{
-  iot_coredata_pubsub_t * pub;
-  iot_coredata_pubsub_t * sub;
-  struct iot_coredata_match_t * next;
-}
-iot_coredata_match_t;
 
 struct iot_coredata_t
 {
   iot_coredata_sub_t * subscribers;
   iot_coredata_pub_t * publishers;
-  iot_coredata_match_t * matches;
+  iot_coredata_topic_t * topics;
   iot_threadpool * thpool;
   iot_scheduler_t * scheduler;
   uint64_t interval;
   pthread_rwlock_t lock;
 };
 
-static void iot_coredata_unmatch_locked (iot_coredata_t * cd, iot_coredata_pubsub_t * base, bool subscriber)
+static iot_coredata_topic_t * iot_coredata_topic_find_locked (iot_coredata_t * cd, const char * name)
 {
-  iot_coredata_match_t * match = cd->matches;
-  iot_coredata_match_t * prev = NULL;
-  iot_coredata_match_t * old;
-
-  while (match)
+  iot_coredata_topic_t * topic = cd->topics;
+  while (topic)
   {
-    if (subscriber ? (match->sub == base) : (match->pub == base))
-    {
-      if (prev)
-      {
-        prev->next = match->next;
-      }
-      else
-      {
-        cd->matches = match->next;
-      }
-      old = match;
-      match = match->next;
-      free (old);
-    }
-    else
-    {
-      prev = match;
-      match = match->next;
-    }
+    if (strcmp (topic->name, name) == 0) break;
+    topic = topic->next;
   }
+  return topic;
+}
+
+static iot_coredata_topic_t * iot_coredata_topic_create_locked (iot_coredata_t * cd, const char * name, const int * prio)
+{
+  iot_coredata_topic_t * topic = iot_coredata_topic_find_locked (cd, name);
+  if (topic == NULL)
+  {
+    topic = malloc (sizeof (*topic));
+    topic->name = strdup (name);
+    topic->prio_set = (prio != NULL);
+    topic->priority = prio ? *prio : 0;
+    topic->next = cd->topics;
+    cd->topics = topic;
+  }
+  return topic;
 }
 
 static void iot_coredata_sub_free_locked (iot_coredata_sub_t * sub)
 {
-  iot_coredata_t * cd = sub->base.coredata;
-  if (sub->base.prev)
+  iot_coredata_sub_t * prev = NULL;
+  iot_coredata_sub_t * iter = sub->coredata->subscribers;
+  iot_coredata_pub_t * pub = sub->coredata->publishers;
+
+  while (iter)
   {
-    sub->base.prev->next = sub->base.next;
+    if (iter == sub)
+    {
+      if (prev)
+      {
+        prev->next = iter->next;
+      }
+      else
+      {
+        sub->coredata->subscribers = iter->next;
+      }
+      break;
+    }
+    prev = iter;
+    iter = iter->next;
   }
-  else
+
+  while (pub)
   {
-    cd->subscribers = (iot_coredata_sub_t*) sub->base.next;
+    iot_coredata_match_t * mprev = NULL;
+    iot_coredata_match_t * match = pub->matches;
+    while (match)
+    {
+      if (match->sub == sub)
+      {
+        if (mprev)
+        {
+          mprev->next = match->next;
+        }
+        else
+        {
+          pub->matches = match->next;
+        }
+        free (match);
+      }
+      mprev = match;
+      match = match->next;
+    }
+    pub = pub->next;
   }
-  if (sub->base.next)
-  {
-    sub->base.next->prev = sub->base.prev;
-  }
-  iot_coredata_unmatch_locked (cd, &sub->base, true);
   free (sub->pattern);
   free (sub);
 }
 
 static void iot_coredata_pub_free_locked (iot_coredata_pub_t * pub)
 {
-  iot_coredata_t * cd = pub->base.coredata;
-  if (pub->base.prev)
+  iot_coredata_match_t * match;
+  iot_coredata_pub_t * prev = NULL;
+  iot_coredata_pub_t * iter = pub->coredata->publishers;
+
+  while (iter)
   {
-    pub->base.prev->next = pub->base.next;
+    if (iter == pub)
+    {
+      if (prev)
+      {
+        prev->next = iter->next;
+      }
+      else
+      {
+        pub->coredata->publishers = iter->next;
+      }
+      break;
+    }
+    prev = iter;
+    iter = iter->next;
   }
-  else
+
+  while ((match = pub->matches))
   {
-    cd->publishers = (iot_coredata_pub_t*) pub->base.next;
+    pub->matches = match->next;
+    free (match);
   }
-  if (pub->base.next)
-  {
-    pub->base.next->prev = pub->base.prev;
-  }
-  iot_coredata_unmatch_locked (cd, &pub->base, false);
-  free (pub->topic);
   free (pub);
 }
 
@@ -122,12 +163,12 @@ static iot_coredata_sub_t * iot_coredata_find_sub_locked (iot_coredata_t * cd, v
   iot_coredata_sub_t * sub = cd->subscribers;
   while (sub)
   {
-    if (sub->base.self == self && strcmp (sub->pattern, pattern) == 0)
+    if (sub->self == self && strcmp (sub->pattern, pattern) == 0)
     {
       break;
     }
     if (prev) *prev = sub;
-    sub = (iot_coredata_sub_t*) sub->base.next;
+    sub = sub->next;
   }
   return sub;
 }
@@ -137,25 +178,25 @@ static iot_coredata_pub_t * iot_coredata_find_pub_locked (iot_coredata_t * cd, v
   iot_coredata_pub_t * pub = cd->publishers;
   while (pub)
   {
-    if (pub->base.self == self && strcmp (pub->topic, topic) == 0)
+    if (pub->self == self && strcmp (pub->topic->name, topic) == 0)
     {
       break;
     }
     if (prev) *prev = pub;
-    pub = (iot_coredata_pub_t*) pub->base.next;
+    pub = pub->next;
   }
   return pub;
 }
 
 static inline bool iot_coredata_pubsub_match_locked (iot_coredata_pub_t * pub, iot_coredata_sub_t * sub)
 {
-  return strcmp (pub->topic, sub->pattern) == 0; // TODO: Implement pattern match
+  return strcmp (pub->topic->name, sub->pattern) == 0; // TODO: Implement pattern match
 }
 
 static void iot_coredata_sched_fn (void * arg)
 {
   iot_coredata_pub_t * pub = (iot_coredata_pub_t*) arg;
-  iot_data_t * data = (pub->callback) (pub->base.self);
+  iot_data_t * data = (pub->callback) (pub->self);
   iot_coredata_publish (pub, data);
 }
 
@@ -204,6 +245,7 @@ void iot_coredata_free (iot_coredata_t * cd)
 {
   if (cd)
   {
+    iot_coredata_topic_t * topic;
     while (cd->publishers)
     {
       pthread_rwlock_wrlock (&cd->lock);
@@ -215,6 +257,12 @@ void iot_coredata_free (iot_coredata_t * cd)
       pthread_rwlock_wrlock (&cd->lock);
       iot_coredata_sub_free_locked (cd->subscribers);
       pthread_rwlock_unlock (&cd->lock);
+    }
+    while ((topic = cd->topics))
+    {
+      cd->topics = topic->next;
+      free (topic->name);
+      free (topic);
     }
     iot_scheduler_fini (cd->scheduler);
     sleep (1);
@@ -233,12 +281,10 @@ static void iot_coredata_match_sub_locked (iot_coredata_t * cd, iot_coredata_sub
     if (iot_coredata_pubsub_match_locked (pub, sub))
     {
       match = malloc (sizeof (*match));
-      match->pub = &pub->base;
-      match->sub = &sub->base;
-      match->next = cd->matches;
-      cd->matches = match;
+      match->sub = sub;
+      match->next = pub->matches;
     }
-    pub = (iot_coredata_pub_t*) pub->base.next;
+    pub = pub->next;
   }
 }
 
@@ -251,32 +297,30 @@ static void iot_coredata_match_pub_locked (iot_coredata_t * cd, iot_coredata_pub
     if (iot_coredata_pubsub_match_locked (pub, sub))
     {
       match = malloc (sizeof (*match));
-      match->pub = &pub->base;
-      match->sub = &sub->base;
-      match->next = cd->matches;
-      cd->matches = match;
+      match->sub = sub;
+      match->next = pub->matches;
+      pub->matches = match;
     }
-    sub = (iot_coredata_sub_t*) sub->base.next;
+    sub = sub->next;
   }
 }
 
 iot_coredata_sub_t * iot_coredata_sub_alloc (iot_coredata_t * cd, void * self, iot_data_sub_fn_t callback, const char * pattern)
 {
-  assert (callback);
-  assert (pattern);
+  assert (cd && callback && pattern);
+
   pthread_rwlock_wrlock (&cd->lock);
   iot_coredata_sub_t * sub = iot_coredata_find_sub_locked (cd, self, pattern, NULL);
   if (sub == NULL)
   {
     sub = calloc (1, sizeof (*sub));
-    sub->base.self = self;
-    sub->base.coredata = cd;
+    sub->self = self;
+    sub->coredata = cd;
     sub->pattern = strdup (pattern);
     sub->callback = callback;
     if (cd->subscribers)
     {
-      sub->base.next = &cd->subscribers->base;
-      cd->subscribers->base.prev = &sub->base;
+      sub->next = cd->subscribers;
     }
     cd->subscribers = sub;
     iot_coredata_match_sub_locked (cd, sub);
@@ -289,7 +333,7 @@ void iot_coredata_sub_free (iot_coredata_sub_t * sub)
 {
   if (sub)
   {
-    pthread_rwlock_t *lock = &sub->base.coredata->lock;
+    pthread_rwlock_t * lock = &sub->coredata->lock;
     pthread_rwlock_wrlock (lock);
     iot_coredata_sub_free_locked (sub);
     pthread_rwlock_unlock (lock);
@@ -298,20 +342,16 @@ void iot_coredata_sub_free (iot_coredata_sub_t * sub)
 
 iot_coredata_pub_t * iot_coredata_pub_alloc (iot_coredata_t * cd, void * self, iot_data_pub_cb_fn_t callback, const char * topic)
 {
-  assert (topic);
+  assert (cd && topic);
   pthread_rwlock_wrlock (&cd->lock);
   iot_coredata_pub_t * pub = iot_coredata_find_pub_locked (cd, self, topic, NULL);
   if (pub == NULL)
   {
     pub = calloc (1, sizeof (*pub));
-    pub->base.self = self;
-    pub->base.coredata = cd;
-    pub->topic = strdup (topic);
-    if (cd->publishers)
-    {
-      pub->base.next = &cd->publishers->base;
-      cd->publishers->base.prev = &pub->base;
-    }
+    pub->self = self;
+    pub->coredata = cd;
+    pub->topic = iot_coredata_topic_create_locked (cd, topic, NULL);
+    pub->next = cd->publishers;
     cd->publishers = pub;
     if (callback)
     {
@@ -329,10 +369,10 @@ void iot_coredata_pub_free (iot_coredata_pub_t * pub)
 {
   if (pub)
   {
-    pthread_rwlock_t *lock = &pub->base.coredata->lock;
+    pthread_rwlock_t *lock = &pub->coredata->lock;
     if (pub->sc)
     {
-      iot_schedule_remove (pub->base.coredata->scheduler, pub->sc);
+      iot_schedule_remove (pub->coredata->scheduler, pub->sc);
     }
     pthread_rwlock_wrlock (lock);
     iot_coredata_pub_free_locked (pub);
@@ -342,22 +382,15 @@ void iot_coredata_pub_free (iot_coredata_pub_t * pub)
 
 void iot_coredata_publish (iot_coredata_pub_t * pub, iot_data_t * data)
 {
-  assert (pub);
-  assert (data);
-  iot_coredata_t * cd = pub->base.coredata;
-  iot_coredata_match_t * match;
-  iot_coredata_sub_t * sub;
-  pthread_rwlock_rdlock (&cd->lock);
-  match = cd->matches;
+  assert (pub && data);
+
+  pthread_rwlock_rdlock (&pub->coredata->lock);
+  iot_coredata_match_t * match = pub->matches;
   while (match)
   {
-    if (match->pub == &pub->base)
-    {
-      sub = (iot_coredata_sub_t*) match->sub;
-      (sub->callback) (data, sub->base.self, pub->topic);
-    }
+    (match->sub->callback) (data, match->sub->self, pub->topic->name);
     match = match->next;
   }
-  pthread_rwlock_unlock (&cd->lock);
+  pthread_rwlock_unlock (&pub->coredata->lock);
   iot_data_free (data);
 }
