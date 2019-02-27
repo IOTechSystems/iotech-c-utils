@@ -202,8 +202,7 @@ static void iot_coredata_match_locked (iot_coredata_pub_t * pub, iot_coredata_su
 static void iot_coredata_sched_fn (void * arg)
 {
   iot_coredata_pub_t * pub = (iot_coredata_pub_t*) arg;
-  iot_data_t * data = (pub->callback) (pub->self);
-  iot_coredata_publish (pub, data);
+  iot_coredata_publish (pub, (pub->callback) (pub->self));
 }
 
 iot_coredata_t * iot_coredata_alloc (void)
