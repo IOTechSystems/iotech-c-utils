@@ -283,6 +283,7 @@ static void iot_coredata_match_sub_locked (iot_coredata_t * cd, iot_coredata_sub
       match = malloc (sizeof (*match));
       match->sub = sub;
       match->next = pub->matches;
+      pub->matches = match;
     }
     pub = pub->next;
   }
