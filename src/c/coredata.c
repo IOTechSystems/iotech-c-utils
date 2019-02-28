@@ -237,7 +237,7 @@ void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
       iot_data_array_iter_t iter;
       const iot_data_t * map;
       const char * name;
-      int32_t prio;
+      int prio;
       iot_data_array_iter (value, &iter);
       while (iot_data_array_iter_next (&iter))
       {
