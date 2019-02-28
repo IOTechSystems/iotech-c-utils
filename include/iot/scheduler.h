@@ -76,9 +76,9 @@ iot_schedule_t * iot_schedule_create
   iot_scheduler_t * schd,
   void (*function)(void* arg),
   void * arg,
-  unsigned long long  period,
-  unsigned long long  start,
-  unsigned long repeat
+  uint64_t period,
+  uint64_t start,
+  uint64_t repeat
 );
 
 /**
