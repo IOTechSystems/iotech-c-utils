@@ -53,14 +53,14 @@ static int iot_json_parse_primitive (iot_json_parser * parser, const char *js, s
       /* In strict mode primitive must be followed by "," or "}" or "]" */
       case ':':
 #endif
-      case '\t' :
-      case '\r' :
-      case '\n' :
-      case ' ' :
-      case ','  :
-      case ']'  :
-      case '}' :
-        goto found;
+      case '\t':
+      case '\r':
+      case '\n':
+      case ' ':
+      case ',':
+      case ']':
+      case '}': goto found;
+      default: break;
     }
     if (js[parser->pos] < 32 || js[parser->pos] >= 127)
     {
@@ -294,8 +294,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
       default:
 #endif
         r = iot_json_parse_primitive (parser, json, len, tokens, num_tokens);
-        if (r < 0)
-        { return r; }
+        if (r < 0) return r;
         count++;
         if (parser->toksuper != -1 && tokens != NULL)
         {
