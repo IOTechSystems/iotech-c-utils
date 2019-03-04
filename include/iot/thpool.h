@@ -19,10 +19,10 @@ typedef struct iot_threadpool iot_threadpool;
  *    thpool = iot_thpool_init(4);               //then we initialize it to 4 threads
  *    ..
  *
- * @param  num_threads   number of threads to be created in the threadpool
- * @return iot_threadpool    created threadpool on success, NULL on error
+ * @param  num_threads     number of threads to be created in the threadpool
+ * @return iot_threadpool  created threadpool on success, NULL on error
  */
-iot_threadpool * iot_thpool_init (unsigned num_threads);
+iot_threadpool * iot_thpool_init (uint32_t num_threads);
 
 
 /**
@@ -123,6 +123,6 @@ void iot_thpool_destroy (iot_threadpool * thpool);
  * @param iot_threadpool the threadpool of interest
  * @return integer       number of threads working
  */
-unsigned iot_thpool_num_threads_working (iot_threadpool * thpool);
+uint32_t iot_thpool_num_threads_working (iot_threadpool * thpool);
 
 #endif

@@ -1,8 +1,13 @@
 //
-// Copyright (c) 2010
-// Serge A. Zaitsev
+// Copyright (c) 2019
+// IOTech
 //
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
+//
+// This file incorporates work covered by the following copyright and
+// permission notice:
+//
+//   Copyright (c) 2010 Serge A. Zaitsev SPDX-License-Identifier: MIT
 //
 
 #include "iot/json.h"

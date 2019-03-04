@@ -1,12 +1,14 @@
-/* ********************************
- * Author:       Johan Hanssen Seferidis
- * License:       MIT
- * Description:  Library providing a threading pool where you can add
- *               work. For usage, check the thpool.h file or README.md
- *
- *//** @file thpool.h *//*
- *
- ********************************/
+//
+// Copyright (c) 2019
+// IOTech
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// This file incorporates work covered by the following copyright and
+// permission notice:
+//
+//   Copyright (c) 2016 Johan Hanssen Seferidis SPDX-License-Identifier: MIT
+//
 
 #include "iot/thpool.h"
 #if defined(__linux__)
@@ -50,13 +52,13 @@ typedef struct iot_jobqueue
   iot_job * front;                     /* pointer to front of queue */
   iot_job * rear;                      /* pointer to rear  of queue */
   iot_bsem * has_jobs;                 /* flag as binary semaphore  */
-  volatile unsigned len;               /* number of jobs in queue   */
+  volatile uint32_t len;               /* number of jobs in queue   */
 } iot_jobqueue;
 
 /* Thread */
 typedef struct iot_thread
 {
-  unsigned id;                         /* friendly id               */
+  uint32_t id;                         /* friendly id               */
   pthread_t pthread;                   /* pointer to actual thread  */
   struct iot_threadpool * thpool;      /* thread pool               */
 } iot_thread;
@@ -64,12 +66,12 @@ typedef struct iot_thread
 /* Threadpool */
 typedef struct iot_threadpool
 {
-  iot_thread **   threads;               /* pointer to threads        */
-  volatile unsigned num_threads_alive;   /* threads currently alive   */
-  volatile unsigned num_threads_working; /* threads currently working */
-  pthread_mutex_t  thcount_lock;         /* used for thread count etc */
-  pthread_cond_t  threads_all_idle;      /* signal to iot_thpool_wait */
-  iot_jobqueue  jobqueue;                /* job queue                 */
+  iot_thread ** threads;                 /* pointer to threads        */
+  volatile uint32_t num_threads_alive;   /* threads currently alive   */
+  volatile uint32_t num_threads_working; /* threads currently working */
+  pthread_mutex_t thcount_lock;          /* used for thread count etc */
+  pthread_cond_t threads_all_idle;       /* signal to iot_thpool_wait */
+  iot_jobqueue jobqueue;                 /* job queue                 */
   volatile bool running;                 /* state of pool             */
 } iot_threadpool;
 
@@ -94,7 +96,7 @@ static void bsem_wait (iot_bsem * bsem);
 /* ========================== THREADPOOL ============================ */
 
 /* Initialise thread pool */
-iot_threadpool * iot_thpool_init (unsigned num_threads)
+iot_threadpool * iot_thpool_init (uint32_t num_threads)
 {
   iot_threadpool * thpool = (iot_threadpool*) calloc (1, sizeof (*thpool));
   thpool->running = true;
@@ -104,7 +106,7 @@ iot_threadpool * iot_thpool_init (unsigned num_threads)
 
   /* Create and start threads */
   thpool->threads = (iot_thread**) malloc (num_threads * sizeof (iot_thread*));
-  for (unsigned n = 0; n < num_threads; n++)
+  for (uint32_t n = 0; n < num_threads; n++)
   {
     pthread_attr_t attr;
     iot_thread * th = (iot_thread*) calloc (1, sizeof (*th));
@@ -174,7 +176,7 @@ void iot_thpool_destroy (iot_threadpool * thpool_p)
   /* No need to destory if it's NULL */
   if (thpool_p == NULL) return ;
 
-  volatile unsigned threads_total = thpool_p->num_threads_alive;
+  volatile uint32_t threads_total = thpool_p->num_threads_alive;
 
   /* End each thread 's infinite loop */
   thpool_p->running = false;
@@ -201,7 +203,7 @@ void iot_thpool_destroy (iot_threadpool * thpool_p)
   /* Job queue cleanup */
   jobqueue_destroy (&thpool_p->jobqueue);
   /* Deallocs */
-  for (unsigned n = 0; n < threads_total; n++)
+  for (uint32_t n = 0; n < threads_total; n++)
   {
     free (thpool_p->threads[n]);
   }
@@ -209,7 +211,7 @@ void iot_thpool_destroy (iot_threadpool * thpool_p)
   free (thpool_p);
 }
 
-unsigned iot_thpool_num_threads_working (iot_threadpool * thpool)
+uint32_t iot_thpool_num_threads_working (iot_threadpool * thpool)
 {
   return thpool->num_threads_working;
 }
