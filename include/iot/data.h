@@ -102,5 +102,6 @@ extern uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter);
 extern const iot_data_t * iot_data_array_iter_value (const iot_data_array_iter_t * iter);
 
 extern char * iot_data_to_json (const iot_data_t * data, bool wrap);
+extern iot_data_t * iot_data_from_json (const char * json);
 
 #endif

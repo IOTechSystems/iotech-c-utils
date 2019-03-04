@@ -222,30 +222,21 @@ void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
   if (config)
   {
     const iot_data_t * value = iot_data_string_map_get (config, "Interval");
-    if (value)
-    {
-      cd->interval = iot_data_ui64 (value);
-    }
+    if (value) cd->interval = (uint64_t) iot_data_i64 (value);
     value = iot_data_string_map_get (config, "Threads");
-    if (value)
-    {
-      threads = iot_data_ui32 (value);
-    }
+    if (value) threads = (uint32_t) iot_data_i64 (value);
     value = iot_data_string_map_get (config, "Topics");
     if (value)
     {
       iot_data_array_iter_t iter;
-      const iot_data_t * map;
-      const char * name;
-      int prio;
       iot_data_array_iter (value, &iter);
       while (iot_data_array_iter_next (&iter))
       {
-        map = iot_data_array_iter_value (&iter);
+        const iot_data_t * map = iot_data_array_iter_value (&iter);
         value = iot_data_string_map_get (map, "Topic");
-        name = iot_data_string (value);
+        const char * name = iot_data_string (value);
         value = iot_data_string_map_get (map, "Priority");
-        prio = iot_data_i32 (value);
+        int prio = (int) iot_data_i64 (value);
         iot_coredata_topic_create_locked (cd, name, &prio);
       }
     }

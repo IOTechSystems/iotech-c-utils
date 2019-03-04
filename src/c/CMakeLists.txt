@@ -39,7 +39,7 @@ set_target_properties (cutils PROPERTIES DEFINE_SYMBOL "IOTECHUTILS_EXPORTS")
 
 add_subdirectory (cunit)
 add_subdirectory (examples)
-# add_subdirectory (utests)
+add_subdirectory (utests)
  
 # Configure installer
 

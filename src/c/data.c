@@ -7,9 +7,12 @@
 
 #include "iot/os.h"
 #include "iot/data.h"
+#include "iot/json.h"
 
 #define IOT_DATA_BLOCK_SIZE 64
 #define IOT_JSON_BUFF_SIZE 512
+#define IOT_JSON_TOKENS 256
+#define IOT_JSON_STRING_MAX 256
 
 typedef union iot_data_union_t
 {
@@ -79,8 +82,9 @@ typedef struct iot_string_holder_t
 // Data cache and guard mutex
 
 static iot_data_t * iot_data_cache = NULL;
-
 static pthread_mutex_t iot_data_mutex;
+
+static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
 
 static void * iot_data_factory_alloc (size_t size)
 {
@@ -530,12 +534,12 @@ bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
 
 const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * iter)
 {
-  return (iot_data_t*)((iter->pair) ? iter->pair->key : NULL);
+  return (iter->pair) ? iter->pair->key : NULL;
 }
 
 const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter)
 {
-  return (iot_data_t*)((iter->pair) ? iter->pair->value : NULL);
+  return (iter->pair) ? iter->pair->value : NULL;
 }
 
 void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter)
@@ -582,10 +586,10 @@ static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * 
 
   switch (data->type)
   {
-    case IOT_DATA_INT8: sprintf (buff, "%d", iot_data_i8 (data)); break;
-    case IOT_DATA_UINT8: sprintf (buff, "%u", iot_data_ui8 (data)); break;
-    case IOT_DATA_INT16: sprintf (buff, "%d", iot_data_i16 (data)); break;
-    case IOT_DATA_UINT16: sprintf (buff, "%u", iot_data_ui16 (data)); break;
+    case IOT_DATA_INT8: sprintf (buff, "%" PRId8 , iot_data_i8 (data)); break;
+    case IOT_DATA_UINT8: sprintf (buff, "%" PRIu8, iot_data_ui8 (data)); break;
+    case IOT_DATA_INT16: sprintf (buff, "%" PRId16, iot_data_i16 (data)); break;
+    case IOT_DATA_UINT16: sprintf (buff, "%" PRIu16, iot_data_ui16 (data)); break;
     case IOT_DATA_INT32: sprintf (buff, "%" PRId32, iot_data_i32 (data)); break;
     case IOT_DATA_UINT32: sprintf (buff, "%" PRIu32, iot_data_ui32 (data)); break;
     case IOT_DATA_INT64: sprintf (buff, "%" PRId64, iot_data_i64 (data)); break;
@@ -625,13 +629,11 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     {
       iot_data_map_iter_t iter;
       iot_data_map_iter (data, &iter);
-      const iot_data_t * key;
-      const iot_data_t * value;
       iot_data_strcat (holder, "{");
       while (iot_data_map_iter_next (&iter))
       {
-        key = iot_data_map_iter_key (&iter);
-        value = iot_data_map_iter_value (&iter);
+        const iot_data_t * key = iot_data_map_iter_key (&iter);
+        const iot_data_t * value = iot_data_map_iter_value (&iter);
         iot_data_dump (holder, key, true);
         iot_data_strcat (holder, ":");
         iot_data_dump (holder, value, wrap);
@@ -647,11 +649,10 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     {
       iot_data_array_iter_t iter;
       iot_data_array_iter (data, &iter);
-      const iot_data_t * value;
       iot_data_strcat (holder, "[");
       while (iot_data_array_iter_next (&iter))
       {
-        value = iot_data_array_iter_value (&iter);
+        const iot_data_t * value = iot_data_array_iter_value (&iter);
         iot_data_dump (holder, value, wrap);
         if (iter.index < iter.array->size)
         {
@@ -674,4 +675,99 @@ char * iot_data_to_json (const iot_data_t * data, bool wrap)
   holder.free = IOT_JSON_BUFF_SIZE - 1; // Allowing for string terminator
   iot_data_dump (&holder, data, wrap);
   return holder.str;
+}
+
+static inline void iot_data_string_from_json_token (char * str, const char * json, iot_json_tok_t * token)
+{
+  size_t len = (size_t) (((token->end - token->start) > IOT_JSON_STRING_MAX) ? IOT_JSON_STRING_MAX : (token->end - token->start));
+  strncpy (str, json + token->start, len);
+  str[len] = 0;
+}
+
+static iot_data_t * iot_data_string_from_json (iot_json_tok_t ** tokens, const char * json)
+{
+  char str [IOT_JSON_STRING_MAX];
+  iot_data_string_from_json_token (str, json, *tokens);
+  (*tokens)++;
+  return iot_data_alloc_string (str, true);
+}
+
+static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, const char * json)
+{
+  char str [IOT_JSON_STRING_MAX];
+  iot_data_string_from_json_token (str, json, *tokens);
+  (*tokens)++;
+  switch (str[0])
+  {
+    case 't':
+    case 'f': return iot_data_alloc_bool (str[0] == 't');
+    case 'n': return iot_data_alloc_string ("null", false);
+    default: break; // A number
+  }
+
+  // Handle all floating point numbers as doubles and integers as uint64_t
+
+  if (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E'))
+  {
+    return iot_data_alloc_f64 (strtod (str, NULL));
+  }
+  return iot_data_alloc_i64 (strtol (str, NULL, 0));
+}
+
+static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char * json)
+{
+  uint32_t elements = (*tokens)->size;
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+
+  (*tokens)++;
+  while  (elements--)
+  {
+    iot_data_t * key = iot_data_string_from_json (tokens, json);
+    iot_data_map_add (map, key, iot_data_all_from_json (tokens, json));
+  }
+  return map;
+}
+
+static iot_data_t * iot_data_array_from_json (iot_json_tok_t ** tokens, const char * json)
+{
+  uint32_t elements = (*tokens)->size;
+  uint32_t index = 0;
+  iot_data_t * array = iot_data_alloc_array (elements);
+
+  (*tokens)++;
+  while (elements--)
+  {
+    iot_data_array_add (array, index++, iot_data_all_from_json (tokens, json));
+  }
+  return array;
+}
+
+static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json)
+{
+  iot_data_t * data = NULL;
+  switch ((*tokens)->type)
+  {
+    case IOT_JSON_PRIMITIVE: data = iot_data_primitive_from_json (tokens, json); break;
+    case IOT_JSON_OBJECT: data = iot_data_map_from_json (tokens, json); break;
+    case IOT_JSON_ARRAY: data = iot_data_array_from_json (tokens, json); break;
+    case IOT_JSON_STRING: data = iot_data_string_from_json (tokens, json); break;
+    default: break;
+  }
+  return data;
+}
+
+iot_data_t * iot_data_from_json (const char * json)
+{
+  iot_json_tok_t tokens[IOT_JSON_TOKENS];
+  iot_json_parser parser;
+  iot_data_t * data = NULL;
+
+  iot_json_init (&parser);
+  int32_t used = iot_json_parse (&parser, json, strlen (json), tokens, IOT_JSON_TOKENS);
+  if (used)
+  {
+    iot_json_tok_t * tptr = tokens;
+    data = iot_data_all_from_json (&tptr, json);
+  }
+  return data;
 }
