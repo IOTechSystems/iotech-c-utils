@@ -165,19 +165,19 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
 /**
  * Parse JSON string and fill tokens.
  */
-int iot_json_parse (iot_json_parser *parser, const char *js, size_t len, iot_json_tok_t *tokens, uint32_t num_tokens)
+int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_json_tok_t *tokens, uint32_t num_tokens)
 {
   int r;
   int i;
   iot_json_tok_t *token;
   int count = parser->toknext;
 
-  for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++)
+  for (; parser->pos < len && json[parser->pos] != '\0'; parser->pos++)
   {
     char c;
     iot_json_type_t type;
 
-    c = js[parser->pos];
+    c = json[parser->pos];
     switch (c)
     {
       case '{':
@@ -236,7 +236,7 @@ int iot_json_parse (iot_json_parser *parser, const char *js, size_t len, iot_jso
         }
         break;
       case '\"':
-        r = iot_json_parse_string (parser, js, len, tokens, num_tokens);
+        r = iot_json_parse_string (parser, json, len, tokens, num_tokens);
         if (r < 0)
         { return r; }
         count++;
@@ -288,7 +288,7 @@ int iot_json_parse (iot_json_parser *parser, const char *js, size_t len, iot_jso
         /* In non-strict mode every unquoted value is a primitive */
       default:
 #endif
-        r = iot_json_parse_primitive (parser, js, len, tokens, num_tokens);
+        r = iot_json_parse_primitive (parser, json, len, tokens, num_tokens);
         if (r < 0)
         { return r; }
         count++;

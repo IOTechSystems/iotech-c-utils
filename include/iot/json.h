@@ -65,7 +65,7 @@ void iot_json_init (iot_json_parser * parser);
  * Run JSON parser. It parses a JSON data string into and array of tokens,
  * each describing a single JSON object.
  */
-int iot_json_parse (iot_json_parser * parser, const char *js, size_t len, iot_json_tok_t * tokens, uint32_t num_tokens);
+int iot_json_parse (iot_json_parser * parser, const char * json, size_t len, iot_json_tok_t * tokens, uint32_t num_tokens);
 
 #ifdef __cplusplus
 }
