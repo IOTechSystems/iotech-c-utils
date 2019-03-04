@@ -19,17 +19,16 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
 static iot_data_t * publisher_callback (void * self);
 
-static const char * pubsub_config =
-"{"
-"\"Interval\": 200000000,"
-"\"Threads\": 10,"
-"\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 10 }, { \"Topic\": \"test/data\", \"Priority\": 20 }]"
-"}";
-
 static iot_data_t * get_config (void)
 {
+  static const char * json =
+  "{"
+    "\"Interval\": 200000000,"
+    "\"Threads\": 4,"
+    "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 10 }, { \"Topic\": \"test/data\", \"Priority\": 20 }]"
+  "}";
   iot_data_init ();
-  return iot_data_from_json (pubsub_config);
+  return iot_data_from_json (json);
 }
 
 int main (void)
