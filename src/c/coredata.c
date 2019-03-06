@@ -52,7 +52,7 @@ struct iot_coredata_t
   iot_coredata_sub_t * subscribers;
   iot_coredata_pub_t * publishers;
   iot_coredata_topic_t * topics;
-  iot_threadpool * thpool;
+  iot_threadpool_t * thpool;
   iot_scheduler_t * scheduler;
   uint64_t interval;
   pthread_rwlock_t lock;
@@ -378,7 +378,7 @@ iot_coredata_pub_t * iot_coredata_pub_alloc (iot_coredata_t * cd, void * self, i
     if (callback)
     {
       pub->callback = callback;
-      pub->sc = iot_schedule_create (cd->scheduler, iot_coredata_sched_fn, pub, cd->interval, 0, 0);
+      pub->sc = iot_schedule_create (cd->scheduler, iot_coredata_sched_fn, pub, cd->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
       iot_schedule_add (cd->scheduler, pub->sc);
     }
     iot_coredata_match_pub_locked (cd, pub);
@@ -433,7 +433,7 @@ void iot_coredata_publish (iot_coredata_pub_t * pub, iot_data_t * data, bool syn
       iot_data_addref (data);
       atomic_fetch_add (&pub->refs, 1);
       atomic_fetch_add (&job->sub->refs, 1);
-      iot_thpool_add_work (pub->coredata->thpool, iot_coredata_publish_job, job);
+      iot_thpool_add_work (pub->coredata->thpool, iot_coredata_publish_job, job, job->pub->topic->prio_set ? &job->pub->topic->priority : NULL);
     }
     match = match->next;
   }

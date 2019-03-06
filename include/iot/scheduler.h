@@ -32,11 +32,10 @@ typedef struct iot_schedule_t iot_schedule_t;
  *
  * @endcode
  *
- * @param  thpool            A pointer to the asspciated thread pool.
+ * @param  pool              A pointer to the associated thread pool.
  * @return iot_scheduler_t   A pointer to the created scheduler. NULL on error.
  */
-iot_scheduler_t * iot_scheduler_init (iot_threadpool * thpool);
-
+iot_scheduler_t * iot_scheduler_init (iot_threadpool_t * pool);
 
 /**
  * @brief  Start the scheduler
@@ -69,16 +68,18 @@ void iot_scheduler_start (iot_scheduler_t * scheduler);
  * @param  period             The period of the schedule (in nanoseconds).
  * @param  start              The start time of the schedule (in nanoseconds).
  * @param  repeat             The number of times the schedule should repeat, (0 = infinite).
- * @return iot_schedule       A pointer to the created edgex schedule. NULL on error.
+ * @param  priority           The thread priority for running the schedule, (NULL = not set).
+ * @return iot_schedule       A pointer to the created schedule. NULL on error.
  */
 iot_schedule_t * iot_schedule_create
 (
   iot_scheduler_t * schd,
-  void (*function)(void* arg),
+  void (*function) (void* arg),
   void * arg,
   uint64_t period,
   uint64_t start,
-  uint64_t repeat
+  uint64_t repeat,
+  const int * priority
 );
 
 /**

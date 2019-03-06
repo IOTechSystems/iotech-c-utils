@@ -3,32 +3,32 @@
 
 #include "iot/os.h"
 
-typedef struct iot_threadpool iot_threadpool;
+typedef struct iot_threadpool_t iot_threadpool_t;
 
 
 /**
- * @brief  Initialize threadpool
+ * @brief  Initialize thread pool
  *
- * Initializes a threadpool. This function will not return untill all
+ * Initializes a thread pool. This function will not return until all
  * threads have initialized successfully.
  *
  * @example
  *
  *    ..
- *    iot_threadpool thpool;                     //First we declare a threadpool
- *    thpool = iot_thpool_init(4);               //then we initialize it to 4 threads
+ *    iot_threadpool pool;                      //First we declare a thread pool
+ *    pool = iot_thpool_init (4);               //then we initialize it to 4 threads
  *    ..
  *
  * @param  num_threads     number of threads to be created in the threadpool
- * @return iot_threadpool  created threadpool on success, NULL on error
+ * @return iot_threadpool  created thread pool on success, NULL on error
  */
-iot_threadpool * iot_thpool_init (uint32_t num_threads);
+iot_threadpool_t * iot_thpool_init (uint32_t num_threads);
 
 
 /**
  * @brief Add work to the job queue
  *
- * Takes an action and its argument and adds it to the threadpool's job queue.
+ * Takes an action and its argument and adds it to the thread pool's job queue.
  * If you want to add to work a function with more than one arguments then
  * a way to implement this is by passing a pointer to a structure.
  *
@@ -43,15 +43,16 @@ iot_threadpool * iot_thpool_init (uint32_t num_threads);
  *    int main() {
  *       ..
  *       int a = 10;
- *       iot_thpool_add_work(thpool, (void*)print_num, (void*)a);
+ *       iot_thpool_add_work (pool, (void*) print_num, (void*) a);
  *       ..
  *    }
  *
- * @param  iot_threadpool  threadpool to which the work will be added
+ * @param  iot_threadpool  pool to which the work will be added
  * @param  function        pointer to function to add as work
  * @param  arg             pointer to an argument
+ * @param  priority        priority to run thread at (not set if NULL)
  */
-void iot_thpool_add_work (iot_threadpool * thpool, void (*function) (void*), void * arg);
+void iot_thpool_add_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, const int * priority);
 
 
 /**
@@ -64,45 +65,44 @@ void iot_thpool_add_work (iot_threadpool * thpool, void (*function) (void*), voi
  * Smart polling is used in wait. The polling is initially 0 - meaning that
  * there is virtually no polling at all. If after 1 seconds the threads
  * haven't finished, the polling interval starts growing exponentially
- * untill it reaches max_secs seconds. Then it jumps down to a maximum polling
- * interval assuming that heavy processing is being used in the threadpool.
+ * until it reaches max_secs seconds. Then it jumps down to a maximum polling
+ * interval assuming that heavy processing is being used in the thread pool.
  *
  * @example
  *
  *    ..
- *    iot_threadpool thpool = iot_thpool_init(4);
+ *    iot_threadpool * pool = iot_thpool_init (4);
  *    ..
  *    // Add a bunch of work
  *    ..
- *    iot_thpool_wait (thpool);
+ *    iot_thpool_wait (pool);
  *    puts("All added work has finished");
  *    ..
  *
- * @param iot_threadpool the threadpool to wait for
+ * @param iot_threadpool the thread pool to wait for
  * @return nothing
  */
-void iot_thpool_wait (iot_threadpool * thpool);
+void iot_thpool_wait (iot_threadpool_t * pool);
 
 /**
- * @brief Destroy the threadpool
+ * @brief Destroy the thread pool
  *
  * This will wait for the currently active threads to finish and then 'kill'
- * the whole threadpool to free up memory.
+ * the whole thread pool to free up memory.
  *
  * @example
  * int main() {
- *    iot_threadpool thpool1 = iot_thpool_init(2);
- *    iot_threadpool thpool2 = iot_thpool_init(2);
+ *    iot_threadpool * pool = iot_thpool_init (2);
  *    ..
- *    iot_thpool_destroy (thpool1);
+ *    iot_thpool_destroy (pool);
  *    ..
  *    return 0;
  * }
  *
- * @param iot_threadpool the threadpool to destroy
+ * @param iot_threadpool the pool to destroy
  * @return nothing
  */
-void iot_thpool_destroy (iot_threadpool * thpool);
+void iot_thpool_destroy (iot_threadpool_t * pool);
 
 
 /**
@@ -112,17 +112,16 @@ void iot_thpool_destroy (iot_threadpool * thpool);
  *
  * @example
  * int main() {
- *    iot_threadpool thpool1 = iot_thpool_init (2);
- *    iot_threadpool thpool2 = iot_thpool_init (2);
+ *    iot_threadpool * pool = iot_thpool_init (2);
  *    ..
- *    printf ("Working threads: %d\n", iot_thpool_num_threads_working (thpool1));
+ *    printf ("Working threads: %d\n", iot_thpool_num_threads_working (pool));
  *    ..
  *    return 0;
  * }
  *
- * @param iot_threadpool the threadpool of interest
+ * @param iot_threadpool the pool of interest
  * @return integer       number of threads working
  */
-uint32_t iot_thpool_num_threads_working (iot_threadpool * thpool);
+uint32_t iot_thpool_num_threads_working (iot_threadpool_t * pool);
 
 #endif
