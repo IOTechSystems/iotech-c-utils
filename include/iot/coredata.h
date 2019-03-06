@@ -34,7 +34,7 @@ extern void iot_coredata_sub_free (iot_coredata_sub_t * sub);
 /* Data publication */
 
 extern iot_coredata_pub_t * iot_coredata_pub_alloc (iot_coredata_t * cd, void * self, iot_data_pub_cb_fn_t callback, const char * topic);
+extern void iot_coredata_publish (iot_coredata_pub_t * pub, iot_data_t * data, bool sync);
 extern void iot_coredata_pub_free  (iot_coredata_pub_t * pub);
-extern void iot_coredata_publish (iot_coredata_pub_t * pub, iot_data_t * data);
 
 #endif

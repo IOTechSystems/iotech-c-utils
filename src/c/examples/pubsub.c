@@ -75,7 +75,7 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters)
     // Increment map ref count or publish will delete
 
     iot_data_addref (map);
-    iot_coredata_publish (pub, map);
+    iot_coredata_publish (pub, map, true);
   }
 
   // Finally delete sample

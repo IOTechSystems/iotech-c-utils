@@ -131,13 +131,13 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
       {
         /* Allowed escaped symbols */
         case '\"':
-        case '/' :
-        case '\\' :
-        case 'b' :
-        case 'f' :
-        case 'r' :
-        case 'n'  :
-        case 't' :
+        case '/':
+        case '\\':
+        case 'b':
+        case 'f':
+        case 'r':
+        case 'n' :
+        case 't':
           break;
           /* Allows escaped symbol \uXXXX */
         case 'u':
