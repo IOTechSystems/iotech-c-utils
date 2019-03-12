@@ -46,7 +46,6 @@ int main (void)
   publish (pub, PUB_ITERS);
   stamp = time (NULL);
   printf ("Stop: %s", ctime (&stamp));
-  sleep (5);
   iot_coredata_stop (cd);
   iot_coredata_free (cd);
   iot_data_fini ();
