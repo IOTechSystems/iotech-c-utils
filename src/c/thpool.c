@@ -95,16 +95,15 @@ static void bsem_wait (iot_bsem_t * bsem);
 iot_threadpool_t * iot_thpool_init (uint32_t num_threads)
 {
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
+  pool->threads = (iot_thread_t*) calloc (num_threads, sizeof (iot_thread_t));
+
   pthread_mutex_init (&pool->mutex, NULL);
   pthread_mutex_lock (&pool->mutex);
   atomic_store (&pool->running, true);
-  atomic_store (&pool->num_threads_alive, 0);
-  atomic_store (&pool->num_threads_working, 0);
   jobqueue_init (&pool->jobqueue);
   pthread_cond_init (&pool->cond, NULL);
 
   /* Create and start threads */
-  pool->threads = (iot_thread_t*) calloc (num_threads, sizeof (iot_thread_t));
   for (uint32_t n = 0; n < num_threads; n++)
   {
     pthread_attr_t attr;
