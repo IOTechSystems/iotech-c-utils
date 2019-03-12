@@ -1,4 +1,4 @@
-#include "iot/thpool.h"
+#include "iot/threadpool.h"
 
 #ifndef _CUTIL_UTEST_THREADPOOL_H_
 #define _CUTIL_UTEST_THREADPOOL_H_

@@ -10,7 +10,7 @@
 //   Copyright (c) 2016 Johan Hanssen Seferidis SPDX-License-Identifier: MIT
 //
 
-#include "iot/thpool.h"
+#include "iot/threadpool.h"
 #if defined(__linux__)
 #include <sys/prctl.h>
 #endif

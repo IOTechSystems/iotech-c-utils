@@ -1,5 +1,5 @@
-#ifndef _IOT_THPOOL_H_
-#define _IOT_THPOOL_H_
+#ifndef _IOT_THREADPOOL_H_
+#define _IOT_THREADPOOL_H_
 
 #include "iot/os.h"
 
