@@ -10,6 +10,10 @@
 
 #include "iot/data.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Types */
 
 typedef struct iot_coredata_t iot_coredata_t;
@@ -37,4 +41,7 @@ extern iot_coredata_pub_t * iot_coredata_pub_alloc (iot_coredata_t * cd, void * 
 extern void iot_coredata_publish (iot_coredata_pub_t * pub, iot_data_t * data, bool sync);
 extern void iot_coredata_pub_free  (iot_coredata_pub_t * pub);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

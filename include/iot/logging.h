@@ -5,9 +5,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 #ifndef _IOT_LOGGING_H_
-#define _IOT_LOGGING_H_ 1
+#define _IOT_LOGGING_H_
 
 #include "iot/os.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum iot_loglevel { INFO = 0, TRACE, DEBUG, WARNING, ERROR } iot_loglevel;
 
@@ -71,4 +75,7 @@ extern void iot_log_debug (iot_logging_client *lc, const char *fmt, ...);
 extern void iot_log_warning (iot_logging_client *lc, const char *fmt, ...);
 extern void iot_log_error (iot_logging_client *lc, const char *fmt, ...);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

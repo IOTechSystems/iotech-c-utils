@@ -3,8 +3,11 @@
 
 #include "iot/os.h"
 
-typedef struct iot_threadpool_t iot_threadpool_t;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+typedef struct iot_threadpool_t iot_threadpool_t;
 
 /**
  * @brief  Initialize thread pool
@@ -124,4 +127,7 @@ void iot_thpool_destroy (iot_threadpool_t * pool);
  */
 uint32_t iot_thpool_num_threads_working (iot_threadpool_t * pool);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

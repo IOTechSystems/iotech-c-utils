@@ -13,6 +13,10 @@
 #include "iot/os.h"
 #include "iot/threadpool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define IOT_BILLION 1000000000L
 #define IOT_MS_TO_NS(MILLISECONDS) (MILLISECONDS * 1000000)
 #define IOT_SEC_TO_NS(SECONDS) (SECONDS * IOT_BILLION)
@@ -110,7 +114,8 @@ int iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
  *
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler_t. 
- * @param  schedule                 A pointer to the iot_schedule to be deleted.
+ * @param  schedule                #ifdef __cplusplus
+ A pointer to the iot_schedule to be deleted.
  * @return                          1 on success.
  *                                  0 on error.
  */
@@ -162,4 +167,7 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler);
  */
 void iot_scheduler_fini (iot_scheduler_t * scheduler);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

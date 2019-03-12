@@ -10,6 +10,10 @@
 
 #include "iot/os.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum iot_data_type_t
 {
   IOT_DATA_INT8 = 0,
@@ -104,4 +108,7 @@ extern const iot_data_t * iot_data_array_iter_value (const iot_data_array_iter_t
 extern char * iot_data_to_json (const iot_data_t * data, bool wrap);
 extern iot_data_t * iot_data_from_json (const char * json);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
