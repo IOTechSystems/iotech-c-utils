@@ -9,6 +9,4 @@ build
 deps
 *~
 TAGS
-cmake-build-debug
-cmake-build-release
-cmake-build-static
+cmake-build-*
