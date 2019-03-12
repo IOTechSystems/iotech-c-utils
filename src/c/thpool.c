@@ -152,12 +152,12 @@ void iot_thpool_add_work (iot_threadpool_t * pool, void (*function) (void*), voi
 /* Wait until all jobs have finished */
 void iot_thpool_wait (iot_threadpool_t * pool)
 {
-  pthread_mutex_lock (&pool->jobqueue.mutex);
+  pthread_mutex_lock (&pool->mutex);
   while (atomic_load (&pool->jobqueue.len) || atomic_load (&pool->num_threads_working))
   {
     pthread_cond_wait (&pool->cond, &pool->mutex);
   }
-  pthread_mutex_unlock (&pool->jobqueue.mutex);
+  pthread_mutex_unlock (&pool->mutex);
 }
 
 #ifdef __ZEPHYR__
@@ -178,7 +178,7 @@ void iot_thpool_destroy (iot_threadpool_t * pool)
   if (pool)
   {
     pthread_mutex_lock (&pool->mutex);
-    uint32_t threads_total = atomic_load (&pool->num_threads_alive);
+    uint32_t threads_total = (uint32_t) atomic_load (&pool->num_threads_alive);
 
     /* End each thread 's infinite loop */
     atomic_store (&pool->running, false);
@@ -218,7 +218,7 @@ void iot_thpool_destroy (iot_threadpool_t * pool)
 
 uint32_t iot_thpool_num_threads_working (iot_threadpool_t * pool)
 {
-  return atomic_load (&pool->num_threads_working);
+  return (uint32_t) atomic_load (&pool->num_threads_working);
 }
 
 /* ============================ THREAD ============================== */
@@ -261,18 +261,20 @@ static void * thread_do (iot_thread_t * th)
       (job->function) (job->arg);
       free (job);
     }
-    if (atomic_fetch_add (&pool->num_threads_working, -1) == 0)
+    if (atomic_fetch_add (&pool->num_threads_working, -1) <= 1)
     {
       pthread_cond_signal (&pool->cond);
     }
   }
-  atomic_fetch_add (&pool->num_threads_alive, -1);
+  if (atomic_fetch_add (&pool->num_threads_alive, -1) <= 1)
+  {
+    pthread_cond_signal (&pool->cond);
+  }
 
   return NULL;
 }
 
 /* ============================ JOB QUEUE =========================== */
-
 
 /* Initialize queue */
 static void jobqueue_init (iot_jobqueue_t * jobqueue)
@@ -307,9 +309,9 @@ static void jobqueue_push (iot_jobqueue_t * jobqueue, iot_job_t * job)
     iot_job_t * prev = NULL;
     while (iter)
     {
-      if (iter->prio_set && iter->priority < job->priority)
+      if (! iter->prio_set || iter->priority < job->priority)
       {
-        job->prev = iter->prev;
+        job->prev = iter;
         if (prev)
         {
           prev->prev = job;
