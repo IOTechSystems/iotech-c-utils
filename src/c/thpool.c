@@ -66,7 +66,7 @@ typedef struct iot_thread_t
 /* Threadpool */
 typedef struct iot_threadpool_t
 {
-  iot_thread_t ** threads;                  /* pointer to threads        */
+  iot_thread_t * threads;                   /* array of threads          */
   atomic_uint_fast32_t num_threads_alive;   /* threads currently alive   */
   atomic_uint_fast32_t num_threads_working; /* threads currently working */
   pthread_mutex_t mutex;                    /* used for thread count etc */
@@ -104,14 +104,13 @@ iot_threadpool_t * iot_thpool_init (uint32_t num_threads)
   pthread_cond_init (&pool->cond, NULL);
 
   /* Create and start threads */
-  pool->threads = (iot_thread_t**) malloc (num_threads * sizeof (iot_thread_t*));
+  pool->threads = (iot_thread_t*) calloc (num_threads, sizeof (iot_thread_t));
   for (uint32_t n = 0; n < num_threads; n++)
   {
     pthread_attr_t attr;
-    iot_thread_t * th = (iot_thread_t*) calloc (1, sizeof (*th));
+    iot_thread_t * th = &pool->threads[n];
     th->pool = pool;
     th->id = n;
-    pool->threads[n] = th;
 
     pthread_attr_init (&attr);
 #ifdef __ZEPHYR__
@@ -178,7 +177,6 @@ void iot_thpool_destroy (iot_threadpool_t * pool)
   if (pool)
   {
     pthread_mutex_lock (&pool->mutex);
-    uint32_t threads_total = (uint32_t) atomic_load (&pool->num_threads_alive);
 
     /* End each thread 's infinite loop */
     atomic_store (&pool->running, false);
@@ -207,10 +205,6 @@ void iot_thpool_destroy (iot_threadpool_t * pool)
     pthread_cond_destroy (&pool->cond);
     pthread_mutex_unlock (&pool->mutex);
     pthread_mutex_destroy (&pool->mutex);
-    for (uint32_t n = 0; n < threads_total; n++)
-    {
-      free (pool->threads[n]);
-    }
     free (pool->threads);
     free (pool);
   }
