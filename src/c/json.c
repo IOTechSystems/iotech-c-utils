@@ -175,7 +175,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
   int r;
   int i;
   iot_json_tok_t *token;
-  int count = parser->toknext;
+  int32_t count = parser->toknext;
 
   for (; parser->pos < len && json[parser->pos] != '\0'; parser->pos++)
   {
@@ -205,8 +205,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
         token->start = parser->pos;
         parser->toksuper = parser->toknext - 1;
         break;
-      case '}':
-      case ']':
+      case '}': case ']':
         if (tokens == NULL)
         {
           break;
@@ -242,8 +241,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
         break;
       case '\"':
         r = iot_json_parse_string (parser, json, len, tokens, num_tokens);
-        if (r < 0)
-        { return r; }
+        if (r < 0) return r;
         count++;
         if (parser->toksuper != -1 && tokens != NULL)
         {
