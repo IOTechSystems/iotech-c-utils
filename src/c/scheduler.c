@@ -166,8 +166,6 @@ void iot_scheduler_start (iot_scheduler_t * scheduler)
 {
   pthread_mutex_lock (&scheduler->mutex);
   scheduler->running = true;
-
-  /* Start scheduler thread, pass in threadpool provided */
   pthread_create (&scheduler->thread, NULL, &iot_scheduler_thread, (void*) scheduler);
   pthread_mutex_unlock (&scheduler->mutex);
 }
@@ -254,8 +252,8 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
   if (scheduler->running == true)
   {
     scheduler->running = false;
-    pthread_mutex_unlock (&scheduler->mutex);
     pthread_cond_signal (&scheduler->cond);
+    pthread_mutex_unlock (&scheduler->mutex);
     iot_thpool_wait (scheduler->thpool);
     pthread_join (scheduler->thread, NULL);
   }

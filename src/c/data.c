@@ -11,7 +11,6 @@
 
 #define IOT_DATA_BLOCK_SIZE 64
 #define IOT_JSON_BUFF_SIZE 512
-#define IOT_JSON_TOKENS 256
 #define IOT_JSON_STRING_MAX 256
 
 typedef union iot_data_union_t
@@ -197,23 +196,23 @@ iot_data_type_t iot_data_type (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && atomic_fetch_add (&data->refs, -1) <= 1)
+  if (data && (atomic_fetch_add (&data->refs, -1) <= 1))
   {
     switch (data->type)
     {
       case IOT_DATA_STRING:
-        if (data->release) free (((iot_data_value_t *) data)->value.str);
+        if (data->release) free (((iot_data_value_t*) data)->value.str);
         break;
       case IOT_DATA_BLOB:
       {
-        iot_data_blob_t *blob = (iot_data_blob_t *) data;
+        iot_data_blob_t * blob = (iot_data_blob_t*) data;
         if (blob->base.release) free (blob->data);
         break;
       }
       case IOT_DATA_MAP:
       {
-        iot_data_map_t *map = (iot_data_map_t *) data;
-        iot_data_pair_t *pair;
+        iot_data_map_t * map = (iot_data_map_t*) data;
+        iot_data_pair_t * pair;
         while (map->pairs)
         {
           pair = map->pairs;
@@ -226,7 +225,7 @@ void iot_data_free (iot_data_t * data)
       }
       case IOT_DATA_ARRAY:
       {
-        iot_data_array_t *array = (iot_data_array_t *) data;
+        iot_data_array_t * array = (iot_data_array_t*) data;
         for (uint32_t i = 0; i < array->size; i++)
         {
           iot_data_free (array->values[i]);
@@ -584,6 +583,12 @@ static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * 
   char buff [128];
   wrap = wrap || data->type == IOT_DATA_BOOL;
 
+// Temporary fix for Zephyr 0.10 SDK toolchain bug (PR#55)
+#ifndef PRId64
+#define PRId64 "lld"
+#define PRIu64 "llu"
+#endif
+
   switch (data->type)
   {
     case IOT_DATA_INT8: sprintf (buff, "%" PRId8 , iot_data_i8 (data)); break;
@@ -697,12 +702,11 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
   char str [IOT_JSON_STRING_MAX];
   iot_data_string_from_json_token (str, json, *tokens);
   (*tokens)++;
-  switch (str[0])
+  switch (str[0]) // Check for true/false/null
   {
-    case 't':
-    case 'f': return iot_data_alloc_bool (str[0] == 't');
+    case 't': case 'f': return iot_data_alloc_bool (str[0] == 't');
     case 'n': return iot_data_alloc_string ("null", false);
-    default: break; // A number
+    default: break;
   }
 
   // Handle all floating point numbers as doubles and integers as uint64_t
@@ -758,16 +762,29 @@ static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char
 
 iot_data_t * iot_data_from_json (const char * json)
 {
-  iot_json_tok_t tokens[IOT_JSON_TOKENS];
   iot_json_parser parser;
   iot_data_t * data = NULL;
+  int32_t used;
+  const char * ptr = json;
+  uint32_t count = 1;
+
+  // Approximate token count
+  while (*ptr != '\0')
+  {
+    if (*ptr == '[' || *ptr == '{') count++;
+    if (*ptr == ':') count += 2;
+    ptr++;
+  }
+  iot_json_tok_t * tokens = calloc (1, sizeof (*tokens) * count);
+  iot_json_tok_t * tptr = tokens;
 
   iot_json_init (&parser);
-  int32_t used = iot_json_parse (&parser, json, strlen (json), tokens, IOT_JSON_TOKENS);
+  used = iot_json_parse (&parser, json, strlen (json), tptr, count);
   if (used)
   {
-    iot_json_tok_t * tptr = tokens;
+    assert (used <= count);
     data = iot_data_all_from_json (&tptr, json);
   }
+  free (tokens);
   return data;
 }

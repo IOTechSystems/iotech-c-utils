@@ -97,7 +97,7 @@ static iot_data_t * publisher_callback (void * self)
 {
   static float f32 = 20.00;
 
-  f32 = f32 * 1.02;
+  f32 = (float) (f32 * 1.02);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-7", false));
   iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (f32));
