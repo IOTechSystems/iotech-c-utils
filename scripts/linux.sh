@@ -94,6 +94,7 @@ then
   c/examples/scheduler
   c/examples/data
   c/examples/pubsub
+  c/utests/runner/runner -a -j
 
   # Generate coverage html report
 
@@ -119,7 +120,8 @@ then
   VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data
-  valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/pubsub
+  valgrind $VG_FLAGS --xml-file=pubsub_vg.xml c/examples/pubsub
+  valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi
 
 # Allow deletion of generated files in mounted volume
