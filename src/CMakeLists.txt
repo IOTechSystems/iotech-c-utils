@@ -22,14 +22,10 @@ set (CUTILS_BUILD_LCOV OFF CACHE BOOL "Build LCov")
 
 # Configure for different target systems
 
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-  set (CPACK_GENERATOR TGZ)
-endif ()
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-  set (CPACK_GENERATOR TGZ)
-endif ()
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set (CPACK_GENERATOR ZIP)
+else ()
+  set (CPACK_GENERATOR TGZ)
 endif ()
 
 # Build modules

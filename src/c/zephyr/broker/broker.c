@@ -48,6 +48,8 @@ int main (void)
   iot_coredata_stop (cd);
   iot_coredata_free (cd);
   iot_data_fini ();
+  printf ("Done\n");
+  fflush (stdout);
   return 0;
 }
 

@@ -21,4 +21,7 @@ extern char * strdup (const char *s);
 #error Zephyr CONFIG_PTHREAD_IPC not set
 #endif
 
+#define IOT_ZEPHYR_STACK_SIZE 4096
+#define IOT_ZEPHYR_MAX_THREADS 5
+
 #endif

@@ -583,12 +583,6 @@ static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * 
   char buff [128];
   wrap = wrap || data->type == IOT_DATA_BOOL;
 
-// Temporary fix for Zephyr 0.10 SDK toolchain bug (PR#55)
-#ifndef PRId64
-#define PRId64 "lld"
-#define PRIu64 "llu"
-#endif
-
   switch (data->type)
   {
     case IOT_DATA_INT8: sprintf (buff, "%" PRId8 , iot_data_i8 (data)); break;
@@ -771,8 +765,12 @@ iot_data_t * iot_data_from_json (const char * json)
   // Approximate token count
   while (*ptr != '\0')
   {
-    if (*ptr == '[' || *ptr == '{') count++;
-    if (*ptr == ':') count += 2;
+    switch (*ptr)
+    {
+      case '[': case '{': count++; break;
+      case ':': count += 2; break;
+      default: break;
+    }
     ptr++;
   }
   iot_json_tok_t * tokens = calloc (1, sizeof (*tokens) * count);

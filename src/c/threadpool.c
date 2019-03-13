@@ -11,6 +11,8 @@
 //
 
 #include "iot/threadpool.h"
+#include "iot/thread.h"
+
 #if defined(__linux__)
 #include <sys/prctl.h>
 #endif
@@ -19,12 +21,6 @@
 #define err(str) fprintf (stderr, str)
 #else
 #define err(str)
-#endif
-
-#ifdef __ZEPHYR__
-#define STACK_SIZE 4096
-#define MAX_THREADS 5
-static K_THREAD_STACK_ARRAY_DEFINE (thread_stacks, MAX_THREADS, STACK_SIZE);
 #endif
 
 /* Job */
@@ -93,20 +89,10 @@ iot_threadpool_t * iot_thpool_init (uint32_t num_threads)
   /* Create and start threads */
   for (uint32_t n = 0; n < num_threads; n++)
   {
-    pthread_attr_t attr;
     iot_thread_t * th = &pool->threads[n];
     th->pool = pool;
     th->id = n;
-
-    pthread_attr_init (&attr);
-#ifdef __ZEPHYR__
-    struct sched_param schedparam = { .sched_priority = CONFIG_NUM_COOP_PRIORITIES - 1 };
-    pthread_attr_setstack (&attr, thread_stacks[n], STACK_SIZE);
-    pthread_attr_setschedparam (&attr, &schedparam);
-    pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
-#endif
-    pthread_create (&th->pthread, &attr, (void*) thread_do, th);
-    pthread_detach (th->pthread);
+    iot_thread_create (&th->pthread, (iot_thread_fn_t) thread_do, th, NULL);
 
 #if THPOOL_DEBUG
     printf ("THPOOL_DEBUG: Created thread %u in pool \n", n);
@@ -144,18 +130,6 @@ void iot_thpool_wait (iot_threadpool_t * pool)
   }
   pthread_mutex_unlock (&pool->mutex);
 }
-
-#ifdef __ZEPHYR__
-static void time (time_t *t)
-{
-  *t = k_uptime_get ();
-}
-
-static double difftime (time_t end, time_t start)
-{
-  return (end - start) / 1000.0;
-}
-#endif
 
 /* Destroy the threadpool */
 void iot_thpool_destroy (iot_threadpool_t * pool)
