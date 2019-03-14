@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include "iot/coredata.h"
+#include "iot/bus.h"
 
 #define ARRAY_SIZE 3
 
@@ -15,7 +15,7 @@
 #define PUB_ITERS 100000000
 #endif
 
-static void publish (iot_coredata_pub_t * pub, uint32_t iters);
+static void publish (iot_bus_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
 static iot_data_t * publisher_callback (void * self);
 
@@ -30,23 +30,23 @@ int main (void)
 {
   time_t stamp;
   iot_data_init ();
-  iot_coredata_t * cd = iot_coredata_alloc ();
-  iot_coredata_init (cd, json_config);
-  iot_coredata_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
-  iot_coredata_pub_t * pub = iot_coredata_pub_alloc (cd, NULL, publisher_callback, "test/tube");
-  iot_coredata_start (cd);
+  iot_bus_t * cd = iot_bus_alloc ();
+  iot_bus_init (cd, json_config);
+  iot_bus_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
+  iot_bus_pub_t * pub = iot_bus_pub_alloc (cd, NULL, publisher_callback, "test/tube");
+  iot_bus_start (cd);
   stamp = time (NULL);
   printf ("Samples: %d\nStart: %s", PUB_ITERS, ctime (&stamp));
   publish (pub, PUB_ITERS);
   stamp = time (NULL);
   printf ("Stop: %s", ctime (&stamp));
   sleep (3);
-  iot_coredata_stop (cd);
-  iot_coredata_free (cd);
+  iot_bus_stop (cd);
+  iot_bus_free (cd);
   iot_data_fini ();
 }
 
-static void publish (iot_coredata_pub_t * pub, uint32_t iters)
+static void publish (iot_bus_pub_t * pub, uint32_t iters)
 {
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * array = iot_data_alloc_array (ARRAY_SIZE);
@@ -69,7 +69,7 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters)
     // Increment map ref count or publish will delete
 
     iot_data_addref (map);
-    iot_coredata_publish (pub, map, true);
+    iot_bus_publish (pub, map, true);
   }
 
   // Finally delete sampleutests/threadpool/threadpool.h
