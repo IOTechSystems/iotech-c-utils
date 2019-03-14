@@ -72,9 +72,9 @@ static void iot_scheduler_thread (void * arg)
   struct timespec schdTime;
   uint64_t ns;
 
-  iot_scheduler_t *scheduler = (iot_scheduler_t*) arg;
-  iot_schd_queue_t *queue = &scheduler->queue;
-  iot_schd_queue_t *idle_queue = &scheduler->idle_queue;
+  iot_scheduler_t * scheduler = (iot_scheduler_t*) arg;
+  iot_schd_queue_t * queue = &scheduler->queue;
+  iot_schd_queue_t * idle_queue = &scheduler->idle_queue;
 
   clock_gettime (CLOCK_REALTIME, &schdTime);
   while (atomic_load (&scheduler->running))
@@ -106,15 +106,14 @@ static void iot_scheduler_thread (void * arg)
           /* If the number of repetitions has just become 0 */
           if (current->repeat == 0)
           {
-            /* Remove the schedule from the queue */
+            /* Move schedule to idle queue */
             remove_schedule_from_queue (queue, current);
-            /* Add schedule to idle queue */
             add_schedule_to_queue (idle_queue, current);
             current->scheduled = false;
           }
           else
           {
-            /* Remove from current position and add in new location */
+            /* Re-queue schedule */
             remove_schedule_from_queue (queue, current);
             add_schedule_to_queue (queue, current);
           }
@@ -189,11 +188,8 @@ int iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
     /* If the schedule was placed and the front of the queue & the scheduler is running */
     if (scheduler->queue.front == schedule && atomic_load (&scheduler->running))
     {
-      /* Post on the semaphore */
       pthread_cond_signal (&scheduler->cond);
     }
-
-    /* Set the schedules status as scheduled */
     schedule->scheduled = true;
     ret = 1;
   }
@@ -231,16 +227,16 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
 void iot_scheduler_stop (iot_scheduler_t * scheduler)
 {
   pthread_mutex_lock (&scheduler->mutex);
-  if (atomic_load (&scheduler->running))
+  bool running = atomic_load (&scheduler->running);
+  if (running)
   {
     atomic_store (&scheduler->running, false);
     pthread_cond_signal (&scheduler->cond);
-    pthread_mutex_unlock (&scheduler->mutex);
-    iot_thpool_wait (scheduler->thpool);
   }
-  else
+  pthread_mutex_unlock (&scheduler->mutex);
+  if (running)
   {
-    pthread_mutex_unlock (&scheduler->mutex);
+    iot_thpool_wait (scheduler->thpool);
   }
 }
 
@@ -248,7 +244,6 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
 void iot_scheduler_fini (iot_scheduler_t * scheduler)
 {
   iot_scheduler_stop (scheduler);
-
   while (scheduler->queue.length > 0)
   {
     iot_schedule_delete (scheduler, scheduler->queue.front);

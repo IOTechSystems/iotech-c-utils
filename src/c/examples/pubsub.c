@@ -12,7 +12,7 @@
 #ifndef NDEBUG
 #define PUB_ITERS 10
 #else
-#define PUB_ITERS 10000000
+#define PUB_ITERS 100000000
 #endif
 
 static void publish (iot_coredata_pub_t * pub, uint32_t iters);

@@ -64,8 +64,8 @@ int main (void)
   printf ("Stop and delete the scheduler\n");
   iot_scheduler_fini (scheduler);
 
-  sleep (1);
   /* Destroy the thread pool */
   printf ("Destroy the thread pool\n");
   iot_thpool_destroy (pool);
+  return 0;
 }

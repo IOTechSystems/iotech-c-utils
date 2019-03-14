@@ -40,6 +40,7 @@ typedef struct iot_jobqueue_t
   pthread_cond_t cond;                 /* synchronisation condition */
   iot_job_t * front;                   /* pointer to front of queue */
   iot_job_t * rear;                    /* pointer to rear  of queue */
+  iot_job_t * cache;                   /* free job  cache           */
   atomic_uint_fast32_t jobs;           /* number of jobs in queue   */
 } iot_jobqueue_t;
 
@@ -66,11 +67,15 @@ typedef struct iot_threadpool_t
 
 static void * thread_do (iot_thread_t * th);
 
-static void jobqueue_init (iot_jobqueue_t * jobqueue);
 static void jobqueue_fini (iot_jobqueue_t * jobqueue);
-static void jobqueue_push (iot_jobqueue_t * jobqueue, iot_job_t * job);
-static struct iot_job_t * jobqueue_pull_locked (iot_jobqueue_t * jobqueue);
+static void jobqueue_push (iot_jobqueue_t * jobqueue, void (*func) (void*), void* arg, const int * prio);
+static void jobqueue_pull_locked (iot_jobqueue_t * jobqueue, iot_job_t * job);
 
+static inline void jobqueue_init (iot_jobqueue_t * jobqueue)
+{
+  pthread_mutex_init (&jobqueue->mutex, NULL);
+  pthread_cond_init (&jobqueue->cond, NULL);
+}
 
 /* ========================== THREADPOOL ============================ */
 
@@ -110,14 +115,14 @@ iot_threadpool_t * iot_thpool_init (uint32_t num_threads)
 }
 
 /* Add work to the thread pool */
-void iot_thpool_add_work (iot_threadpool_t * pool, void (*function) (void*), void* arg, const int * priority)
+void iot_thpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void* arg, const int * prio)
 {
-  iot_job_t * job = (iot_job_t*) malloc (sizeof (*job));
-  job->function = function;
-  job->arg = arg;
-  job->priority = priority ? *priority : 0;
-  job->prio_set = (priority != NULL);
-  jobqueue_push (&pool->jobqueue, job);
+  pthread_mutex_lock (&pool->mutex);
+  if (atomic_load (&pool->running))
+  {
+    jobqueue_push (&pool->jobqueue, func, arg, prio);
+  }
+  pthread_mutex_unlock (&pool->mutex);
 }
 
 /* Wait until all jobs have finished */
@@ -147,7 +152,6 @@ void iot_thpool_destroy (iot_threadpool_t * pool)
       pthread_cond_broadcast (&pool->jobqueue.cond);
       sleep (1);
     }
-
     /* Cleanup */
     jobqueue_fini (&pool->jobqueue);
     pthread_cond_destroy (&pool->cond);
@@ -189,15 +193,15 @@ static void * thread_do (iot_thread_t * th)
   atomic_fetch_add (&pool->num_threads_alive, 1);
   while (atomic_load (&pool->running))
   {
+    iot_job_t job;
     /* Read job from queue and execute it */
     pthread_mutex_lock (&pool->jobqueue.mutex);
-    iot_job_t * job = jobqueue_pull_locked (&pool->jobqueue);
-    if (job)
+    jobqueue_pull_locked (&pool->jobqueue, &job);
+    if (job.function)
     {
       pthread_mutex_unlock (&pool->jobqueue.mutex);
       atomic_fetch_add (&pool->num_threads_working, 1);
-      (job->function) (job->arg);
-      free (job);
+      (job.function) (job.arg);
       if (atomic_fetch_add (&pool->num_threads_working, -1) <= 1)
       {
         pthread_cond_signal (&pool->cond);
@@ -213,24 +217,20 @@ static void * thread_do (iot_thread_t * th)
   {
     pthread_cond_signal (&pool->cond);
   }
-
   return NULL;
 }
 
 /* ============================ JOB QUEUE =========================== */
 
-static void jobqueue_init (iot_jobqueue_t * jobqueue)
-{
-  pthread_mutex_init (&jobqueue->mutex, NULL);
-  pthread_cond_init (&jobqueue->cond, NULL);
-}
 
 static void jobqueue_fini (iot_jobqueue_t * jobqueue)
 {
+  iot_job_t * job;
   pthread_mutex_lock (&jobqueue->mutex);
-  while (atomic_load (&jobqueue->jobs))
+  while ((job = jobqueue->cache))
   {
-    free (jobqueue_pull_locked (jobqueue));
+    jobqueue->cache = job->prev;
+    free (job);
   }
   pthread_mutex_unlock (&jobqueue->mutex);
   pthread_cond_destroy (&jobqueue->cond);
@@ -238,9 +238,24 @@ static void jobqueue_fini (iot_jobqueue_t * jobqueue)
 }
 
 /* Add new job to queue, ordered by priority */
-static void jobqueue_push (iot_jobqueue_t * jobqueue, iot_job_t * job)
+static void jobqueue_push (iot_jobqueue_t * jobqueue, void (*func) (void*), void * arg, const int * prio)
 {
   pthread_mutex_lock (&jobqueue->mutex);
+  iot_job_t * job = jobqueue->cache;
+  if (job)
+  {
+    jobqueue->cache = job->prev;
+  }
+  else
+  {
+    job = malloc (sizeof (*job));
+  }
+  job->function = func;
+  job->arg = arg;
+  job->priority = prio ? *prio : 0;
+  job->prio_set = (prio != NULL);
+  job->prev = NULL;
+
   if (job->prio_set)
   {
     iot_job_t * iter = jobqueue->front;
@@ -267,6 +282,10 @@ static void jobqueue_push (iot_jobqueue_t * jobqueue, iot_job_t * job)
 
   /* Add to back of queue  */
   job->prev = NULL;
+  if (jobqueue->rear)
+  {
+    jobqueue->rear->prev = job;
+  }
   jobqueue->rear = job;
   if (jobqueue->front == NULL)
   {
@@ -280,24 +299,24 @@ added:
   pthread_mutex_unlock (&jobqueue->mutex);
 }
 
-static struct iot_job_t * jobqueue_pull_locked (iot_jobqueue_t * jobqueue)
+static void jobqueue_pull_locked (iot_jobqueue_t * jobqueue, iot_job_t * job)
 {
-  iot_job_t* job = jobqueue->front;
-
-  switch (atomic_load (&jobqueue->jobs))
+  iot_job_t * first = jobqueue->front;
+  job->function = NULL;
+  if (first)
   {
-    case 0:  /* if no jobs in queue */
-      break;
-    case 1:  /* if one job in queue */
+    *job = *first;
+    jobqueue->front = first->prev;
+    first->prev = jobqueue->cache;
+    jobqueue->cache = first;
+    if (atomic_fetch_add (&jobqueue->jobs, -1) <= 1) // Queue now empty
+    {
       jobqueue->front = NULL;
-      jobqueue->rear  = NULL;
-      atomic_store (&jobqueue->jobs, 0);
-      break;
-    default: /* if >1 jobs in queue */
-      jobqueue->front = job->prev;
-      atomic_fetch_add (&jobqueue->jobs, -1);
-      /* more than one job in queue -> post it */
+      jobqueue->rear = NULL;
+    }
+    else // Still jobs in queue
+    {
       pthread_cond_signal (&jobqueue->cond);
+    }
   }
-  return job;
 }
