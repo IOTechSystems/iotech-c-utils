@@ -73,3 +73,36 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
 
   return ret;
 }
+
+int iot_thread_get_priority (pthread_t thread)
+{
+  struct sched_param param;
+  int policy;
+  pthread_getschedparam (thread, &policy, &param);
+  return param.sched_priority;
+}
+
+int iot_thread_current_get_priority (void)
+{
+  return iot_thread_get_priority (pthread_self ());
+}
+
+bool iot_thread_set_priority (pthread_t thread, int prio)
+{
+  bool result;
+  struct sched_param param;
+  int policy;
+
+  result = (pthread_getschedparam (thread, &policy, &param) == 0);
+  if (result && (prio >= sched_get_priority_min (policy)) && (prio <= sched_get_priority_max (policy)))
+  {
+    param.sched_priority = prio;
+    result = (pthread_setschedparam (thread, policy, &param) == 0);
+  }
+  return result;
+}
+
+bool iot_thread_current_set_priority (int prio)
+{
+  return iot_thread_set_priority (pthread_self (), prio);
+}

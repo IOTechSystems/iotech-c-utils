@@ -180,6 +180,7 @@ uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool)
 static void * thread_do (iot_thread_t * th)
 {
   iot_threadpool_t * pool = th->pool;
+  int priority = iot_thread_current_get_priority ();
 
 #if defined (__linux__)
   char thread_name[64];
@@ -201,6 +202,14 @@ static void * thread_do (iot_thread_t * th)
     {
       pthread_mutex_unlock (&pool->jobqueue.mutex);
       atomic_fetch_add (&pool->num_threads_working, 1);
+      /* If required, set thread priority */
+      if (job.prio_set && (job.priority != priority))
+      {
+        if (iot_thread_current_set_priority (job.priority))
+        {
+          priority = job.priority;
+        }
+      }
       (job.function) (job.arg);
       if (atomic_fetch_add (&pool->num_threads_working, -1) <= 1)
       {

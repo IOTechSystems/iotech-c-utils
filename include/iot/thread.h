@@ -14,7 +14,13 @@ extern "C" {
 #endif
 
 typedef void * (*iot_thread_fn_t) (void * arg);
+
 extern int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const int * prio);
+extern int iot_thread_current_get_priority (void);
+extern bool iot_thread_current_set_priority (int prio);
+extern int iot_thread_get_priority (pthread_t thread);
+extern bool iot_thread_set_priority (pthread_t thread, int prio);
+
 
 #ifdef __cplusplus
 }
