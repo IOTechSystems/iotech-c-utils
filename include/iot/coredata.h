@@ -30,6 +30,10 @@ extern void iot_coredata_start (iot_coredata_t * cd);
 extern void iot_coredata_stop (iot_coredata_t * cd);
 extern void iot_coredata_free (iot_coredata_t * cd);
 
+/* Topics */
+
+extern void iot_coredata_topic_create (iot_coredata_t * cd, const char * name, const int * prio);
+
 /* Data subscription */
 
 extern iot_coredata_sub_t * iot_coredata_sub_alloc (iot_coredata_t * cd, void * self, iot_data_sub_fn_t callback, const char * pattern);

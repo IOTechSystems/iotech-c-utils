@@ -83,11 +83,11 @@ static iot_coredata_topic_t * iot_coredata_topic_create_locked (iot_coredata_t *
   {
     topic = malloc (sizeof (*topic));
     topic->name = strdup (name);
-    topic->prio_set = (prio != NULL);
-    topic->priority = prio ? *prio : 0;
     topic->next = cd->topics;
     cd->topics = topic;
   }
+  topic->prio_set = (prio != NULL);
+  topic->priority = prio ? *prio : 0;
   return topic;
 }
 
@@ -226,6 +226,14 @@ iot_coredata_t * iot_coredata_alloc (void)
   iot_coredata_t * cd = calloc (1, sizeof (*cd));
   pthread_rwlock_init (&cd->lock, NULL);
   return cd;
+}
+
+void iot_coredata_topic_create (iot_coredata_t * cd, const char * name, const int * prio)
+{
+  assert (cd && name);
+  pthread_rwlock_wrlock (&cd->lock);
+  iot_coredata_topic_create_locked (cd, name, prio);
+  pthread_rwlock_unlock (&cd->lock);
 }
 
 void iot_coredata_init (iot_coredata_t * cd, const char * json_config)
