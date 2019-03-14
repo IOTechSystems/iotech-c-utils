@@ -228,15 +228,16 @@ iot_coredata_t * iot_coredata_alloc (void)
   return cd;
 }
 
-void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
+void iot_coredata_init (iot_coredata_t * cd, const char * json_config)
 {
   assert (cd);
   uint32_t threads = IOT_COREDATA_DEFAULT_THREADS;
 
   pthread_rwlock_wrlock (&cd->lock);
   cd->interval = IOT_COREDATA_DEFAULT_INTERVAL;
-  if (config)
+  if (json_config)
   {
+    iot_data_t * config = iot_data_from_json (json_config);
     const iot_data_t * value = iot_data_string_map_get (config, "Interval");
     if (value) cd->interval = (uint64_t) iot_data_i64 (value);
     value = iot_data_string_map_get (config, "Threads");
@@ -256,6 +257,7 @@ void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config)
         iot_coredata_topic_create_locked (cd, name, &prio);
       }
     }
+    iot_data_free (config);
   }
   cd->threadpool = iot_threadpool_init (threads);
   cd->scheduler = iot_scheduler_init (cd->threadpool);

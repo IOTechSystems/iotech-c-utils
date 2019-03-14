@@ -19,25 +19,19 @@ static void publish (iot_coredata_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
 static iot_data_t * publisher_callback (void * self);
 
-static iot_data_t * get_config (void)
-{
-  static const char * json =
-  "{"
-    "\"Interval\": 200000000,"
-    "\"Threads\": 4,"
-    "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 10 }, { \"Topic\": \"test/data\", \"Priority\": 20 }]"
-  "}";
-  iot_data_init ();
-  return iot_data_from_json (json);
-}
+static const char * json_config =
+"{"
+  "\"Interval\": 200000000,"
+  "\"Threads\": 4,"
+  "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 10 }, { \"Topic\": \"test/data\", \"Priority\": 20 }]"
+"}";
 
 int main (void)
 {
   time_t stamp;
-  iot_data_t * config = get_config ();
+  iot_data_init ();
   iot_coredata_t * cd = iot_coredata_alloc ();
-  iot_coredata_init (cd, config);
-  iot_data_free (config);
+  iot_coredata_init (cd, json_config);
   iot_coredata_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
   iot_coredata_pub_t * pub = iot_coredata_pub_alloc (cd, NULL, publisher_callback, "test/tube");
   iot_coredata_start (cd);

@@ -25,7 +25,7 @@ typedef void (*iot_data_sub_fn_t) (iot_data_t * data, void * self, const char * 
 /* Lifecycle operations */
 
 extern iot_coredata_t * iot_coredata_alloc (void);
-extern void iot_coredata_init (iot_coredata_t * cd, iot_data_t * config);
+extern void iot_coredata_init (iot_coredata_t * cd, const char * json_config);
 extern void iot_coredata_start (iot_coredata_t * cd);
 extern void iot_coredata_stop (iot_coredata_t * cd);
 extern void iot_coredata_free (iot_coredata_t * cd);
