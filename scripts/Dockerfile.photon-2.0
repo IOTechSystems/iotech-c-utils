@@ -1,9 +1,0 @@
-FROM photon:2.0
-MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN tdnf update -y && tdnf install -y wget gcc glibc-devel linux-api-headers binutils make git cmake tar gzip
-COPY VERSION /iotech-c-utils/
-COPY src /iotech-c-utils/src/
-COPY include /iotech-c-utils/include/
-COPY scripts /iotech-c-utils/scripts
-WORKDIR /iotech-c-utils
-ENTRYPOINT ["/iotech-c-utils/scripts/linux.sh"]
