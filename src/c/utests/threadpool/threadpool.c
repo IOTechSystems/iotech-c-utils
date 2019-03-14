@@ -27,14 +27,14 @@ static void cunit_threadpool_priority (void)
   int p1 = min;
   int p2 = p1 + delta;
   int p3 = p2 + delta;
-  iot_threadpool_t * pool = iot_thpool_init (1u);
+  iot_threadpool_t * pool = iot_threadpool_init (1u);
   CU_ASSERT (pool != NULL);
-  iot_thpool_add_work (pool, cunit_pool_worker, "Dummy", NULL);
-  iot_thpool_add_work (pool, cunit_pool_worker, "Job Prio 1", &p1);
-  iot_thpool_add_work (pool, cunit_pool_worker, "Job Prio 2", &p2);
-  iot_thpool_add_work (pool, cunit_pool_worker, "Job Prio 3", &p3);
-  iot_thpool_wait (pool);
-  iot_thpool_destroy (pool);
+  iot_threadpool_add_work (pool, cunit_pool_worker, "Dummy", NULL);
+  iot_threadpool_add_work (pool, cunit_pool_worker, "Job Prio 1", &p1);
+  iot_threadpool_add_work (pool, cunit_pool_worker, "Job Prio 2", &p2);
+  iot_threadpool_add_work (pool, cunit_pool_worker, "Job Prio 3", &p3);
+  iot_threadpool_wait (pool);
+  iot_threadpool_destroy (pool);
 }
 
 void cunit_threadpool_test_init (void)

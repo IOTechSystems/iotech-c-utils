@@ -41,7 +41,7 @@ struct iot_scheduler_t
   pthread_mutex_t mutex;          /* Mutex to control access to the scheduler */
   pthread_cond_t cond;            /* Condition to control schedule execution */
   atomic_bool running;            /* Flag to indicate if the scheduler is running */
-  iot_threadpool_t * thpool;      /* Thread pool to post jobs to */
+  iot_threadpool_t * threadpool;      /* Thread pool to post jobs to */
 };
 
 /* ========================== PROTOTYPES ============================ */
@@ -94,7 +94,7 @@ static void iot_scheduler_thread (void * arg)
         iot_schedule_t *current = queue->front;
 
         /* Post the work to the threadpool */
-        iot_thpool_add_work (scheduler->thpool, current->function, current->arg, current->prio_set ? &current->priority : NULL);
+        iot_threadpool_add_work (scheduler->threadpool, current->function, current->arg, current->prio_set ? &current->priority : NULL);
 
         /* Recalculate the next start time for the schedule */
         uint64_t time_now = getTimeAsUInt64 ();
@@ -144,7 +144,7 @@ iot_scheduler_t * iot_scheduler_init (iot_threadpool_t * pool)
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1, sizeof (*scheduler));
   pthread_mutex_init (&(scheduler->mutex), NULL);
   pthread_cond_init (&scheduler->cond, NULL);
-  scheduler->thpool = pool;
+  scheduler->threadpool = pool;
   return scheduler;
 }
 
@@ -152,7 +152,7 @@ iot_scheduler_t * iot_scheduler_init (iot_threadpool_t * pool)
 void iot_scheduler_start (iot_scheduler_t * scheduler)
 {
   atomic_store (&scheduler->running, true);
-  iot_thpool_add_work (scheduler->thpool, iot_scheduler_thread, scheduler, NULL);
+  iot_threadpool_add_work (scheduler->threadpool, iot_scheduler_thread, scheduler, NULL);
 }
 
 /* Create a schedule and insert it into the queue */
@@ -236,7 +236,7 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
   pthread_mutex_unlock (&scheduler->mutex);
   if (running)
   {
-    iot_thpool_wait (scheduler->thpool);
+    iot_threadpool_wait (scheduler->threadpool);
   }
 }
 

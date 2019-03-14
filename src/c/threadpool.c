@@ -59,7 +59,7 @@ typedef struct iot_threadpool_t
   atomic_uint_fast32_t num_threads_alive;   /* threads currently alive   */
   atomic_uint_fast32_t num_threads_working; /* threads currently working */
   pthread_mutex_t mutex;                    /* used for thread count etc */
-  pthread_cond_t cond;                      /* signal to iot_thpool_wait */
+  pthread_cond_t cond;                      /* signal to iot_threadpool_wait */
   iot_jobqueue_t jobqueue;                  /* job queue                 */
   atomic_bool running;                      /* state of pool             */
 } iot_threadpool_t;
@@ -80,7 +80,7 @@ static inline void jobqueue_init (iot_jobqueue_t * jobqueue)
 /* ========================== THREADPOOL ============================ */
 
 /* Initialise thread pool */
-iot_threadpool_t * iot_thpool_init (uint32_t num_threads)
+iot_threadpool_t * iot_threadpool_init (uint32_t num_threads)
 {
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
   pool->threads = (iot_thread_t*) calloc (num_threads, sizeof (iot_thread_t));
@@ -115,7 +115,7 @@ iot_threadpool_t * iot_thpool_init (uint32_t num_threads)
 }
 
 /* Add work to the thread pool */
-void iot_thpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void* arg, const int * prio)
+void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void* arg, const int * prio)
 {
   pthread_mutex_lock (&pool->mutex);
   if (atomic_load (&pool->running))
@@ -126,7 +126,7 @@ void iot_thpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void* a
 }
 
 /* Wait until all jobs have finished */
-void iot_thpool_wait (iot_threadpool_t * pool)
+void iot_threadpool_wait (iot_threadpool_t * pool)
 {
   pthread_mutex_lock (&pool->mutex);
   while (atomic_load (&pool->jobqueue.jobs) || atomic_load (&pool->num_threads_working))
@@ -137,7 +137,7 @@ void iot_thpool_wait (iot_threadpool_t * pool)
 }
 
 /* Destroy the threadpool */
-void iot_thpool_destroy (iot_threadpool_t * pool)
+void iot_threadpool_destroy (iot_threadpool_t * pool)
 {
   if (pool)
   {
@@ -162,7 +162,7 @@ void iot_thpool_destroy (iot_threadpool_t * pool)
   }
 }
 
-uint32_t iot_thpool_num_threads_working (iot_threadpool_t * pool)
+uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool)
 {
   return (uint32_t) atomic_load (&pool->num_threads_working);
 }
@@ -172,7 +172,7 @@ uint32_t iot_thpool_num_threads_working (iot_threadpool_t * pool)
 /* What each thread is doing
 *
 * In principle this is an endless loop. The only time this loop gets interuppted is once
-* iot_thpool_destroy() is invoked or the program exits.
+* iot_threadpool_destroy() is invoked or the program exits.
 *
 * @param  thread        thread that will run this function
 * @return nothing
