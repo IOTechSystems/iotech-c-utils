@@ -4,6 +4,7 @@ set -e -x
 ARCH=`uname -m`
 ROOT=$(dirname $(dirname $(readlink -f $0)))
 
+UTEST=false
 VALG=false
 CPPCHK=false
 LCOV=false
@@ -36,6 +37,10 @@ esac
 while [ $# -gt 0 ]
 do
   case $1 in
+     -utest)
+      UTEST=true
+      shift 1
+    ;;
     -valgrind)
       VALG=true
       shift 1
@@ -76,6 +81,14 @@ mkdir -p ${BROOT}/debug
 cd ${BROOT}/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug $ROOT/src
 make 2>&1 | tee debug.log
+
+# Unit tests
+
+if [ "$UTEST" = "true" ]
+then
+  cd ${BROOT}/release
+  c/utests/runner/runner -a -j
+fi
 
 # Coverage
 
