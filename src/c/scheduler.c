@@ -6,6 +6,7 @@
 //
 #include "iot/os.h"
 #include "iot/scheduler.h"
+#include "iot/thread.h"
 #include <pthread.h>
 
 #define IOT_NS_TO_SEC(SECONDS) (SECONDS / IOT_BILLION)
@@ -142,7 +143,7 @@ static void iot_scheduler_thread (void * arg)
 iot_scheduler_t * iot_scheduler_init (iot_threadpool_t * pool)
 {
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1, sizeof (*scheduler));
-  pthread_mutex_init (&(scheduler->mutex), NULL);
+  iot_mutex_init (&scheduler->mutex);
   pthread_cond_init (&scheduler->cond, NULL);
   scheduler->threadpool = pool;
   return scheduler;
@@ -219,8 +220,8 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
 {
   pthread_mutex_lock (&scheduler->mutex);
   remove_schedule_from_queue (schedule->scheduled ? &scheduler->queue : &scheduler->idle_queue, schedule);
-  free (schedule);
   pthread_mutex_unlock (&scheduler->mutex);
+  free (schedule);
 }
 
 /* Stop the scheduler thread */

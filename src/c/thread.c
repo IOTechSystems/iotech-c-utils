@@ -104,3 +104,13 @@ bool iot_thread_current_set_priority (int prio)
 {
   return iot_thread_set_priority (pthread_self (), prio);
 }
+
+void iot_mutex_init (pthread_mutex_t * mutex)
+{
+  assert (mutex);
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init (&attr);
+  pthread_mutexattr_setprotocol (&attr, PTHREAD_PRIO_INHERIT);
+  pthread_mutex_init (mutex, &attr);
+  pthread_mutexattr_destroy (&attr);
+}

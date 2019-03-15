@@ -21,6 +21,8 @@ extern bool iot_thread_current_set_priority (int prio);
 extern int iot_thread_get_priority (pthread_t thread);
 extern bool iot_thread_set_priority (pthread_t thread, int prio);
 
+extern void iot_mutex_init (pthread_mutex_t * mutex);
+
 
 #ifdef __cplusplus
 }
