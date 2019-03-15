@@ -82,7 +82,7 @@ static iot_bus_topic_t * iot_bus_topic_create_locked (iot_bus_t * cd, const char
   if (topic == NULL)
   {
     topic = malloc (sizeof (*topic));
-    topic->name = strdup (name);
+    topic->name = iot_strdup (name);
     topic->next = cd->topics;
     cd->topics = topic;
   }
@@ -346,7 +346,7 @@ iot_bus_sub_t * iot_bus_sub_alloc (iot_bus_t * cd, void * self, iot_data_sub_fn_
     sub = calloc (1, sizeof (*sub));
     sub->self = self;
     sub->bus = cd;
-    sub->pattern = strdup (pattern);
+    sub->pattern = iot_strdup (pattern);
     sub->callback = callback;
     if (cd->subscribers)
     {

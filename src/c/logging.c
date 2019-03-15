@@ -7,7 +7,6 @@
 #include "iot/os.h"
 #include "iot/logging.h"
 
-#include <pthread.h>
 #include <stdarg.h>
 
 // TODO: allow an array of labels in a log message
@@ -17,12 +16,12 @@ static const char *levelstrs[] =
 
 typedef struct impl_list
 {
-  iot_log_function fn;
+  iot_log_function_t fn;
   char *dest;
   struct impl_list *next;
 } impl_list;
 
-struct iot_logging_client
+struct iot_logging_client_t
 {
   char *subsystem;
   impl_list *loggers;
@@ -30,11 +29,11 @@ struct iot_logging_client
 };
 
 static void logthis
-  (iot_logging_client *svc, iot_loglevel l, const char *fmt, va_list ap);
+  (iot_logging_client_t *svc, iot_loglevel_t l, const char *fmt, va_list ap);
 
-static void logtofd (FILE *, const char *, iot_loglevel, time_t, const char *);
+static void logtofd (FILE *, const char *, iot_loglevel_t, time_t, const char *);
 
-static iot_logging_client dfl;
+static iot_logging_client_t dfl;
 
 void iot_log_init ()
 {
@@ -43,9 +42,9 @@ void iot_log_init ()
   pthread_mutex_init (&dfl.lock, NULL);
 }
 
-iot_logging_client *iot_log_default = &dfl;
+iot_logging_client_t *iot_log_default = &dfl;
 
-void iot_log_info (iot_logging_client *lc, const char *fmt, ...)
+void iot_log_info (iot_logging_client_t *lc, const char *fmt, ...)
 {
   va_list args;
   va_start (args, fmt);
@@ -53,7 +52,7 @@ void iot_log_info (iot_logging_client *lc, const char *fmt, ...)
   va_end(args);
 }
 
-void iot_log_trace (iot_logging_client *lc, const char *fmt, ...)
+void iot_log_trace (iot_logging_client_t *lc, const char *fmt, ...)
 {
   va_list args;
   va_start (args, fmt);
@@ -61,7 +60,7 @@ void iot_log_trace (iot_logging_client *lc, const char *fmt, ...)
   va_end(args);
 }
 
-void iot_log_debug (iot_logging_client *lc, const char *fmt, ...)
+void iot_log_debug (iot_logging_client_t *lc, const char *fmt, ...)
 {
   va_list args;
   va_start (args, fmt);
@@ -69,7 +68,7 @@ void iot_log_debug (iot_logging_client *lc, const char *fmt, ...)
   va_end(args);
 }
 
-void iot_log_warning (iot_logging_client *lc, const char *fmt, ...)
+void iot_log_warning (iot_logging_client_t *lc, const char *fmt, ...)
 {
   va_list args;
   va_start (args, fmt);
@@ -77,7 +76,7 @@ void iot_log_warning (iot_logging_client *lc, const char *fmt, ...)
   va_end(args);
 }
 
-void iot_log_error (iot_logging_client *lc, const char *fmt, ...)
+void iot_log_error (iot_logging_client_t *lc, const char *fmt, ...)
 {
   va_list args;
   va_start (args, fmt);
@@ -85,12 +84,12 @@ void iot_log_error (iot_logging_client *lc, const char *fmt, ...)
   va_end(args);
 }
 
-void logtofd (FILE *dest, const char *subsystem, iot_loglevel l, time_t timestamp, const char *message)
+static void logtofd (FILE *dest, const char *subsystem, iot_loglevel_t l, time_t timestamp, const char *message)
 {
   fprintf (dest, "%ld %s: %s: %s\n", timestamp, subsystem ? subsystem : "(default)", levelstrs[l], message);
 }
 
-bool iot_log_tofile (const char *dest, const char *subsystem, iot_loglevel l, time_t timestamp, const char *message)
+bool iot_log_tofile (const char *dest, const char *subsystem, iot_loglevel_t l, time_t timestamp, const char *message)
 {
   FILE *f;
   if (strcmp (dest, "-") == 0)
@@ -120,7 +119,7 @@ static time_t time (time_t *t)
 }
 #endif
 
-void logthis (iot_logging_client *lc, iot_loglevel l, const char *fmt, va_list ap)
+static void logthis (iot_logging_client_t *lc, iot_loglevel_t l, const char *fmt, va_list ap)
 {
   char str [1024];
   bool ok = false;
@@ -143,17 +142,17 @@ void logthis (iot_logging_client *lc, iot_loglevel l, const char *fmt, va_list a
   }
 }
 
-iot_logging_client *iot_logging_client_create (const char *s)
+iot_logging_client_t * iot_logging_client_create (const char *s)
 {
-  iot_logging_client *client;
-  client = malloc (sizeof (iot_logging_client));
-  client->subsystem = strdup (s);
+  iot_logging_client_t *client;
+  client = malloc (sizeof (iot_logging_client_t));
+  client->subsystem = iot_strdup (s);
   client->loggers = NULL;
   pthread_mutex_init (&client->lock, NULL);
   return client;
 }
 
-void iot_logging_client_destroy (iot_logging_client *lc)
+void iot_logging_client_destroy (iot_logging_client_t *lc)
 {
   impl_list *next;
   impl_list *i;
@@ -174,7 +173,7 @@ void iot_logging_client_destroy (iot_logging_client *lc)
 }
 
 void iot_log_addlogger
-  (iot_logging_client *lc, iot_log_function fn, const char *destination)
+  (iot_logging_client_t *lc, iot_log_function_t fn, const char *destination)
 {
   if (lc == iot_log_default)
   {
@@ -182,7 +181,7 @@ void iot_log_addlogger
     return;
   }
   impl_list *addthis = malloc (sizeof (impl_list));
-  addthis->dest = strdup (destination);
+  addthis->dest = iot_strdup (destination);
   addthis->fn = fn;
   pthread_mutex_lock (&lc->lock);
   addthis->next = lc->loggers;
@@ -191,7 +190,7 @@ void iot_log_addlogger
 }
 
 bool iot_log_dellogger
-  (iot_logging_client *lc, iot_log_function fn, const char *destination)
+  (iot_logging_client_t *lc, iot_log_function_t fn, const char *destination)
 {
   bool result = false;
   impl_list **iter = &lc->loggers;

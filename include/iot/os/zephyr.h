@@ -3,7 +3,7 @@
 
 #include <zephyr.h>
 
-extern char * strdup (const char *s);
+extern char * iot_strdup (const char * s);
 
 #ifndef CONFIG_NET_TCP
 #error Zephyr CONFIG_NET_TCP not set

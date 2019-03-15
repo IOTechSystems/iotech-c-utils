@@ -13,10 +13,8 @@
 extern "C" {
 #endif
 
-typedef enum iot_loglevel { INFO = 0, TRACE, DEBUG, WARNING, ERROR } iot_loglevel;
-
-struct iot_logging_client;
-typedef struct iot_logging_client iot_logging_client;
+typedef enum iot_loglevel_t { INFO = 0, TRACE, DEBUG, WARNING, ERROR } iot_loglevel_t;
+typedef struct iot_logging_client_t iot_logging_client_t;
 
 /**
  * Plugin function for loggers. This is called whenever a new message is logged.
@@ -30,11 +28,11 @@ typedef struct iot_logging_client iot_logging_client;
  * @return true if the log was successfully posted.
  */
 
-typedef bool (*iot_log_function)
+typedef bool (*iot_log_function_t)
 (
-  const char *destination,
-  const char *subsystem,
-  iot_loglevel l,
+  const char * destination,
+  const char * subsystem,
+  iot_loglevel_t level,
   time_t timestamp,
   const char *message
 );
@@ -43,37 +41,37 @@ typedef bool (*iot_log_function)
 
 extern bool iot_log_tofile
 (
-  const char *dest,
-  const char *subsystem,
-  iot_loglevel l,
+  const char * dest,
+  const char * subsystem,
+  iot_loglevel_t l,
   time_t timestamp,
   const char *message
 );
 
 /* Create and destroy logging clients */
 
-extern iot_logging_client *iot_logging_client_create (const char *subsystem);
-extern void iot_logging_client_destroy (iot_logging_client *lc);
+extern iot_logging_client_t * iot_logging_client_create (const char * subsystem);
+extern void iot_logging_client_destroy (iot_logging_client_t * lc);
 
 /* Default logging client: logs to stderr only */
 
-extern iot_logging_client *iot_log_default;
+extern iot_logging_client_t * iot_log_default;
 
 /* Plug in and remove logger implementations */
 
 extern void iot_log_addlogger
-  (iot_logging_client *lc, iot_log_function fn, const char *destination);
+  (iot_logging_client_t *lc, iot_log_function_t fn, const char * destination);
 extern bool iot_log_dellogger
-  (iot_logging_client *lc, iot_log_function fn, const char *destination);
+  (iot_logging_client_t *lc, iot_log_function_t fn, const char * destination);
 
 /* Functions to generate logs */
 
 extern void iot_log_init (void);
-extern void iot_log_info (iot_logging_client *lc, const char *fmt, ...);
-extern void iot_log_trace (iot_logging_client *lc, const char *fmt, ...);
-extern void iot_log_debug (iot_logging_client *lc, const char *fmt, ...);
-extern void iot_log_warning (iot_logging_client *lc, const char *fmt, ...);
-extern void iot_log_error (iot_logging_client *lc, const char *fmt, ...);
+extern void iot_log_info (iot_logging_client_t * lc, const char * fmt, ...);
+extern void iot_log_trace (iot_logging_client_t * lc, const char * fmt, ...);
+extern void iot_log_debug (iot_logging_client_t * lc, const char * fmt, ...);
+extern void iot_log_warning (iot_logging_client_t * lc, const char * fmt, ...);
+extern void iot_log_error (iot_logging_client_t * lc, const char * fmt, ...);
 
 #ifdef __cplusplus
 }

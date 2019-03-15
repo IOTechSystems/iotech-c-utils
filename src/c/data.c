@@ -320,7 +320,7 @@ iot_data_t * iot_data_alloc_string (const char * val, bool copy)
 {
   assert (val);
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, copy);
-  data->value.str = copy ? strdup (val) : (char*) val;
+  data->value.str = copy ? iot_strdup (val) : (char*) val;
   return (iot_data_t*) data;
 }
 

@@ -1,6 +1,7 @@
 #include "iot/os.h"
 
-char *strdup (const char *s)
+#ifdef __ZEPHYR__
+char * iot_strdup (const char *s)
 {
   size_t len = strlen (s) + 1;
   char * copy = malloc (len);
@@ -12,4 +13,4 @@ char *strdup (const char *s)
 
   return copy;
 }
-
+#endif
