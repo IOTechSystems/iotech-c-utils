@@ -11,7 +11,7 @@ build_dist()
 {
   mkdir -p ${ARCH}/build/${SYSTEM}
   docker build --tag iotech-c-utils-${SYSTEM}-${RAND}:${VER} --file scripts/Dockerfile.${SYSTEM} .
-  docker run --rm -e "TARGET=${TARGET}" -v "$(pwd)"/${ARCH}/${SYSTEM}:/iotech-c-utils/${ARCH} iotech-c-utils-${SYSTEM}-${RAND}:${VER}
+  docker run --cap-add=SYS_NICE --rm -e "TARGET=${TARGET}" -v "$(pwd)"/${ARCH}/${SYSTEM}:/iotech-c-utils/${ARCH} iotech-c-utils-${SYSTEM}-${RAND}:${VER}
   docker rmi iotech-c-utils-${SYSTEM}-${RAND}:${VER}
 }
 
