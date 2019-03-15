@@ -21,7 +21,7 @@ static iot_data_t * publisher_callback (void * self);
 
 static const char * json_config =
 "{"
-  "\"Interval\": 200000000,"
+  "\"Interval\": 200000,"
   "\"Threads\": 4,"
   "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 10 }, { \"Topic\": \"test/data\", \"Priority\": 20 }]"
 "}";

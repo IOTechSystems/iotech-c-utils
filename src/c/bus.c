@@ -247,7 +247,7 @@ void iot_bus_init (iot_bus_t * cd, const char * json_config)
   {
     iot_data_t * config = iot_data_from_json (json_config);
     const iot_data_t * value = iot_data_string_map_get (config, "Interval");
-    if (value) cd->interval = (uint64_t) iot_data_i64 (value);
+    if (value) cd->interval = (uint64_t) iot_data_i64 (value) * 1000;
     value = iot_data_string_map_get (config, "Threads");
     if (value) threads = (uint32_t) iot_data_i64 (value);
     value = iot_data_string_map_get (config, "Topics");
