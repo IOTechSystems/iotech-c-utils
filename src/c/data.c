@@ -93,10 +93,16 @@ static void * iot_data_factory_alloc (size_t size)
   if (data)
   {
     iot_data_cache = data->next;
-    memset (data, 0, size);
   }
   pthread_mutex_unlock (&iot_data_mutex);
-  data = data ? data : calloc (1, IOT_DATA_BLOCK_SIZE);
+  if (data)
+  {
+    memset (data, 0, size);
+  }
+  else
+  {
+    data = calloc (1, IOT_DATA_BLOCK_SIZE);
+  }
   atomic_store (&data->refs, 1);
   return data;
 }
@@ -144,15 +150,13 @@ void iot_data_init (void)
 
 void iot_data_fini (void)
 {
-  iot_data_t *data;
-  pthread_mutex_lock (&iot_data_mutex);
   while (iot_data_cache)
   {
-    data = iot_data_cache;
+    iot_data_t * data = iot_data_cache;
     iot_data_cache = data->next;
     free (data);
   }
-  pthread_mutex_unlock (&iot_data_mutex);
+  pthread_mutex_destroy (&iot_data_mutex);
 }
 
 void iot_data_addref (iot_data_t * data)
