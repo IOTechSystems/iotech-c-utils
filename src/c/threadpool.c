@@ -55,17 +55,17 @@ typedef struct iot_thread_t
 /* Threadpool */
 typedef struct iot_threadpool_t
 {
-  iot_thread_t * threads;                   /* array of threads          */
-  atomic_uint_fast32_t num_threads_alive;   /* threads currently alive   */
-  atomic_uint_fast32_t num_threads_working; /* threads currently working */
-  pthread_mutex_t mutex;                    /* used for thread count etc */
-  pthread_cond_t cond;                      /* signal to iot_threadpool_wait */
-  iot_jobqueue_t jobqueue;                  /* job queue                 */
-  atomic_bool running;                      /* state of pool             */
+  iot_thread_t * threads;                   /* array of threads           */
+  atomic_uint_fast32_t num_threads_alive;   /* threads currently alive    */
+  atomic_uint_fast32_t num_threads_working; /* threads currently working  */
+  pthread_mutex_t mutex;                    /* used for thread count etc  */
+  pthread_cond_t cond;                      /* signal to thread pool_wait */
+  iot_jobqueue_t jobqueue;                  /* job queue                  */
+  atomic_bool running;                      /* state of pool              */
 } iot_threadpool_t;
 
 
-static void * thread_do (iot_thread_t * th);
+static void * iot_threadpool_thread (iot_thread_t * th);
 
 static void jobqueue_fini (iot_jobqueue_t * jobqueue);
 static void jobqueue_push (iot_jobqueue_t * jobqueue, void (*func) (void*), void* arg, const int * prio);
@@ -80,7 +80,7 @@ static inline void jobqueue_init (iot_jobqueue_t * jobqueue)
 /* ========================== THREADPOOL ============================ */
 
 /* Initialise thread pool */
-iot_threadpool_t * iot_threadpool_init (uint32_t num_threads)
+iot_threadpool_t * iot_threadpool_init (uint32_t num_threads, const int * default_prio)
 {
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
   pool->threads = (iot_thread_t*) calloc (num_threads, sizeof (iot_thread_t));
@@ -97,7 +97,7 @@ iot_threadpool_t * iot_threadpool_init (uint32_t num_threads)
     iot_thread_t * th = &pool->threads[n];
     th->pool = pool;
     th->id = n;
-    iot_thread_create (&th->pthread, (iot_thread_fn_t) thread_do, th, NULL);
+    iot_thread_create (&th->pthread, (iot_thread_fn_t) iot_threadpool_thread, th, default_prio);
 
 #if THPOOL_DEBUG
     printf ("THPOOL_DEBUG: Created thread %u in pool \n", n);
@@ -177,10 +177,11 @@ uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool)
 * @param  thread        thread that will run this function
 * @return nothing
 */
-static void * thread_do (iot_thread_t * th)
+static void * iot_threadpool_thread (iot_thread_t * th)
 {
   iot_threadpool_t * pool = th->pool;
-  int priority = iot_thread_current_get_priority ();
+  pthread_t tid = pthread_self ();
+  int priority = iot_thread_get_priority (tid);
 
 #if defined (__linux__)
   char thread_name[64];
@@ -205,7 +206,7 @@ static void * thread_do (iot_thread_t * th)
       /* If required, set thread priority */
       if (job.prio_set && (job.priority != priority))
       {
-        if (iot_thread_current_set_priority (job.priority))
+        if (iot_thread_set_priority (tid, job.priority))
         {
           priority = job.priority;
         }

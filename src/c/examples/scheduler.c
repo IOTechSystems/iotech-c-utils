@@ -25,7 +25,7 @@ int main (void)
 {
   /* Create a threadpool */
   printf ("Create the threadpool\n");
-  iot_threadpool_t * pool = iot_threadpool_init (4);
+  iot_threadpool_t * pool = iot_threadpool_init (4, NULL);
 
   /* Initialise the scheduler */
   printf ("Initialise the scheduler\n");

@@ -65,8 +65,9 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
     param.sched_priority = *prio;
 #endif
     /* If priority set, also set FIFO scheduling */
-    pthread_attr_setschedparam (&attr, &param);
+
     pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
+    pthread_attr_setschedparam (&attr, &param);
   }
   ret = pthread_create (tid, &attr, func, arg);
   pthread_attr_destroy (&attr);
@@ -89,15 +90,12 @@ int iot_thread_current_get_priority (void)
 
 bool iot_thread_set_priority (pthread_t thread, int prio)
 {
-  bool result;
-  struct sched_param param;
-  int policy;
+  bool result = false;
+  struct sched_param param = { .sched_priority = prio };
 
-  result = (pthread_getschedparam (thread, &policy, &param) == 0);
-  if (result && (prio >= sched_get_priority_min (policy)) && (prio <= sched_get_priority_max (policy)))
+  if ((prio >= sched_get_priority_min (SCHED_FIFO)) && (prio <= sched_get_priority_max (SCHED_FIFO)))
   {
-    param.sched_priority = prio;
-    result = (pthread_setschedparam (thread, policy, &param) == 0);
+    result = (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
   }
   return result;
 }

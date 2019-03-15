@@ -22,10 +22,11 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  *    pool = iot_threadpool_init (4);               //then we initialize it to 4 threads
  *    ..
  *
- * @param  num_threads     number of threads to be created in the threadpool
+ * @param num_threads     number of threads to be created in the threadpool
+ * @param default_prio    default priority for created threads
  * @return iot_threadpool  created thread pool on success, NULL on error
  */
-iot_threadpool_t * iot_threadpool_init (uint32_t num_threads);
+iot_threadpool_t * iot_threadpool_init (uint32_t num_threads, const int * default_prio);
 
 
 /**

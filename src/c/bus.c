@@ -267,7 +267,7 @@ void iot_bus_init (iot_bus_t * cd, const char * json_config)
     }
     iot_data_free (config);
   }
-  cd->threadpool = iot_threadpool_init (threads);
+  cd->threadpool = iot_threadpool_init (threads, NULL);
   cd->scheduler = iot_scheduler_init (cd->threadpool);
   pthread_rwlock_unlock (&cd->lock);
 }
