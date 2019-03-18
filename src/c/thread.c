@@ -110,7 +110,9 @@ void iot_mutex_init (pthread_mutex_t * mutex)
   assert (mutex);
   pthread_mutexattr_t attr;
   pthread_mutexattr_init (&attr);
+#ifndef __ZEPHYR__
   pthread_mutexattr_setprotocol (&attr, PTHREAD_PRIO_INHERIT);
+#endif
   pthread_mutex_init (mutex, &attr);
   pthread_mutexattr_destroy (&attr);
 }
