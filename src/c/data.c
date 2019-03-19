@@ -82,7 +82,7 @@ typedef struct iot_string_holder_t
 
 static iot_data_t * iot_data_cache = NULL;
 
-#ifdef __USE_XOPEN2K
+#ifdef _GNU_SOURCE
 static pthread_spinlock_t iot_data_slock;
 #else
 static pthread_mutex_t iot_data_mutex;
@@ -94,7 +94,7 @@ static void * iot_data_factory_alloc (size_t size)
 {
   assert (size <= IOT_DATA_BLOCK_SIZE);
 
-#ifdef __USE_XOPEN2K
+#ifdef _GNU_SOURCE
   pthread_spin_lock (&iot_data_slock);
 #else
   pthread_mutex_lock (&iot_data_mutex);
@@ -104,7 +104,7 @@ static void * iot_data_factory_alloc (size_t size)
   {
     iot_data_cache = data->next;
   }
-#ifdef __USE_XOPEN2K
+#ifdef _GNU_SOURCE
   pthread_spin_unlock (&iot_data_slock);
 #else
   pthread_mutex_unlock (&iot_data_mutex);
@@ -123,14 +123,14 @@ static void * iot_data_factory_alloc (size_t size)
 
 static inline void iot_data_factory_free (iot_data_t * data)
 {
-#ifdef __USE_XOPEN2K
+#ifdef _GNU_SOURCE
   pthread_spin_lock (&iot_data_slock);
 #else
   pthread_mutex_lock (&iot_data_mutex);
 #endif
   data->next = iot_data_cache;
   iot_data_cache = data;
-#ifdef __USE_XOPEN2K
+#ifdef _GNU_SOURCE
   pthread_spin_unlock (&iot_data_slock);
 #else
   pthread_mutex_unlock (&iot_data_mutex);
@@ -167,7 +167,7 @@ static bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 
 void iot_data_init (void)
 {
-#ifdef __USE_XOPEN2K
+#ifdef _GNU_SOURCE
   pthread_spin_init (&iot_data_slock, 0);
 #else
   pthread_mutex_init (&iot_data_mutex, NULL);
@@ -182,7 +182,7 @@ void iot_data_fini (void)
     iot_data_cache = data->next;
     free (data);
   }
-#ifdef __USE_XOPEN2K
+#ifdef _GNU_SOURCE
   pthread_spin_destroy (&iot_data_slock);
 #else
   pthread_mutex_destroy (&iot_data_mutex);
