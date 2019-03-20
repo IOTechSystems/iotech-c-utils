@@ -221,7 +221,7 @@ pipeline
   {
     choice (choices: ['None','Development','Release'], description: 'Build Archive Type', name: 'Archive')
     choice (choices: ['ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-29','opensuse-42','photon-3.0','zephyr-1.14','all'], description: 'System to Build', name: 'System')
-    choice (choices: ['x86_64','arm64','arm32', 'all'], description: 'Build Host 1GArchitecture', name: 'Arch')
+    choice (choices: ['x86_64','arm64','arm32', 'all'], description: 'Build Host Architecture', name: 'Arch')
     choice (choices: ['None','frdm_k64f','native_posix','all'], description: 'Target Board', name: 'Board')
   }
   stages { stage ('All') { steps { script { parallel buildMap }}}}
