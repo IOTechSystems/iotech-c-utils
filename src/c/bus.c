@@ -204,9 +204,47 @@ static iot_bus_pub_t * iot_bus_find_pub_locked (iot_bus_t * cd, void * self, con
   return pub;
 }
 
+static bool iot_bus_topic_match (const char * topic, const char * pattern)
+{
+  bool match = false;
+  char *psave, *tsave, *ttok, *ptok;
+  char * top = iot_strdup (topic);
+  char * pat = iot_strdup (pattern);
+  ptok = pat;
+  ttok = top;
+
+  while (! match)
+  {
+    ptok = iot_ctok_r (ptok, '/', &tsave);
+    ttok = iot_ctok_r (ttok, '/', &psave);
+    if (ptok == NULL || ttok == NULL)
+    {
+      match = (ptok == ttok);
+      break;
+    }
+    if (*ptok == '#') // Match all wildcard
+    {
+      match = true;
+      break;
+    }
+    if (*ptok != '+') // Match local wildcard
+    {
+      if (strcmp (ttok, ptok) != 0)
+      {
+        break;
+      }
+    }
+    ptok = NULL;
+    ttok = NULL;
+  }
+  free (top);
+  free (pat);
+  return match;
+}
+
 static void iot_bus_match_locked (iot_bus_pub_t * pub, iot_bus_sub_t * sub)
 {
-  if (strcmp (pub->topic->name, sub->pattern) == 0) // TODO: Implement pattern match
+  if (iot_bus_topic_match (pub->topic->name, sub->pattern))
   {
     iot_bus_match_t * match = malloc (sizeof (*match));
     match->sub = sub;

@@ -26,4 +26,6 @@
 #include <time.h>
 #include <stdatomic.h>
 
+extern char * iot_ctok_r (char *str, const char delim, char **saveptr);
+
 #endif
