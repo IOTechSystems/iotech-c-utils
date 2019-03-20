@@ -86,7 +86,7 @@ void iot_log_error (iot_logging_client_t *lc, const char *fmt, ...)
 
 static void logtofd (FILE *dest, const char *subsystem, iot_loglevel_t l, time_t timestamp, const char *message)
 {
-  fprintf (dest, "%ld %s: %s: %s\n", timestamp, subsystem ? subsystem : "(default)", levelstrs[l], message);
+  fprintf (dest, "%" PRId64 " %s: %s: %s\n", (int64_t) timestamp, subsystem ? subsystem : "(default)", levelstrs[l], message);
 }
 
 bool iot_log_tofile (const char *dest, const char *subsystem, iot_loglevel_t l, time_t timestamp, const char *message)
