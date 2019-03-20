@@ -13,7 +13,6 @@ char * iot_strdup (const char *s)
 
   return copy;
 }
-#endif
 
 char * iot_ctok_r (char *str, const char delim, char **saveptr)
 {
@@ -48,3 +47,4 @@ char * iot_ctok_r (char *str, const char delim, char **saveptr)
   }
   return tok;
 }
+#endif

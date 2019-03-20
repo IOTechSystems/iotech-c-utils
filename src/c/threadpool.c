@@ -233,7 +233,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
 /* ============================ JOB QUEUE =========================== */
 
 
-static void iot_jobqueue_fini(iot_jobqueue_t * jobqueue)
+static void iot_jobqueue_fini (iot_jobqueue_t * jobqueue)
 {
   iot_job_t * job;
   pthread_mutex_lock (&jobqueue->mutex);

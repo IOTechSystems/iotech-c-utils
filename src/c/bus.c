@@ -215,8 +215,13 @@ static bool iot_bus_topic_match (const char * topic, const char * pattern)
 
   while (! match)
   {
+#ifdef __ZEPHYR__
     ptok = iot_ctok_r (ptok, '/', &tsave);
     ttok = iot_ctok_r (ttok, '/', &psave);
+#else
+    ptok = strtok_r (ptok, "/", &tsave);
+    ttok = strtok_r (ttok, "/", &psave);
+#endif
     if (ptok == NULL || ttok == NULL)
     {
       match = (ptok == ttok);

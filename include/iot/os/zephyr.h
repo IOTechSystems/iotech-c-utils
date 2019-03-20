@@ -4,6 +4,7 @@
 #include <zephyr.h>
 
 extern char * iot_strdup (const char * s);
+extern char * iot_ctok_r (char *str, const char delim, char **saveptr);
 
 #ifndef CONFIG_NET_TCP
 #error Zephyr CONFIG_NET_TCP not set
