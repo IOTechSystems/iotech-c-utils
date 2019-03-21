@@ -20,6 +20,9 @@ if (DEFINED CMAKE_C_COMPILER_ID)
     endif ()
   endif ()
 endif ()
+if ("${CUTILS_LINUX_SYS}" STREQUAL "Alpine")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__LIBMUSL__")
+endif ()
 
 # Set default files to compile and libraries
 
