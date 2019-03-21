@@ -11,7 +11,6 @@
 #include "iot/os/zephyr.h"
 #else
 #include "iot/os/linux.h"
-#define iot_strdup(s) strdup(s)
 #endif
 
 #include <pthread.h>
