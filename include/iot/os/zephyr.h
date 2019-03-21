@@ -23,6 +23,6 @@ extern char * iot_ctok_r (char *str, const char delim, char **saveptr);
 #endif
 
 #define IOT_ZEPHYR_STACK_SIZE 4096
-#define IOT_ZEPHYR_MAX_THREADS 5
+#define IOT_ZEPHYR_MAX_THREADS 4
 
 #endif

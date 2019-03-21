@@ -78,7 +78,7 @@ typedef struct iot_string_holder_t
   size_t free;
 } iot_string_holder_t;
 
-// Data cache and guard mutex
+// Data cache and guard mutex or spin lock
 
 static iot_data_t * iot_data_cache = NULL;
 
