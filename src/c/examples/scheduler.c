@@ -66,6 +66,6 @@ int main (void)
 
   /* Destroy the thread pool */
   printf ("Destroy the thread pool\n");
-  iot_threadpool_destroy (pool);
+  iot_threadpool_fini (pool);
   return 0;
 }

@@ -58,6 +58,7 @@ typedef struct iot_threadpool_t
   iot_thread_t * threads;                   /* array of threads           */
   atomic_uint_fast32_t num_threads_alive;   /* threads currently alive    */
   atomic_uint_fast32_t num_threads_working; /* threads currently working  */
+  atomic_uint_fast32_t refs;                /* Reference count            */
   pthread_mutex_t mutex;                    /* used for thread count etc  */
   pthread_cond_t cond;                      /* signal to thread pool_wait */
   iot_jobqueue_t jobqueue;                  /* job queue                  */
@@ -88,7 +89,8 @@ iot_threadpool_t * iot_threadpool_init (uint32_t num_threads, const int * defaul
   iot_mutex_init (&pool->mutex);
   pthread_mutex_lock (&pool->mutex);
   atomic_store (&pool->running, true);
-  iot_jobqueue_init(&pool->jobqueue);
+  atomic_store (&pool->refs, 1);
+  iot_jobqueue_init (&pool->jobqueue);
   pthread_cond_init (&pool->cond, NULL);
 
   /* Create and start threads */
@@ -136,26 +138,28 @@ void iot_threadpool_wait (iot_threadpool_t * pool)
   pthread_mutex_unlock (&pool->mutex);
 }
 
-/* Destroy the threadpool */
-void iot_threadpool_destroy (iot_threadpool_t * pool)
+/* Increment thread pool reference count */
+void iot_threadpool_addref (iot_threadpool_t * pool)
 {
-  if (pool)
+  assert (pool);
+  atomic_fetch_add (&pool->refs, 1);
+}
+
+/* Destroy the threadpool if reference count zero  */
+void iot_threadpool_fini (iot_threadpool_t * pool)
+{
+  if (pool && (atomic_fetch_add (&pool->refs, -1) <= 1))
   {
-    pthread_mutex_lock (&pool->mutex);
-
-    /* End each thread 's infinite loop */
+    /* Terminate threads, then wait for completion */
     atomic_store (&pool->running, false);
-
-    /* Poll remaining threads */
     while (atomic_load (&pool->num_threads_alive))
     {
       pthread_cond_broadcast (&pool->jobqueue.cond);
       sleep (1);
     }
     /* Cleanup */
-    iot_jobqueue_fini(&pool->jobqueue);
+    iot_jobqueue_fini (&pool->jobqueue);
     pthread_cond_destroy (&pool->cond);
-    pthread_mutex_unlock (&pool->mutex);
     pthread_mutex_destroy (&pool->mutex);
     free (pool->threads);
     free (pool);

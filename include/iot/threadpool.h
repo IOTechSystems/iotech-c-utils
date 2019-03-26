@@ -98,7 +98,7 @@ void iot_threadpool_wait (iot_threadpool_t * pool);
  * int main() {
  *    iot_threadpool * pool = iot_threadpool_init (2);
  *    ..
- *    iot_threadpool_destroy (pool);
+ *    iot_threadpool_fini (pool);
  *    ..
  *    return 0;
  * }
@@ -106,7 +106,7 @@ void iot_threadpool_wait (iot_threadpool_t * pool);
  * @param iot_threadpool the pool to destroy
  * @return nothing
  */
-void iot_threadpool_destroy (iot_threadpool_t * pool);
+void iot_threadpool_fini (iot_threadpool_t * pool);
 
 
 /**
@@ -127,6 +127,12 @@ void iot_threadpool_destroy (iot_threadpool_t * pool);
  * @return integer       number of threads working
  */
 uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool);
+
+/**
+ * @brief Add reference count to thread pool
+ * @param iot_threadpool the pool of interest
+ */
+extern void iot_threadpool_addref (iot_threadpool_t * pool);
 
 #ifdef __cplusplus
 }
