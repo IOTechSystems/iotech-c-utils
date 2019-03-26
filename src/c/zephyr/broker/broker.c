@@ -23,13 +23,16 @@ static const char * json_config =
 "{"
   "\"Interval\": 200000000,"
   "\"Threads\": 4,"
-  "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 10 }, { \"Topic\": \"test/data\", \"Priority\": 20 }]"
+  "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 2 }, { \"Topic\": \"test/data\", \"Priority\": 5 }]"
 "}";
 
 int main (void)
 {
   struct timespec start, stop;
   iot_data_init ();
+  int prio_max = sched_get_priority_max (SCHED_FIFO);
+  int prio_min = sched_get_priority_min (SCHED_FIFO);
+  printf ("\nFIFO priority max: %d min: %d\n", prio_max, prio_min);
   iot_bus_t * cd = iot_bus_alloc ();
   iot_bus_init (cd, json_config);
   iot_bus_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
