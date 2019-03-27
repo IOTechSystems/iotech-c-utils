@@ -11,8 +11,7 @@
 
 // TODO: allow an array of labels in a log message
 
-static const char *levelstrs[] =
-  {"INFO", "TRACE", "DEBUG", "WARNING", "ERROR"};
+static const char * iot_log_levels[5] = {"INFO", "TRACE", "DEBUG", "WARNING", "ERROR"};
 
 typedef struct impl_list
 {
@@ -28,21 +27,22 @@ struct iot_logging_client_t
   pthread_mutex_t lock;
 };
 
-static void logthis
-  (iot_logging_client_t *svc, iot_loglevel_t l, const char *fmt, va_list ap);
-
+static void logthis (iot_logging_client_t *svc, iot_loglevel_t l, const char *fmt, va_list ap);
 static void logtofd (FILE *, const char *, iot_loglevel_t, time_t, const char *);
 
-static iot_logging_client_t dfl;
-
-void iot_log_init ()
+iot_logging_client_t * iot_log_default (void)
 {
-  dfl.subsystem = NULL;
-  dfl.loggers = NULL;
-  pthread_mutex_init (&dfl.lock, NULL);
+  static iot_logging_client_t dfl;
+  static iot_logging_client_t * logger = NULL;
+  if (logger == NULL)
+  {
+    logger = &dfl;
+    dfl.subsystem = NULL;
+    dfl.loggers = NULL;
+    pthread_mutex_init (&dfl.lock, NULL);
+  }
+  return logger;
 }
-
-iot_logging_client_t *iot_log_default = &dfl;
 
 void iot_log_info (iot_logging_client_t *lc, const char *fmt, ...)
 {
@@ -86,7 +86,7 @@ void iot_log_error (iot_logging_client_t *lc, const char *fmt, ...)
 
 static void logtofd (FILE *dest, const char *subsystem, iot_loglevel_t l, time_t timestamp, const char *message)
 {
-  fprintf (dest, "%" PRId64 " %s: %s: %s\n", (int64_t) timestamp, subsystem ? subsystem : "(default)", levelstrs[l], message);
+  fprintf (dest, "%" PRId64 " %s: %s: %s\n", (int64_t) timestamp, subsystem ? subsystem : "(default)", iot_log_levels[l], message);
 }
 
 bool iot_log_tofile (const char *dest, const char *subsystem, iot_loglevel_t l, time_t timestamp, const char *message)
@@ -175,7 +175,7 @@ void iot_logging_client_destroy (iot_logging_client_t *lc)
 void iot_log_addlogger
   (iot_logging_client_t *lc, iot_log_function_t fn, const char *destination)
 {
-  if (lc == iot_log_default)
+  if (lc == iot_log_default ())
   {
     iot_log_error (lc, "Request to add plugin to default logger - ignored");
     return;
@@ -189,24 +189,20 @@ void iot_log_addlogger
   pthread_mutex_unlock (&lc->lock);
 }
 
-bool iot_log_dellogger
-  (iot_logging_client_t *lc, iot_log_function_t fn, const char *destination)
+void iot_log_dellogger (iot_logging_client_t *lc, iot_log_function_t fn, const char *destination)
 {
-  bool result = false;
-  impl_list **iter = &lc->loggers;
   pthread_mutex_lock (&lc->lock);
+  impl_list **iter = &lc->loggers;
   while (*iter)
   {
     if ((*iter)->fn == fn && strcmp ((*iter)->dest, destination) == 0)
     {
       impl_list *tmp = *iter;
       *iter = (*iter)->next;
-      free (tmp);
-      result = true;
+      free (*iter);
       break;
     }
     iter = &((*iter)->next);
   }
   pthread_mutex_unlock (&lc->lock);
-  return result;
 }

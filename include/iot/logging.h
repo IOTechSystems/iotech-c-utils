@@ -55,18 +55,17 @@ extern void iot_logging_client_destroy (iot_logging_client_t * lc);
 
 /* Default logging client: logs to stderr only */
 
-extern iot_logging_client_t * iot_log_default;
+extern iot_logging_client_t * iot_log_default (void);
 
 /* Plug in and remove logger implementations */
 
 extern void iot_log_addlogger
   (iot_logging_client_t *lc, iot_log_function_t fn, const char * destination);
-extern bool iot_log_dellogger
+extern void iot_log_dellogger
   (iot_logging_client_t *lc, iot_log_function_t fn, const char * destination);
 
 /* Functions to generate logs */
 
-extern void iot_log_init (void);
 extern void iot_log_info (iot_logging_client_t * lc, const char * fmt, ...);
 extern void iot_log_trace (iot_logging_client_t * lc, const char * fmt, ...);
 extern void iot_log_debug (iot_logging_client_t * lc, const char * fmt, ...);
