@@ -4,13 +4,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-#include "iot/os.h"
+#include "iot/data.h"
+#include "iot/container.h"
 #include "iot/scheduler.h"
 #include "iot/thread.h"
-#include <pthread.h>
 
-#define IOT_NS_TO_SEC(SECONDS) (SECONDS / IOT_BILLION)
-#define IOT_NS_REMAINING(SECONDS) (SECONDS % IOT_BILLION)
+#define IOT_NS_TO_SEC(s) ((s) / IOT_BILLION)
+#define IOT_NS_REMAINING(s) ((s) % IOT_BILLION)
 
 /* Schedule */
 struct iot_schedule_t
@@ -37,12 +37,13 @@ typedef struct iot_schd_queue_t
 /* Scheduler */
 struct iot_scheduler_t
 {
+  iot_component_t component;      /* Component base type */
   iot_schd_queue_t queue;         /* Schedule queue */
   iot_schd_queue_t idle_queue;    /* The queue of idle schedules */
   pthread_mutex_t mutex;          /* Mutex to control access to the scheduler */
   pthread_cond_t cond;            /* Condition to control schedule execution */
   atomic_bool running;            /* Flag to indicate if the scheduler is running */
-  iot_threadpool_t * threadpool;      /* Thread pool to post jobs to */
+  iot_threadpool_t * threadpool;  /* Thread pool to post jobs to */
 };
 
 /* ========================== PROTOTYPES ============================ */
@@ -140,20 +141,29 @@ static void iot_scheduler_thread (void * arg)
 }
 
 /* Initialise the schedule queue and processing thread */
-iot_scheduler_t * iot_scheduler_init (iot_threadpool_t * pool)
+iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool)
 {
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1, sizeof (*scheduler));
   iot_mutex_init (&scheduler->mutex);
   pthread_cond_init (&scheduler->cond, NULL);
   scheduler->threadpool = pool;
+  scheduler->component.start_fn = (iot_component_start_fn_t) iot_scheduler_start;
+  scheduler->component.stop_fn = (iot_component_stop_fn_t) iot_scheduler_stop;
   return scheduler;
 }
 
+iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler)
+{
+  assert (scheduler);
+  return scheduler->threadpool;
+}
+
 /* Start the scheduler thread */
-void iot_scheduler_start (iot_scheduler_t * scheduler)
+bool iot_scheduler_start (iot_scheduler_t * scheduler)
 {
   atomic_store (&scheduler->running, true);
   iot_threadpool_add_work (scheduler->threadpool, iot_scheduler_thread, scheduler, NULL);
+  return true;
 }
 
 /* Create a schedule and insert it into the queue */
@@ -225,7 +235,7 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
 }
 
 /* Stop the scheduler thread */
-void iot_scheduler_stop (iot_scheduler_t * scheduler)
+bool iot_scheduler_stop (iot_scheduler_t * scheduler)
 {
   pthread_mutex_lock (&scheduler->mutex);
   bool running = atomic_load (&scheduler->running);
@@ -239,10 +249,11 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
   {
     iot_threadpool_wait (scheduler->threadpool);
   }
+  return true;
 }
 
 /* Destroy all remaining scheduler resouces */
-void iot_scheduler_fini (iot_scheduler_t * scheduler)
+void iot_scheduler_free (iot_scheduler_t * scheduler)
 {
   iot_scheduler_stop (scheduler);
   while (scheduler->queue.length > 0)
@@ -343,4 +354,19 @@ static void remove_schedule_from_queue (iot_schd_queue_t * queue, iot_schedule_t
 
   /* Decrement the number of schedules */
   queue->length -= 1;
+}
+
+/* Container support */
+
+static iot_component_t * iot_scheduler_config (iot_container_t * cont, const iot_data_t * map)
+{
+  const char * name = iot_data_string_map_get_string (map, "ThreadPool");
+  iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find (cont, name);
+  return (iot_component_t*) iot_scheduler_alloc (pool);
+}
+
+const iot_component_factory_t * iot_scheduler_factory (void)
+{
+  static iot_component_factory_t factory = { IOT_SCHEDULER_TYPE, iot_scheduler_config, (iot_component_free_fn_t) iot_scheduler_free };
+  return &factory;
 }

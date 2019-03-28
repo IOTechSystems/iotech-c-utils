@@ -19,13 +19,6 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
 static iot_data_t * publisher_callback (void * self);
 
-static const char * json_config =
-"{"
-  "\"Interval\": 200000000,"
-  "\"Threads\": 4,"
-  "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 2 }, { \"Topic\": \"test/data\", \"Priority\": 5 }]"
-"}";
-
 int main (void)
 {
   struct timespec start, stop;
@@ -33,17 +26,18 @@ int main (void)
   int prio_max = sched_get_priority_max (SCHED_FIFO);
   int prio_min = sched_get_priority_min (SCHED_FIFO);
   printf ("\nFIFO priority max: %d min: %d\n", prio_max, prio_min);
-  iot_bus_t * cd = iot_bus_alloc ();
-  iot_bus_init (cd, json_config);
-  iot_bus_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
-  iot_bus_pub_t * pub = iot_bus_pub_alloc (cd, NULL, publisher_callback, "test/tube");
-  iot_bus_start (cd);
+  iot_threadpool_t * pool = iot_threadpool_alloc (4, NULL);
+  iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
+  iot_bus_t * bus = iot_bus_alloc (scheduler, 200000);
+  iot_bus_sub_alloc (bus, NULL, subscriber_callback, "test/tube");
+  iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, NULL, publisher_callback, "test/tube");
+  iot_bus_start (bus);
   clock_gettime (CLOCK_MONOTONIC, &start);
   publish (pub, PUB_ITERS);
   clock_gettime (CLOCK_MONOTONIC, &stop);
   printf ("Published %d samples in %d seconds %d nanoseconds\n", PUB_ITERS, stop.tv_sec - start.tv_sec, stop.tv_nsec - start.tv_nsec);
-  iot_bus_stop (cd);
-  iot_bus_free (cd);
+  iot_bus_stop (bus);
+  iot_bus_free (bus);
   iot_data_fini ();
   printf ("Done\n");
   fflush (stdout);

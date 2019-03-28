@@ -19,30 +19,25 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters);
 static void subscriber_callback (iot_data_t * data, void * self, const char * match);
 static iot_data_t * publisher_callback (void * self);
 
-static const char * json_config =
-"{"
-  "\"Interval\": 200000,"
-  "\"Threads\": 4,"
-  "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 10 }, { \"Topic\": \"test/data\", \"Priority\": 20 }]"
-"}";
-
 int main (void)
 {
   time_t stamp;
   iot_data_init ();
-  iot_bus_t * cd = iot_bus_alloc ();
-  iot_bus_init (cd, json_config);
-  iot_bus_sub_alloc (cd, NULL, subscriber_callback, "test/tube");
-  iot_bus_pub_t * pub = iot_bus_pub_alloc (cd, NULL, publisher_callback, "test/tube");
-  iot_bus_start (cd);
+  iot_threadpool_t * pool = iot_threadpool_alloc (4, NULL);
+  iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
+  iot_bus_t * bus = iot_bus_alloc (scheduler, 200000);
+  iot_bus_sub_alloc (bus, NULL, subscriber_callback, "test/tube");
+  iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, NULL, publisher_callback, "test/tube");
+  iot_bus_start (bus);
   stamp = time (NULL);
   printf ("Samples: %d\nStart: %s", PUB_ITERS, ctime (&stamp));
   publish (pub, PUB_ITERS);
   stamp = time (NULL);
   printf ("Stop: %s", ctime (&stamp));
   sleep (3);
-  iot_bus_stop (cd);
-  iot_bus_free (cd);
+  iot_bus_stop (bus);
+  iot_bus_free (bus);
+  iot_scheduler_free (scheduler);
   iot_data_fini ();
 }
 

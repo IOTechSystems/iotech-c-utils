@@ -25,11 +25,11 @@ int main (void)
 {
   /* Create a threadpool */
   printf ("Create the threadpool\n");
-  iot_threadpool_t * pool = iot_threadpool_init (4, NULL);
+  iot_threadpool_t * pool = iot_threadpool_alloc (4, NULL);
 
   /* Initialise the scheduler */
   printf ("Initialise the scheduler\n");
-  iot_scheduler_t * scheduler = iot_scheduler_init (pool);
+  iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
 
   /* Create two schedules */
   printf ("Create two schedules\n");
@@ -62,10 +62,10 @@ int main (void)
 
   /* Stop and delete the scheduler (and associated schedules) */
   printf ("Stop and delete the scheduler\n");
-  iot_scheduler_fini (scheduler);
+  iot_scheduler_free (scheduler);
 
   /* Destroy the thread pool */
   printf ("Destroy the thread pool\n");
-  iot_threadpool_fini (pool);
+  iot_threadpool_free (pool);
   return 0;
 }

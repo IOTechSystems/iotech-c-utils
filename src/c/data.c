@@ -515,13 +515,19 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   return pair ? pair->value : NULL;
 }
 
-extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key)
+const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key)
 {
   assert (key);
   iot_data_t * dkey = iot_data_alloc_string (key, false);
   const iot_data_t * value = iot_data_map_get (map, dkey);
   iot_data_free (dkey);
   return value;
+}
+
+const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return data ? iot_data_string (data) : NULL;
 }
 
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
@@ -579,6 +585,16 @@ const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter)
   return (iter->pair) ? iter->pair->value : NULL;
 }
 
+const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * iter)
+{
+  return iot_data_string (iot_data_map_iter_key (iter));
+}
+
+const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter)
+{
+  return iot_data_string (iot_data_map_iter_value (iter));
+}
+
 void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter)
 {
   assert (iter);
@@ -601,6 +617,11 @@ uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter)
 const iot_data_t * iot_data_array_iter_value (const iot_data_array_iter_t * iter)
 {
   return (iter->index <= iter->array->size) ? iter->array->values[iter->index - 1] : NULL;
+}
+
+const char * iot_data_array_iter_string (const iot_data_array_iter_t * iter)
+{
+  return (iter->index <= iter->array->size) ? iot_data_string (iter->array->values[iter->index - 1]) : NULL;
 }
 
 static void iot_data_strcat (iot_string_holder_t * holder, const char * add)

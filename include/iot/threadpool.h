@@ -1,11 +1,13 @@
 #ifndef _IOT_THREADPOOL_H_
 #define _IOT_THREADPOOL_H_
 
-#include "iot/os.h"
+#include "iot/component.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define IOT_THREADPOOL_TYPE "IOT::ThreadPool"
 
 typedef struct iot_threadpool_t iot_threadpool_t;
 
@@ -19,15 +21,14 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  *
  *    ..
  *    iot_threadpool pool;                      //First we declare a thread pool
- *    pool = iot_threadpool_init (4);               //then we initialize it to 4 threads
+ *    pool = iot_threadpool_alloc (4, NULL);     //then we initialize it to 4 threads
  *    ..
  *
  * @param num_threads     number of threads to be created in the threadpool
  * @param default_prio    default priority for created threads
  * @return iot_threadpool  created thread pool on success, NULL on error
  */
-iot_threadpool_t * iot_threadpool_init (uint32_t num_threads, const int * default_prio);
-
+extern iot_threadpool_t * iot_threadpool_alloc (uint32_t num_threads, const int * default_prio);
 
 /**
  * @brief Add work to the job queue
@@ -56,7 +57,7 @@ iot_threadpool_t * iot_threadpool_init (uint32_t num_threads, const int * defaul
  * @param  arg             pointer to an argument
  * @param  priority        priority to run thread at (not set if NULL)
  */
-void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, const int * priority);
+extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, const int * priority);
 
 
 /**
@@ -75,7 +76,7 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (void*),
  * @example
  *
  *    ..
- *    iot_threadpool * pool = iot_threadpool_init (4);
+ *    iot_threadpool * pool = iot_threadpool_alloc (4, NULL);
  *    ..
  *    // Add a bunch of work
  *    ..
@@ -86,7 +87,10 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (void*),
  * @param iot_threadpool the thread pool to wait for
  * @return nothing
  */
-void iot_threadpool_wait (iot_threadpool_t * pool);
+extern void iot_threadpool_wait (iot_threadpool_t * pool);
+
+extern bool iot_threadpool_start (iot_threadpool_t * pool);
+extern bool iot_threadpool_stop (iot_threadpool_t * pool);
 
 /**
  * @brief Destroy the thread pool
@@ -96,9 +100,9 @@ void iot_threadpool_wait (iot_threadpool_t * pool);
  *
  * @example
  * int main() {
- *    iot_threadpool * pool = iot_threadpool_init (2);
+ *    iot_threadpool * pool = iot_threadpool_alloc (2, NULL);
  *    ..
- *    iot_threadpool_fini (pool);
+ *    iot_threadpool_free (pool);
  *    ..
  *    return 0;
  * }
@@ -106,7 +110,7 @@ void iot_threadpool_wait (iot_threadpool_t * pool);
  * @param iot_threadpool the pool to destroy
  * @return nothing
  */
-void iot_threadpool_fini (iot_threadpool_t * pool);
+extern void iot_threadpool_free (iot_threadpool_t * pool);
 
 
 /**
@@ -116,7 +120,7 @@ void iot_threadpool_fini (iot_threadpool_t * pool);
  *
  * @example
  * int main() {
- *    iot_threadpool * pool = iot_threadpool_init (2);
+ *    iot_threadpool * pool = iot_threadpool_alloc (2, NULL);
  *    ..
  *    printf ("Working threads: %d\n", iot_threadpool_num_threads_working (pool));
  *    ..
@@ -126,13 +130,17 @@ void iot_threadpool_fini (iot_threadpool_t * pool);
  * @param iot_threadpool the pool of interest
  * @return integer       number of threads working
  */
-uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool);
+extern uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool);
 
 /**
  * @brief Add reference count to thread pool
  * @param iot_threadpool the pool of interest
  */
 extern void iot_threadpool_addref (iot_threadpool_t * pool);
+
+/* Threadpool factory */
+
+extern const iot_component_factory_t * iot_threadpool_factory (void);
 
 #ifdef __cplusplus
 }

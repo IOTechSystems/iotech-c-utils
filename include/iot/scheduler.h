@@ -10,8 +10,8 @@
 #ifndef _IOT_SCHEDULER_H_
 #define _IOT_SCHEDULER_H_
 
-#include "iot/os.h"
 #include "iot/threadpool.h"
+#include "iot/component.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +25,8 @@ extern "C" {
 typedef struct iot_scheduler_t iot_scheduler_t;
 typedef struct iot_schedule_t iot_schedule_t;
 
+#define IOT_SCHEDULER_TYPE "IOT::Scheduler"
+
 /**
  * @brief  Initialise the scheduler
  *
@@ -32,14 +34,16 @@ typedef struct iot_schedule_t iot_schedule_t;
  *
  * @code
  *
- *    iot_scheduler_t * myScheduler  = iot_scheduler_init (&thpool);
+ *    iot_scheduler_t * myScheduler  = iot_scheduler_alloc (&thpool);
  *
  * @endcode
  *
  * @param  pool              A pointer to the associated thread pool.
  * @return iot_scheduler_t   A pointer to the created scheduler. NULL on error.
  */
-iot_scheduler_t * iot_scheduler_init (iot_threadpool_t * pool);
+extern iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool);
+
+extern iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler);
 
 /**
  * @brief  Start the scheduler
@@ -53,7 +57,7 @@ iot_scheduler_t * iot_scheduler_init (iot_threadpool_t * pool);
  * @endcode
  * @param  scheduler  A pointer to the iot_scheduler_t.
  */
-void iot_scheduler_start (iot_scheduler_t * scheduler);
+extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
 
 
 /**
@@ -75,7 +79,7 @@ void iot_scheduler_start (iot_scheduler_t * scheduler);
  * @param  priority           The thread priority for running the schedule, (NULL = not set).
  * @return iot_schedule       A pointer to the created schedule. NULL on error.
  */
-iot_schedule_t * iot_schedule_create
+extern iot_schedule_t * iot_schedule_create
 (
   iot_scheduler_t * schd,
   void (*function) (void* arg),
@@ -101,7 +105,7 @@ iot_schedule_t * iot_schedule_create
  * @return                          1 on success.
  *                                  0 on error.
  */
-int iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
+extern int iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 /**
  * @brief  Delete a schedule
@@ -119,7 +123,7 @@ int iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
  * @return                          1 on success.
  *                                  0 on error.
  */
-int iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
+extern int iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 /**
  * @brief  Delete a schedule
@@ -134,7 +138,7 @@ int iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
  * @param  scheduler                A pointer to the iot_scheduler_t. 
  * @param  schedule                 A pointer to the iot_schedule to be deleted.
  */
-void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
+extern void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 
 /**
@@ -150,7 +154,7 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler_t. 
  */
-void iot_scheduler_stop (iot_scheduler_t * scheduler);
+extern bool iot_scheduler_stop (iot_scheduler_t * scheduler);
 
 
 /**
@@ -160,12 +164,16 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler);
  *
  * @code
  *
- *    iot_scheduler_t_fini(myScheduler);
+ *    iot_scheduler_t_free (myScheduler);
  *
  * @endcode
- * @param  scheduler                A pointer to the iot_scheduler_t. 
+ * @param  scheduler       A pointer to the iot_scheduler_t.
  */
-void iot_scheduler_fini (iot_scheduler_t * scheduler);
+extern void iot_scheduler_free (iot_scheduler_t * scheduler);
+
+/* Scheduler factory */
+
+extern const iot_component_factory_t * iot_scheduler_factory (void);
 
 #ifdef __cplusplus
 }

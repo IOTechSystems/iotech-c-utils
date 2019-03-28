@@ -89,6 +89,7 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
 extern void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val);
 extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key);
 extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key);
+extern const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key);
 extern iot_data_type_t iot_data_map_key_type (const iot_data_t * map);
 
 extern void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val);
@@ -99,11 +100,14 @@ extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * ite
 extern bool iot_data_map_iter_next (iot_data_map_iter_t * iter);
 extern const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * iter);
 extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter);
+extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * iter);
+extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter);
 
 extern void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter);
 extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 extern uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter);
 extern const iot_data_t * iot_data_array_iter_value (const iot_data_array_iter_t * iter);
+extern const char * iot_data_array_iter_string (const iot_data_array_iter_t * iter);
 
 extern char * iot_data_to_json (const iot_data_t * data, bool wrap);
 extern iot_data_t * iot_data_from_json (const char * json);
