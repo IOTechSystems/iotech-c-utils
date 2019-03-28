@@ -302,6 +302,7 @@ void iot_bus_free (iot_bus_t * bus)
 {
   if (bus)
   {
+    iot_bus_stop (bus);
     iot_bus_topic_t * topic;
     while (bus->publishers)
     {

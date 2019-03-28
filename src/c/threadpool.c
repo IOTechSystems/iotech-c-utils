@@ -14,7 +14,7 @@
 #include "iot/thread.h"
 #include "iot/data.h"
 
-#if defined(__linux__)
+#if defined (__linux__)
 #include <sys/prctl.h>
 #endif
 

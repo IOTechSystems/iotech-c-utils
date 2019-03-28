@@ -162,13 +162,13 @@ iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler)
 bool iot_scheduler_start (iot_scheduler_t * scheduler)
 {
   atomic_store (&scheduler->running, true);
-  iot_threadpool_add_work (scheduler->threadpool, iot_scheduler_thread, scheduler, NULL);
   iot_threadpool_start (scheduler->threadpool);
+  iot_threadpool_add_work (scheduler->threadpool, iot_scheduler_thread, scheduler, NULL);
   return true;
 }
 
 /* Create a schedule and insert it into the queue */
-iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void (*function) (void*), void * arg, uint64_t period, uint64_t start, uint64_t repeat, const int * priortity)
+iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void (*function) (void*), void * arg, uint64_t period, uint64_t start, uint64_t repeat, const int * priority)
 {
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));
   schedule->function = function;
@@ -176,8 +176,8 @@ iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void (*functi
   schedule->period = period;
   schedule->start = start;
   schedule->repeat = repeat;
-  schedule->priority = (priortity) ? *priortity : 0;
-  schedule->prio_set = (priortity != NULL);
+  schedule->priority = (priority) ? *priority : 0;
+  schedule->prio_set = (priority != NULL);
 
   pthread_mutex_lock (&scheduler->mutex);
   add_schedule_to_queue (&scheduler->idle_queue, schedule);
