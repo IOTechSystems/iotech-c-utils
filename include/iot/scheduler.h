@@ -154,7 +154,7 @@ extern void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * s
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler_t. 
  */
-extern bool iot_scheduler_stop (iot_scheduler_t * scheduler);
+extern void iot_scheduler_stop (iot_scheduler_t * scheduler);
 
 
 /**

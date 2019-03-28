@@ -2,7 +2,7 @@
 #include "iot/data.h"
 
 extern bool iot_component_start (iot_component_t * comp);
-extern bool iot_component_stop (iot_component_t * comp);
+extern void iot_component_stop (iot_component_t * comp);
 
 typedef struct iot_factory_holder_t
 {
@@ -114,7 +114,14 @@ static bool iot_container_set_state (iot_container_t * cont, bool start)
   iter = cont->components;
   while (iter)
   {
-    ret = ret && start ? iot_component_start (iter->component) : iot_component_stop (iter->component);
+    if (start)
+    {
+      iot_component_stop (iter->component);
+    }
+    else
+    {
+      ret = ret && iot_component_start (iter->component);
+    }
     iter = iter->next;
   }
   pthread_rwlock_unlock (&cont->lock);
@@ -126,9 +133,9 @@ bool iot_container_start (iot_container_t * cont)
   return iot_container_set_state (cont, true);
 }
 
-bool iot_container_stop (iot_container_t * cont)
+void iot_container_stop (iot_container_t * cont)
 {
-  return iot_container_set_state (cont, false);
+  iot_container_set_state (cont, false);
 }
 
 bool iot_container_add_factory (iot_container_t * cont, iot_component_factory_t * factory)

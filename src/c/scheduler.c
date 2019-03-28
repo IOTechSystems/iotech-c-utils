@@ -163,6 +163,7 @@ bool iot_scheduler_start (iot_scheduler_t * scheduler)
 {
   atomic_store (&scheduler->running, true);
   iot_threadpool_add_work (scheduler->threadpool, iot_scheduler_thread, scheduler, NULL);
+  iot_threadpool_start (scheduler->threadpool);
   return true;
 }
 
@@ -235,7 +236,7 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
 }
 
 /* Stop the scheduler thread */
-bool iot_scheduler_stop (iot_scheduler_t * scheduler)
+void iot_scheduler_stop (iot_scheduler_t * scheduler)
 {
   pthread_mutex_lock (&scheduler->mutex);
   bool running = atomic_load (&scheduler->running);
@@ -249,7 +250,6 @@ bool iot_scheduler_stop (iot_scheduler_t * scheduler)
   {
     iot_threadpool_wait (scheduler->threadpool);
   }
-  return true;
 }
 
 /* Destroy all remaining scheduler resouces */

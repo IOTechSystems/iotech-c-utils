@@ -14,7 +14,7 @@ typedef const char * (*iot_container_config_load_fn_t) (const char * name);
 extern iot_container_t * iot_container_alloc (iot_container_config_load_fn_t loader);
 extern bool iot_container_init (iot_container_t * cont, const char * name);
 extern bool iot_container_start (iot_container_t * cont);
-extern bool iot_container_stop (iot_container_t * cont);
+extern void iot_container_stop (iot_container_t * cont);
 extern void iot_container_free (iot_container_t * cont);
 
 extern bool iot_container_add_factory (iot_container_t * cont, iot_component_factory_t * factory);

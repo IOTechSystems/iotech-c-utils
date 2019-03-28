@@ -29,7 +29,7 @@ typedef void (*iot_data_sub_fn_t) (iot_data_t * data, void * self, const char * 
 
 extern iot_bus_t * iot_bus_alloc (iot_scheduler_t * scheduler, uint64_t default_poll_interval);
 extern bool iot_bus_start (iot_bus_t * bus);
-extern bool iot_bus_stop (iot_bus_t * bus);
+extern void iot_bus_stop (iot_bus_t * bus);
 extern void iot_bus_free (iot_bus_t * bus);
 
 /* Topics */

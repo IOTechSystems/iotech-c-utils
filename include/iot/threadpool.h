@@ -90,7 +90,7 @@ extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (
 extern void iot_threadpool_wait (iot_threadpool_t * pool);
 
 extern bool iot_threadpool_start (iot_threadpool_t * pool);
-extern bool iot_threadpool_stop (iot_threadpool_t * pool);
+extern void iot_threadpool_stop (iot_threadpool_t * pool);
 
 /**
  * @brief Destroy the thread pool

@@ -53,6 +53,8 @@ extern bool iot_log_tofile
 
 extern iot_logger_t * iot_logger_alloc (const char * subsystem);
 extern void iot_logger_free (iot_logger_t * logger);
+extern bool iot_logger_start (iot_logger_t * logger);
+extern void iot_logger_stop (iot_logger_t * logger);
 
 /* Default logging client: logs to stderr only */
 

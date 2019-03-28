@@ -34,7 +34,7 @@ int main (void)
   publish (pub, PUB_ITERS);
   stamp = time (NULL);
   printf ("Stop: %s", ctime (&stamp));
-  sleep (3);
+  sleep (10);
   iot_bus_stop (bus);
   iot_bus_free (bus);
   iot_scheduler_free (scheduler);

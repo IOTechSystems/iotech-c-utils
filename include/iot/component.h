@@ -22,7 +22,7 @@ iot_component_state_t;
 
 typedef iot_component_t * (*iot_component_config_fn_t) (iot_container_t * cont, const iot_data_t * map);
 typedef bool (*iot_component_start_fn_t) (iot_component_t * this);
-typedef bool (*iot_component_stop_fn_t) (iot_component_t * this);
+typedef void (*iot_component_stop_fn_t) (iot_component_t * this);
 typedef void (*iot_component_free_fn_t) (iot_component_t * this);
 
 struct iot_component_t

@@ -9,7 +9,7 @@
 #include "iot/bus.h"
 #include "iot/container.h"
 
-#define IOT_BUS_DEFAULT_INTERVAL 500000000
+#define IOT_BUS_DEFAULT_INTERVAL 500000 // usecs
 
 typedef struct iot_bus_topic_t
 {
@@ -289,15 +289,13 @@ void iot_bus_topic_create (iot_bus_t * bus, const char * name, const int * prio)
 bool iot_bus_start (iot_bus_t * bus)
 {
   assert (bus);
-  iot_scheduler_start (bus->scheduler);
-  return true;
+  return iot_scheduler_start (bus->scheduler);
 }
 
-bool iot_bus_stop (iot_bus_t * bus)
+void iot_bus_stop (iot_bus_t * bus)
 {
   assert (bus);
   iot_scheduler_stop (bus->scheduler);
-  return true;
 }
 
 void iot_bus_free (iot_bus_t * bus)

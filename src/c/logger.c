@@ -143,14 +143,15 @@ static void logthis (iot_logger_t *logger, iot_loglevel_t l, const char *fmt, va
   }
 }
 
-iot_logger_t * iot_logger_alloc (const char *s)
+iot_logger_t * iot_logger_alloc (const char * subsystem)
 {
-  iot_logger_t *client;
-  client = malloc (sizeof (iot_logger_t));
-  client->subsystem = iot_strdup (s);
-  client->loggers = NULL;
-  pthread_mutex_init (&client->lock, NULL);
-  return client;
+  iot_logger_t * logger;
+  logger = calloc (1, sizeof (iot_logger_t));
+  logger->subsystem = iot_strdup (subsystem);
+  logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
+  logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
+  pthread_mutex_init (&logger->lock, NULL);
+  return logger;
 }
 
 void iot_logger_free (iot_logger_t *logger)
@@ -169,6 +170,17 @@ void iot_logger_free (iot_logger_t *logger)
   pthread_mutex_destroy (&logger->lock);
   free (logger->subsystem);
   free (logger);
+}
+
+bool iot_logger_start (iot_logger_t * logger)
+{
+  (void) logger;
+  return true;
+}
+
+void iot_logger_stop (iot_logger_t * logger)
+{
+  (void) logger;
 }
 
 void iot_logger_add (iot_logger_t *logger, iot_log_function_t fn, const char *destination)
