@@ -323,9 +323,6 @@ void iot_bus_free (iot_bus_t * bus)
       free (topic->name);
       free (topic);
     }
-    iot_scheduler_free (bus->scheduler);
-    sleep (1);
-    iot_threadpool_free (bus->threadpool);
     pthread_rwlock_destroy (&bus->lock);
     free (bus);
   }
