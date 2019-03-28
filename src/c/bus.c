@@ -265,21 +265,16 @@ static void iot_bus_sched_fn (void * arg)
   iot_bus_publish (pub, (pub->callback) (pub->self), true);
 }
 
-static iot_bus_t * iot_bus_create (uint64_t default_poll_interval)
+iot_bus_t * iot_bus_alloc (iot_scheduler_t * scheduler, uint64_t default_poll_interval)
 {
+  assert (scheduler);
   iot_bus_t * bus = calloc (1, sizeof (*bus));
   pthread_rwlock_init (&bus->lock, NULL);
   bus->component.start_fn = (iot_component_start_fn_t) iot_bus_start;
   bus->component.stop_fn = (iot_component_stop_fn_t) iot_bus_stop;
   bus->interval = default_poll_interval * 1000;
-  return bus;
-}
-
-iot_bus_t * iot_bus_alloc (iot_scheduler_t * scheduler, uint64_t default_poll_interval)
-{
-  assert (scheduler);
-  iot_bus_t * bus = iot_bus_create (default_poll_interval);
   bus->scheduler = scheduler;
+  bus->threadpool = iot_scheduler_thread_pool (scheduler);
   return bus;
 }
 
@@ -476,14 +471,13 @@ void iot_bus_publish (iot_bus_pub_t * pub, iot_data_t * data, bool sync)
 
 static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_bus_t * bus = iot_bus_create (IOT_BUS_DEFAULT_INTERVAL);
   const iot_data_t * value = iot_data_string_map_get (map, "Interval");
-  if (value) bus->interval = (uint64_t) iot_data_i64 (value) * 1000;
+  uint64_t interval = value ? (uint64_t) iot_data_i64 (value) : IOT_BUS_DEFAULT_INTERVAL;
   const char * name = iot_data_string_map_get_string (map, "Scheduler");
   assert (name);
-  bus->scheduler = (iot_scheduler_t*) iot_container_find (cont, name);
-  assert (bus->scheduler);
-  bus->threadpool = iot_scheduler_thread_pool (bus->scheduler);
+  iot_scheduler_t * scheduler = (iot_scheduler_t*) iot_container_find (cont, name);
+  assert (scheduler);
+  iot_bus_t * bus = iot_bus_alloc (scheduler, interval);
   value = iot_data_string_map_get (map, "Topics");
   if (value)
   {
