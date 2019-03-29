@@ -482,8 +482,10 @@ static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_
     while (iot_data_array_iter_next (&iter))
     {
       const iot_data_t * map = iot_data_array_iter_value (&iter);
+      assert (map);
       name = iot_data_string_map_get_string (map, "Topic");
       value = iot_data_string_map_get (map, "Priority");
+      assert (name && value);
       int prio = (int) iot_data_i64 (value);
       iot_bus_topic_create_locked (bus, name, &prio);
     }

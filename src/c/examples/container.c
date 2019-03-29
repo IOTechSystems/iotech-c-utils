@@ -5,90 +5,117 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include "iot/bus.h"
+#include "iot/component.h"
+#include "iot/container.h"
+#include "iot/logger.h"
+#include "iot/scheduler.h"
 
-#define ARRAY_SIZE 3
+static const char * config_loader (const char * name);
 
-#ifndef NDEBUG
-#define PUB_ITERS 10
-#else
-#define PUB_ITERS 100000000
-#endif
+/* Boilerplate code for a component */
 
-static void publish (iot_bus_pub_t * pub, uint32_t iters);
-static void subscriber_callback (iot_data_t * data, void * self, const char * match);
-static iot_data_t * publisher_callback (void * self);
+#define MY_COMPONENT_TYPE "MyComponent"
+
+typedef struct my_component_t
+{
+  iot_component_t component;
+  iot_logger_t * logger;
+} my_component_t;
+
+static bool my_component_start (my_component_t * comp)
+{
+  printf ("MyComponent started\n");
+  return true;
+}
+
+static void my_component_stop (my_component_t * comp)
+{
+  printf ("MyComponent stopped\n");
+}
+
+static my_component_t * my_component_alloc (iot_logger_t * logger)
+{
+  printf ("MyComponent alloc\n");
+  my_component_t * mycomp = malloc (sizeof (*mycomp));
+  mycomp->component.start_fn = (iot_component_start_fn_t) my_component_start;
+  mycomp->component.stop_fn = (iot_component_stop_fn_t) my_component_stop;
+  mycomp->logger = logger;
+  return mycomp;
+}
+
+static void my_component_free (my_component_t * comp)
+{
+  printf ("MyComponent free\n");
+  free (comp);
+}
+
+static iot_component_t * my_component_config (iot_container_t * cont, const iot_data_t * map)
+{
+  printf ("MyComponent config\n");
+  const char * name = iot_data_string_map_get_string (map, "MyLogger");
+  iot_logger_t * logger = (iot_logger_t*) iot_container_find (cont, name);
+  return (iot_component_t*) my_component_alloc (logger);
+}
+
+static const iot_component_factory_t * my_component_factory (void)
+{
+  static iot_component_factory_t factory = { MY_COMPONENT_TYPE, my_component_config, (iot_component_free_fn_t) my_component_free };
+  return &factory;
+}
 
 int main (void)
 {
-  time_t stamp;
+  iot_container_t * container = iot_container_alloc (config_loader);
   iot_data_init ();
-  iot_threadpool_t * pool = iot_threadpool_alloc (4, NULL);
-  iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
-  iot_bus_t * bus = iot_bus_alloc (scheduler, 200000);
-  iot_bus_sub_alloc (bus, NULL, subscriber_callback, "test/tube");
-  iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, NULL, publisher_callback, "test/tube");
-  iot_bus_start (bus);
-  stamp = time (NULL);
-  printf ("Samples: %d\nStart: %s", PUB_ITERS, ctime (&stamp));
-  publish (pub, PUB_ITERS);
-  stamp = time (NULL);
-  printf ("Stop: %s", ctime (&stamp));
-  sleep (10);
-  iot_bus_stop (bus);
-  iot_bus_free (bus);
-  iot_scheduler_free (scheduler);
+  iot_container_add_factory (container, iot_logger_factory ());
+  iot_container_add_factory (container, iot_threadpool_factory ());
+  iot_container_add_factory (container, iot_scheduler_factory ());
+  iot_container_add_factory (container, my_component_factory ());
+  iot_container_init (container, "main");
+  iot_container_start (container);
+  sleep (2);
+  iot_container_stop (container);
+  iot_container_free (container);
   iot_data_fini ();
+  return 0;
 }
 
-static void publish (iot_bus_pub_t * pub, uint32_t iters)
+static const char * main_config =
+"{"
+  "\"logger\":\"IOT::Logger\","
+  "\"pool\":\"IOT::ThreadPool\","
+  "\"scheduler\":\"IOT::Scheduler\","
+  "\"mycomp\":\"MyComponent\""
+"}";
+
+static const char * logger_config =
+"{"
+  "\"SubSystem\":\"example\""
+"}";
+
+static const char * pool_config =
+"{"
+  "\"Threads\":2"
+"}";
+
+static const char * sched_config =
+"{"
+  "\"ThreadPool\":\"pool\""
+"}";
+
+static const char * my_config =
+"{"
+  "\"MyLogger\":\"logger\""
+"}";
+
+/* Configuration resolver function */
+
+static const char * config_loader (const char * name)
 {
-  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_t * array = iot_data_alloc_array (ARRAY_SIZE);
-  uint32_t index = 0;
-
-  // Create fixed part of sample
-
-  iot_data_array_add (array, index++, iot_data_alloc_i32 (11));
-  iot_data_array_add (array, index++, iot_data_alloc_i32 (22));
-  iot_data_array_add (array, index, iot_data_alloc_i32 (33));
-  iot_data_string_map_add (map, "Coords", array);
-  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-54", false));
-
-  while (iters--)
-  {
-    // Update first field for each iteration
-
-    iot_data_string_map_add (map, "#", iot_data_alloc_i32 (PUB_ITERS - iters));
-
-    // Increment map ref count or publish will delete
-
-    iot_data_addref (map);
-    iot_bus_publish (pub, map, true);
-  }
-
-  // Finally delete sampleutests/threadpool/threadpool.h
-
-  iot_data_free (map);
-}
-
-static void subscriber_callback (iot_data_t * data, void * self, const char * match)
-{
-#ifndef NDEBUG
-  printf ("Subscription (%s): ", match);
-  char * json = iot_data_to_json (data, true);
-  printf ("%s\n", json);
-  free (json);
-#endif
-}
-
-static iot_data_t * publisher_callback (void * self)
-{
-  static float f32 = 20.00;
-
-  f32 = (float) (f32 * 1.02);
-  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-7", false));
-  iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (f32));
-  return map;
+  if (strcmp (name, "main") == 0) return main_config;
+  if (strcmp (name, "logger") == 0) return logger_config;
+  if (strcmp (name, "pool") == 0) return pool_config;
+  if (strcmp (name, "scheduler") == 0) return sched_config;
+  if (strcmp (name, "mycomp") == 0) return my_config;
+  return NULL;
 }

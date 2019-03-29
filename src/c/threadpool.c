@@ -356,9 +356,9 @@ static void iot_jobqueue_pull_locked (iot_jobqueue_t * jobqueue, iot_job_t * job
 static iot_component_t * iot_threadpool_config (iot_container_t * cont, const iot_data_t * map)
 {
   const iot_data_t * value = iot_data_string_map_get (map, "Threads");
-  uint32_t threads = value ? iot_data_ui32 (value) : IOT_THREADPOOL_THREADS_DEFAULT;
+  uint32_t threads = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_THREADS_DEFAULT;
   value = iot_data_string_map_get (map, "Priority");
-  int prio = value ? (int) iot_data_i32 (value) : -1;
+  int prio = value ? (int) iot_data_i64 (value) : -1;
   return (iot_component_t*) iot_threadpool_alloc (threads, value ? &prio : NULL);
 }
 
