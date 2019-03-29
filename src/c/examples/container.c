@@ -36,7 +36,7 @@ static void my_component_stop (my_component_t * comp)
 static my_component_t * my_component_alloc (iot_logger_t * logger)
 {
   printf ("MyComponent alloc\n");
-  my_component_t * mycomp = malloc (sizeof (*mycomp));
+  my_component_t * mycomp = calloc (1, sizeof (*mycomp));
   mycomp->component.start_fn = (iot_component_start_fn_t) my_component_start;
   mycomp->component.stop_fn = (iot_component_stop_fn_t) my_component_stop;
   mycomp->logger = logger;

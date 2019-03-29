@@ -159,7 +159,7 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
   {
     usleep (100000);
   }
-  return true; // TODO: Implement
+  return true;
 }
 
 /* Increment thread pool reference count */
