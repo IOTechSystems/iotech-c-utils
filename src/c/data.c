@@ -68,7 +68,8 @@ typedef struct iot_data_map_t
 {
   iot_data_t base;
   iot_data_type_t key_type;
-  iot_data_pair_t * pairs;
+  iot_data_pair_t * head;
+  iot_data_pair_t * tail;
 } iot_data_map_t;
 
 typedef struct iot_string_holder_t
@@ -115,7 +116,7 @@ static void * iot_data_factory_alloc (size_t size)
 #endif
   if (data)
   {
-    memset (data, 0, size);
+    memset (data, 0, IOT_DATA_BLOCK_SIZE);
   }
   else
   {
@@ -251,12 +252,11 @@ void iot_data_free (iot_data_t * data)
       {
         iot_data_map_t * map = (iot_data_map_t*) data;
         iot_data_pair_t * pair;
-        while (map->pairs)
+        while ((pair = map->head))
         {
-          pair = map->pairs;
           iot_data_free (pair->key);
           iot_data_free (pair->value);
-          map->pairs = (iot_data_pair_t *) pair->base.next;
+          map->head = (iot_data_pair_t *) pair->base.next;
           iot_data_factory_free (&pair->base);
         }
         break;
@@ -463,7 +463,7 @@ const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size)
 
 static iot_data_pair_t * iot_data_map_find (iot_data_map_t * map, const iot_data_t * key)
 {
-  iot_data_pair_t * pair =  map->pairs;
+  iot_data_pair_t * pair =  map->head;
   while (pair)
   {
     if (iot_data_equal (pair->key, key))
@@ -497,8 +497,9 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   else
   {
     pair = (iot_data_pair_t*) iot_data_factory_alloc (sizeof (*pair));
-    pair->base.next = &mp->pairs->base;
-    mp->pairs = pair;
+    if (mp->tail) mp->tail->base.next = &pair->base;
+    mp->tail = pair;
+    if (mp->head == NULL) mp->head = pair;
   }
   pair->value = val;
   pair->key = key;
@@ -571,7 +572,7 @@ void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
 
 bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
 {
-  iter->pair = iter->pair ? (iot_data_pair_t*) iter->pair->base.next : iter->map->pairs;
+  iter->pair = iter->pair ? (iot_data_pair_t*) iter->pair->base.next : iter->map->head;
   return (iter->pair != NULL);
 }
 
