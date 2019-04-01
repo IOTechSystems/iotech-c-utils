@@ -8,7 +8,7 @@
 #include "iot/component.h"
 #include "iot/container.h"
 #include "iot/logger.h"
-#include "iot/scheduler.h"
+#include "iot/bus.h"
 
 static const char * config_loader (const char * name);
 
@@ -70,6 +70,7 @@ int main (void)
   iot_container_add_factory (container, iot_logger_factory ());
   iot_container_add_factory (container, iot_threadpool_factory ());
   iot_container_add_factory (container, iot_scheduler_factory ());
+  iot_container_add_factory (container, iot_bus_factory ());
   iot_container_add_factory (container, my_component_factory ());
   iot_container_init (container, "main");
   iot_container_start (container);
@@ -85,6 +86,7 @@ static const char * main_config =
   "\"logger\":\"IOT::Logger\","
   "\"pool\":\"IOT::ThreadPool\","
   "\"scheduler\":\"IOT::Scheduler\","
+  "\"bus\":\"IOT::Bus\","
   "\"mycomp\":\"MyComponent\""
 "}";
 
@@ -103,6 +105,13 @@ static const char * sched_config =
   "\"ThreadPool\":\"pool\""
 "}";
 
+static const char * bus_config =
+"{"
+  "\"Interval\":100000,"
+  "\"Scheduler\":\"scheduler\","
+  "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10}]"
+"}";
+
 static const char * my_config =
 "{"
   "\"MyLogger\":\"logger\""
@@ -116,6 +125,7 @@ static const char * config_loader (const char * name)
   if (strcmp (name, "logger") == 0) return logger_config;
   if (strcmp (name, "pool") == 0) return pool_config;
   if (strcmp (name, "scheduler") == 0) return sched_config;
+  if (strcmp (name, "bus") == 0) return bus_config;
   if (strcmp (name, "mycomp") == 0) return my_config;
   return NULL;
 }

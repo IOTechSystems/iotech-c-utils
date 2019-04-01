@@ -161,11 +161,30 @@ iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler)
 /* Start the scheduler thread */
 bool iot_scheduler_start (iot_scheduler_t * scheduler)
 {
-  atomic_store (&scheduler->running, true);
-  iot_threadpool_start (scheduler->threadpool);
-  iot_threadpool_add_work (scheduler->threadpool, iot_scheduler_thread, scheduler, NULL);
+  pthread_mutex_lock (&scheduler->mutex);
+  if (scheduler->component.state != IOT_COMPONENT_RUNNING)
+  {
+    scheduler->component.state = IOT_COMPONENT_RUNNING;
+    atomic_store (&scheduler->running, true);
+    iot_threadpool_add_work (scheduler->threadpool, iot_scheduler_thread, scheduler, NULL);
+  }
+  pthread_mutex_unlock (&scheduler->mutex);
   return true;
 }
+
+/* Stop the scheduler thread */
+void iot_scheduler_stop (iot_scheduler_t * scheduler)
+{
+  pthread_mutex_lock (&scheduler->mutex);
+  if (scheduler->component.state != IOT_COMPONENT_STOPPED)
+  {
+    scheduler->component.state = IOT_COMPONENT_STOPPED;
+    atomic_store (&scheduler->running, false);
+    pthread_cond_signal (&scheduler->cond);
+  }
+  pthread_mutex_unlock (&scheduler->mutex);
+}
+
 
 /* Create a schedule and insert it into the queue */
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void (*function) (void*), void * arg, uint64_t period, uint64_t start, uint64_t repeat, const int * priority)
@@ -233,23 +252,6 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
   remove_schedule_from_queue (schedule->scheduled ? &scheduler->queue : &scheduler->idle_queue, schedule);
   pthread_mutex_unlock (&scheduler->mutex);
   free (schedule);
-}
-
-/* Stop the scheduler thread */
-void iot_scheduler_stop (iot_scheduler_t * scheduler)
-{
-  pthread_mutex_lock (&scheduler->mutex);
-  bool running = atomic_load (&scheduler->running);
-  if (running)
-  {
-    atomic_store (&scheduler->running, false);
-    pthread_cond_signal (&scheduler->cond);
-  }
-  pthread_mutex_unlock (&scheduler->mutex);
-  if (running)
-  {
-    iot_threadpool_wait (scheduler->threadpool);
-  }
 }
 
 /* Destroy all remaining scheduler resouces */

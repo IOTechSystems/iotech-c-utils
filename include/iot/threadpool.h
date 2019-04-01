@@ -132,12 +132,6 @@ extern void iot_threadpool_free (iot_threadpool_t * pool);
  */
 extern uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool);
 
-/**
- * @brief Add reference count to thread pool
- * @param iot_threadpool the pool of interest
- */
-extern void iot_threadpool_addref (iot_threadpool_t * pool);
-
 /* Threadpool factory */
 
 extern const iot_component_factory_t * iot_threadpool_factory (void);

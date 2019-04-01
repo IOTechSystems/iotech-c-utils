@@ -288,14 +288,23 @@ void iot_bus_topic_create (iot_bus_t * bus, const char * name, const int * prio)
 
 bool iot_bus_start (iot_bus_t * bus)
 {
-  assert (bus);
-  return iot_scheduler_start (bus->scheduler);
+  pthread_rwlock_wrlock (&bus->lock);
+  if (bus->component.state != IOT_COMPONENT_RUNNING)
+  {
+    bus->component.state = IOT_COMPONENT_RUNNING;
+  }
+  pthread_rwlock_unlock (&bus->lock);
+  return true;
 }
 
 void iot_bus_stop (iot_bus_t * bus)
 {
-  assert (bus);
-  iot_scheduler_stop (bus->scheduler);
+  pthread_rwlock_wrlock (&bus->lock);
+  if (bus->component.state != IOT_COMPONENT_STOPPED)
+  {
+    bus->component.state = IOT_COMPONENT_STOPPED;
+  }
+  pthread_rwlock_unlock (&bus->lock);
 }
 
 void iot_bus_free (iot_bus_t * bus)
@@ -467,6 +476,7 @@ void iot_bus_publish (iot_bus_pub_t * pub, iot_data_t * data, bool sync)
 
 static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_t * map)
 {
+  printf ("iot_bus_config\n");
   const iot_data_t * value = iot_data_string_map_get (map, "Interval");
   uint64_t interval = value ? (uint64_t) iot_data_i64 (value) : IOT_BUS_DEFAULT_INTERVAL;
   const char * name = iot_data_string_map_get_string (map, "Scheduler");
@@ -487,6 +497,7 @@ static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_
       value = iot_data_string_map_get (map, "Priority");
       assert (name && value);
       int prio = (int) iot_data_i64 (value);
+      printf ("topic %s %d\n", name, prio);
       iot_bus_topic_create_locked (bus, name, &prio);
     }
   }

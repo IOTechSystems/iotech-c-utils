@@ -4,9 +4,6 @@
 
 #define IOT_COMPONENT_DELTA 4
 
-extern void iot_component_start (iot_component_t * comp);
-extern void iot_component_stop (iot_component_t * comp);
-
 typedef struct iot_factory_holder_t
 {
   struct iot_factory_holder_t * next;
@@ -120,8 +117,8 @@ bool iot_container_start (iot_container_t * cont)
   pthread_rwlock_rdlock (&cont->lock);
   for (uint32_t i = 0; i < cont->ccount; i++)
   {
-    iot_component_start (cont->components[i]->component);
-    ret = ret && (cont->components[i]->component->state == IOT_COMPONENT_RUNNING);
+    iot_component_t * comp = cont->components[i]->component;
+    ret = ret && (comp->start_fn) (comp);
   }
   pthread_rwlock_unlock (&cont->lock);
   return ret;
@@ -132,7 +129,8 @@ void iot_container_stop (iot_container_t * cont)
   pthread_rwlock_rdlock (&cont->lock);
   for (int32_t i = cont->ccount - 1; i >= 0; i--)
   {
-    iot_component_stop (cont->components[i]->component);
+    iot_component_t * comp = cont->components[i]->component;
+    (comp->stop_fn) (comp);
   }
   pthread_rwlock_unlock (&cont->lock);
 }

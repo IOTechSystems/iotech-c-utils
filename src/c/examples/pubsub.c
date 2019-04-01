@@ -28,6 +28,8 @@ int main (void)
   iot_bus_t * bus = iot_bus_alloc (scheduler, 200000);
   iot_bus_sub_alloc (bus, NULL, subscriber_callback, "test/tube");
   iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, NULL, publisher_callback, "test/tube");
+  iot_threadpool_start (pool);
+  iot_scheduler_start (scheduler);
   iot_bus_start (bus);
   stamp = time (NULL);
   printf ("Samples: %d\nStart: %s", PUB_ITERS, ctime (&stamp));
@@ -36,8 +38,11 @@ int main (void)
   printf ("Stop: %s", ctime (&stamp));
   sleep (5);
   iot_bus_stop (bus);
+  iot_scheduler_stop (scheduler);
+  iot_threadpool_stop (pool);
   iot_bus_free (bus);
   iot_scheduler_free (scheduler);
+  iot_threadpool_free (pool);
   iot_data_fini ();
 }
 
