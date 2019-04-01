@@ -34,7 +34,7 @@ struct iot_component_t
 
 struct iot_component_factory_t
 {
-  const char * type;
+  const char * const type;
   iot_component_config_fn_t config_fn;
   iot_component_free_fn_t free_fn;
 };

@@ -76,14 +76,12 @@ bool iot_container_init (iot_container_t * cont, const char * name)
         ch->component = comp;
         ch->name = iot_strdup (cname);
         ch->factory = factory;
-        pthread_rwlock_wrlock (&cont->lock);
         if ((cont->ccount + 1) == cont->csize)
         {
           cont->csize += IOT_COMPONENT_DELTA;
           cont->components = realloc (cont->components, cont->csize * sizeof (iot_component_holder_t));
         }
         cont->components[cont->ccount++] = ch;
-        pthread_rwlock_unlock (&cont->lock);
       }
     }
   }
@@ -95,7 +93,7 @@ void iot_container_free (iot_container_t * cont)
 {
   while (cont->ccount)
   {
-    iot_component_holder_t * ch = cont->components[--cont->ccount];
+    iot_component_holder_t * ch = cont->components[--cont->ccount]; // Free in reverse of declaration order (dependents last)
     (ch->factory->free_fn) (ch->component);
     free (ch->name);
     free (ch);
@@ -115,7 +113,7 @@ bool iot_container_start (iot_container_t * cont)
 {
   bool ret = true;
   pthread_rwlock_rdlock (&cont->lock);
-  for (uint32_t i = 0; i < cont->ccount; i++)
+  for (uint32_t i = 0; i < cont->ccount; i++) // Start in declaration order (dependents first)
   {
     iot_component_t * comp = cont->components[i]->component;
     ret = ret && (comp->start_fn) (comp);
@@ -127,7 +125,7 @@ bool iot_container_start (iot_container_t * cont)
 void iot_container_stop (iot_container_t * cont)
 {
   pthread_rwlock_rdlock (&cont->lock);
-  for (int32_t i = cont->ccount - 1; i >= 0; i--)
+  for (int32_t i = cont->ccount - 1; i >= 0; i--) // Stop in reverse of declaration order (dependents last)
   {
     iot_component_t * comp = cont->components[i]->component;
     (comp->stop_fn) (comp);
