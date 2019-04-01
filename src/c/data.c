@@ -765,11 +765,8 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
 
   // Handle all floating point numbers as doubles and integers as uint64_t
 
-  if (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E'))
-  {
-    return iot_data_alloc_f64 (strtod (str, NULL));
-  }
-  return iot_data_alloc_i64 (strtol (str, NULL, 0));
+  return (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E')) ?
+    iot_data_alloc_f64 (strtod (str, NULL)) : iot_data_alloc_i64 (strtol (str, NULL, 0));
 }
 
 static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char * json)
