@@ -1,0 +1,9 @@
+FROM clearlinux:latest
+MAINTAINER Steve Osselton <steve@iotechsys.com>
+RUN swupd update && swupd bundle-add dev-utils wget
+COPY VERSION /iotech-c-utils/
+COPY src /iotech-c-utils/src/
+COPY include /iotech-c-utils/include/
+COPY scripts /iotech-c-utils/scripts
+WORKDIR /iotech-c-utils
+ENTRYPOINT ["/iotech-c-utils/scripts/linux.sh", "-utest"]
