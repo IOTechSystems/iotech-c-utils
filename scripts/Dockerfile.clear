@@ -1,6 +1,6 @@
 FROM clearlinux:latest
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN swupd update && swupd bundle-add dev-utils wget
+RUN swupd update && swupd bundle-add dev-utils-dev wget
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
