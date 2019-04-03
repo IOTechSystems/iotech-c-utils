@@ -259,10 +259,13 @@ static void iot_bus_match_locked (iot_bus_pub_t * pub, iot_bus_sub_t * sub)
   }
 }
 
-static void iot_bus_sched_fn (void * arg)
+static void iot_bus_sched_fn (iot_bus_pub_t * pub)
 {
-  iot_bus_pub_t *pub = (iot_bus_pub_t *) arg;
-  iot_bus_publish (pub, (pub->callback) (pub->self), true);
+  iot_data_t * data = (pub->callback) (pub->self);
+  if (data) // Ignore if no data
+  {
+    iot_bus_publish (pub, data, true);
+  }
 }
 
 iot_bus_t * iot_bus_alloc (iot_scheduler_t * scheduler, uint64_t default_poll_interval)
@@ -409,7 +412,7 @@ iot_bus_pub_t * iot_bus_pub_alloc (iot_bus_t * bus, void * self, iot_data_pub_cb
     if (callback)
     {
       pub->callback = callback;
-      pub->sc = iot_schedule_create (bus->scheduler, iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
+      pub->sc = iot_schedule_create (bus->scheduler, (iot_schedule_fn_t) iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
       iot_schedule_add (bus->scheduler, pub->sc);
     }
     iot_bus_match_pub_locked (bus, pub);

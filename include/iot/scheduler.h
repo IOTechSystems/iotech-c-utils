@@ -24,6 +24,7 @@ extern "C" {
 
 typedef struct iot_scheduler_t iot_scheduler_t;
 typedef struct iot_schedule_t iot_schedule_t;
+typedef void (*iot_schedule_fn_t) (void * arg);
 
 #define IOT_SCHEDULER_TYPE "IOT::Scheduler"
 
@@ -80,15 +81,7 @@ extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
  * @return iot_schedule       A pointer to the created schedule. NULL on error.
  */
 extern iot_schedule_t * iot_schedule_create
-(
-  iot_scheduler_t * schd,
-  void (*function) (void* arg),
-  void * arg,
-  uint64_t period,
-  uint64_t start,
-  uint64_t repeat,
-  const int * priority
-);
+  (iot_scheduler_t * schd, iot_schedule_fn_t func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, const int * priority);
 
 /**
  * @brief  Delete a schedule
