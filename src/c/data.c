@@ -824,8 +824,8 @@ iot_data_t * iot_data_from_json (const char * json)
   {
     switch (*ptr)
     {
-      case '[': case '{': count++; break;
-      case ':': count += 2; break;
+      case ',': case '{': count++; break;
+      case ':': case '[': count += 2; break;
       default: break;
     }
     ptr++;
