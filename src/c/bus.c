@@ -248,9 +248,11 @@ static bool iot_bus_topic_match (const char * topic, const char * pattern)
   return match;
 }
 
+// Match publishers with subscribers (by topic) unless self matches
+
 static void iot_bus_match_locked (iot_bus_pub_t * pub, iot_bus_sub_t * sub)
 {
-  if (iot_bus_topic_match (pub->topic->name, sub->pattern))
+  if (((pub->self == NULL) || (pub->self != sub->self)) && iot_bus_topic_match (pub->topic->name, sub->pattern))
   {
     iot_bus_match_t * match = malloc (sizeof (*match));
     match->sub = sub;
@@ -494,10 +496,10 @@ static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_
     iot_data_array_iter (value, &iter);
     while (iot_data_array_iter_next (&iter))
     {
-      const iot_data_t * map = iot_data_array_iter_value (&iter);
-      assert (map);
-      name = iot_data_string_map_get_string (map, "Topic");
-      value = iot_data_string_map_get (map, "Priority");
+      const iot_data_t * mp = iot_data_array_iter_value (&iter);
+      assert (mp);
+      name = iot_data_string_map_get_string (mp, "Topic");
+      value = iot_data_string_map_get (mp, "Priority");
       assert (name && value);
       int prio = (int) iot_data_i64 (value);
       printf ("topic %s %d\n", name, prio);

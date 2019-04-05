@@ -95,10 +95,8 @@ static pthread_mutex_t iot_data_mutex;
 
 static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
 
-static void * iot_data_factory_alloc (size_t size)
+static void * iot_data_factory_alloc (void)
 {
-  assert (size <= IOT_DATA_BLOCK_SIZE);
-
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
@@ -144,7 +142,7 @@ static inline void iot_data_factory_free (iot_data_t * data)
 
 static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
 {
-  iot_data_value_t * val = iot_data_factory_alloc (sizeof (*val));
+  iot_data_value_t * val = iot_data_factory_alloc ();
   val->base.type = type;
   val->base.release = copy;
   return val;
@@ -172,6 +170,11 @@ static bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 
 void iot_data_init (void)
 {
+  assert (sizeof (iot_data_value_t) <= IOT_DATA_BLOCK_SIZE);
+  assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE);
+  assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE);
+  assert (sizeof (iot_data_blob_t) <= IOT_DATA_BLOCK_SIZE);
+  assert (sizeof (iot_data_pair_t) <= IOT_DATA_BLOCK_SIZE);
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
 #else
@@ -211,7 +214,7 @@ const char * iot_data_type_name (const iot_data_t * data)
 iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)
 {
   assert (key_type < IOT_DATA_MAP);
-  iot_data_map_t * map = iot_data_factory_alloc (sizeof (*map));
+  iot_data_map_t * map = iot_data_factory_alloc ();
   map->base.type = IOT_DATA_MAP;
   map->key_type = key_type;
   return (iot_data_t*) map;
@@ -220,7 +223,7 @@ iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)
 iot_data_t * iot_data_alloc_array (uint32_t size)
 {
   assert (size);
-  iot_data_array_t * array = iot_data_factory_alloc (sizeof (*array));
+  iot_data_array_t * array = iot_data_factory_alloc ();
   array->base.type = IOT_DATA_ARRAY;
   array->size = size;
   array->values = calloc (size, sizeof (iot_data_t*));
@@ -364,9 +367,8 @@ iot_data_t * iot_data_alloc_string (const char * val, bool copy)
 
 iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, bool copy)
 {
-  assert (data);
-  assert (size);
-  iot_data_blob_t * blob = iot_data_factory_alloc (sizeof (*blob));
+  assert (data && size);
+  iot_data_blob_t * blob = iot_data_factory_alloc ();
   blob->base.type = IOT_DATA_BLOB;
   blob->size = size;
   blob->base.release = copy;
@@ -496,7 +498,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   }
   else
   {
-    pair = (iot_data_pair_t*) iot_data_factory_alloc (sizeof (*pair));
+    pair = (iot_data_pair_t*) iot_data_factory_alloc ();
     if (mp->tail) mp->tail->base.next = &pair->base;
     mp->tail = pair;
     if (mp->head == NULL) mp->head = pair;
