@@ -2,6 +2,7 @@
 #include "../../cunit/Basic.h"
 #include "../../cunit/Automated.h"
 #include "../json/json.h"
+#include "../bus/bus.h"
 #include "../threadpool/threadpool.h"
 
 static void usage (void)
@@ -59,6 +60,7 @@ int main (int argc, char* argv[])
   }
 
   cunit_json_test_init ();
+  cunit_bus_test_init ();
   cunit_threadpool_test_init ();
 
   CU_set_error_action (error_action);
