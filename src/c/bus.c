@@ -8,8 +8,15 @@
 #include "iot/scheduler.h"
 #include "iot/bus.h"
 #include "iot/container.h"
+#include "iot/thread.h"
 
 #define IOT_BUS_DEFAULT_INTERVAL 500000 // usecs
+
+typedef struct iot_bus_sub_match_t
+{
+  iot_bus_sub_t * sub;
+  struct iot_bus_sub_match_t * next;
+} iot_bus_sub_match_t;
 
 typedef struct iot_bus_topic_t
 {
@@ -17,21 +24,26 @@ typedef struct iot_bus_topic_t
   char * name;
   int priority;
   bool prio_set;
+  bool retain;
+  uint64_t count;
+  iot_data_t * last;
+  iot_bus_sub_match_t * matches;
+  pthread_mutex_t mutex;
 } iot_bus_topic_t;
 
-typedef struct iot_bus_match_t
+typedef struct iot_bus_topic_match_t
 {
-  iot_bus_sub_t * sub;
-  struct iot_bus_match_t * next;
-} iot_bus_match_t;
+  iot_bus_topic_t * topic;
+  uint64_t count;
+  struct iot_bus_topic_match_t * next;
+} iot_bus_topic_match_t;
 
 struct iot_bus_pub_t
 {
   iot_bus_t * bus;
   struct iot_bus_pub_t * next;
-  const iot_bus_topic_t * topic;
+  iot_bus_topic_t * topic;
   void * self;
-  iot_bus_match_t * matches;
   iot_data_pub_cb_fn_t callback;
   iot_schedule_t * sc;
   atomic_uint_fast32_t refs;
@@ -43,6 +55,7 @@ struct iot_bus_sub_t
   struct iot_bus_sub_t * next;
   void * self;
   char * pattern;
+  iot_bus_topic_match_t * matches;
   iot_data_sub_fn_t callback;
   atomic_uint_fast32_t refs;
 };
@@ -66,7 +79,12 @@ typedef struct iot_bus_job_t
   iot_data_t * data;
 } iot_bus_job_t;
 
-static iot_bus_topic_t * iot_bus_topic_find_locked (iot_bus_t * bus, const char * name)
+static inline bool iot_bus_topic_priority_less (iot_bus_topic_t * t1, iot_bus_topic_t * t2)
+{
+  return (t1->prio_set) ? ((t2->prio_set) ? (t1->priority < t2->priority) : false) : (t2->prio_set);
+}
+
+static iot_bus_topic_t * iot_bus_topic_create_locked (iot_bus_t * bus, const char * name, bool retain, const int * prio, bool * exists)
 {
   iot_bus_topic_t * topic = bus->topics;
   while (topic)
@@ -74,21 +92,18 @@ static iot_bus_topic_t * iot_bus_topic_find_locked (iot_bus_t * bus, const char 
     if (strcmp (topic->name, name) == 0) break;
     topic = topic->next;
   }
-  return topic;
-}
-
-static iot_bus_topic_t * iot_bus_topic_create_locked (iot_bus_t * bus, const char * name, const int * prio)
-{
-  iot_bus_topic_t * topic = iot_bus_topic_find_locked (bus, name);
+  if (exists) *exists = topic != NULL;
   if (topic == NULL)
   {
-    topic = malloc (sizeof (*topic));
+    topic = calloc (1, sizeof (*topic));
+    iot_mutex_init (&topic->mutex);
     topic->name = iot_strdup (name);
+    topic->prio_set = (prio != NULL);
+    topic->priority = prio ? *prio : 0;
+    topic->retain = retain;
     topic->next = bus->topics;
     bus->topics = topic;
   }
-  topic->prio_set = (prio != NULL);
-  topic->priority = prio ? *prio : 0;
   return topic;
 }
 
@@ -96,7 +111,7 @@ static void iot_bus_sub_free_locked (iot_bus_sub_t * sub)
 {
   iot_bus_sub_t * prev = NULL;
   iot_bus_sub_t * iter = sub->bus->subscribers;
-  iot_bus_pub_t * pub = sub->bus->publishers;
+  iot_bus_topic_t * topic = sub->bus->topics;
 
   while (iter)
   {
@@ -115,29 +130,60 @@ static void iot_bus_sub_free_locked (iot_bus_sub_t * sub)
     prev = iter;
     iter = iter->next;
   }
-
-  while (pub)
+  while (topic)
   {
-    iot_bus_match_t * mprev = NULL;
-    iot_bus_match_t * match = pub->matches;
+    iot_bus_sub_match_t * mprev = NULL;
+    iot_bus_sub_match_t * match = topic->matches;
     while (match)
     {
       if (match->sub == sub)
       {
-        if (mprev)
+        if (mprev) // Add topic to list ordering by priority (highest first)
+/*
+    iot_bus_topic_t * iter = bus->topics;
+    iot_bus_topic_t * prev = NULL;
+    while (true)
+    {
+      if (iter && iot_bus_topic_priority_less (topic, iter))
+      {
+        prev = iter;
+        iter = iter->next;
+      }
+      else
+      {
+        if (prev)
+        {
+          prev->next = topic;
+          topic->next = iter;
+        }
+        else
+        {
+          topic->next = bus->topics;
+          bus->topics = topic;
+        }
+        break;
+      }
+    } */
         {
           mprev->next = match->next;
         }
         else
         {
-          pub->matches = match->next;
+          topic->matches = match->next;
         }
         free (match);
+        break;
       }
       mprev = match;
       match = match->next;
     }
-    pub = pub->next;
+    topic = topic->next;
+  }
+  while (sub->matches)
+  {
+    iot_bus_topic_match_t * tm = sub->matches;
+    sub->matches = tm->next;
+    free (tm);
   }
   free (sub->pattern);
   free (sub);
@@ -145,7 +191,6 @@ static void iot_bus_sub_free_locked (iot_bus_sub_t * sub)
 
 static void iot_bus_pub_free_locked (iot_bus_pub_t * pub)
 {
-  iot_bus_match_t * match;
   iot_bus_pub_t * prev = NULL;
   iot_bus_pub_t * iter = pub->bus->publishers;
 
@@ -166,13 +211,21 @@ static void iot_bus_pub_free_locked (iot_bus_pub_t * pub)
     prev = iter;
     iter = iter->next;
   }
+  free (pub);
+}
 
-  while ((match = pub->matches))
+static void iot_bus_topic_free (iot_bus_topic_t * topic)
+{
+  iot_bus_sub_match_t * match;
+  while ((match = topic->matches))
   {
-    pub->matches = match->next;
+    topic->matches = match->next;
     free (match);
   }
-  free (pub);
+  free (topic->name);
+  iot_data_free (topic->last);
+  pthread_mutex_destroy (&topic->mutex);
+  free (topic);
 }
 
 static iot_bus_sub_t * iot_bus_find_sub_locked (iot_bus_t * bus, void * self, const char * pattern, iot_bus_sub_t ** prev)
@@ -228,12 +281,12 @@ static bool iot_bus_topic_match (const char * topic, const char * pattern)
       match = (ptok == ttok);
       break;
     }
-    if (*ptok == '#') // Match all wildcard
+    if (*ptok == '#') // Multi level wildcard
     {
       match = true;
       break;
     }
-    if (*ptok != '+') // Match local wildcard
+    if (*ptok != '+') // Single level wildcard
     {
       if (strcmp (ttok, ptok) != 0)
       {
@@ -248,16 +301,58 @@ static bool iot_bus_topic_match (const char * topic, const char * pattern)
   return match;
 }
 
-// Match publishers with subscribers (by topic) unless self matches
+static inline void iot_bus_match_sub_topic (iot_bus_sub_t * sub, iot_bus_topic_t * topic)
+{
+  iot_bus_topic_match_t * match = sub->matches;
+  while (match)
+  {
+    if (match->topic == topic) break;
+    match = match->next;
+  }
+  if (match == NULL) // Add match to subscriber ordering by topic priority (highest first)
+  {
+    iot_bus_topic_match_t * nm = malloc (sizeof (*match));
+    iot_bus_topic_match_t * prev = NULL;
+    nm->count = 0;
+    nm->topic = topic;
+    match = sub->matches;
+    while (true)
+    {
+      if (match && iot_bus_topic_priority_less (topic, match->topic))
+      {
+        prev = match;
+        match = match->next;
+      }
+      else
+      {
+        if (prev)
+        {
+          prev->next = nm;
+          nm->next = match;
+        }
+        else
+        {
+          nm->next = sub->matches;
+          sub->matches = nm;
+        }
+        break;
+      }
+    }
+  }
+}
+
+// Match publishers with subscribers (by topic) unless same self
 
 static void iot_bus_match_locked (iot_bus_pub_t * pub, iot_bus_sub_t * sub)
 {
-  if (((pub->self == NULL) || (pub->self != sub->self)) && iot_bus_topic_match (pub->topic->name, sub->pattern))
+  iot_bus_topic_t * topic = pub->topic;
+  if (((pub->self == NULL) || (pub->self != sub->self)) && iot_bus_topic_match (topic->name, sub->pattern))
   {
-    iot_bus_match_t * match = malloc (sizeof (*match));
+    iot_bus_sub_match_t * match = malloc (sizeof (*match));
     match->sub = sub;
-    match->next = pub->matches;
-    pub->matches = match;
+    match->next = topic->matches;
+    topic->matches = match;
+    iot_bus_match_sub_topic (sub, topic);
   }
 }
 
@@ -266,28 +361,27 @@ static void iot_bus_sched_fn (iot_bus_pub_t * pub)
   iot_data_t * data = (pub->callback) (pub->self);
   if (data) // Ignore if no data
   {
-    iot_bus_publish (pub, data, true);
+    iot_bus_pub_push (pub, data, true);
   }
 }
 
-iot_bus_t * iot_bus_alloc (iot_scheduler_t * scheduler, uint64_t default_poll_interval)
+iot_bus_t * iot_bus_alloc (iot_scheduler_t * scheduler, iot_threadpool_t * pool, uint64_t default_poll_interval)
 {
-  assert (scheduler);
   iot_bus_t * bus = calloc (1, sizeof (*bus));
   pthread_rwlock_init (&bus->lock, NULL);
   bus->component.start_fn = (iot_component_start_fn_t) iot_bus_start;
   bus->component.stop_fn = (iot_component_stop_fn_t) iot_bus_stop;
   bus->interval = default_poll_interval * 1000;
   bus->scheduler = scheduler;
-  bus->threadpool = iot_scheduler_thread_pool (scheduler);
+  bus->threadpool = pool;
   return bus;
 }
 
-void iot_bus_topic_create (iot_bus_t * bus, const char * name, const int * prio)
+void iot_bus_topic_create (iot_bus_t * bus, const char * name, bool retain, const int * prio)
 {
   assert (bus && name);
   pthread_rwlock_wrlock (&bus->lock);
-  iot_bus_topic_create_locked (bus, name, prio);
+  iot_bus_topic_create_locked (bus, name, retain, prio, NULL);
   pthread_rwlock_unlock (&bus->lock);
 }
 
@@ -333,8 +427,7 @@ void iot_bus_free (iot_bus_t * bus)
     while ((topic = bus->topics))
     {
       bus->topics = topic->next;
-      free (topic->name);
-      free (topic);
+      iot_bus_topic_free (topic);
     }
     pthread_rwlock_destroy (&bus->lock);
     free (bus);
@@ -363,7 +456,7 @@ static void iot_bus_match_pub_locked (iot_bus_t * bus, iot_bus_pub_t * pub)
 
 iot_bus_sub_t * iot_bus_sub_alloc (iot_bus_t * bus, void * self, iot_data_sub_fn_t callback, const char * pattern)
 {
-  assert (bus && callback && pattern);
+  assert (bus && pattern);
 
   pthread_rwlock_wrlock (&bus->lock);
   iot_bus_sub_t * sub = iot_bus_find_sub_locked (bus, self, pattern, NULL);
@@ -397,27 +490,59 @@ void iot_bus_sub_free (iot_bus_sub_t * sub)
   }
 }
 
-iot_bus_pub_t * iot_bus_pub_alloc (iot_bus_t * bus, void * self, iot_data_pub_cb_fn_t callback, const char * topic)
+iot_data_t * iot_bus_sub_pull (iot_bus_sub_t * sub)
 {
-  assert (bus && topic);
+  iot_data_t * ret = NULL;
+  assert (sub);
+
+  pthread_rwlock_rdlock (&sub->bus->lock);
+  iot_bus_topic_match_t * match = sub->matches;
+  while (match && (ret == NULL))
+  {
+    iot_bus_topic_t * topic = match->topic;
+    if (topic->retain)
+    {
+      pthread_mutex_lock (&topic->mutex);
+      if (match->count < topic->count)
+      {
+        match->count = topic->count;
+        ret = topic->last;
+        if (ret) iot_data_addref (ret);
+      }
+      pthread_mutex_unlock (&topic->mutex);
+    }
+    match = match->next;
+  }
+  pthread_rwlock_unlock (&sub->bus->lock);
+
+  return ret;
+}
+
+iot_bus_pub_t * iot_bus_pub_alloc (iot_bus_t * bus, void * self, iot_data_pub_cb_fn_t callback, const char * topic_name)
+{
+  assert (bus && topic_name);
   pthread_rwlock_wrlock (&bus->lock);
-  iot_bus_pub_t * pub = iot_bus_find_pub_locked (bus, self, topic, NULL);
+  iot_bus_pub_t * pub = iot_bus_find_pub_locked (bus, self, topic_name, NULL);
   if (pub == NULL)
   {
+    bool existing;
     pub = calloc (1, sizeof (*pub));
     pub->self = self;
     pub->bus = bus;
-    pub->topic = iot_bus_topic_create_locked (bus, topic, NULL);
+    pub->topic = iot_bus_topic_create_locked (bus, topic_name, false, NULL, &existing);
     pub->next = bus->publishers;
     atomic_store (&pub->refs, 1);
     bus->publishers = pub;
-    if (callback)
+    if (callback && bus->scheduler)
     {
       pub->callback = callback;
       pub->sc = iot_schedule_create (bus->scheduler, (iot_schedule_fn_t) iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
       iot_schedule_add (bus->scheduler, pub->sc);
     }
-    iot_bus_match_pub_locked (bus, pub);
+    if (! existing)
+    {
+      iot_bus_match_pub_locked (bus, pub);
+    }
   }
   pthread_rwlock_unlock (&bus->lock);
   return pub;
@@ -448,28 +573,47 @@ static void iot_bus_publish_job (void * arg)
   free (job);
 }
 
-void iot_bus_publish (iot_bus_pub_t * pub, iot_data_t * data, bool sync)
+void iot_bus_pub_push (iot_bus_pub_t * pub, iot_data_t * data, bool sync)
 {
   assert (pub && data);
 
+  iot_bus_topic_t * topic = pub->topic;
+  if (topic->retain) // If retaining data on topic, save current sample
+  {
+    iot_data_addref (data);
+    pthread_mutex_lock (&topic->mutex);
+    iot_data_t * last = topic->last;
+    topic->count++;
+    topic->last = data;
+    iot_data_free (last);
+    pthread_mutex_unlock (&topic->mutex);
+  }
+
   pthread_rwlock_rdlock (&pub->bus->lock);
-  iot_bus_match_t * match = pub->matches;
+  iot_bus_sub_match_t * match = topic->matches;
   while (match)
   {
     if (sync)
     {
-      (match->sub->callback) (data, match->sub->self, pub->topic->name);
+      (match->sub->callback) (data, match->sub->self, topic->name);
     }
     else
     {
-      iot_bus_job_t * job = malloc (sizeof (*job));
-      job->pub = pub;
-      job->sub = match->sub;
-      job->data = data;
-      iot_data_addref (data);
-      atomic_fetch_add (&pub->refs, 1);
-      atomic_fetch_add (&job->sub->refs, 1);
-      iot_threadpool_add_work (pub->bus->threadpool, iot_bus_publish_job, job, job->pub->topic->prio_set ? &job->pub->topic->priority : NULL);
+      if (pub->bus->threadpool)
+      {
+        iot_bus_job_t *job = malloc (sizeof (*job));
+        job->pub = pub;
+        job->sub = match->sub;
+        job->data = data;
+        iot_data_addref (data);
+        atomic_fetch_add (&pub->refs, 1);
+        atomic_fetch_add (&job->sub->refs, 1);
+        iot_threadpool_add_work (pub->bus->threadpool, iot_bus_publish_job, job, topic->prio_set ? &topic->priority : NULL);
+      }
+      else
+      {
+        break;
+      }
     }
     match = match->next;
   }
@@ -481,14 +625,17 @@ void iot_bus_publish (iot_bus_pub_t * pub, iot_data_t * data, bool sync)
 
 static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_t * map)
 {
-  printf ("iot_bus_config\n");
   const iot_data_t * value = iot_data_string_map_get (map, "Interval");
   uint64_t interval = value ? (uint64_t) iot_data_i64 (value) : IOT_BUS_DEFAULT_INTERVAL;
   const char * name = iot_data_string_map_get_string (map, "Scheduler");
-  assert (name);
   iot_scheduler_t * scheduler = (iot_scheduler_t*) iot_container_find (cont, name);
-  assert (scheduler);
-  iot_bus_t * bus = iot_bus_alloc (scheduler, interval);
+  name = iot_data_string_map_get_string (map, "ThreadPool");
+  iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find (cont, name);
+  if ((pool == NULL) && scheduler)
+  {
+    pool = iot_scheduler_thread_pool (scheduler);
+  }
+  iot_bus_t * bus = iot_bus_alloc (scheduler, pool, interval);
   value = iot_data_string_map_get (map, "Topics");
   if (value)
   {
@@ -502,8 +649,9 @@ static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_
       value = iot_data_string_map_get (mp, "Priority");
       assert (name && value);
       int prio = (int) iot_data_i64 (value);
-      printf ("topic %s %d\n", name, prio);
-      iot_bus_topic_create_locked (bus, name, &prio);
+      value = iot_data_string_map_get (mp, "Retain");
+      bool retain = value ? iot_data_bool (value) : false;
+      iot_bus_topic_create_locked (bus, name, retain, &prio, NULL);
     }
   }
   return &bus->component;

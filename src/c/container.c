@@ -146,16 +146,19 @@ void iot_container_add_factory (iot_container_t * cont, const iot_component_fact
 
 iot_component_t * iot_container_find (iot_container_t * cont, const char * name)
 {
-  iot_component_holder_t * iter = NULL;
-  pthread_rwlock_rdlock (&cont->lock);
-  for (uint32_t i = 0; i < cont->ccount; i++)
+  iot_component_t * comp = NULL;
+  if (name && (name[0] != '\0'))
   {
-    iter = cont->components[i];
-    if (strcmp (iter->name, name) == 0)
+    pthread_rwlock_rdlock (&cont->lock);
+    for (uint32_t i = 0; i < cont->ccount; i++)
     {
-      break;
+      if (strcmp (cont->components[i]->name, name) == 0)
+      {
+        comp = cont->components[i]->component;
+        break;
+      }
     }
+    pthread_rwlock_unlock (&cont->lock);
   }
-  pthread_rwlock_unlock (&cont->lock);
-  return iter ? iter->component : NULL;
+  return comp;
 }

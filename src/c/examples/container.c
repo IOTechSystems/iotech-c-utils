@@ -109,7 +109,8 @@ static const char * bus_config =
 "{"
   "\"Interval\":100000,"
   "\"Scheduler\":\"scheduler\","
-  "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10}]"
+  "\"ThreadPool\":\"pool\","
+  "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10,\"Retain\":true}]"
 "}";
 
 static const char * my_config =

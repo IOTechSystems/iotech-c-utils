@@ -27,24 +27,25 @@ typedef void (*iot_data_sub_fn_t) (iot_data_t * data, void * self, const char * 
 
 /* Lifecycle operations */
 
-extern iot_bus_t * iot_bus_alloc (iot_scheduler_t * scheduler, uint64_t default_poll_interval);
+extern iot_bus_t * iot_bus_alloc (iot_scheduler_t * scheduler, iot_threadpool_t * pool, uint64_t default_poll_interval);
 extern bool iot_bus_start (iot_bus_t * bus);
 extern void iot_bus_stop (iot_bus_t * bus);
 extern void iot_bus_free (iot_bus_t * bus);
 
 /* Topics */
 
-extern void iot_bus_topic_create (iot_bus_t * bus, const char * name, const int * prio);
+extern void iot_bus_topic_create (iot_bus_t * bus, const char * name, bool retain, const int * prio);
 
 /* Data subscription */
 
 extern iot_bus_sub_t * iot_bus_sub_alloc (iot_bus_t * bus, void * self, iot_data_sub_fn_t callback, const char * pattern);
+extern iot_data_t * iot_bus_sub_pull (iot_bus_sub_t * sub);
 extern void iot_bus_sub_free (iot_bus_sub_t * sub);
 
 /* Data publication */
 
 extern iot_bus_pub_t * iot_bus_pub_alloc (iot_bus_t * bus, void * self, iot_data_pub_cb_fn_t callback, const char * topic);
-extern void iot_bus_publish (iot_bus_pub_t * pub, iot_data_t * data, bool sync);
+extern void iot_bus_pub_push (iot_bus_pub_t * pub, iot_data_t * data, bool sync);
 extern void iot_bus_pub_free  (iot_bus_pub_t * pub);
 
 /* Component factory */

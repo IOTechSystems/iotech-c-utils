@@ -25,8 +25,8 @@ int main (void)
   iot_data_init ();
   iot_threadpool_t * pool = iot_threadpool_alloc (4, NULL);
   iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
-  iot_bus_t * bus = iot_bus_alloc (scheduler, 200000);
-  iot_bus_sub_alloc (bus, NULL, subscriber_callback, "test/tube");
+  iot_bus_t * bus = iot_bus_alloc (scheduler, pool, 200000);
+  iot_bus_sub_alloc (bus, NULL, subscriber_callback, "test/+");
   iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, NULL, publisher_callback, "test/tube");
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
@@ -69,7 +69,7 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters)
     // Increment map ref count or publish will delete
 
     iot_data_addref (map);
-    iot_bus_publish (pub, map, true);
+    iot_bus_pub_push (pub, map, true);
   }
 
   // Finally delete sampleutests/threadpool/threadpool.h
