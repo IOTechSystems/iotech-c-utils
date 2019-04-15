@@ -79,11 +79,6 @@ typedef struct iot_bus_job_t
   iot_data_t * data;
 } iot_bus_job_t;
 
-static inline bool iot_bus_topic_priority_less (iot_bus_topic_t * t1, iot_bus_topic_t * t2)
-{
-  return (t1->prio_set) ? ((t2->prio_set) ? (t1->priority < t2->priority) : false) : (t2->prio_set);
-}
-
 static iot_bus_topic_t * iot_bus_topic_create_locked (iot_bus_t * bus, const char * name, bool retain, const int * prio, bool * exists)
 {
   iot_bus_topic_t * topic = bus->topics;
@@ -138,32 +133,7 @@ static void iot_bus_sub_free_locked (iot_bus_sub_t * sub)
     {
       if (match->sub == sub)
       {
-        if (mprev) // Add topic to list ordering by priority (highest first)
-/*
-    iot_bus_topic_t * iter = bus->topics;
-    iot_bus_topic_t * prev = NULL;
-    while (true)
-    {
-      if (iter && iot_bus_topic_priority_less (topic, iter))
-      {
-        prev = iter;
-        iter = iter->next;
-      }
-      else
-      {
-        if (prev)
-        {
-          prev->next = topic;
-          topic->next = iter;
-        }
-        else
-        {
-          topic->next = bus->topics;
-          bus->topics = topic;
-        }
-        break;
-      }
-    } */
+        if (mprev)
         {
           mprev->next = match->next;
         }
@@ -299,6 +269,11 @@ static bool iot_bus_topic_match (const char * topic, const char * pattern)
   free (top);
   free (pat);
   return match;
+}
+
+static inline bool iot_bus_topic_priority_less (iot_bus_topic_t * t1, iot_bus_topic_t * t2)
+{
+  return (t1->prio_set) ? ((t2->prio_set) ? (t1->priority < t2->priority) : false) : (t2->prio_set);
 }
 
 static inline void iot_bus_match_sub_topic (iot_bus_sub_t * sub, iot_bus_topic_t * topic)
