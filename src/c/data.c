@@ -511,17 +511,14 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
 const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key)
 {
   iot_data_map_t * mp = (iot_data_map_t*) map;
-
-  assert (mp && (mp->base.type == IOT_DATA_MAP));
-  assert (key && key->type == mp->key_type);
-
+  assert (mp && key && (mp->base.type == IOT_DATA_MAP));
   iot_data_pair_t * pair = iot_data_map_find (mp, key);
   return pair ? pair->value : NULL;
 }
 
 const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key)
 {
-  assert (key);
+  assert (map && key);
   iot_data_t * dkey = iot_data_alloc_string (key, false);
   const iot_data_t * value = iot_data_map_get (map, dkey);
   iot_data_free (dkey);
