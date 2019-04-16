@@ -82,14 +82,19 @@ static void test_data_types (void)
 
 static void test_data_blob_key (void)
 {
-  uint8_t data [4] = { 0, 1, 2 ,3 };
+  uint8_t data1 [4] = { 0, 1, 2 ,3 };
+  uint8_t data2 [4] = { 0, 1, 2 ,4 };
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_BLOB);
   CU_ASSERT (iot_data_map_key_type (map) == IOT_DATA_BLOB);
-  iot_data_t * blob = iot_data_alloc_blob (data, 4, false);
+  iot_data_t * blob1 = iot_data_alloc_blob (data1, sizeof (data1), false);
+  iot_data_t * blob2 = iot_data_alloc_blob (data2, sizeof (data2), false);
   iot_data_t * val = iot_data_alloc_ui32 (66u);
-  iot_data_map_add (map, blob, val);
-  const iot_data_t * ret = iot_data_map_get (map, blob);
+  iot_data_map_add (map, blob1, val);
+  const iot_data_t * ret = iot_data_map_get (map, blob1);
   CU_ASSERT (ret == val);
+  ret = iot_data_map_get (map, blob2);
+  CU_ASSERT (ret == NULL);
+  iot_data_free (blob2);
   iot_data_free (map);
 }
 
@@ -97,5 +102,5 @@ void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
   CU_add_test (suite, "data_types", test_data_types);
-  CU_add_test (suite, "data_blob", test_data_blob_key);
+  CU_add_test (suite, "data_blob_key", test_data_blob_key);
 }
