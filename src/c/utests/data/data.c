@@ -120,6 +120,9 @@ static void test_data_string_array (void)
     CU_ASSERT (iot_data_array_iter_string (&iter) == strs[index]);
     index++;
   }
+  CU_ASSERT (iot_data_array_size (array) == 2);
+  CU_ASSERT (iot_data_array_get (array, 0) == str1);
+  CU_ASSERT (iot_data_array_get (array, 1) == str2);
   iot_data_free (array);
 }
 
