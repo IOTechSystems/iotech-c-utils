@@ -102,9 +102,31 @@ static void test_data_blob_key (void)
   iot_data_free (map);
 }
 
+static void test_data_string_array (void)
+{
+  const char * strs [2] = { "Test", "Tube" };
+  uint32_t index = 0;
+  iot_data_array_iter_t iter;
+  iot_data_t * array = iot_data_alloc_array (2);
+  iot_data_t * str1 = iot_data_alloc_string (strs[0], false);
+  iot_data_t * str2 = iot_data_alloc_string (strs[1], false);
+  iot_data_array_add (array, 0, str1);
+  iot_data_array_add (array, 1, str2);
+  iot_data_array_iter (array, &iter);
+  while (iot_data_array_iter_next (&iter))
+  {
+    CU_ASSERT (iot_data_array_iter_index (&iter) == index);
+    CU_ASSERT (iot_data_array_iter_value (&iter) != NULL);
+    CU_ASSERT (iot_data_array_iter_string (&iter) == strs[index]);
+    index++;
+  }
+  iot_data_free (array);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
   CU_add_test (suite, "data_types", test_data_types);
   CU_add_test (suite, "data_blob_key", test_data_blob_key);
+  CU_add_test (suite, "data_string_array", test_data_string_array);
 }
