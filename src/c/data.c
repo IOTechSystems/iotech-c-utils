@@ -151,6 +151,7 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, boo
 static bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 {
   assert (v1 && v2);
+  if (v1 == v2) return true;
   if (v1->type == v2->type)
   {
     switch (v1->type)
