@@ -205,7 +205,7 @@ void iot_data_addref (iot_data_t * data)
 
 const char * iot_data_type_name (const iot_data_t * data)
 {
-  static const char * type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float62","Float64","Bool","String","BLOB","Map","Array"};
+  static const char * type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","BLOB","Map","Array"};
   assert (data);
   assert (data->type <= IOT_DATA_ARRAY);
   return type_names[data->type];
