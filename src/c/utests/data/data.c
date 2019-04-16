@@ -89,12 +89,16 @@ static void test_data_blob_key (void)
   iot_data_t * blob1 = iot_data_alloc_blob (data1, sizeof (data1), false);
   iot_data_t * blob2 = iot_data_alloc_blob (data2, sizeof (data2), false);
   iot_data_t * val = iot_data_alloc_ui32 (66u);
+  iot_data_t * duffkey = iot_data_alloc_i32 (55);
   iot_data_map_add (map, blob1, val);
   const iot_data_t * ret = iot_data_map_get (map, blob1);
   CU_ASSERT (ret == val);
   ret = iot_data_map_get (map, blob2);
   CU_ASSERT (ret == NULL);
+  ret = iot_data_map_get (map, duffkey);
+  CU_ASSERT (ret == NULL);
   iot_data_free (blob2);
+  iot_data_free (duffkey);
   iot_data_free (map);
 }
 
