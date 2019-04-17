@@ -126,10 +126,26 @@ static void test_data_string_array (void)
   iot_data_free (array);
 }
 
+static void test_data_to_json (void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * val = iot_data_alloc_ui32 (1u);
+  iot_data_t * key = iot_data_alloc_string ("UInt32", false);
+  iot_data_map_add (map, key, val);
+  val = iot_data_alloc_string ("Lilith", false);
+  key = iot_data_alloc_string ("Name", false);
+  iot_data_map_add (map, key, val);
+  char * json = iot_data_to_json (map, false);
+  printf (" %s ", json);
+  free (json);
+  iot_data_free (map);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
   CU_add_test (suite, "data_types", test_data_types);
   CU_add_test (suite, "data_blob_key", test_data_blob_key);
   CU_add_test (suite, "data_string_array", test_data_string_array);
+  CU_add_test (suite, "data_to_json", test_data_to_json);
 }
