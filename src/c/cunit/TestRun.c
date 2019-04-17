@@ -83,6 +83,14 @@
 #include <sysLib.h>
 #endif
 
+#ifdef __ZEPHYR__
+static clock_t clock (void)
+{
+  return 0;
+}
+#define CLOCKS_PER_SEC 1
+#endif
+
 #include "CUnit.h"
 #include "MyMem.h"
 #include "TestDB.h"
@@ -328,7 +336,8 @@ unsigned int CU_get_number_of_failure_records(void)
 /*------------------------------------------------------------------------*/
 double CU_get_elapsed_time(void)
 {
-  if (CU_TRUE == f_bTestIsRunning) {
+  if (CU_TRUE == f_bTestIsRunning)
+  {
     return ((double)clock() - (double)f_start_time)/(double)CLOCKS_PER_SEC;
   }
   else {

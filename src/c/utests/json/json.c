@@ -21,12 +21,12 @@ static int dump_parse (const char *js, iot_json_tok_t *t, int count, int indent)
   }
   if (t->type == IOT_JSON_PRIMITIVE)
   {
-    printf ("%.*s", t->end - t->start, js + t->start);
+    printf ("%.*s", (int) (t->end - t->start), js + t->start);
     return 1;
   }
   else if (t->type == IOT_JSON_STRING)
   {
-    printf ("'%.*s'", t->end - t->start, js + t->start);
+    printf ("'%.*s'", (int) (t->end - t->start), js + t->start);
     return 1;
   }
   else if (t->type == IOT_JSON_OBJECT)
