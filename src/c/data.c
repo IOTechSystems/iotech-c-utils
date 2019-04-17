@@ -655,8 +655,7 @@ static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * 
     case IOT_DATA_UINT64: sprintf (buff, "%" PRIu64, iot_data_ui64 (data)); break;
     case IOT_DATA_FLOAT32: sprintf (buff, "%f", iot_data_f32 (data)); break;
     case IOT_DATA_FLOAT64: sprintf (buff, "%lf", iot_data_f64 (data)); break;
-    case IOT_DATA_BOOL: sprintf (buff, "%s", iot_data_bool (data) ? "true" : "false"); break;
-    default: assert (0);
+    default: sprintf (buff, "%s", iot_data_bool (data) ? "true" : "false"); break;
   }
   if (wrap)
   {
