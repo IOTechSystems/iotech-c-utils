@@ -136,8 +136,24 @@ static void test_data_to_json (void)
   key = iot_data_alloc_string ("Name", false);
   iot_data_map_add (map, key, val);
   char * json = iot_data_to_json (map, false);
+  CU_ASSERT (json != NULL);
   printf (" %s ", json);
   free (json);
+  iot_data_free (map);
+}
+
+static void test_data_from_json (void)
+{
+  static const char * bus_config =
+  "{"
+    "\"Interval\":100000,"
+    "\"Scheduler\":\"scheduler\","
+    "\"ThreadPool\":\"pool\","
+    "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10,\"Retain\":true}],"
+    "\"Dummy\":null"
+  "}";
+  iot_data_t * map = iot_data_from_json (bus_config);
+  CU_ASSERT (map != NULL);
   iot_data_free (map);
 }
 
@@ -148,4 +164,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_blob_key", test_data_blob_key);
   CU_add_test (suite, "data_string_array", test_data_string_array);
   CU_add_test (suite, "data_to_json", test_data_to_json);
+  CU_add_test (suite, "data_from_json", test_data_from_json);
 }
