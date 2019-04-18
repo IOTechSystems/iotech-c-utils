@@ -38,17 +38,17 @@ static void cunit_pool_worker (void * arg)
 
 static void cunit_threadpool_priority (void)
 {
-  int delta = (prio_max > prio_min) ? 1 : -1;
-  CU_ASSERT (prio_max != prio_min);
-  prio1 = prio_min + delta;
-  prio2 = prio1 + delta;
-  prio3 = prio2 + delta;
+  CU_ASSERT (prio_max > prio_min);
+  prio1 = prio_min + 1;
+  prio2 = prio1 + 1;
+  prio3 = prio2 + 1;
   iot_threadpool_t * pool = iot_threadpool_alloc (1u, &prio_min);
   CU_ASSERT (pool != NULL);
   iot_threadpool_add_work (pool, cunit_pool_sleeper, NULL, NULL);
   iot_threadpool_add_work (pool, cunit_pool_worker, &prio1, &prio1);
   iot_threadpool_add_work (pool, cunit_pool_worker, &prio2, &prio2);
   iot_threadpool_add_work (pool, cunit_pool_worker, &prio3, &prio3);
+  iot_threadpool_start (pool);
   iot_threadpool_wait (pool);
   iot_threadpool_free (pool);
 }
