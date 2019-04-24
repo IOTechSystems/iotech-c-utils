@@ -54,6 +54,18 @@ static void test_bus_pub_free (void)
   iot_bus_free (bus);
 }
 
+static void test_bus_sub_free (void)
+{
+  iot_bus_t * bus = iot_bus_alloc (NULL, NULL, 0);
+  iot_bus_sub_t * sub1 = iot_bus_sub_alloc (bus, NULL, NULL, "utest/topic1");
+  iot_bus_sub_t * sub2 = iot_bus_sub_alloc (bus, NULL, NULL, "utest/topic1");
+  iot_bus_sub_t * sub3 = iot_bus_sub_alloc (bus, NULL, NULL, "utest/topic2");
+  iot_bus_sub_free (sub1);
+  iot_bus_sub_free (sub2);
+  iot_bus_sub_free (sub3);
+  iot_bus_free (bus);
+}
+
 static void test_bus_no_threads (void)
 {
   iot_bus_t * bus = iot_bus_alloc (NULL, NULL, 0);
@@ -108,6 +120,7 @@ void cunit_bus_test_init (void)
   CU_pSuite suite = CU_add_suite ("bus", suite_init, suite_clean);
   CU_add_test (suite, "bus_add_topic", test_bus_add_topic);
   CU_add_test (suite, "bus_pub_free", test_bus_pub_free);
+  CU_add_test (suite, "bus_sub_free", test_bus_sub_free);
   CU_add_test (suite, "bus_no_threads", test_bus_no_threads);
   CU_add_test (suite, "bus_no_threads_priority", test_bus_no_threads_priority);
 }
