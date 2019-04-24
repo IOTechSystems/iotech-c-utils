@@ -4,11 +4,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright (c) 2016 Johan Hanssen Seferidis SPDX-License-Identifier: MIT
-//
 
 #include "iot/threadpool.h"
 #include "iot/thread.h"
@@ -25,175 +20,74 @@
 #endif
 
 #define IOT_THREADPOOL_THREADS_DEFAULT 2
+#define IOT_THREADPOOL_JOBS_DEFAULT 0
 
-/* Job */
 typedef struct iot_job_t
 {
-  struct iot_job_t * prev;             /* Pointer to previous job */
-  void (*function) (void * arg);       /* Function to run         */
-  void * arg;                          /* Function's argument     */
-  int priority;                        /* Job priority            */
-  bool prio_set;                       /* Whether priority set    */
+  struct iot_job_t * prev;           /* Pointer to previous job */
+  void (*function) (void * arg);     /* Function to run         */
+  void * arg;                        /* Function's argument     */
+  int priority;                      /* Job priority            */
+  bool prio_set;                     /* Whether priority set    */
 } iot_job_t;
 
-/* Job queue */
-typedef struct iot_jobqueue_t
-{
-  pthread_mutex_t mutex;               /* used for queue r/w access */
-  pthread_cond_t cond;                 /* synchronisation condition */
-  iot_job_t * front;                   /* pointer to front of queue */
-  iot_job_t * rear;                    /* pointer to rear  of queue */
-  iot_job_t * cache;                   /* free job  cache           */
-  atomic_uint_fast32_t jobs;           /* number of jobs in queue   */
-} iot_jobqueue_t;
-
-/* Thread */
 typedef struct iot_thread_t
 {
-  uint32_t id;                         /* friendly id               */
-  pthread_t pthread;                   /* pointer to actual thread  */
-  struct iot_threadpool_t * pool;      /* thread pool               */
+  uint32_t id;                       /* friendly id               */
+  pthread_t pthread;                 /* pointer to actual thread  */
+  struct iot_threadpool_t * pool;    /* thread pool               */
 } iot_thread_t;
 
-/* Threadpool */
 typedef struct iot_threadpool_t
 {
-  iot_component_t component;                /* component base type        */
-  iot_thread_t * threads;                   /* array of threads           */
-  uint32_t num_threads;                     /* total number of threads    */
-  const int * default_prio;                 /* default thread priority    */
-  atomic_uint_fast32_t num_threads_alive;   /* threads currently alive    */
-  atomic_uint_fast32_t num_threads_working; /* threads currently working  */
-  pthread_mutex_t mutex;                    /* used for thread count etc  */
-  pthread_cond_t cond;                      /* signal to thread pool_wait */
-  iot_jobqueue_t jobqueue;                  /* job queue                  */
-  atomic_bool running;                      /* state of pool              */
+  iot_component_t component;                /* component base type             */
+  iot_thread_t * threads;                   /* array of threads                */
+  uint32_t max_threads;                     /* maximum number of threads       */
+  uint32_t max_jobs;                        /* maximum number of queued jobs   */
+  uint32_t jobs;                            /* number of jobs in queue         */
+  iot_job_t * front;                        /* pointer to front of job queue   */
+  iot_job_t * rear;                         /* pointer to rear of job queue    */
+  iot_job_t * cache;                        /* free job cache                  */
+  const int * default_prio;                 /* default thread priority         */
+  atomic_uint_fast32_t threads_alive;       /* threads currently alive         */
+  atomic_uint_fast32_t threads_working;     /* threads currently working       */
+  pthread_mutex_t mutex;                    /* used for thread count etc       */
+  pthread_cond_t thread_cond;               /* worker thread control condition */
+  pthread_cond_t queue_cond;                /* job queue control condition     */
+  atomic_bool running;                      /* state of pool                   */
 } iot_threadpool_t;
 
-
-static void * iot_threadpool_thread (iot_thread_t * th);
-
-static void iot_jobqueue_fini (iot_jobqueue_t * jobqueue);
-static void iot_jobqueue_push (iot_jobqueue_t * jobqueue, void (*func) (void*), void* arg, const int * prio);
-static void iot_jobqueue_pull_locked (iot_jobqueue_t * jobqueue, iot_job_t * job);
-
-static inline void iot_jobqueue_init (iot_jobqueue_t * jobqueue)
+static void iot_threadpool_pull_locked (iot_threadpool_t * pool, iot_job_t * job)
 {
-  iot_mutex_init (&jobqueue->mutex);
-  pthread_cond_init (&jobqueue->cond, NULL);
-}
-
-/* ========================== THREADPOOL ============================ */
-
-/* Initialise thread pool */
-iot_threadpool_t * iot_threadpool_alloc (uint32_t num_threads, const int * default_prio)
-{
-  iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
-  pool->threads = (iot_thread_t*) calloc (num_threads, sizeof (iot_thread_t));
-  pool->num_threads = num_threads;
-  pool->default_prio = default_prio;
-  iot_mutex_init (&pool->mutex);
-  iot_jobqueue_init (&pool->jobqueue);
-  pthread_cond_init (&pool->cond, NULL);
-  pool->component.start_fn = (iot_component_start_fn_t) iot_threadpool_start;
-  pool->component.stop_fn = (iot_component_stop_fn_t) iot_threadpool_stop;
-
-  return pool;
-}
-
-/* Add work to the thread pool */
-void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void* arg, const int * prio)
-{
-  pthread_mutex_lock (&pool->mutex);
-  if (atomic_load (&pool->running))
+  iot_job_t * first = pool->front;
+  job->function = NULL;
+  if (first)
   {
-    iot_jobqueue_push (&pool->jobqueue, func, arg, prio);
-  }
-  pthread_mutex_unlock (&pool->mutex);
-}
-
-/* Wait until all jobs have finished */
-void iot_threadpool_wait (iot_threadpool_t * pool)
-{
-  pthread_mutex_lock (&pool->mutex);
-  while (atomic_load (&pool->jobqueue.jobs) || atomic_load (&pool->num_threads_working))
-  {
-    pthread_cond_wait (&pool->cond, &pool->mutex);
-  }
-  pthread_mutex_unlock (&pool->mutex);
-}
-
-void iot_threadpool_stop (iot_threadpool_t * pool)
-{
-  pthread_mutex_lock (&pool->mutex);
-  if (pool->component.state != IOT_COMPONENT_STOPPED)
-  {
-    pool->component.state = IOT_COMPONENT_STOPPED;
-    /* Terminate threads, then wait for completion */
-    atomic_store (&pool->running, false);
-  }
-  pthread_mutex_unlock (&pool->mutex);
-  while (atomic_load (&pool->num_threads_alive))
-  {
-    pthread_cond_broadcast (&pool->jobqueue.cond);
-    sleep (1);
-  }
-}
-
-bool iot_threadpool_start (iot_threadpool_t * pool)
-{
-  if (pool->component.state != IOT_COMPONENT_RUNNING)
-  {
-    pool->component.state = IOT_COMPONENT_RUNNING;
-    /* Create and start threads */
-    atomic_store (&pool->running, true);
-
-    for (uint32_t n = 0; n < pool->num_threads; n++)
+    *job = *first;
+    pool->front = first->prev;
+    first->prev = pool->cache;
+    pool->cache = first;
+    if (pool->jobs == pool->max_jobs)
     {
-      iot_thread_t *th = &pool->threads[n];
-      th->pool = pool;
-      th->id = n;
-      iot_thread_create (&th->pthread, (iot_thread_fn_t) iot_threadpool_thread, th, pool->default_prio);
+      pthread_cond_signal (&pool->queue_cond);
+    }
+    if (--pool->jobs == 0) // Queue now empty
+    {
+      pool->front = NULL;
+      pool->rear = NULL;
+    }
+    else // Still jobs in queue, so wake thread
+    {
+      pthread_cond_signal (&pool->thread_cond);
     }
   }
-  pthread_mutex_unlock (&pool->mutex);
-
-  /* Wait for threads to initialize */
-  while (atomic_load (&pool->num_threads_alive) != pool->num_threads)
-  {
-    usleep (100000);
-  }
-  return true;
 }
 
-/* Destroy the threadpool if reference count zero  */
-void iot_threadpool_free (iot_threadpool_t * pool)
-{
-  if (pool)
-  {
-    iot_threadpool_stop (pool);
-    iot_jobqueue_fini (&pool->jobqueue);
-    pthread_cond_destroy (&pool->cond);
-    pthread_mutex_destroy (&pool->mutex);
-    free (pool->threads);
-    free (pool);
-  }
-}
-
-uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool)
-{
-  return (uint32_t) atomic_load (&pool->num_threads_working);
-}
-
-/* ============================ THREAD ============================== */
-
-/* What each thread is doing
+/*
+* Thread entry function. Loops processing jobs until pool is stopped.
 *
-* In principle this is an endless loop. The only time this loop gets interuppted is once
-* iot_threadpool_destroy() is invoked or the program exits.
-*
-* @param  thread        thread that will run this function
-* @return nothing
+* @param  th        thread that will run this function
+* @return NULL
 */
 static void * iot_threadpool_thread (iot_thread_t * th)
 {
@@ -210,17 +104,17 @@ static void * iot_threadpool_thread (iot_thread_t * th)
 
   /* Mark thread as alive (initialized) */
 
-  atomic_fetch_add (&pool->num_threads_alive, 1);
+  atomic_fetch_add (&pool->threads_alive, 1);
   while (atomic_load (&pool->running))
   {
     iot_job_t job;
     /* Read job from queue and execute it */
-    pthread_mutex_lock (&pool->jobqueue.mutex);
-    iot_jobqueue_pull_locked (&pool->jobqueue, &job);
+    pthread_mutex_lock (&pool->mutex);
+    iot_threadpool_pull_locked (pool, &job);
     if (job.function)
     {
-      pthread_mutex_unlock (&pool->jobqueue.mutex);
-      atomic_fetch_add (&pool->num_threads_working, 1);
+      pthread_mutex_unlock (&pool->mutex);
+      atomic_fetch_add (&pool->threads_working, 1);
       /* If required, set thread priority */
       if (job.prio_set && (job.priority != priority))
       {
@@ -230,48 +124,46 @@ static void * iot_threadpool_thread (iot_thread_t * th)
         }
       }
       (job.function) (job.arg);
-      if (atomic_fetch_add (&pool->num_threads_working, -1) <= 1)
+      if (atomic_fetch_add (&pool->threads_working, -1) <= 1)
       {
-        pthread_cond_signal (&pool->cond);
+        pthread_cond_signal (&pool->thread_cond);
       }
     }
     else
     {
-      pthread_cond_wait (&pool->jobqueue.cond, &pool->jobqueue.mutex);
-      pthread_mutex_unlock (&pool->jobqueue.mutex);
+      pthread_cond_wait (&pool->thread_cond, &pool->mutex);
+      pthread_mutex_unlock (&pool->mutex);
     }
   }
-  if (atomic_fetch_add (&pool->num_threads_alive, -1) <= 1)
+  if (atomic_fetch_add (&pool->threads_alive, -1) <= 1)
   {
-    pthread_cond_signal (&pool->cond);
+    pthread_cond_signal (&pool->thread_cond);
   }
   return NULL;
 }
 
-/* ============================ JOB QUEUE =========================== */
-
-static void iot_jobqueue_fini (iot_jobqueue_t * jobqueue)
+iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, const int * default_prio)
 {
-  iot_job_t * job;
-  pthread_mutex_lock (&jobqueue->mutex);
-  while ((job = jobqueue->cache))
-  {
-    jobqueue->cache = job->prev;
-    free (job);
-  }
-  pthread_mutex_unlock (&jobqueue->mutex);
-  pthread_cond_destroy (&jobqueue->cond);
-  pthread_mutex_destroy (&jobqueue->mutex);
+  iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
+  pool->threads = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
+  pool->max_threads = threads;
+  pool->default_prio = default_prio;
+  pool->max_jobs = max_jobs;
+  iot_mutex_init (&pool->mutex);
+  pthread_cond_init (&pool->thread_cond, NULL);
+  pthread_cond_init (&pool->queue_cond, NULL);
+  pool->component.start_fn = (iot_component_start_fn_t) iot_threadpool_start;
+  pool->component.stop_fn = (iot_component_stop_fn_t) iot_threadpool_stop;
+  return pool;
 }
 
-/* Add new job to queue, ordered by priority */
-static void iot_jobqueue_push (iot_jobqueue_t * jobqueue, void (*func) (void*), void * arg, const int * prio)
+/* Add work to the thread pool, ordering job by priority  */
+static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
 {
-  pthread_mutex_lock (&jobqueue->mutex);
-  iot_job_t * job = jobqueue->cache;
+  iot_job_t * job = pool->cache;
   if (job)
   {
-    jobqueue->cache = job->prev;
+    pool->cache = job->prev;
   }
   else
   {
@@ -285,7 +177,7 @@ static void iot_jobqueue_push (iot_jobqueue_t * jobqueue, void (*func) (void*), 
 
   if (job->prio_set)
   {
-    iot_job_t * iter = jobqueue->front;
+    iot_job_t * iter = pool->front;
     iot_job_t * prev = NULL;
     while (iter)
     {
@@ -298,7 +190,7 @@ static void iot_jobqueue_push (iot_jobqueue_t * jobqueue, void (*func) (void*), 
         }
         else
         {
-          jobqueue->front = job;
+          pool->front = job;
         }
         goto added;
       }
@@ -307,45 +199,134 @@ static void iot_jobqueue_push (iot_jobqueue_t * jobqueue, void (*func) (void*), 
     }
   }
 
-  /* Add to back of queue  */
+  /* Add job to back of queue  */
   job->prev = NULL;
-  if (jobqueue->rear)
+  if (pool->rear)
   {
-    jobqueue->rear->prev = job;
+    pool->rear->prev = job;
   }
-  jobqueue->rear = job;
-  if (jobqueue->front == NULL)
+  pool->rear = job;
+  if (pool->front == NULL)
   {
-    jobqueue->front = job;
+    pool->front = job;
   }
 
 added:
 
-  atomic_fetch_add (&jobqueue->jobs, 1);
-  pthread_cond_signal (&jobqueue->cond);
-  pthread_mutex_unlock (&jobqueue->mutex);
+  pool->jobs++;
+  pthread_cond_signal (&pool->thread_cond);
 }
 
-static void iot_jobqueue_pull_locked (iot_jobqueue_t * jobqueue, iot_job_t * job)
+bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
 {
-  iot_job_t * first = jobqueue->front;
-  job->function = NULL;
-  if (first)
+  assert (pool && func);
+  bool ret = false;
+  if (atomic_load (&pool->running))
   {
-    *job = *first;
-    jobqueue->front = first->prev;
-    first->prev = jobqueue->cache;
-    jobqueue->cache = first;
-    if (atomic_fetch_add (&jobqueue->jobs, -1) <= 1) // Queue now empty
+    pthread_mutex_lock (&pool->mutex);
+    if ((pool->max_jobs == 0) || (pool->jobs < pool->max_jobs))
     {
-      jobqueue->front = NULL;
-      jobqueue->rear = NULL;
+      iot_threadpool_add_job_locked (pool, func, arg, prio);
+      ret = true;
     }
-    else // Still jobs in queue
+    pthread_mutex_unlock (&pool->mutex);
+  }
+  return ret;
+}
+
+void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
+{
+  assert (pool && func);
+  if (atomic_load (&pool->running))
+  {
+    pthread_mutex_lock (&pool->mutex);
+    if ((pool->max_jobs > 0 ) && (pool->jobs == pool->max_jobs))
     {
-      pthread_cond_signal (&jobqueue->cond);
+      pthread_cond_wait (&pool->queue_cond, &pool->mutex);
+    }
+    iot_threadpool_add_job_locked (pool, func, arg, prio);
+    pthread_mutex_unlock (&pool->mutex);
+  }
+}
+
+/* Wait until all jobs have finished */
+void iot_threadpool_wait (iot_threadpool_t * pool)
+{
+  pthread_mutex_lock (&pool->mutex);
+  while (pool->jobs || atomic_load (&pool->threads_working))
+  {
+    pthread_cond_wait (&pool->thread_cond, &pool->mutex);
+  }
+  pthread_mutex_unlock (&pool->mutex);
+}
+
+void iot_threadpool_stop (iot_threadpool_t * pool)
+{
+  pthread_mutex_lock (&pool->mutex);
+  if (pool->component.state != IOT_COMPONENT_STOPPED)
+  {
+    pool->component.state = IOT_COMPONENT_STOPPED;
+    /* Terminate threads, then wait for completion */
+    atomic_store (&pool->running, false);
+  }
+  pthread_mutex_unlock (&pool->mutex);
+  while (atomic_load (&pool->threads_alive))
+  {
+    pthread_cond_broadcast (&pool->thread_cond);
+    sleep (1);
+  }
+}
+
+bool iot_threadpool_start (iot_threadpool_t * pool)
+{
+  if (pool->component.state != IOT_COMPONENT_RUNNING)
+  {
+    pool->component.state = IOT_COMPONENT_RUNNING;
+    /* Create and start threads */
+    atomic_store (&pool->running, true);
+
+    for (uint32_t n = 0; n < pool->max_threads; n++)
+    {
+      iot_thread_t *th = &pool->threads[n];
+      th->pool = pool;
+      th->id = n;
+      iot_thread_create (&th->pthread, (iot_thread_fn_t) iot_threadpool_thread, th, pool->default_prio);
     }
   }
+  pthread_mutex_unlock (&pool->mutex);
+
+  /* Wait for threads to initialize */
+  while (atomic_load (&pool->threads_alive) != pool->max_threads)
+  {
+    usleep (100000);
+  }
+  return true;
+}
+
+void iot_threadpool_free (iot_threadpool_t * pool)
+{
+  if (pool)
+  {
+    iot_job_t * job;
+    iot_threadpool_stop (pool);
+    pthread_mutex_lock (&pool->mutex);
+    while ((job = pool->cache))
+    {
+      pool->cache = job->prev;
+      free (job);
+    }
+    pthread_mutex_unlock (&pool->mutex);
+    pthread_cond_destroy (&pool->thread_cond);
+    pthread_cond_destroy (&pool->queue_cond);
+    pthread_mutex_destroy (&pool->mutex);
+    free (pool->threads);
+    free (pool);
+  }
+}
+
+uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool)
+{
+  return (uint32_t) atomic_load (&pool->threads_working);
 }
 
 /* Container support */
@@ -354,9 +335,11 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
 {
   const iot_data_t * value = iot_data_string_map_get (map, "Threads");
   uint32_t threads = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_THREADS_DEFAULT;
+  value = iot_data_string_map_get (map, "MaxJobs");
+  uint32_t jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_JOBS_DEFAULT;
   value = iot_data_string_map_get (map, "Priority");
   int prio = value ? (int) iot_data_i64 (value) : -1;
-  return (iot_component_t*) iot_threadpool_alloc (threads, value ? &prio : NULL);
+  return (iot_component_t*) iot_threadpool_alloc (threads, jobs, value ? &prio : NULL);
 }
 
 const iot_component_factory_t * iot_threadpool_factory (void)

@@ -11,7 +11,7 @@ static iot_scheduler_t * scheduler = NULL;
 static int suite_init (void)
 {
   iot_data_init ();
-  pool = iot_threadpool_alloc (2, NULL);
+  pool = iot_threadpool_alloc (2, 0, NULL);
   scheduler = iot_scheduler_alloc (pool);
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);

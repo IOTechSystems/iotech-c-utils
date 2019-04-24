@@ -97,7 +97,8 @@ static const char * logger_config =
 
 static const char * pool_config =
 "{"
-  "\"Threads\":2"
+  "\"Threads\":2,"
+  "\"MaxJobs\":10"
 "}";
 
 static const char * sched_config =

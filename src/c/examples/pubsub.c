@@ -23,7 +23,7 @@ int main (void)
 {
   time_t stamp;
   iot_data_init ();
-  iot_threadpool_t * pool = iot_threadpool_alloc (4, NULL);
+  iot_threadpool_t * pool = iot_threadpool_alloc (4, 0, NULL);
   iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
   iot_bus_t * bus = iot_bus_alloc (scheduler, pool, 200000);
   iot_bus_sub_alloc (bus, NULL, subscriber_callback, "test/+");
