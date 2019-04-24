@@ -198,36 +198,6 @@ static void iot_bus_topic_free (iot_bus_topic_t * topic)
   free (topic);
 }
 
-static iot_bus_sub_t * iot_bus_find_sub_locked (iot_bus_t * bus, void * self, const char * pattern, iot_bus_sub_t ** prev)
-{
-  iot_bus_sub_t * sub = bus->subscribers;
-  while (sub)
-  {
-    if (sub->self == self && strcmp (sub->pattern, pattern) == 0)
-    {
-      break;
-    }
-    if (prev) *prev = sub;
-    sub = sub->next;
-  }
-  return sub;
-}
-
-static iot_bus_pub_t * iot_bus_find_pub_locked (iot_bus_t * bus, void * self, const char * topic, iot_bus_pub_t ** prev)
-{
-  iot_bus_pub_t * pub = bus->publishers;
-  while (pub)
-  {
-    if (pub->self == self && strcmp (pub->topic->name, topic) == 0)
-    {
-      break;
-    }
-    if (prev) *prev = pub;
-    pub = pub->next;
-  }
-  return pub;
-}
-
 static bool iot_bus_topic_match (const char * topic, const char * pattern)
 {
   bool match = false;
@@ -433,23 +403,19 @@ iot_bus_sub_t * iot_bus_sub_alloc (iot_bus_t * bus, void * self, iot_data_sub_fn
 {
   assert (bus && pattern);
 
+  iot_bus_sub_t * sub = calloc (1, sizeof (*sub));
+  sub->self = self;
+  sub->bus = bus;
+  sub->pattern = iot_strdup (pattern);
+  sub->callback = callback;
   pthread_rwlock_wrlock (&bus->lock);
-  iot_bus_sub_t * sub = iot_bus_find_sub_locked (bus, self, pattern, NULL);
-  if (sub == NULL)
+  if (bus->subscribers)
   {
-    sub = calloc (1, sizeof (*sub));
-    sub->self = self;
-    sub->bus = bus;
-    sub->pattern = iot_strdup (pattern);
-    sub->callback = callback;
-    if (bus->subscribers)
-    {
-      sub->next = bus->subscribers;
-    }
-    atomic_store (&sub->refs, 1);
-    bus->subscribers = sub;
-    iot_bus_match_sub_locked (bus, sub);
+    sub->next = bus->subscribers;
   }
+  atomic_store (&sub->refs, 1);
+  bus->subscribers = sub;
+  iot_bus_match_sub_locked (bus, sub);
   pthread_rwlock_unlock (&bus->lock);
   return sub;
 }
@@ -496,28 +462,24 @@ iot_data_t * iot_bus_sub_pull (iot_bus_sub_t * sub)
 iot_bus_pub_t * iot_bus_pub_alloc (iot_bus_t * bus, void * self, iot_data_pub_cb_fn_t callback, const char * topic_name)
 {
   assert (bus && topic_name);
+  bool existing;
+  iot_bus_pub_t * pub = calloc (1, sizeof (*pub));
+  pub->self = self;
+  pub->bus = bus;
   pthread_rwlock_wrlock (&bus->lock);
-  iot_bus_pub_t * pub = iot_bus_find_pub_locked (bus, self, topic_name, NULL);
-  if (pub == NULL)
+  pub->topic = iot_bus_topic_create_locked (bus, topic_name, false, NULL, &existing);
+  pub->next = bus->publishers;
+  atomic_store (&pub->refs, 1);
+  bus->publishers = pub;
+  if (callback && bus->scheduler)
   {
-    bool existing;
-    pub = calloc (1, sizeof (*pub));
-    pub->self = self;
-    pub->bus = bus;
-    pub->topic = iot_bus_topic_create_locked (bus, topic_name, false, NULL, &existing);
-    pub->next = bus->publishers;
-    atomic_store (&pub->refs, 1);
-    bus->publishers = pub;
-    if (callback && bus->scheduler)
-    {
-      pub->callback = callback;
-      pub->sc = iot_schedule_create (bus->scheduler, (iot_schedule_fn_t) iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
-      iot_schedule_add (bus->scheduler, pub->sc);
-    }
-    if (! existing)
-    {
-      iot_bus_match_pub_locked (bus, pub);
-    }
+    pub->callback = callback;
+    pub->sc = iot_schedule_create (bus->scheduler, (iot_schedule_fn_t) iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
+    iot_schedule_add (bus->scheduler, pub->sc);
+  }
+  if (! existing)
+  {
+    iot_bus_match_pub_locked (bus, pub);
   }
   pthread_rwlock_unlock (&bus->lock);
   return pub;
