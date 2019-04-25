@@ -31,6 +31,9 @@ int main (void)
   printf ("Initialise the scheduler\n");
   iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
 
+  iot_threadpool_start (pool);
+  iot_scheduler_start (scheduler);
+
   /* Create two schedules */
   printf ("Create two schedules\n");
   iot_schedule_t * sched1 = iot_schedule_create (scheduler, testFunc1, NULL, IOT_MS_TO_NS (500), 0, 0, NULL);
