@@ -114,7 +114,8 @@ then
 
   lcov --capture --no-external -d . -b $ROOT/src -o lcov.tmp1
   lcov --remove lcov.tmp1 "*/c/cunit/*" -o lcov.tmp2
-  genhtml -o html lcov.tmp2
+  lcov --remove lcov.tmp2 "*/c/utests/runner/*" -o lcov.tmp3
+  genhtml -o html lcov.tmp3
   gcovr --xml -o cobertura.xml
 
 fi
