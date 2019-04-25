@@ -24,6 +24,15 @@ if ("${CUTILS_LINUX_SYS}" STREQUAL "Alpine")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__LIBMUSL__")
 endif ()
 
+
+find_package (Libpaho REQUIRED)
+if (NOT PAHO_FOUND)
+    message (FATAL_ERROR "LibMbedTls library or header not found")
+endif ()
+set (LINK_LIBRARIES ${PAHO_LIBRARIES})
+
+
+
 # Set default files to compile and libraries
 
 file (GLOB C_FILES "*.c")
@@ -40,6 +49,8 @@ add_subdirectory (examples)
 add_subdirectory (utests)
  
 # Configure installer
+
+target_link_libraries (cutils PUBLIC ${LINK_LIBRARIES})
 
 install (TARGETS cutils LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
 install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION include)
