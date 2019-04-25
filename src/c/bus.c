@@ -479,11 +479,11 @@ void iot_bus_pub_free (iot_bus_pub_t * pub)
   if (pub && atomic_fetch_add (&pub->refs, -1) <= 1)
   {
     pthread_rwlock_t *lock = &pub->bus->lock;
+    pthread_rwlock_wrlock (lock);
     if (pub->sc)
     {
       iot_schedule_remove (pub->bus->scheduler, pub->sc);
     }
-    pthread_rwlock_wrlock (lock);
     iot_bus_pub_free_locked (pub);
     pthread_rwlock_unlock (lock);
   }
