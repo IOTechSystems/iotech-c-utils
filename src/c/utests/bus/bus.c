@@ -57,9 +57,10 @@ static void test_bus_pub_free (void)
 static void test_bus_sub_free (void)
 {
   iot_bus_t * bus = iot_bus_alloc (NULL, NULL, 0);
-  iot_bus_sub_t * sub1 = iot_bus_sub_alloc (bus, NULL, NULL, "utest/topic1");
-  iot_bus_sub_t * sub2 = iot_bus_sub_alloc (bus, NULL, NULL, "utest/topic1");
-  iot_bus_sub_t * sub3 = iot_bus_sub_alloc (bus, NULL, NULL, "utest/topic2");
+  iot_bus_pub_t * pub1 = iot_bus_pub_alloc (bus, NULL, NULL, "utest/topic1");
+  iot_bus_sub_t * sub1 = iot_bus_sub_alloc (bus, NULL, NULL, "utest/+");
+  iot_bus_sub_t * sub2 = iot_bus_sub_alloc (bus, NULL, NULL, "utest/#");
+  iot_bus_sub_t * sub3 = iot_bus_sub_alloc (bus, NULL, NULL, "#");
   iot_bus_sub_free (sub1);
   iot_bus_sub_free (sub2);
   iot_bus_sub_free (sub3);
