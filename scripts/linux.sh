@@ -71,7 +71,7 @@ make package
 
 mkdir -p ${BROOT}/static
 cd ${BROOT}/static
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DCUTILS_BUILD_STATIC=ON $ROOT/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DIOT_BUILD_STATIC=ON $ROOT/src
 make 2>&1 | tee static.log
 make package
 
@@ -99,7 +99,7 @@ then
 
   mkdir -p ${BROOT}/lcov
   cd ${BROOT}/lcov
-  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DCUTILS_BUILD_LCOV=ON $ROOT/src
+  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON $ROOT/src
   make
 
   # Run executables
