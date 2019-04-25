@@ -11,7 +11,7 @@ def checkoutStage (arch)
   deleteDir ()
   cleanWs (cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true)
   checkout scm
-  currentBuild.displayName = "C Utils ${arch}:${env.BUILD_ID}"
+  currentBuild.displayName = "IOT ${arch}:${env.BUILD_ID}"
 }
 
 def buildStage (systems, arch)
