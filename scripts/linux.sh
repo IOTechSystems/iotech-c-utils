@@ -63,7 +63,7 @@ done
 
 mkdir -p ${BROOT}/release
 cd ${BROOT}/release
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release $ROOT/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
 make 2>&1 | tee release.log
 make package
 
@@ -71,7 +71,7 @@ make package
 
 mkdir -p ${BROOT}/static
 cd ${BROOT}/static
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DIOT_BUILD_STATIC=ON $ROOT/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DIOT_BUILD_STATIC=ON ${ROOT}/src
 make 2>&1 | tee static.log
 make package
 
@@ -79,7 +79,7 @@ make package
 
 mkdir -p ${BROOT}/debug
 cd ${BROOT}/debug
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug $ROOT/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
 make 2>&1 | tee debug.log
 
 # Unit tests
@@ -99,7 +99,7 @@ then
 
   mkdir -p ${BROOT}/lcov
   cd ${BROOT}/lcov
-  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON $ROOT/src
+  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON ${ROOT}/src
   make
 
   # Run executables
@@ -112,11 +112,11 @@ then
 
   # Generate coverage html report
 
-  lcov --capture --no-external -d . -b $ROOT/src -o lcov.tmp1
+  lcov --capture --no-external -d . -b ${ROOT}/src -o lcov.tmp1
   lcov --remove lcov.tmp1 "*/c/cunit/*" -o lcov.tmp2
   lcov --remove lcov.tmp2 "*/c/utests/runner/*" -o lcov.tmp3
   genhtml -o html lcov.tmp3
-  gcovr -r $ROOT/src --xml -o cobertura.xml
+  gcovr -r ${ROOT}/src --xml -o cobertura.xml
 
 fi
 
