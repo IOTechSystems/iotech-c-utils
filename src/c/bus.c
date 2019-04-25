@@ -184,20 +184,6 @@ static void iot_bus_pub_free_locked (iot_bus_pub_t * pub)
   free (pub);
 }
 
-static void iot_bus_topic_free (iot_bus_topic_t * topic)
-{
-  iot_bus_sub_match_t * match;
-  while ((match = topic->matches))
-  {
-    topic->matches = match->next;
-    free (match);
-  }
-  free (topic->name);
-  iot_data_free (topic->last);
-  pthread_mutex_destroy (&topic->mutex);
-  free (topic);
-}
-
 static bool iot_bus_topic_match (const char * topic, const char * pattern)
 {
   bool match = false;
@@ -372,7 +358,10 @@ void iot_bus_free (iot_bus_t * bus)
     while ((topic = bus->topics))
     {
       bus->topics = topic->next;
-      iot_bus_topic_free (topic);
+      free (topic->name);
+      iot_data_free (topic->last);
+      pthread_mutex_destroy (&topic->mutex);
+      free (topic);
     }
     pthread_rwlock_destroy (&bus->lock);
     free (bus);
