@@ -7,6 +7,7 @@ static int prio3 = 12;
 
 static iot_threadpool_t * pool = NULL;
 static iot_scheduler_t * scheduler = NULL;
+static uint32_t counter = 0;
 
 static int suite_init (void)
 {
@@ -116,6 +117,27 @@ static void test_bus_no_threads_priority (void)
   iot_bus_free (bus);
 }
 
+static void subscriber_callback (iot_data_t * data, void * self, const char * match)
+{
+  CU_ASSERT (strcmp (match, "utest/data") == 0)
+  counter++;
+}
+
+static void test_bus_async_pub (void)
+{
+  iot_data_t * data = iot_data_alloc_ui32 (0u);
+  iot_bus_t * bus = iot_bus_alloc (scheduler, pool, 200000);
+  iot_bus_start (bus);
+  counter = 0;
+  iot_bus_sub_alloc (bus, NULL, subscriber_callback, "utest/+");
+  iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, NULL, NULL, "utest/data");
+  iot_bus_pub_push (pub, data, false);
+  usleep (100000);
+  CU_ASSERT (counter == 1)
+  iot_bus_stop (bus);
+  iot_bus_free (bus);
+}
+
 void cunit_bus_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("bus", suite_init, suite_clean);
@@ -124,4 +146,5 @@ void cunit_bus_test_init (void)
   CU_add_test (suite, "bus_sub_free", test_bus_sub_free);
   CU_add_test (suite, "bus_no_threads", test_bus_no_threads);
   CU_add_test (suite, "bus_no_threads_priority", test_bus_no_threads_priority);
+  CU_add_test (suite, "bus_async_pub", test_bus_async_pub);
 }
