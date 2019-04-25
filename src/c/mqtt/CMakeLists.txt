@@ -1,0 +1,6 @@
+file (GLOB C_FILES *.c)
+file (GLOB H_FILES "../../../include/svc/*.h")
+add_library (utils_mqtt ${CUTILS_LIB_TYPE} ${C_FILES} ${H_FILES})
+target_link_libraries (utils_mqtt PRIVATE cutils)
+target_include_directories (utils_mqtt PRIVATE ../../../include)
+install (TARGETS utils_mqtt LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)

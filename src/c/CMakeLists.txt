@@ -27,11 +27,9 @@ endif ()
 
 find_package (Libpaho REQUIRED)
 if (NOT PAHO_FOUND)
-    message (FATAL_ERROR "LibMbedTls library or header not found")
+    message (FATAL_ERROR "Libpaho library or header not found")
 endif ()
 set (LINK_LIBRARIES ${PAHO_LIBRARIES})
-
-
 
 # Set default files to compile and libraries
 
@@ -41,16 +39,15 @@ file (GLOB C_FILES "*.c")
 
 add_library (cutils ${CUTILS_LIB_TYPE} ${C_FILES})
 target_include_directories (cutils PRIVATE ../../include)
+target_link_libraries (cutils PUBLIC ${LINK_LIBRARIES})
 
 # Build modules
 
 add_subdirectory (cunit)
 add_subdirectory (examples)
 add_subdirectory (utests)
- 
+add_subdirectory (mqtt)
 # Configure installer
-
-target_link_libraries (cutils PUBLIC ${LINK_LIBRARIES})
 
 install (TARGETS cutils LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
 install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION include)

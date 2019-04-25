@@ -16,8 +16,10 @@
     long time_out;
  }xrt_mqtt_exporter_t;
 
-static void pusher (xrt_mqtt_exporter_t *exporter, iot_data_t *data, const char *match)
+static void pusher (iot_data_t * data, void * self, const char * match)
 {
+  xrt_mqtt_exporter_t *exporter = (xrt_mqtt_exporter_t *)self;
+
   MQTTClient_message pubmsg = MQTTClient_message_initializer;
   MQTTClient_deliveryToken token;
 
@@ -34,13 +36,15 @@ static void pusher (xrt_mqtt_exporter_t *exporter, iot_data_t *data, const char 
   free (json);
 }
 
-static void process_mqtt (xrt_mqtt_exporter_t *p)
+static void process_mqtt (void *p)
 {
-  int topicLength = strlen (p->topic);
-  while (MQTTClient_isConnected (p->client))
+  xrt_mqtt_exporter_t *me = (xrt_mqtt_exporter_t *)p;
+
+  int topicLength = strlen (me->topic);
+  while (MQTTClient_isConnected (me->client))
   {
     MQTTClient_message * message;
-    MQTTClient_receive (p->client, &p->topic, &topicLength, &message, p->time_out);
+    MQTTClient_receive (me->client, &me->topic, &topicLength, &message, me->time_out);
   }
 }
 
