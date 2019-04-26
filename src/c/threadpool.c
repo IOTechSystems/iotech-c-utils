@@ -12,12 +12,6 @@
 #include <sys/prctl.h>
 #endif
 
-#ifdef THPOOL_DEBUG
-#define err(str) fprintf (stderr, str)
-#else
-#define err(str)
-#endif
-
 #define IOT_THREADPOOL_THREADS_DEFAULT 2
 #define IOT_THREADPOOL_JOBS_DEFAULT 0
 
@@ -32,7 +26,7 @@ typedef struct iot_job_t
 
 typedef struct iot_thread_t
 {
-  uint32_t id;                       // Thread number
+  const uint32_t id;                 // Thread number
   pthread_t pthread;                 // Thread id
   struct iot_threadpool_t * pool;    // Thread pool
 } iot_thread_t;
@@ -41,8 +35,8 @@ typedef struct iot_threadpool_t
 {
   iot_component_t component;         // Component base type
   iot_thread_t * threads;            // Array of threads
-  uint32_t max_threads;              // Maximum number of threads
-  uint32_t max_jobs;                 // Maximum number of queued jobs
+  const uint32_t max_threads;        // Maximum number of threads
+  const uint32_t max_jobs;           // Maximum number of queued jobs
   uint32_t jobs;                     // Number of jobs in queue
   uint32_t threads_alive;            // Threads currently alive
   uint32_t threads_working;          // Threads currently working
@@ -143,9 +137,9 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
 {
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
   pool->threads = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
-  pool->max_threads = threads;
+  *(uint32_t*) &pool->max_threads = threads;
+  *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   pool->default_prio = default_prio;
-  pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   iot_mutex_init (&pool->mutex);
   pthread_cond_init (&pool->thread_cond, NULL);
   pthread_cond_init (&pool->queue_cond, NULL);
@@ -154,7 +148,6 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   return pool;
 }
 
-/* Add work to the thread pool, ordering job by priority  */
 static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
 {
   iot_job_t * job = pool->cache;
@@ -282,7 +275,7 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
     {
       iot_thread_t *th = &pool->threads[n];
       th->pool = pool;
-      th->id = n;
+      *(uint32_t*) &th->id = n;
       iot_thread_create (&th->pthread, (iot_thread_fn_t) iot_threadpool_thread, th, pool->default_prio);
     }
     while (pool->threads_alive != pool->max_threads) // Wait for all threads to start
