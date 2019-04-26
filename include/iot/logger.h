@@ -15,7 +15,7 @@ extern "C" {
 
 #define IOT_LOGGER_TYPE "IOT::Logger"
 
-typedef enum iot_loglevel_t { INFO = 0, TRACE, DEBUG, WARNING, ERROR } iot_loglevel_t;
+typedef enum iot_loglevel_t { TRACE = 0, DEBUG, INFO, WARNING, ERROR } iot_loglevel_t;
 typedef struct iot_logger_t iot_logger_t;
 
 /**
