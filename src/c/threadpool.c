@@ -172,7 +172,7 @@ static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func)
   job->prio_set = (prio != NULL);
   job->prev = NULL;
 
-  if (job->prio_set) // Sort job by priority
+  if (job->prio_set) // Order job by priority
   {
     iot_job_t * iter = pool->front;
     iot_job_t * prev = NULL;
@@ -238,20 +238,19 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), voi
   {
     if (pool->jobs == pool->max_jobs)
     {
-      pthread_cond_wait (&pool->queue_cond, &pool->mutex);
+      pthread_cond_wait (&pool->queue_cond, &pool->mutex); // Wait until job processed
     }
     iot_threadpool_add_job_locked (pool, func, arg, prio);
   }
   pthread_mutex_unlock (&pool->mutex);
 }
 
-/* Wait until all jobs have finished */
 void iot_threadpool_wait (iot_threadpool_t * pool)
 {
   pthread_mutex_lock (&pool->mutex);
   while (pool->jobs || pool->threads_working)
   {
-    pthread_cond_wait (&pool->thread_cond, &pool->mutex);
+    pthread_cond_wait (&pool->thread_cond, &pool->mutex); // Wait until all jobs processed
   }
   pthread_mutex_unlock (&pool->mutex);
 }
