@@ -261,7 +261,7 @@ void iot_threadpool_stop (iot_threadpool_t * pool)
   {
     pthread_cond_broadcast (&pool->job_cond);
     pthread_mutex_unlock (&pool->mutex);
-    iot_threadpool_wait (pool);
+    usleep (100000);
     pthread_mutex_lock (&pool->mutex);
   }
   pthread_mutex_unlock (&pool->mutex);
