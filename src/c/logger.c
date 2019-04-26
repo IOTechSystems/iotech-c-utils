@@ -11,7 +11,7 @@
 
 // TODO: allow an array of labels in a log message
 
-static const char * iot_log_levels[5] = {"INFO", "TRACE", "DEBUG", "WARNING", "ERROR"};
+static const char * iot_log_levels[5] = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
 
 typedef struct iot_logger_list
 {
