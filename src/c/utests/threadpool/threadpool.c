@@ -74,7 +74,6 @@ static void cunit_threadpool_priority (void)
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, &prio2);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio3, &prio3);
   iot_threadpool_wait (pool);
-  CU_ASSERT (iot_threadpool_num_threads_working (pool) == 0u)
   iot_threadpool_free (pool);
 }
 

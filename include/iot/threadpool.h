@@ -90,14 +90,6 @@ extern void iot_threadpool_stop (iot_threadpool_t * pool);
  */
 extern void iot_threadpool_free (iot_threadpool_t * pool);
 
-/**
- * @brief Show currently working threads
- *
- * @param pool       the pool of interest
- * @return uint32_t  the number of threads working
- */
-extern uint32_t iot_threadpool_num_threads_working (iot_threadpool_t * pool);
-
 /* Threadpool factory */
 
 extern const iot_component_factory_t * iot_threadpool_factory (void);
