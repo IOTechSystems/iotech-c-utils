@@ -5,28 +5,25 @@
 #include <string.h>
 #include <MQTTClient.h>
 
-
- typedef struct xrt_mqtt_exporter_t
- {
-    MQTTClient client;
-    char * topic;
-    iot_bus_sub_t * sub;
-    iot_threadpool_t * thpool;
-    int message_schematics;
-    long time_out;
- }xrt_mqtt_exporter_t;
-
-static void pusher (iot_data_t * data, void * self, const char * match)
+static MQTTClient_message common_push (iot_data_t * data, void * self, const char * match, char *json)
 {
   xrt_mqtt_exporter_t *exporter = (xrt_mqtt_exporter_t *)self;
-
   MQTTClient_message pubmsg = MQTTClient_message_initializer;
-  MQTTClient_deliveryToken token;
 
-  char *json = iot_data_to_json (data, true);
+  json = iot_data_to_json (data, true);
   pubmsg.payload = json;
   pubmsg.qos = exporter->message_schematics;
   pubmsg.retained = 0;
+
+  return pubmsg;
+}
+
+static void push_bus (iot_data_t * data, void * self, const char * match)
+{
+  xrt_mqtt_exporter_t *exporter = (xrt_mqtt_exporter_t *)self;
+  char * json = NULL;
+  MQTTClient_message pubmsg = common_push (data, self, match, json);
+  MQTTClient_deliveryToken token;
 
   MQTTClient_publishMessage (exporter->client, exporter->topic, &pubmsg, &token);
   if (MQTTClient_waitForCompletion (exporter->client, token, exporter->time_out) != MQTTCLIENT_SUCCESS)
@@ -35,6 +32,28 @@ static void pusher (iot_data_t * data, void * self, const char * match)
   }
   free (json);
 }
+
+void push_topic (iot_data_t * data, void * self, const char * match, char * topic)
+{
+  xrt_mqtt_exporter_t *exporter = (xrt_mqtt_exporter_t *)self;
+
+  char * json = NULL;
+  MQTTClient_message pubmsg = MQTTClient_message_initializer;
+  MQTTClient_deliveryToken token;
+
+  json = iot_data_to_json (data, true);
+  pubmsg.payload = json;
+  pubmsg.qos = exporter->message_schematics;
+  pubmsg.retained = 0;
+
+  MQTTClient_publishMessage (exporter->client, topic, &pubmsg, &token);
+  if (MQTTClient_waitForCompletion (exporter->client, token, exporter->time_out) != MQTTCLIENT_SUCCESS)
+  {
+    printf ("mqtt: error publishing: %d\n", token);
+  }
+  free (json);
+}
+
 
 static void process_mqtt (void *p)
 {
@@ -48,40 +67,45 @@ static void process_mqtt (void *p)
   }
 }
 
-xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (  iot_bus_t *pubsub,  const char *match, const char *address, const char *client_id, const char * username, const char * password, const char *topic, const int keept_alive_interval, const long time_out,
-  const int message_schematics, const int persistance_type, char* const* server_uri)
+xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (iot_bus_t *pubsub, const char *match, const char *address, const char *client_id,
+                         const char *username, const char *password, const char *topic, int keept_alive_interval, long time_out,
+                         const int message_schematics, const int persistance_type, char *const *server_uri)
 {
-  xrt_mqtt_exporter_t * state = calloc (1, sizeof (xrt_mqtt_exporter_t));
+  xrt_mqtt_exporter_t *state = calloc (1, sizeof (xrt_mqtt_exporter_t));
 
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-  MQTTClient_create (state->client, address, client_id, persistance_type, NULL);
+  if (MQTTClient_create (&state->client, address, client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL) != MQTTCLIENT_SUCCESS){
+    exit (0);
+  }
   conn_opts.username = username;
   conn_opts.password = password;
-  conn_opts.keepAliveInterval = keept_alive_interval;
-  conn_opts.connectTimeout = time_out;
+  conn_opts.keepAliveInterval = 20;
   conn_opts.cleansession = 1;
+  conn_opts.connectTimeout = time_out;
   conn_opts.serverURIs = server_uri;
 
   int rc;
   for (unsigned i = 0; i < MAX_RETRIES; ++i)
   {
-    if ((rc = MQTTClient_connect(state->client, &conn_opts)) != MQTTCLIENT_SUCCESS)
+    if ((rc = MQTTClient_connect (state->client, &conn_opts)) != MQTTCLIENT_SUCCESS)
     {
       sleep (CONNECT_TIMEOUT);
-      printf("Failed to connect, return code %d\n", rc);
+      printf ("Failed to connect, return code %d\n", rc);
     }
     else
     {
+      printf ("Conn");
+
       break;
     }
   }
 
   if (MQTTClient_isConnected (state->client))
   {
+    printf ("Main");
     state->message_schematics = message_schematics;
     state->topic = iot_strdup (topic);
-    state->sub = iot_bus_sub_alloc (pubsub, state, pusher, match);
-
+    state->sub = iot_bus_sub_alloc (pubsub, state, push_bus, match);
     state->thpool = iot_threadpool_alloc (1, NULL);
     iot_threadpool_add_work (state->thpool, process_mqtt, state, NULL);
   }
