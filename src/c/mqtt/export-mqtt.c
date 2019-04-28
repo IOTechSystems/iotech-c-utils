@@ -5,6 +5,34 @@
 #include <string.h>
 #include <MQTTClient.h>
 
+struct mqtt_info {
+    iot_bus_t * pubsub,
+    const char * match,
+    const char * address,
+    const char * client_id,
+    const char * username,
+    const char * password,
+    const char * topic,
+    int keep_alive_interval,
+    long time_out,
+    int message_schematics,
+    int persistance_type,
+    char * const * server_uri;
+};
+
+struct mqtt_ssl_info {
+    const char * trust_store,
+    const char * key_store,
+    const char * private_key,
+    const char * private_key_password,
+    const char * enabled_cipher_suites,
+    int enable_server_cert_auth,
+    int ssl_version,
+    int verify,
+    const char * ca_path,
+    void * ssl_error_context;
+};
+
 static MQTTClient_message common_push (iot_data_t * data, void * self, const char * match, char *json)
 {
   xrt_mqtt_exporter_t *exporter = (xrt_mqtt_exporter_t *)self;
@@ -67,22 +95,27 @@ static void process_mqtt (void *p)
   }
 }
 
-xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (iot_bus_t *pubsub, const char *match, const char *address, const char *client_id,
-                         const char *username, const char *password, const char *topic, int keept_alive_interval, long time_out,
-                         const int message_schematics, const int persistance_type, char *const *server_uri)
+static xrt_mqtt_exporter_t * xrt_mqtt_exporter__common_alloc (iot_bus_t *pubsub, struct mqtt_info mqtt)
 {
-  xrt_mqtt_exporter_t *state = calloc (1, sizeof (xrt_mqtt_exporter_t));
+    xrt_mqtt_exporter_t *state = calloc (1, sizeof (xrt_mqtt_exporter_t));
 
-  MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-  if (MQTTClient_create (&state->client, address, client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL) != MQTTCLIENT_SUCCESS){
-    exit (0);
-  }
-  conn_opts.username = username;
-  conn_opts.password = password;
-  conn_opts.keepAliveInterval = 20;
-  conn_opts.cleansession = 1;
-  conn_opts.connectTimeout = time_out;
-  conn_opts.serverURIs = server_uri;
+    MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+    if (MQTTClient_create (&state->client, mqtt.address, mqtt.client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL) != MQTTCLIENT_SUCCESS){
+        exit (0);
+    }
+    conn_opts.username = mqtt.username;
+    conn_opts.password = mqtt.password;
+    conn_opts.keepAliveInterval = mqtt.keep_alive_interval;
+    conn_opts.cleansession = 1;
+    conn_opts.connectTimeout = mqtt.time_out;
+    conn_opts.serverURIs = mqtt.time_out;
+
+    return state;
+}
+
+xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (iot_bus_t *pubsub, struct mqtt_info mqtt)
+{
+  xrt_mqtt_exporter_t *state = xrt_mqtt_exporter__common_alloc (pubsub, mqtt);
 
   int rc;
   for (unsigned i = 0; i < MAX_RETRIES; ++i)
@@ -116,6 +149,55 @@ xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (iot_bus_t *pubsub, const char *ma
   }
 
   return state;
+}
+
+extern xrt_mqtt_exporter_t * xrt_mqtt_exporter_ssl_alloc (iot_bus_t *pubsub, struct mqtt_info, struct mqtt_ssl_info)
+{
+    xrt_mqtt_exporter_t *state = xrt_mqtt_exporter__common_alloc (pubsub, mqtt);
+
+    MQTTClient_SSLOptions ssl_options = MQTTClient_SSLOptions_initializer;
+    ssl_options.trustStore = mqtt_ssl_info.trust_store;
+    ssl_options.keyStore =  mqtt_ssl_info.key_store;
+    ssl_options.privateKey =  mqtt_ssl_info.privateKey;
+    ssl_options.privateKeyPassword = mqtt_ssl_info.private_key_password;
+    ssl_options.enabledCipherSuites = mqtt_ssl_info.enabled_cipher_suites;
+    ssl_options.enableServerCertAuth = mqtt_ssl_info.enabled_server_cert_auth;
+    ssl_options.sslVersion = mqtt_ssl_info.ssl_version;
+    ssl_options.verify = mqtt_ssl_info.verify;
+    ssl_options.CApath = mqtt_ssl_info.ca_path;
+
+    int rc;
+    for (unsigned i = 0; i < MAX_RETRIES; ++i)
+    {
+        if ((rc = MQTTClient_connect (state->client, &ssl_options)) != MQTTCLIENT_SUCCESS)
+        {
+            sleep (CONNECT_TIMEOUT);
+            printf ("Failed to connect, return code %d\n", rc);
+        }
+        else
+        {
+            printf ("Conn");
+
+            break;
+        }
+    }
+
+    if (MQTTClient_isConnected (state->client))
+    {
+        printf ("Main");
+        state->message_schematics = message_schematics;
+        state->topic = iot_strdup (topic);
+        state->sub = iot_bus_sub_alloc (pubsub, state, push_bus, match);
+        state->thpool = iot_threadpool_alloc (1, NULL);
+        iot_threadpool_add_work (state->thpool, process_mqtt, state, NULL);
+    }
+    else
+    {
+        free (state);
+        state = NULL;
+    }
+
+    return state;
 }
 
 void xrt_mqtt_exporter_free (xrt_mqtt_exporter_t * state)
