@@ -13,3 +13,7 @@ target_link_libraries (pubsub PRIVATE cutils)
 add_executable (container container.c)
 target_include_directories (container PRIVATE ../../../include)
 target_link_libraries (container PRIVATE cutils)
+
+add_executable (mqtt mqtt.c)
+target_include_directories (mqtt PRIVATE ../../../include)
+target_link_libraries (mqtt PRIVATE cutils utils_mqtt)
