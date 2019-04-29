@@ -23,6 +23,7 @@ typedef struct iot_logger_list
 struct iot_logger_t
 {
   iot_component_t component;
+  iot_loglevel_t level;
   char *subsystem;
   iot_logger_list *loggers;
   pthread_mutex_t lock;
@@ -122,6 +123,11 @@ static time_t time (time_t *t)
 
 static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t l, const char *fmt, va_list ap)
 {
+  if (l < logger->level)
+  {
+    return;
+  }
+
   char str [1024];
   bool ok = false;
   time_t created = time (NULL);
@@ -145,11 +151,23 @@ static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t l, const char *
   }
 }
 
+void iot_logger_setlevel (iot_logger_t *logger, iot_loglevel_t l)
+{
+  logger->level = l;
+}
+
+const char *iot_logger_levelname (iot_loglevel_t l)
+{
+  assert (l >= TRACE && l <= ERROR);
+  return iot_log_levels[l];
+}
+
 iot_logger_t * iot_logger_alloc (const char * subsystem)
 {
   iot_logger_t * logger;
   logger = calloc (1, sizeof (iot_logger_t));
   logger->subsystem = iot_strdup (subsystem);
+  logger->level = TRACE;
   logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
   logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
   pthread_mutex_init (&logger->lock, NULL);
