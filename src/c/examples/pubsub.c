@@ -73,7 +73,6 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters)
   }
 
   // Finally delete sampleutests/threadpool/threadpool.h
-
   iot_data_free (map);
 }
 

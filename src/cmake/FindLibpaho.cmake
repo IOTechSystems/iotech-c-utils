@@ -1,5 +1,5 @@
 #include headers
-find_path(PAHO_INCLUDE_DIR NAMES /usr/local/include/MQTTClient.h)
+find_path(PAHO_INCLUDE_DIR NAMES MQTTClient.h)
 #find .so files, .a files.
 find_library(PAHO_LIBRARY NAMES paho-mqtt3c )
 
