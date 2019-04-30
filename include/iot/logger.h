@@ -73,6 +73,14 @@ extern void iot_log_debug (iot_logger_t * logger, const char * fmt, ...);
 extern void iot_log_warning (iot_logger_t * logger, const char * fmt, ...);
 extern void iot_log_error (iot_logger_t * logger, const char * fmt, ...);
 
+/* Set log level */
+
+extern void iot_logger_setlevel (iot_logger_t *logger, iot_loglevel_t newlevel);
+
+/* Get name of log level */
+
+extern const char * iot_logger_levelname (iot_loglevel_t level);
+
 /* Logger factory */
 
 extern const iot_component_factory_t * iot_logger_factory (void);
