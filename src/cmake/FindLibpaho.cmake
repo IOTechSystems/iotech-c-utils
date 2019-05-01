@@ -1,7 +1,8 @@
 #include headers
-find_path(PAHO_INCLUDE_DIR NAMES MQTTClient.h)
 #find .so files, .a files.
-find_library(PAHO_LIBRARY NAMES paho-mqtt3c )
+find_library(PAHO_LIBRARY NAMES paho-mqtt3cs )
+find_path(PAHO_INCLUDE_DIR NAMES MQTTClient.h)
+
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PAHO DEFAULT_MSG PAHO_LIBRARY PAHO_INCLUDE_DIR)

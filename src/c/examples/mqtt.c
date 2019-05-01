@@ -4,13 +4,14 @@
 #include <MQTTClient.h>
 
 #define ARRAY_SIZE 3
-#define broker_add "54.171.53.113:13939"
 #define PUB_ITERS 10
+#define broker_address "ssl://localhost:8883"
 
 
 static iot_data_t * publisher_callback (void * self);
 static void publish (iot_bus_pub_t * pub, uint32_t iters);
 void init_info_mqtt (struct mqtt_info * mqtt);
+void init_info_mqtt_ssl (struct mqtt_ssl_info * ssl_info);
 
 int main (void)
 {
@@ -22,13 +23,16 @@ int main (void)
 
   iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, NULL, publisher_callback, "test/tube");
   struct mqtt_info mqtt;
+  struct mqtt_ssl_info ssl;
   init_info_mqtt (&mqtt);
-  xrt_mqtt_exporter_t *  mqttExporter = xrt_mqtt_exporter_alloc (mqtt, bus);
+  init_info_mqtt_ssl (&ssl);
+  //xrt_mqtt_exporter_t *  mqttExporter = xrt_mqtt_exporter_alloc (mqtt, bus, false);
+  xrt_mqtt_exporter_t *  mqttExporter = xrt_mqtt_exporter_ssl_alloc (mqtt, ssl, bus, false);
 
   iot_threadpool_start (thread_pool);
   iot_scheduler_start (scheduler);
   iot_bus_start (bus);
-
+  xrt_mqtt_exporter_start (mqttExporter);
 
   publish (pub, PUB_ITERS);
   sleep (5);
@@ -36,6 +40,8 @@ int main (void)
   iot_bus_stop (bus);
   iot_scheduler_stop (scheduler);
   iot_threadpool_stop (thread_pool);
+  xrt_mqtt_exporter_stop (mqttExporter);
+
   xrt_mqtt_exporter_free (mqttExporter);
   iot_bus_free (bus);
   iot_scheduler_free (scheduler);
@@ -47,18 +53,29 @@ int main (void)
 
 void init_info_mqtt (struct mqtt_info * mqtt)
 {
-  mqtt->address = broker_add;
-  mqtt->topic = "test/";
-  mqtt->username = "hsfunheq";
-  mqtt->password = "6n5OVDPYRnCr";
-  mqtt->client_id = "clientid";
-  mqtt->keep_alive_interval = 500;
-  mqtt->time_out = 5000;
+  mqtt->address = broker_address;
+  mqtt->topic = "test";
+  mqtt->username = "";
+  mqtt->password = "";
+  mqtt->client_id = "JD";
+  mqtt->keep_alive_interval = 20;
+  mqtt->time_out = 10000L;
   mqtt->message_schematics = 1;
-  mqtt->persistance_type = MQTTCLIENT_PERSISTENCE_DEFAULT;
-  mqtt->server_uri = NULL;
-  mqtt->match = "#";
+  mqtt->persistance_type = MQTTCLIENT_PERSISTENCE_NONE;
+  mqtt->match = "test/#";
 }
+
+void init_info_mqtt_ssl (struct mqtt_ssl_info * ssl_info)
+{
+  ssl_info->trust_store = "/home/jordan/CLionProjects/iotech-c-utils-2/src/c/examples/cacert.pem";
+  //key and cert in one file.
+  ssl_info->key_store = "/home/jordan/CLionProjects/iotech-c-utils-2/src/c/examples/localhost.pem";
+  ssl_info->private_key_password = "";
+  ssl_info->enable_server_cert_auth = 1;
+  ssl_info->ssl_version = MQTT_SSL_VERSION_TLS_1_2;
+  ssl_info->enabled_cipher_suites = "ALL";
+}
+
 
 static void publish (iot_bus_pub_t * pub, uint32_t iters)
 {
@@ -82,7 +99,6 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters)
     iot_bus_pub_push (pub, map, false);
   }
 
-  // Finally delete sampleutests/threadpool/threadpool.h
   iot_data_free (map);
 }
 
