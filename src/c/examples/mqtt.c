@@ -54,7 +54,7 @@ int main (void)
 void init_info_mqtt (struct mqtt_info * mqtt)
 {
   mqtt->address = broker_address;
-  mqtt->topic = "test";
+  mqtt->topic_export = "test";
   mqtt->username = "";
   mqtt->password = "";
   mqtt->client_id = "JD";
@@ -62,7 +62,7 @@ void init_info_mqtt (struct mqtt_info * mqtt)
   mqtt->time_out = 10000L;
   mqtt->message_schematics = 1;
   mqtt->persistance_type = MQTTCLIENT_PERSISTENCE_NONE;
-  mqtt->match = "test/#";
+  mqtt->match = "#";
 }
 
 void init_info_mqtt_ssl (struct mqtt_ssl_info * ssl_info)

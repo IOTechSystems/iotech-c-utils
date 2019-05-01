@@ -17,3 +17,7 @@ target_link_libraries (container PRIVATE cutils)
 add_executable (mqtt mqtt.c)
 target_include_directories (mqtt PRIVATE ../../../include)
 target_link_libraries (mqtt PRIVATE cutils utils_mqtt)
+
+add_executable (mqttsub mqttsubconf.c)
+target_include_directories (mqttsub PRIVATE ../../../include)
+target_link_libraries (mqttsub PRIVATE cutils utils_mqtt)

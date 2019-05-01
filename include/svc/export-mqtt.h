@@ -19,8 +19,9 @@ struct mqtt_info {
   const char * client_id;
   const char * username;
   const char * password;
-  const char * topic;
+  const char * topic_export;
   const char * match;
+  const char * match_pub;
 };
 
 struct mqtt_ssl_info {
@@ -38,7 +39,7 @@ extern void xrt_mqtt_exporter_stop (xrt_mqtt_exporter_t * state);
 extern void xrt_mqtt_exporter_free (xrt_mqtt_exporter_t * state);
 
 /* alloc functions, each alloc will sub to a bus topic, set bool here to sub to a topic enabled for communication. Once a topic has been picked up it is then allocated for use */
-xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (struct mqtt_info mqtt, iot_bus_t * iot_bus, bool sub_to_topic_config);
+extern xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (struct mqtt_info mqtt, iot_bus_t * iot_bus, bool sub_to_topic_config);
 extern xrt_mqtt_exporter_t * xrt_mqtt_exporter_ssl_alloc (struct mqtt_info mqtt, struct mqtt_ssl_info mqtt_ssl, iot_bus_t * bus,  bool sub_to_topic_config);
 
 
