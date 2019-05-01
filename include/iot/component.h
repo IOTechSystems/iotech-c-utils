@@ -15,8 +15,10 @@ typedef struct iot_component_factory_t iot_component_factory_t;
 
 typedef enum
 {
-  IOT_COMPONENT_STOPPED = 0,
-  IOT_COMPONENT_RUNNING
+  IOT_COMPONENT_INITIAL = 0,
+  IOT_COMPONENT_STOPPED,
+  IOT_COMPONENT_RUNNING,
+  IOT_COMPONENT_DELETED
 }
 iot_component_state_t;
 
