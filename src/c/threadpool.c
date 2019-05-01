@@ -38,8 +38,8 @@ typedef struct iot_threadpool_t
   const uint32_t max_threads;        // Maximum number of threads
   const uint32_t max_jobs;           // Maximum number of queued jobs
   uint32_t jobs;                     // Number of jobs in queue
-  uint32_t threads;                  // Threads currently alive
-  uint32_t working;                    // Threads currently working
+  uint32_t threads;                  // Number of threads
+  uint32_t working;                  // Number of threads currently working
   iot_job_t * front;                 // Pointer to front of job queue
   iot_job_t * rear;                  // Pointer to rear of job queue
   iot_job_t * cache;                 // Free job cache
@@ -50,37 +50,10 @@ typedef struct iot_threadpool_t
   pthread_cond_t queue_cond;         // Job queue control condition
 } iot_threadpool_t;
 
-static void iot_threadpool_pull_locked (iot_threadpool_t * pool, iot_job_t * job)
-{
-  iot_job_t * first = pool->front;
-  job->function = NULL;
-  if (first)
-  {
-    *job = *first;
-    pool->front = first->prev;
-    first->prev = pool->cache;
-    pool->cache = first;
-    if (pool->jobs == pool->max_jobs)
-    {
-      pthread_cond_broadcast (&pool->queue_cond); // Signal now space in job queue
-    }
-    if (--pool->jobs == 0)
-    {
-      pthread_cond_signal (&pool->thread_cond); // Signal no jobs in queue
-      pool->front = NULL;
-      pool->rear = NULL;
-    }
-    else
-    {
-      pthread_cond_signal (&pool->job_cond); // Signal jobs in queue
-    }
-  }
-}
-
 /*
 * Thread entry function. Loops processing jobs until pool is stopped.
 *
-* @param  th        thread that will run this function
+* @param  th        thread running this function
 * @return NULL
 */
 static void * iot_threadpool_thread (iot_thread_t * th)
@@ -102,10 +75,23 @@ static void * iot_threadpool_thread (iot_thread_t * th)
   }
   while (pool->component.state == IOT_COMPONENT_RUNNING)
   {
-    iot_job_t job;
-    iot_threadpool_pull_locked (pool, &job); // Pull job from queue
-    if (job.function)
+    iot_job_t * first = pool->front;
+    if (first) // Pull job from queue
     {
+      iot_job_t job = *first;
+      pool->front = first->prev;
+      first->prev = pool->cache;
+      pool->cache = first;
+      if (--pool->jobs == 0)
+      {
+        pool->front = NULL;
+        pool->rear = NULL;
+        pthread_cond_signal (&pool->thread_cond); // Signal no jobs in queue
+      }
+      if ((pool->jobs + 1) == pool->max_jobs)
+      {
+        pthread_cond_broadcast (&pool->queue_cond); // Signal now space in job queue
+      }
       pool->working++;
       pthread_mutex_unlock (&pool->mutex);
       if (job.prio_set && (job.priority != priority)) // If required, set thread priority
