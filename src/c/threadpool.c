@@ -39,7 +39,6 @@ typedef struct iot_threadpool_t
   const uint32_t max_threads;        // Maximum number of threads
   const uint32_t max_jobs;           // Maximum number of queued jobs
   uint32_t jobs;                     // Number of jobs in queue
-  uint32_t threads;                  // Number of threads
   uint32_t working;                  // Number of threads currently working
   iot_job_t * front;                 // Pointer to front of job queue
   iot_job_t * rear;                  // Pointer to rear of job queue
