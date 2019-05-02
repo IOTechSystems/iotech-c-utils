@@ -1,10 +1,8 @@
 //
-// Copyright (c) 2019
-// IoTech
+// Copyright (c) 2019 IoTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-
 #include "iot/os.h"
 #include "iot/data.h"
 #include "iot/json.h"

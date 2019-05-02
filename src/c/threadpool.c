@@ -3,7 +3,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-
 #include "iot/threadpool.h"
 #include "iot/thread.h"
 #include "iot/data.h"

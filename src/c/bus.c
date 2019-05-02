@@ -1,10 +1,8 @@
 //
-// Copyright (c) 2019
-// IoTech
+// Copyright (c) 2019 IoTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-
 #include "iot/scheduler.h"
 #include "iot/bus.h"
 #include "iot/container.h"

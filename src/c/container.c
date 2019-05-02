@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2019 IoTech
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 #include "iot/container.h"
 #include "iot/data.h"
 #include "iot/logger.h"

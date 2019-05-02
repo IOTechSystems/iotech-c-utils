@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2019 IoTech
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 #include "iot/thread.h"
 
 #ifdef __ZEPHYR__
