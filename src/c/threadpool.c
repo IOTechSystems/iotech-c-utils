@@ -272,8 +272,8 @@ void iot_threadpool_free (iot_threadpool_t * pool)
   if (pool)
   {
     iot_job_t * job;
-    iot_threadpool_stop (pool);
     iot_threadpool_wait (pool);
+    iot_threadpool_stop (pool);
     pthread_mutex_lock (&pool->mutex);
     pool->component.state = IOT_COMPONENT_DELETED;
     pthread_cond_broadcast (&pool->state_cond);
