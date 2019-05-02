@@ -14,6 +14,7 @@
 
 #define IOT_THREADPOOL_THREADS_DEFAULT 2
 #define IOT_THREADPOOL_JOBS_DEFAULT 0
+#define IOT_THREADPOOL_SHUTDOWN_DELAY 200000
 
 typedef struct iot_job_t
 {
@@ -281,18 +282,13 @@ void iot_threadpool_free (iot_threadpool_t * pool)
     iot_threadpool_stop_locked (pool);
     pool->component.state = IOT_COMPONENT_DELETED;
     pthread_cond_broadcast (&pool->state_cond);
-    while (pool->threads)
-    {
-      pthread_mutex_unlock (&pool->mutex);
-      usleep (100000);
-      pthread_mutex_lock (&pool->mutex);
-    }
     while ((job = pool->cache))
     {
       pool->cache = job->prev;
       free (job);
     }
     pthread_mutex_unlock (&pool->mutex);
+    usleep (IOT_THREADPOOL_SHUTDOWN_DELAY);
     pthread_cond_destroy (&pool->thread_cond);
     pthread_cond_destroy (&pool->queue_cond);
     pthread_cond_destroy (&pool->job_cond);
