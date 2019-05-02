@@ -52,7 +52,6 @@ static void cunit_pool_counter (void * arg)
   counter++;
 }
 
-
 static void cunit_pool_prio_worker (void * arg)
 {
   int prio = *((int*) arg);

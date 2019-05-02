@@ -51,12 +51,6 @@ typedef struct iot_threadpool_t
   pthread_cond_t state_cond;         // Service state control condition
 } iot_threadpool_t;
 
-/*
-* Thread entry function. Loops processing jobs until pool is stopped.
-*
-* @param  th        thread running this function
-* @return NULL
-*/
 static void * iot_threadpool_thread (iot_thread_t * th)
 {
   iot_threadpool_t * pool = th->pool;
@@ -229,27 +223,37 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), voi
   pthread_mutex_unlock (&pool->mutex);
 }
 
-void iot_threadpool_wait (iot_threadpool_t * pool)
+static inline void iot_threadpool_wait_locked (iot_threadpool_t * pool)
 {
-  assert (pool);
-  pthread_mutex_lock (&pool->mutex);
   while (pool->jobs || pool->working)
   {
     pthread_cond_wait (&pool->thread_cond, &pool->mutex); // Wait until all jobs processed
   }
-  pthread_mutex_unlock (&pool->mutex);
 }
 
-void iot_threadpool_stop (iot_threadpool_t * pool)
+void iot_threadpool_wait (iot_threadpool_t * pool)
 {
   assert (pool);
   pthread_mutex_lock (&pool->mutex);
+  iot_threadpool_wait_locked (pool);
+  pthread_mutex_unlock (&pool->mutex);
+}
+
+static inline void iot_threadpool_stop_locked (iot_threadpool_t * pool)
+{
   if (pool->component.state != IOT_COMPONENT_STOPPED)
   {
     pool->component.state = IOT_COMPONENT_STOPPED;
     pthread_cond_broadcast (&pool->state_cond);
     pthread_cond_broadcast (&pool->job_cond);
   }
+}
+
+void iot_threadpool_stop (iot_threadpool_t * pool)
+{
+  assert (pool);
+  pthread_mutex_lock (&pool->mutex);
+  iot_threadpool_stop_locked (pool);
   pthread_mutex_unlock (&pool->mutex);
 }
 
@@ -272,14 +276,13 @@ void iot_threadpool_free (iot_threadpool_t * pool)
   if (pool)
   {
     iot_job_t * job;
-    iot_threadpool_wait (pool);
-    iot_threadpool_stop (pool);
     pthread_mutex_lock (&pool->mutex);
+    iot_threadpool_wait_locked (pool);
+    iot_threadpool_stop_locked (pool);
     pool->component.state = IOT_COMPONENT_DELETED;
     pthread_cond_broadcast (&pool->state_cond);
     while (pool->threads)
     {
-      pthread_cond_broadcast (&pool->job_cond);
       pthread_mutex_unlock (&pool->mutex);
       usleep (100000);
       pthread_mutex_lock (&pool->mutex);
