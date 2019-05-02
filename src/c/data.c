@@ -169,11 +169,11 @@ static bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 
 void iot_data_init (void)
 {
-  assert (sizeof (iot_data_value_t) <= IOT_DATA_BLOCK_SIZE);
-  assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE);
-  assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE);
-  assert (sizeof (iot_data_blob_t) <= IOT_DATA_BLOCK_SIZE);
-  assert (sizeof (iot_data_pair_t) <= IOT_DATA_BLOCK_SIZE);
+  _Static_assert (sizeof (iot_data_value_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_blob_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_pair_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
 #else

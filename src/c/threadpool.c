@@ -58,7 +58,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
 
 #if defined (__linux__)
   char thread_name[64];
-  sprintf (thread_name, "thread-pool-%u", th->id);
+  snprintf (thread_name, sizeof (thread_name), "thread-pool-%u", th->id);
   prctl (PR_SET_NAME, thread_name);
 #endif
 
