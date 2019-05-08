@@ -210,12 +210,9 @@ static bool iot_bus_topic_match (const char * topic, const char * pattern)
       match = true;
       break;
     }
-    if (*ptok != '+') // Single level wildcard
+    if ((*ptok != '+') && (strcmp (ttok, ptok) != 0)) // Single level wildcard
     {
-      if (strcmp (ttok, ptok) != 0)
-      {
-        break;
-      }
+      break;
     }
     ptok = NULL;
     ttok = NULL;
