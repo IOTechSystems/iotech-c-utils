@@ -552,10 +552,6 @@ static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_
   iot_scheduler_t * scheduler = (iot_scheduler_t*) iot_container_find (cont, name);
   name = iot_data_string_map_get_string (map, "ThreadPool");
   iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find (cont, name);
-  if ((pool == NULL) && scheduler)
-  {
-    pool = iot_scheduler_thread_pool (scheduler);
-  }
   iot_bus_t * bus = iot_bus_alloc (scheduler, pool, interval);
   value = iot_data_string_map_get (map, "Topics");
   if (value)
