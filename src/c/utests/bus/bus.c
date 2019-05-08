@@ -131,6 +131,7 @@ static void test_bus_async_pub (void)
   counter = 0;
   iot_bus_sub_alloc (bus, NULL, subscriber_callback, "utest/+/test");
   iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, NULL, NULL, "utest/data/test");
+  iot_bus_pub_alloc (bus, NULL, NULL, "utest/data/tube");
   iot_bus_pub_push (pub, data, false);
   usleep (100000);
   CU_ASSERT (counter == 1)
