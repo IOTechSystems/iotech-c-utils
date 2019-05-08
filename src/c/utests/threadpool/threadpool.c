@@ -65,6 +65,9 @@ static void cunit_pool_prio_worker (void * arg)
 static void cunit_threadpool_priority_range (void)
 {
   CU_ASSERT (prio_max > prio_min)
+  iot_thread_current_set_priority (prio_min + 1);
+  int prio = iot_thread_current_get_priority ();
+  CU_ASSERT (prio == (prio_min + 1))
 }
 
 static void cunit_threadpool_priority (void)
