@@ -43,7 +43,7 @@ struct iot_bus_pub_t
   iot_bus_topic_t * topic;
   void * self;
   iot_data_pub_cb_fn_t callback;
-  iot_schedule_t * sc;
+  iot_schedule_t * schedule;
   atomic_uint_fast32_t refs;
 };
 
@@ -205,15 +205,8 @@ static bool iot_bus_topic_match (const char * topic, const char * pattern)
       match = (ptok == ttok);
       break;
     }
-    if (*ptok == '#') // Multi level wildcard
-    {
-      match = true;
-      break;
-    }
-    if ((*ptok != '+') && (strcmp (ttok, ptok) != 0)) // Single level wildcard
-    {
-      break;
-    }
+    if ((match = (*ptok == '#'))) break; // Multi level wildcard
+    if ((*ptok != '+') && (strcmp (ttok, ptok) != 0)) break; // Single level wildcard
     ptok = NULL;
     ttok = NULL;
   }
@@ -458,8 +451,8 @@ iot_bus_pub_t * iot_bus_pub_alloc (iot_bus_t * bus, void * self, iot_data_pub_cb
   if (callback && bus->scheduler)
   {
     pub->callback = callback;
-    pub->sc = iot_schedule_create (bus->scheduler, (iot_schedule_fn_t) iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
-    iot_schedule_add (bus->scheduler, pub->sc);
+    pub->schedule = iot_schedule_create (bus->scheduler, (iot_schedule_fn_t) iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
+    iot_schedule_add (bus->scheduler, pub->schedule);
   }
   if (! existing)
   {
@@ -475,9 +468,9 @@ void iot_bus_pub_free (iot_bus_pub_t * pub)
   {
     pthread_rwlock_t *lock = &pub->bus->lock;
     pthread_rwlock_wrlock (lock);
-    if (pub->sc)
+    if (pub->schedule)
     {
-      iot_schedule_remove (pub->bus->scheduler, pub->sc);
+      iot_schedule_remove (pub->bus->scheduler, pub->schedule);
     }
     iot_bus_pub_free_locked (pub);
     pthread_rwlock_unlock (lock);
