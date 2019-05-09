@@ -8,6 +8,7 @@ static int prio1 = -1;
 static int prio2 = -1;
 static int prio3 = -1;
 static int counter_max = 0;
+static uint32_t counter = 0;
 
 static int suite_init (void)
 {
@@ -35,15 +36,20 @@ static void cunit_pool_blocker (void * arg)
   pthread_mutex_unlock (mutex);
 }
 
+static void cunit_pool_sole_counter (void * arg)
+{
+  (void) arg;
+  counter++;
+  if (counter > counter_max) counter_max = counter;
+  usleep (500000);
+  CU_ASSERT (counter == 1)
+  counter--;
+}
+
 static void cunit_pool_counter (void * arg)
 {
   (void) arg;
-  static uint32_t counter = 0;
   counter++;
-  if (counter > counter_max) counter_max = counter;
-  usleep (100000);
-  CU_ASSERT (counter == 1)
-  counter--;
 }
 
 static void cunit_pool_prio_worker (void * arg)
@@ -59,6 +65,9 @@ static void cunit_pool_prio_worker (void * arg)
 static void cunit_threadpool_priority_range (void)
 {
   CU_ASSERT (prio_max > prio_min)
+  iot_thread_current_set_priority (prio_min + 1);
+  int prio = iot_thread_current_get_priority ();
+  CU_ASSERT (prio == (prio_min + 1))
 }
 
 static void cunit_threadpool_priority (void)
@@ -73,6 +82,7 @@ static void cunit_threadpool_priority (void)
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio1, &prio1);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, &prio2);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio3, &prio3);
+  iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, &prio2);
   iot_threadpool_wait (pool);
   iot_threadpool_free (pool);
 }
@@ -102,12 +112,34 @@ static void cunit_threadpool_block (void)
 {
   iot_threadpool_t * pool = iot_threadpool_alloc (1u, 1u, NULL);
   iot_threadpool_start (pool);
-  iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
-  iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
-  iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
-  iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
+  iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
+  iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
+  iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
+  iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
   iot_threadpool_wait (pool);
   CU_ASSERT (counter_max == 1)
+  iot_threadpool_free (pool);
+}
+
+static void cunit_threadpool_stop_start (void)
+{
+  iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL);
+  counter = 0;
+  iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
+  iot_threadpool_start (pool);
+  iot_threadpool_wait (pool);
+  CU_ASSERT (counter = 1);
+  iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
+  iot_threadpool_wait (pool);
+  CU_ASSERT (counter = 2);
+  iot_threadpool_stop (pool);
+  iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
+  usleep (500000);
+  CU_ASSERT (counter = 2);
+  iot_threadpool_start (pool);
+  iot_threadpool_wait (pool);
+  CU_ASSERT (counter = 3);
+  iot_threadpool_stop (pool);
   iot_threadpool_free (pool);
 }
 
@@ -118,4 +150,5 @@ void cunit_threadpool_test_init (void)
   CU_add_test (suite, "threadpool_priority", cunit_threadpool_priority);
   CU_add_test (suite, "threadpool_block", cunit_threadpool_block);
   CU_add_test (suite, "threadpool_try_work", cunit_threadpool_try_work);
+  CU_add_test (suite, "threadpool_stop_start", cunit_threadpool_stop_start);
 }

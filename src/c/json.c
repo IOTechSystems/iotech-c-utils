@@ -9,7 +9,6 @@
 //
 //   Copyright (c) 2010 Serge A. Zaitsev SPDX-License-Identifier: MIT
 //
-
 #include "iot/json.h"
 /**
  * Allocates a fresh unused token from the token pool.

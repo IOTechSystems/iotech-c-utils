@@ -1,10 +1,8 @@
 //
-// Copyright (c) 2019
-// IoTech
+// Copyright (c) 2019 IoTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-
 #include "iot/scheduler.h"
 #include "iot/bus.h"
 #include "iot/container.h"
@@ -45,7 +43,7 @@ struct iot_bus_pub_t
   iot_bus_topic_t * topic;
   void * self;
   iot_data_pub_cb_fn_t callback;
-  iot_schedule_t * sc;
+  iot_schedule_t * schedule;
   atomic_uint_fast32_t refs;
 };
 
@@ -207,18 +205,8 @@ static bool iot_bus_topic_match (const char * topic, const char * pattern)
       match = (ptok == ttok);
       break;
     }
-    if (*ptok == '#') // Multi level wildcard
-    {
-      match = true;
-      break;
-    }
-    if (*ptok != '+') // Single level wildcard
-    {
-      if (strcmp (ttok, ptok) != 0)
-      {
-        break;
-      }
-    }
+    if ((match = (*ptok == '#'))) break; // Multi level wildcard
+    if ((*ptok != '+') && (strcmp (ttok, ptok) != 0)) break; // Single level wildcard
     ptok = NULL;
     ttok = NULL;
   }
@@ -463,8 +451,8 @@ iot_bus_pub_t * iot_bus_pub_alloc (iot_bus_t * bus, void * self, iot_data_pub_cb
   if (callback && bus->scheduler)
   {
     pub->callback = callback;
-    pub->sc = iot_schedule_create (bus->scheduler, (iot_schedule_fn_t) iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
-    iot_schedule_add (bus->scheduler, pub->sc);
+    pub->schedule = iot_schedule_create (bus->scheduler, (iot_schedule_fn_t) iot_bus_sched_fn, pub, bus->interval, 0, 0, pub->topic->prio_set ? &pub->topic->priority : NULL);
+    iot_schedule_add (bus->scheduler, pub->schedule);
   }
   if (! existing)
   {
@@ -480,9 +468,9 @@ void iot_bus_pub_free (iot_bus_pub_t * pub)
   {
     pthread_rwlock_t *lock = &pub->bus->lock;
     pthread_rwlock_wrlock (lock);
-    if (pub->sc)
+    if (pub->schedule)
     {
-      iot_schedule_remove (pub->bus->scheduler, pub->sc);
+      iot_schedule_remove (pub->bus->scheduler, pub->schedule);
     }
     iot_bus_pub_free_locked (pub);
     pthread_rwlock_unlock (lock);
@@ -557,10 +545,6 @@ static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_
   iot_scheduler_t * scheduler = (iot_scheduler_t*) iot_container_find (cont, name);
   name = iot_data_string_map_get_string (map, "ThreadPool");
   iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find (cont, name);
-  if ((pool == NULL) && scheduler)
-  {
-    pool = iot_scheduler_thread_pool (scheduler);
-  }
   iot_bus_t * bus = iot_bus_alloc (scheduler, pool, interval);
   value = iot_data_string_map_get (map, "Topics");
   if (value)

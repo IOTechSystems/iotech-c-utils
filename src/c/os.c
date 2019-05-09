@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2019 IoTech
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 #include "iot/os.h"
 
 #ifdef __ZEPHYR__
@@ -17,8 +22,6 @@ char * iot_strdup (const char *s)
 char * iot_ctok_r (char *str, const char delim, char **saveptr)
 {
   char *tok = NULL;
-  char c;
-
   if (str == NULL)
   {
     str = *saveptr;
@@ -33,9 +36,9 @@ char * iot_ctok_r (char *str, const char delim, char **saveptr)
     if (*str) // Check not at end
     {
       tok = str; // Start of token
-      while ((c = *str))
+      while (*str)
       {
-        if (c == delim)
+        if (*str == delim)
         {
           *str = 0;
           *saveptr = ++str;
