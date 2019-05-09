@@ -123,6 +123,16 @@ static void test_data_string_array (void)
   CU_ASSERT (iot_data_array_size (array) == 2);
   CU_ASSERT (iot_data_array_get (array, 0) == str1);
   CU_ASSERT (iot_data_array_get (array, 1) == str2);
+
+  int loop = 5;
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_array_add (array, 0, iot_data_alloc_string ("first element", false));
+  while (loop--)
+  {
+    iot_data_string_map_add (map, "temp", iot_data_alloc_i32 (loop));
+    iot_data_array_add (array, 1, map);
+    assert (iot_data_array_get (array, 1) == map);
+  }
   iot_data_free (array);
 }
 
