@@ -1,5 +1,5 @@
 FROM debian:8
-MAINTAINER Steve Osselton <support@iotechsys.com>
+MAINTAINER IOTech <support@iotechsys.com>
 RUN echo "deb http://ftp.debian.org/debian jessie-backports main" >> /etc/apt/sources.list \
   && apt-get update && apt-get install -y build-essential wget git gcc make \
   && apt-get -y -t jessie-backports install cmake

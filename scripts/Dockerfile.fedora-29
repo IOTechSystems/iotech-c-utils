@@ -1,5 +1,5 @@
 FROM fedora:29
-MAINTAINER Steve Osselton <support@iotechsys.com>
+MAINTAINER IOTech <support@iotechsys.com>
 RUN yum -y update && yum -y install --setopt=tsflags=nodocs wget git gcc glibc-static cmake3 make valgrind rpm-build
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
