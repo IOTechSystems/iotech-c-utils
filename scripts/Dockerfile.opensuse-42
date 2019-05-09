@@ -1,6 +1,11 @@
 FROM opensuse:42.3
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN zypper --non-interactive in git tar gcc8 glibc-static cmake make wget rpm-build
+RUN zypper --non-interactive in git tar gcc8 glibc-static cmake make wget rpm-build libressl-devel-32bit
+RUN git clone https://github.com/eclipse/paho.mqtt.c.git
+RUN cd paho.mqtt.c
+RUN make
+RUN make install
+RUN cd ..
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/

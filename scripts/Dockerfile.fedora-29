@@ -1,6 +1,11 @@
 FROM fedora:29
 MAINTAINER Steve Osselton <steve@iotechsys.com>
-RUN yum -y update && yum -y install --setopt=tsflags=nodocs wget git gcc glibc-static cmake3 make valgrind rpm-build
+RUN yum -y update && yum -y install --setopt=tsflags=nodocs wget git gcc glibc-static cmake3 make valgrind rpm-build openssl-devel
+RUN git clone https://github.com/eclipse/paho.mqtt.c.git
+RUN cd paho.mqtt.c
+RUN make
+RUN make install
+RUN cd ..
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
