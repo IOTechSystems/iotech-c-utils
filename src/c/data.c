@@ -492,10 +492,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   iot_data_pair_t * pair = iot_data_map_find (mp, key);
   if (pair)
   {
-    if (pair->value != val)
-    {
-      iot_data_free (pair->value);
-    }
+    iot_data_free (pair->value);
     iot_data_free (pair->key);
   }
   else
@@ -545,11 +542,8 @@ void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val)
   assert (val);
   assert (index < arr->size);
   iot_data_t * element = arr->values[index];
-  if (element != val)
-  {
-    iot_data_free (element);
-    arr->values[index] = val;
-  }
+  iot_data_free (element);
+  arr->values[index] = val;
 }
 
 const iot_data_t * iot_data_array_get (const iot_data_t * array, uint32_t index)

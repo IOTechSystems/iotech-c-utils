@@ -131,6 +131,7 @@ static void test_data_string_array (void)
   {
     iot_data_string_map_add (map, "temp", iot_data_alloc_i32 (loop));
     iot_data_array_add (array, 1, map);
+    iot_data_addref (map);
     assert (iot_data_array_get (array, 1) == map);
   }
   iot_data_free (array);
