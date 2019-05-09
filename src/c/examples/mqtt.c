@@ -26,8 +26,7 @@ int main (void)
   struct mqtt_ssl_info ssl;
   init_info_mqtt (&mqtt);
   init_info_mqtt_ssl (&ssl);
-  //xrt_mqtt_exporter_t *  mqttExporter = xrt_mqtt_exporter_alloc (mqtt, bus, false);
-  xrt_mqtt_exporter_t *  mqttExporter = xrt_mqtt_exporter_ssl_alloc (mqtt, ssl, bus, false);
+  xrt_mqtt_exporter_t *  mqttExporter = xrt_mqtt_exporter_ssl_alloc (mqtt, ssl, bus, true);
 
   iot_threadpool_start (thread_pool);
   iot_scheduler_start (scheduler);
@@ -42,10 +41,10 @@ int main (void)
   iot_threadpool_stop (thread_pool);
   xrt_mqtt_exporter_stop (mqttExporter);
 
-  xrt_mqtt_exporter_free (mqttExporter);
   iot_bus_free (bus);
   iot_scheduler_free (scheduler);
   iot_threadpool_free (thread_pool);
+  xrt_mqtt_exporter_free (mqttExporter);
   iot_data_fini ();
 
   return 0;
@@ -54,7 +53,7 @@ int main (void)
 void init_info_mqtt (struct mqtt_info * mqtt)
 {
   mqtt->address = broker_address;
-  mqtt->topic_export = "test";
+  mqtt->topic_export_single = "test";
   mqtt->username = "";
   mqtt->password = "";
   mqtt->client_id = "JD";
@@ -83,8 +82,6 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters)
   iot_data_t * array = iot_data_alloc_array (ARRAY_SIZE);
   uint32_t index = 0;
 
-  // Create fixed part of sample
-
   iot_data_array_add (array, index++, iot_data_alloc_i32 (11));
   iot_data_array_add (array, index++, iot_data_alloc_i32 (22));
   iot_data_array_add (array, index, iot_data_alloc_i32 (33));
@@ -94,7 +91,6 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters)
   while (iters--)
   {
     iot_data_string_map_add (map, "#", iot_data_alloc_i32 (PUB_ITERS - iters));
-
     iot_data_addref (map);
     iot_bus_pub_push (pub, map, false);
   }
