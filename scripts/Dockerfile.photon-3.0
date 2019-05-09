@@ -1,5 +1,5 @@
 FROM photon:3.0
-MAINTAINER Steve Osselton <steve@iotechsys.com>
+MAINTAINER Steve Osselton <support@iotechsys.com>
 RUN tdnf remove -y toybox && tdnf update -y && tdnf install -y wget gcc glibc-devel linux-api-headers binutils make git cmake tar gzip
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
