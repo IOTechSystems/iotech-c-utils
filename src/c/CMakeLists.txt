@@ -24,9 +24,13 @@ if ("${IOT_LINUX_SYS}" STREQUAL "Alpine")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__LIBMUSL__")
 endif ()
 
-# Set default files to compile and libraries
+# Set files to compile
 
-file (GLOB C_FILES "*.c")
+set (C_FILES bus.c data.c json.c logger.c os.c scheduler.c thread.c threadpool.c)
+if (IOT_BUILD_COMPONENTS)
+  set (C_FILES ${C_FILES} container.c)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIOT_BUILD_COMPONENTS")
+endif ()
 
 # Main sdk library
 

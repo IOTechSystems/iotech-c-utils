@@ -535,7 +535,7 @@ void iot_bus_pub_push (iot_bus_pub_t * pub, iot_data_t * data, bool sync)
   iot_data_free (data);
 }
 
-/* Container support */
+#ifdef IOT_BUILD_COMPONENTS
 
 static iot_component_t * iot_bus_config (iot_container_t * cont, const iot_data_t * map)
 {
@@ -572,3 +572,5 @@ const iot_component_factory_t * iot_bus_factory (void)
   static iot_component_factory_t factory = { IOT_BUS_TYPE, iot_bus_config, (iot_component_free_fn_t) iot_bus_free };
   return &factory;
 }
+
+#endif

@@ -17,7 +17,7 @@ message (STATUS "IOT ${IOT_DOT_VERSION} for ${CMAKE_SYSTEM_NAME}")
 
 # Configuration variables
 
-set (IOT_BUILD_DEBUG OFF CACHE BOOL "Build Debug")
+set (IOT_BUILD_COMPONENTS ON CACHE BOOL "Build component support")
 set (IOT_BUILD_LCOV OFF CACHE BOOL "Build LCov")
 
 # Configure for different target systems

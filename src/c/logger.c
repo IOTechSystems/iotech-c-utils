@@ -236,7 +236,7 @@ void iot_logger_remove (iot_logger_t *logger, iot_log_function_t fn, const char 
   pthread_mutex_unlock (&logger->lock);
 }
 
-/* Container support */
+#ifdef IOT_BUILD_COMPONENTS
 
 static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_data_t * map)
 {
@@ -249,3 +249,5 @@ const iot_component_factory_t * iot_logger_factory (void)
   static iot_component_factory_t factory = { IOT_LOGGER_TYPE, iot_logger_config, (iot_component_free_fn_t) iot_logger_free };
   return &factory;
 }
+
+#endif
