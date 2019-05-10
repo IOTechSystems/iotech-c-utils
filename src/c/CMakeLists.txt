@@ -24,16 +24,18 @@ if ("${IOT_LINUX_SYS}" STREQUAL "Alpine")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__LIBMUSL__")
 endif ()
 
-
 find_package (Libpaho REQUIRED)
 if (NOT PAHO_FOUND)
     message (FATAL_ERROR "Libpaho library or header not found")
 endif ()
 set (LINK_LIBRARIES ${PAHO_LIBRARIES})
 
-# Set default files to compile and libraries
-
-file (GLOB C_FILES "*.c")
+# Set files to compile
+set (C_FILES bus.c data.c json.c logger.c os.c scheduler.c thread.c threadpool.c mqtt/export-mqtt.c)
+if (IOT_BUILD_COMPONENTS)
+  set (C_FILES ${C_FILES} container.c)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIOT_BUILD_COMPONENTS")
+endif ()
 
 # Main sdk library
 

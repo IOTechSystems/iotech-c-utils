@@ -61,7 +61,7 @@ done
 
 # Release build
 
-mkdir -p ${BROOT}/release
+mkdir -p --mode=a+rw ${BROOT}/release
 cd ${BROOT}/release
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
 make 2>&1 | tee release.log
@@ -69,7 +69,7 @@ make package
 
 # Static release build
 
-mkdir -p ${BROOT}/static
+mkdir -p --mode=a+rw ${BROOT}/static
 cd ${BROOT}/static
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DIOT_BUILD_STATIC=ON ${ROOT}/src
 make 2>&1 | tee static.log
@@ -77,7 +77,7 @@ make package
 
 # Debug build
 
-mkdir -p ${BROOT}/debug
+mkdir -p --mode=a+rw ${BROOT}/debug
 cd ${BROOT}/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
 make 2>&1 | tee debug.log
@@ -97,7 +97,7 @@ then
 
   # Build with profiling enabled
 
-  mkdir -p ${BROOT}/lcov
+  mkdir -p --mode=a+rw ${BROOT}/lcov
   cd ${BROOT}/lcov
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON ${ROOT}/src
   make
@@ -144,7 +144,3 @@ then
   valgrind $VG_FLAGS --xml-file=mqttconf_vg.xml c/examples/mqttconf
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi
-
-# Allow deletion of generated files in mounted volume
-
-chmod -R a+rw ${BROOT}

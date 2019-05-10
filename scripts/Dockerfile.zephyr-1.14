@@ -1,5 +1,5 @@
 FROM docker.iotechsys.com/services/zephyr-builder:1.14
-MAINTAINER Steve Osselton <steve@iotechsys.com>
+MAINTAINER IOTech <support@iotechsys.com>
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
