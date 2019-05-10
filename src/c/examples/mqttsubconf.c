@@ -5,55 +5,61 @@
 
 #define ARRAY_SIZE 3
 #define PUB_ITERS 10
-#define broker_address "ssl://localhost:8883"
+#define BROKER_ADDRESS "tcp://54.171.53.113:13939"
 
 /*
  * Subscribes to Bus topic for configuration (topic on which to publish)
+ *
+ * does this by the user telling the user what topic to publish too with each packet of data.
+ * check publisher_callback function.
+ *
+ * topic is first element
+ * data is the second element.
  * */
 
 static iot_data_t * publisher_callback (void * self);
-static iot_data_t * publisher_callback_single_export (void * self);
 
 void publish (iot_bus_pub_t * pub, uint32_t iters, char * topic);
 void init_info_mqtt (struct mqtt_info * mqtt);
 void init_info_mqtt_ssl (struct mqtt_ssl_info * ssl_info);
-//void publish_configuration (iot_bus_pub_t * pub, char * new_topic);
 
 int main (void)
 {
   iot_data_init ();
-  iot_threadpool_t * thread_pool = iot_threadpool_alloc (4, 0, NULL);
+  iot_threadpool_t * thread_pool = iot_threadpool_alloc (8, 0, NULL);
   iot_scheduler_t * scheduler = iot_scheduler_alloc (thread_pool);
-  iot_bus_t * bus = iot_bus_alloc (scheduler, thread_pool, 200000);
+  iot_bus_t * bus = iot_bus_alloc (scheduler, thread_pool,200000);
 
   //mqtt, set up configuration.
   struct mqtt_info mqtt;
-  struct mqtt_ssl_info ssl;
   init_info_mqtt (&mqtt);
-  init_info_mqtt_ssl (&ssl);
-  xrt_mqtt_exporter_t * mqtt_exporter = xrt_mqtt_exporter_ssl_alloc (mqtt, ssl, bus, true);
+  xrt_mqtt_exporter_t * mqtt_exporter = xrt_mqtt_exporter_alloc (mqtt, bus,true);
 
   iot_threadpool_start (thread_pool);
   iot_scheduler_start (scheduler);
   iot_bus_start (bus);
-  xrt_mqtt_exporter_start (mqtt_exporter);
-  char * topic = "test_publish_export";
+  if (mqtt_exporter != NULL)
+  {
+    xrt_mqtt_exporter_start (mqtt_exporter);
+  }
+  char * topic = "test";
 
-  iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, topic, publisher_callback, "test/tube1");
-  iot_bus_pub_t * pub2 = iot_bus_pub_alloc (bus, topic, publisher_callback_single_export, "test/tube2");
-
-  publish (pub, PUB_ITERS, topic);
-  sleep (5);
-
-  publish (pub2, PUB_ITERS, topic);
+  iot_bus_pub_t * pub = iot_bus_pub_alloc (bus, "test_another", publisher_callback, "test/tube");
+  publish (pub, 5, topic);
   sleep (5);
 
   iot_bus_stop (bus);
   iot_scheduler_stop (scheduler);
   iot_threadpool_stop (thread_pool);
-  xrt_mqtt_exporter_stop (mqtt_exporter);
+  if (mqtt_exporter != NULL)
+  {
+    xrt_mqtt_exporter_stop (mqtt_exporter);
+  }
 
-  xrt_mqtt_exporter_free (mqtt_exporter);
+  if (mqtt_exporter != NULL)
+  {
+    xrt_mqtt_exporter_free (mqtt_exporter);
+  }
   iot_bus_free (bus);
   iot_scheduler_free (scheduler);
   iot_threadpool_free (thread_pool);
@@ -65,16 +71,16 @@ int main (void)
 /* init a mqtt struct */
 void init_info_mqtt (struct mqtt_info * mqtt)
 {
-  mqtt->address = broker_address;
-  mqtt->topic_export_single = "test/export_topic";
-  mqtt->username = "";
-  mqtt->password = "";
+  mqtt->address = BROKER_ADDRESS;
+  mqtt->topic_export_single = NULL;
+  mqtt->username = "hsfunheq";
+  mqtt->password = "6n5OVDPYRnCr";
   mqtt->client_id = "JD";
-  mqtt->keep_alive_interval = 5000;
+  mqtt->keep_alive_interval = 100;
   mqtt->time_out = 10000L;
   mqtt->message_schematics = 1;
-  mqtt->persistance_type = 1;
-  mqtt->match = "test/#";
+  mqtt->persistance_type = MQTTCLIENT_PERSISTENCE_NONE;
+  mqtt->match = "#";
 }
 
 /* init a mqtt struct for ssl*/
@@ -88,37 +94,28 @@ void init_info_mqtt_ssl (struct mqtt_ssl_info * ssl_info)
   ssl_info->enabled_cipher_suites = "ALL";
 }
 
-static iot_data_t * publisher_callback (void * self)
+/* Encode topic here,  */
+static iot_data_t *publisher_callback (void *self)
 {
-  iot_data_t * msg = iot_data_alloc_array (2);
+  iot_data_t *msg = iot_data_alloc_array (3);
+  iot_data_array_add (msg, 0, iot_data_alloc_string ((char *) self, true));
+  iot_data_t *type = iot_data_alloc_bool (true);
+  iot_data_array_add (msg, 2, type);
 
   static float f32 = 20.00;
   f32 = (float) (f32 * 1.02);
-  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t *map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-7", false));
   iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (f32));
 
-  iot_data_array_add (msg, 0, iot_data_alloc_string ( (char *) self, true));
   iot_data_array_add (msg, 1, map);
-
   return msg;
-}
-
-static iot_data_t * publisher_callback_single_export (void * self)
-{
-  static float f32 = 20.00;
-  f32 = (float) (f32 * 1.02);
-  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-8", false));
-  iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (f32));
-
-  return map;
 }
 
 
 void publish (iot_bus_pub_t * pub, uint32_t iters, char * topic)
 {
-  iot_data_t * msg = iot_data_alloc_array (2);
+  iot_data_t * msg = iot_data_alloc_array (3);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * array = iot_data_alloc_array (ARRAY_SIZE);
   uint32_t index = 0;
@@ -130,11 +127,13 @@ void publish (iot_bus_pub_t * pub, uint32_t iters, char * topic)
   iot_data_string_map_add (map, "Coords", array);
   iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-54", false));
   iot_data_array_add (msg, 0, iot_data_alloc_string (topic, true));
+  iot_data_t * type = iot_data_alloc_bool (true);
+  iot_data_array_add (msg, 2, type);
+  iot_data_array_add (msg, 1, map);
 
   while (iters--)
   {
     iot_data_string_map_add (map, "#", iot_data_alloc_i32 (PUB_ITERS - iters));
-    iot_data_array_add (msg, 1, map);
     iot_data_addref (msg);
     iot_bus_pub_push (pub, msg, false);
   }

@@ -5,6 +5,7 @@
 #include "../bus/bus.h"
 #include "../data/data.h"
 #include "../threadpool/threadpool.h"
+#include "../mqtt/mqtt.h"
 
 static void usage (void)
 {
@@ -64,6 +65,7 @@ int main (int argc, char* argv[])
   cunit_data_test_init ();
   cunit_threadpool_test_init ();
   cunit_bus_test_init ();
+  cunit_mqtt_test_init ();
 
   CU_set_error_action (error_action);
 

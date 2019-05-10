@@ -55,7 +55,7 @@ extern void xrt_mqtt_exporter_push_generic (xrt_mqtt_exporter_t *exporter, const
 /* alloc functions, each alloc will sub to a bus topic, set bool here to sub to a topic enabled for communication. Once a topic has been picked up it is then allocated for use */
 extern xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (struct mqtt_info mqtt, iot_bus_t *bus, bool export_single_topic);
 extern xrt_mqtt_exporter_t * xrt_mqtt_exporter_ssl_alloc (struct mqtt_info mqtt, struct mqtt_ssl_info mqtt_ssl, iot_bus_t *bus, bool export_single_topic);
-const iot_component_factory_t * iot_mqtt_factory (void);
 
+const iot_component_factory_t * iot_mqtt_factory (void);
 
 #endif //CUTILS_MQTT_H

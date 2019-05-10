@@ -5,7 +5,7 @@
 
 #define ARRAY_SIZE 3
 #define PUB_ITERS 10
-#define broker_address "ssl://localhost:8883"
+#define BROKER_ADDRESS "tcp://54.171.53.113:13939"
 
 
 static iot_data_t * publisher_callback (void * self);
@@ -26,12 +26,15 @@ int main (void)
   struct mqtt_ssl_info ssl;
   init_info_mqtt (&mqtt);
   init_info_mqtt_ssl (&ssl);
-  xrt_mqtt_exporter_t *  mqttExporter = xrt_mqtt_exporter_ssl_alloc (mqtt, ssl, bus, true);
+  xrt_mqtt_exporter_t * mqttExporter = xrt_mqtt_exporter_alloc (mqtt, bus, true);
 
   iot_threadpool_start (thread_pool);
   iot_scheduler_start (scheduler);
   iot_bus_start (bus);
-  xrt_mqtt_exporter_start (mqttExporter);
+  if (mqttExporter != NULL)
+  {
+    xrt_mqtt_exporter_start (mqttExporter);
+  }
 
   publish (pub, PUB_ITERS);
   sleep (5);
@@ -39,12 +42,18 @@ int main (void)
   iot_bus_stop (bus);
   iot_scheduler_stop (scheduler);
   iot_threadpool_stop (thread_pool);
-  xrt_mqtt_exporter_stop (mqttExporter);
+  if (mqttExporter != NULL)
+  {
+    xrt_mqtt_exporter_stop (mqttExporter);
+  }
 
   iot_bus_free (bus);
   iot_scheduler_free (scheduler);
   iot_threadpool_free (thread_pool);
-  xrt_mqtt_exporter_free (mqttExporter);
+  if (mqttExporter != NULL)
+  {
+    xrt_mqtt_exporter_free (mqttExporter);
+  }
   iot_data_fini ();
 
   return 0;
@@ -52,12 +61,12 @@ int main (void)
 
 void init_info_mqtt (struct mqtt_info * mqtt)
 {
-  mqtt->address = broker_address;
+  mqtt->address = BROKER_ADDRESS;
   mqtt->topic_export_single = "test";
-  mqtt->username = "";
-  mqtt->password = "";
+  mqtt->username = "hsfunheq";
+  mqtt->password = "6n5OVDPYRnCr";
   mqtt->client_id = "JD";
-  mqtt->keep_alive_interval = 20;
+  mqtt->keep_alive_interval = 1;
   mqtt->time_out = 10000L;
   mqtt->message_schematics = 1;
   mqtt->persistance_type = MQTTCLIENT_PERSISTENCE_NONE;
@@ -67,7 +76,6 @@ void init_info_mqtt (struct mqtt_info * mqtt)
 void init_info_mqtt_ssl (struct mqtt_ssl_info * ssl_info)
 {
   ssl_info->trust_store = "/home/jordan/CLionProjects/iotech-c-utils-2/src/c/examples/cacert.pem";
-  //key and cert in one file.
   ssl_info->key_store = "/home/jordan/CLionProjects/iotech-c-utils-2/src/c/examples/localhost.pem";
   ssl_info->private_key_password = "";
   ssl_info->enable_server_cert_auth = 1;
