@@ -4,11 +4,12 @@
 #ifndef CUTILS_MQTT_H
 #define CUTILS_EXPORT_MQTT_H
 #define TIMEOUT 10000L
-
+/*default address */
+#define BROKER_ADDRESS "tcp://54.171.53.113:13939"
 #define IOT_MQTT_TYPE "IOT::Mqtt"
 
 
-typedef struct xrt_mqtt_exporter_t xrt_mqtt_exporter_t;
+typedef struct mqtt_exporter_t mqtt_exporter_t;
 
 /*
  * mqtt_info struct, simplifies allocation method,
@@ -20,6 +21,7 @@ struct mqtt_info
   int keep_alive_interval;
   int message_schematics;
   int persistance_type;
+  bool retain_message_server;
   long time_out;
   const char *address;
   const char *client_id;
@@ -45,16 +47,19 @@ struct mqtt_ssl_info
 };
 
 /* Lifecycle operations */
-extern bool xrt_mqtt_exporter_start (xrt_mqtt_exporter_t * state);
-extern void xrt_mqtt_exporter_stop (xrt_mqtt_exporter_t * state);
-extern void xrt_mqtt_exporter_free (xrt_mqtt_exporter_t * state);
+extern bool mqtt_exporter_start (mqtt_exporter_t *state);
+extern void mqtt_exporter_stop (mqtt_exporter_t *state);
+extern void mqtt_exporter_free (mqtt_exporter_t *state);
 
 /* Generic push function, called internally, but client can call if they wish to */
-extern void xrt_mqtt_exporter_push_generic (xrt_mqtt_exporter_t *exporter, const iot_data_t *data, const char *topic);
+extern bool mqtt_exporter_push_generic (mqtt_exporter_t *exporter, const iot_data_t *data, const char *topic);
+
+/* helper function to check if client is still connected to the end point. */
+extern bool connection_alive (mqtt_exporter_t * exporter);
 
 /* alloc functions, each alloc will sub to a bus topic, set bool here to sub to a topic enabled for communication. Once a topic has been picked up it is then allocated for use */
-extern xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (struct mqtt_info mqtt, iot_bus_t *bus, bool export_single_topic);
-extern xrt_mqtt_exporter_t * xrt_mqtt_exporter_ssl_alloc (struct mqtt_info mqtt, struct mqtt_ssl_info mqtt_ssl, iot_bus_t *bus, bool export_single_topic);
+extern mqtt_exporter_t * mqtt_exporter_alloc (struct mqtt_info mqtt, iot_bus_t *bus, bool export_single_topic);
+extern mqtt_exporter_t * mqtt_exporter_ssl_alloc (struct mqtt_info mqtt, struct mqtt_ssl_info mqtt_ssl, iot_bus_t *bus, bool export_single_topic);
 
 const iot_component_factory_t * iot_mqtt_factory (void);
 

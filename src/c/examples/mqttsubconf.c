@@ -5,7 +5,6 @@
 
 #define ARRAY_SIZE 3
 #define PUB_ITERS 10
-#define BROKER_ADDRESS "tcp://54.171.53.113:13939"
 
 /*
  * Subscribes to Bus topic for configuration (topic on which to publish)
@@ -18,7 +17,6 @@
  * */
 
 static iot_data_t * publisher_callback (void * self);
-
 void publish (iot_bus_pub_t * pub, uint32_t iters, char * topic);
 void init_info_mqtt (struct mqtt_info * mqtt);
 void init_info_mqtt_ssl (struct mqtt_ssl_info * ssl_info);
@@ -33,14 +31,14 @@ int main (void)
   //mqtt, set up configuration.
   struct mqtt_info mqtt;
   init_info_mqtt (&mqtt);
-  xrt_mqtt_exporter_t * mqtt_exporter = xrt_mqtt_exporter_alloc (mqtt, bus,true);
+  mqtt_exporter_t * mqtt_exporter = mqtt_exporter_alloc (mqtt, bus, true);
 
   iot_threadpool_start (thread_pool);
   iot_scheduler_start (scheduler);
   iot_bus_start (bus);
   if (mqtt_exporter != NULL)
   {
-    xrt_mqtt_exporter_start (mqtt_exporter);
+    mqtt_exporter_start (mqtt_exporter);
   }
   char * topic = "test";
 
@@ -53,12 +51,12 @@ int main (void)
   iot_threadpool_stop (thread_pool);
   if (mqtt_exporter != NULL)
   {
-    xrt_mqtt_exporter_stop (mqtt_exporter);
+    mqtt_exporter_stop (mqtt_exporter);
   }
 
   if (mqtt_exporter != NULL)
   {
-    xrt_mqtt_exporter_free (mqtt_exporter);
+    mqtt_exporter_free (mqtt_exporter);
   }
   iot_bus_free (bus);
   iot_scheduler_free (scheduler);

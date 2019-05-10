@@ -108,6 +108,8 @@ then
   c/examples/data
   c/examples/pubsub
   c/examples/container
+  c/examples/mqtt
+  c/examples/mqttconf
   c/utests/runner/runner -a -j
 
   # Generate coverage html report
@@ -138,6 +140,8 @@ then
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data
   valgrind $VG_FLAGS --xml-file=pubsub_vg.xml c/examples/pubsub
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container
+  valgrind $VG_FLAGS --xml-file=mqtt_vg.xml c/examples/mqtt
+  valgrind $VG_FLAGS --xml-file=mqttconf_vg.xml c/examples/mqttconf
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi
 

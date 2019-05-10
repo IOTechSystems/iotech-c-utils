@@ -5,7 +5,6 @@
 
 #define ARRAY_SIZE 3
 #define PUB_ITERS 10
-#define BROKER_ADDRESS "tcp://54.171.53.113:13939"
 
 
 static iot_data_t * publisher_callback (void * self);
@@ -26,15 +25,13 @@ int main (void)
   struct mqtt_ssl_info ssl;
   init_info_mqtt (&mqtt);
   init_info_mqtt_ssl (&ssl);
-  xrt_mqtt_exporter_t * mqttExporter = xrt_mqtt_exporter_alloc (mqtt, bus, true);
+  mqtt_exporter_t * mqttExporter = mqtt_exporter_alloc (mqtt, bus, true);
 
   iot_threadpool_start (thread_pool);
   iot_scheduler_start (scheduler);
   iot_bus_start (bus);
-  if (mqttExporter != NULL)
-  {
-    xrt_mqtt_exporter_start (mqttExporter);
-  }
+  mqtt_exporter_start (mqttExporter);
+
 
   publish (pub, PUB_ITERS);
   sleep (5);
@@ -42,18 +39,14 @@ int main (void)
   iot_bus_stop (bus);
   iot_scheduler_stop (scheduler);
   iot_threadpool_stop (thread_pool);
-  if (mqttExporter != NULL)
-  {
-    xrt_mqtt_exporter_stop (mqttExporter);
-  }
+  mqtt_exporter_stop (mqttExporter);
+
 
   iot_bus_free (bus);
   iot_scheduler_free (scheduler);
   iot_threadpool_free (thread_pool);
-  if (mqttExporter != NULL)
-  {
-    xrt_mqtt_exporter_free (mqttExporter);
-  }
+  mqtt_exporter_free (mqttExporter);
+
   iot_data_fini ();
 
   return 0;

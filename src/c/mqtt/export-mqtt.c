@@ -9,35 +9,48 @@
 
 #define TIME_OUT 10000L
 
-typedef struct xrt_mqtt_exporter_t
+typedef struct mqtt_exporter_t
 {
-  iot_component_t component;      /* Component base type */
+  iot_component_t component;
   MQTTClient client;
-  iot_bus_sub_t * sub;
   int message_schematics;
   pthread_rwlock_t lock;
   const char * topic;
   MQTTClient_connectOptions conn_opts;
   MQTTClient_SSLOptions ssl_options;
   bool use_ssl;
-}xrt_mqtt_exporter_t;
+  bool retain_message_server;
+}mqtt_exporter_t;
 
 
-void xrt_mqtt_exporter_push_generic (xrt_mqtt_exporter_t * exporter, const iot_data_t * data, const char * topic)
+/**
+ * \brief method which pushes iotdata to a specific topic, provided by the client.
+ * used internally, but can be used externally too.
+ * \param exporter type which contains the mqtt_client
+ * \param data data to be exported
+ * \param topic topic to be exported.
+ * \return true if pushed, false if not
+ */
+bool mqtt_exporter_push_generic (mqtt_exporter_t *exporter, const iot_data_t *data, const char *topic)
 {
-    pthread_rwlock_wrlock (&exporter->lock);
-    MQTTClient_message pubmsg = MQTTClient_message_initializer;
-    MQTTClient_deliveryToken token;
-    char *json = iot_data_to_json (data, true);
-    pubmsg.payload = json;
-    pubmsg.payloadlen = strlen (json);
-    pubmsg.qos = exporter->message_schematics;
-    pubmsg.retained = false;
-    MQTTClient_publishMessage (exporter->client, topic, &pubmsg, &token);
-    int ret = MQTTClient_waitForCompletion (exporter->client, token, TIMEOUT);
-    ret != MQTTCLIENT_SUCCESS ? printf ("Error: %d\n", ret) : printf ("json %s\n", json);
-    free (json);
-    pthread_rwlock_unlock (&exporter->lock);
+  pthread_rwlock_wrlock (&exporter->lock);
+  MQTTClient_message pubmsg = MQTTClient_message_initializer;
+  MQTTClient_deliveryToken token;
+  char *json = iot_data_to_json (data, true);
+  pubmsg.payload = json;
+  pubmsg.payloadlen = strlen (json);
+  pubmsg.qos = exporter->message_schematics;
+  pubmsg.retained = exporter->retain_message_server;
+
+  MQTTClient_publishMessage (exporter->client, topic, &pubmsg, &token);
+  int ret = MQTTClient_waitForCompletion (exporter->client, token, TIMEOUT);
+#ifndef NDEBUG
+  ret != MQTTCLIENT_SUCCESS ? printf ("Error: %d\n", ret) : printf ("json %s\n", json);
+#endif
+  free (json);
+  pthread_rwlock_unlock (&exporter->lock);
+
+  return ret == MQTTCLIENT_SUCCESS;
 }
 
 /**
@@ -50,23 +63,17 @@ void xrt_mqtt_exporter_push_generic (xrt_mqtt_exporter_t * exporter, const iot_d
  * \param self will be set to the exporter
  * \param actual data that has been matched
  */
-static void push_topic (iot_data_t *data, void *self, const char *match)
+static void push_topic (iot_data_t *data, void *self, const char * match)
 {
-  xrt_mqtt_exporter_t *exporter = (xrt_mqtt_exporter_t *) self;
-
-  if (iot_data_type (data) == IOT_DATA_ARRAY && iot_data_array_size (data) == 3 &&
-      iot_data_type (iot_data_array_get (data, 2)) == IOT_DATA_BOOL &&
-      iot_data_bool (iot_data_array_get (data, 2)) == true)
-  {
-    xrt_mqtt_exporter_push_generic (exporter, iot_data_array_get (data, 1), iot_data_string (iot_data_array_get (data, 0)));
-  }
-  else
-  {
-    xrt_mqtt_exporter_push_generic (exporter, data, exporter->topic);
-  }
+  mqtt_exporter_t *exporter = (mqtt_exporter_t *) self;
+  //check if the type being passed in is from a publish callback which contains the topic
+  (iot_data_type (data) == IOT_DATA_ARRAY && iot_data_array_size (data) == 3 &&
+  iot_data_type (iot_data_array_get (data, 2)) == IOT_DATA_BOOL &&
+  iot_data_bool (iot_data_array_get (data, 2)) == true) ? mqtt_exporter_push_generic (exporter, iot_data_array_get (data, 1), iot_data_string (iot_data_array_get (data, 0)))
+  : mqtt_exporter_push_generic (exporter, data, exporter->topic);
 }
 
-static void free_mqtt (xrt_mqtt_exporter_t * mqtt)
+static void free_mqtt (mqtt_exporter_t * mqtt)
 {
   pthread_rwlock_wrlock (&mqtt->lock);
   MQTTClient_disconnect (mqtt->client, 10);
@@ -75,16 +82,25 @@ static void free_mqtt (xrt_mqtt_exporter_t * mqtt)
   free (mqtt);
 }
 
-static xrt_mqtt_exporter_t * xrt_mqtt_exporter_common_alloc (struct mqtt_info mqtt, MQTTClient_connectOptions *conn_opts,  bool export_single_topic)
+/**
+ * \brief Alloc method, allocs only the mqtt data needed for export, reduce lines of code.
+ * \param mqtt struct which contains all the data required to set up mqtt without ssl.
+ * \param conn_opts Connection options driven from the mqtt struct
+ * \param export_single_topic boolean which needs to be set if client wants to listen to conf settings on which topics to publish too
+ * \param bus bus to sub too.
+ * \return mqtt_exporter or NULL
+ */
+
+static mqtt_exporter_t * xrt_mqtt_exporter_common_alloc (struct mqtt_info mqtt, MQTTClient_connectOptions *conn_opts, bool export_single_topic, iot_bus_t * bus)
 {
-  xrt_mqtt_exporter_t * mqtt_exporter = calloc (1, sizeof (xrt_mqtt_exporter_t));
+  mqtt_exporter_t * mqtt_exporter = calloc (1, sizeof (mqtt_exporter_t));
 
   if (MQTTClient_create (&mqtt_exporter->client, mqtt.address, mqtt.client_id, mqtt.persistance_type, NULL) != MQTTCLIENT_SUCCESS)
   {
     goto exit;
   }
-  mqtt_exporter->component.start_fn = (iot_component_start_fn_t) xrt_mqtt_exporter_start;
-  mqtt_exporter->component.stop_fn =  (iot_component_stop_fn_t) xrt_mqtt_exporter_stop;
+  mqtt_exporter->component.start_fn = (iot_component_start_fn_t) mqtt_exporter_start;
+  mqtt_exporter->component.stop_fn =  (iot_component_stop_fn_t) mqtt_exporter_stop;
   mqtt_exporter->message_schematics = mqtt.message_schematics;
   mqtt_exporter->topic = export_single_topic ? mqtt.topic_export_single : NULL;
   conn_opts->username = mqtt.username;
@@ -93,6 +109,11 @@ static xrt_mqtt_exporter_t * xrt_mqtt_exporter_common_alloc (struct mqtt_info mq
   conn_opts->cleansession = 1;
   conn_opts->connectTimeout = mqtt.time_out;
   conn_opts->MQTTVersion = 3;
+
+  if (bus)
+  {
+    iot_bus_sub_alloc (bus, mqtt_exporter, push_topic, mqtt.match);
+  }
 
   return mqtt_exporter;
 
@@ -109,17 +130,15 @@ static xrt_mqtt_exporter_t * xrt_mqtt_exporter_common_alloc (struct mqtt_info mq
  * \param export_single_topic boolean to let the method know that the client only wants to export to a single topic throughout the lifecycle of the program.
  * \return mqtt_exporter or NULL
  */
-xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (struct mqtt_info mqtt, iot_bus_t * bus, bool export_single_topic)
+mqtt_exporter_t * mqtt_exporter_alloc (struct mqtt_info mqtt, iot_bus_t *bus, bool export_single_topic)
 {
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-  xrt_mqtt_exporter_t * mqtt_exporter = xrt_mqtt_exporter_common_alloc (mqtt, &conn_opts, export_single_topic);
-  mqtt_exporter->conn_opts = conn_opts;
-
-  if (bus)
+  mqtt_exporter_t * mqtt_exporter = xrt_mqtt_exporter_common_alloc (mqtt, &conn_opts, export_single_topic, bus);
+  if (mqtt_exporter)
   {
-    mqtt_exporter->sub = iot_bus_sub_alloc (bus, mqtt_exporter, push_topic, mqtt.match);
+    mqtt_exporter->conn_opts = conn_opts;
+    mqtt_exporter->use_ssl = false;
   }
-  mqtt_exporter->use_ssl = false;
   return mqtt_exporter;
 }
 
@@ -132,33 +151,31 @@ xrt_mqtt_exporter_t * xrt_mqtt_exporter_alloc (struct mqtt_info mqtt, iot_bus_t 
  * \param export_single_topic boolean to let the method know that the client only wants to export to a single topic throughout the lifecycle of the program.
  * \return mqtt_exporter or NULL
  */
-extern xrt_mqtt_exporter_t * xrt_mqtt_exporter_ssl_alloc (struct mqtt_info mqtt, struct mqtt_ssl_info mqtt_ssl, iot_bus_t * bus, bool export_single_topic)
+extern mqtt_exporter_t * mqtt_exporter_ssl_alloc (struct mqtt_info mqtt, struct mqtt_ssl_info mqtt_ssl,
+                                                      iot_bus_t *bus, bool export_single_topic)
 {
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-  xrt_mqtt_exporter_t * mqtt_exporter = xrt_mqtt_exporter_common_alloc (mqtt, &conn_opts, export_single_topic);
+  mqtt_exporter_t * mqtt_exporter = xrt_mqtt_exporter_common_alloc (mqtt, &conn_opts, export_single_topic, bus);
 
-  MQTTClient_SSLOptions ssl_options = MQTTClient_SSLOptions_initializer;
-  conn_opts.ssl = &ssl_options;
-  conn_opts.ssl->trustStore = mqtt_ssl.trust_store;
-  conn_opts.ssl->keyStore = mqtt_ssl.key_store;
-  conn_opts.ssl->privateKeyPassword = mqtt_ssl.private_key_password;
-  conn_opts.ssl->enableServerCertAuth = mqtt_ssl.enable_server_cert_auth;
-  conn_opts.ssl->sslVersion = mqtt_ssl.ssl_version;
-  conn_opts.ssl->enabledCipherSuites = mqtt_ssl.enabled_cipher_suites;
-  mqtt_exporter->conn_opts = conn_opts;
-
-  if (bus)
+  if (mqtt_exporter)
   {
-    mqtt_exporter->sub = iot_bus_sub_alloc (bus, mqtt_exporter, push_topic, mqtt.match);
+    MQTTClient_SSLOptions ssl_options = MQTTClient_SSLOptions_initializer;
+    conn_opts.ssl = &ssl_options;
+    conn_opts.ssl->trustStore = mqtt_ssl.trust_store;
+    conn_opts.ssl->keyStore = mqtt_ssl.key_store;
+    conn_opts.ssl->privateKeyPassword = mqtt_ssl.private_key_password;
+    conn_opts.ssl->enableServerCertAuth = mqtt_ssl.enable_server_cert_auth;
+    conn_opts.ssl->sslVersion = mqtt_ssl.ssl_version;
+    conn_opts.ssl->enabledCipherSuites = mqtt_ssl.enabled_cipher_suites;
+    mqtt_exporter->conn_opts = conn_opts;
+    mqtt_exporter->ssl_options = ssl_options;
+    mqtt_exporter->use_ssl = true;
   }
-  mqtt_exporter->ssl_options = ssl_options;
-  mqtt_exporter->use_ssl = true;
-
   return mqtt_exporter;
 }
 
 
-extern bool xrt_mqtt_exporter_start (xrt_mqtt_exporter_t * state)
+extern bool mqtt_exporter_start (mqtt_exporter_t *state)
 {
   pthread_rwlock_wrlock (&state->lock);
   if (state->use_ssl)
@@ -179,7 +196,7 @@ extern bool xrt_mqtt_exporter_start (xrt_mqtt_exporter_t * state)
   return true;
 }
 
-extern void xrt_mqtt_exporter_stop (xrt_mqtt_exporter_t * state)
+extern void mqtt_exporter_stop (mqtt_exporter_t *state)
 {
   pthread_rwlock_wrlock (&state->lock);
   if (state->component.state != IOT_COMPONENT_STOPPED)
@@ -191,7 +208,7 @@ extern void xrt_mqtt_exporter_stop (xrt_mqtt_exporter_t * state)
 }
 
 
-void xrt_mqtt_exporter_free (xrt_mqtt_exporter_t * state)
+void mqtt_exporter_free (mqtt_exporter_t *state)
 {
   if (state)
   {
@@ -221,7 +238,7 @@ static iot_component_t * iot_mqtt_config (iot_container_t * cont, const iot_data
   mqtt_info.persistance_type = iot_data_i64 (iot_data_string_map_get (map, "persistance_type"));
 
   struct mqtt_ssl_info mqtt_ssl_info;
-  xrt_mqtt_exporter_t * mqtt_exporter;
+  mqtt_exporter_t * mqtt_exporter;
   if (strcmp (iot_data_string_map_get_string (map, "ssl"), "true") == 0)
   {
     mqtt_ssl_info.trust_store = iot_data_string_map_get_string (map, "trust_store");
@@ -230,17 +247,27 @@ static iot_component_t * iot_mqtt_config (iot_container_t * cont, const iot_data
     mqtt_ssl_info.enabled_cipher_suites = iot_data_string_map_get_string (map, "enabled_cipher_suites");
     mqtt_ssl_info.ssl_version = iot_data_i64 (iot_data_string_map_get (map, "ssl_version"));
     mqtt_ssl_info.enable_server_cert_auth =iot_data_i64 (iot_data_string_map_get (map, "enable_server_cert_auth"));
-    mqtt_exporter = xrt_mqtt_exporter_ssl_alloc (mqtt_info, mqtt_ssl_info, bus, true);
+    mqtt_exporter = mqtt_exporter_ssl_alloc (mqtt_info, mqtt_ssl_info, bus, true);
   }
   else
   {
-    mqtt_exporter = xrt_mqtt_exporter_alloc (mqtt_info, bus, true);
+    mqtt_exporter = mqtt_exporter_alloc (mqtt_info, bus, true);
   }
   return &mqtt_exporter->component;
 }
 
+/**
+ * \brief checks if connection is still alive between mqtt client and server
+ * \param exporter
+ * \return true if connected false if not
+ */
+extern bool connection_alive (mqtt_exporter_t * exporter)
+{
+  return MQTTClient_isConnected (exporter->client);
+}
+
 const iot_component_factory_t * iot_mqtt_factory (void)
 {
-  static iot_component_factory_t factory = { IOT_MQTT_TYPE, iot_mqtt_config, (iot_component_free_fn_t) xrt_mqtt_exporter_free };
+  static iot_component_factory_t factory = { IOT_MQTT_TYPE, iot_mqtt_config, (iot_component_free_fn_t) mqtt_exporter_free };
   return &factory;
 }
