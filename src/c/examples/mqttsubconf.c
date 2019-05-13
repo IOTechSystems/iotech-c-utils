@@ -84,8 +84,8 @@ void init_info_mqtt (struct mqtt_info * mqtt)
 /* init a mqtt struct for ssl*/
 void init_info_mqtt_ssl (struct mqtt_ssl_info * ssl_info)
 {
-  ssl_info->trust_store = "/home/jordan/CLionProjects/iotech-c-utils-2/src/c/examples/cacert.pem";
-  ssl_info->key_store = "/home/jordan/CLionProjects/iotech-c-utils-2/src/c/examples/localhost.pem";
+  ssl_info->trust_store = "src/c/examples/cacert.pem";
+  ssl_info->key_store = "src/c/examples/localhost.pem";
   ssl_info->private_key_password = "";
   ssl_info->enable_server_cert_auth = 1;
   ssl_info->ssl_version = MQTT_SSL_VERSION_TLS_1_2;
