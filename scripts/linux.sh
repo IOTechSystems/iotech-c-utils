@@ -106,7 +106,6 @@ then
 
   c/examples/scheduler
   c/examples/data
-  c/examples/pubsub
   c/examples/container
   c/utests/runner/runner -a -j
 
@@ -136,7 +135,6 @@ then
   VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data
-  valgrind $VG_FLAGS --xml-file=pubsub_vg.xml c/examples/pubsub
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi
