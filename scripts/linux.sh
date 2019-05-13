@@ -9,29 +9,6 @@ VALG=false
 CPPCHK=false
 LCOV=false
 
-case ${ARCH} in
-  armv6l)
-    BROOT=${ROOT}/arm32
-    break
-  ;;
-  armv7l)
-    BROOT=${ROOT}/arm32
-    break
-  ;;
-  aarch64)
-    BROOT=${ROOT}/arm64
-    break
-  ;;
-  x86_64)
-    BROOT=${ROOT}/x86_64
-    break
-  ;;
-  *)
-    echo "Unsupported: ${ARCH}"
-    exit 2
-  ;;
-esac
-
 # Process arguments
 
 while [ $# -gt 0 ]
@@ -53,6 +30,11 @@ do
       LCOV=true
       shift 1
     ;;
+    -broot)
+      shift 1
+      BROOT=$1
+      shift 1
+    ;;
     *)
       shift 1
     ;;
@@ -61,7 +43,7 @@ done
 
 # Release build
 
-mkdir -p -m a+rw ${BROOT}/release
+mkdir ${BROOT}/release
 cd ${BROOT}/release
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
 make 2>&1 | tee release.log
@@ -69,7 +51,7 @@ make package
 
 # Static release build
 
-mkdir -p -m a+rw ${BROOT}/static
+mkdir ${BROOT}/static
 cd ${BROOT}/static
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DIOT_BUILD_STATIC=ON ${ROOT}/src
 make 2>&1 | tee static.log
@@ -77,7 +59,7 @@ make package
 
 # Debug build
 
-mkdir -p -m a+rw ${BROOT}/debug
+mkdir ${BROOT}/debug
 cd ${BROOT}/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
 make 2>&1 | tee debug.log
@@ -97,7 +79,7 @@ then
 
   # Build with profiling enabled
 
-  mkdir -p -m a+rw ${BROOT}/lcov
+  mkdir ${BROOT}/lcov
   cd ${BROOT}/lcov
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON ${ROOT}/src
   make
