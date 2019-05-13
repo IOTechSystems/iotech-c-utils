@@ -24,11 +24,14 @@ if ("${IOT_LINUX_SYS}" STREQUAL "Alpine")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__LIBMUSL__")
 endif ()
 
-find_package (Libpaho REQUIRED)
-if (NOT PAHO_FOUND)
-    message (FATAL_ERROR "Libpaho library or header not found")
+if (NOT IOT_BUILD_STATIC)
+    find_package(Libpaho REQUIRED)
+    if (NOT PAHO_FOUND)
+        message(FATAL_ERROR "Libpaho library or header not found")
+    endif ()
+    set(LINK_LIBRARIES ${PAHO_LIBRARIES})
 endif ()
-set (LINK_LIBRARIES ${PAHO_LIBRARIES})
+
 
 # Set files to compile
 set (C_FILES bus.c data.c json.c logger.c os.c scheduler.c thread.c threadpool.c mqtt/export-mqtt.c)
@@ -48,7 +51,9 @@ target_link_libraries (cutils PUBLIC ${LINK_LIBRARIES})
 add_subdirectory (cunit)
 add_subdirectory (examples)
 add_subdirectory (utests)
-add_subdirectory (mqtt)
+if (NOT IOT_BUILD_STATIC)
+    add_subdirectory (mqtt)
+endif ()
 # Configure installer
 
 install (TARGETS cutils LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)

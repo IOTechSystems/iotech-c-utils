@@ -5,7 +5,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include "svc/export-mqtt.h"
+/*
+ * MQTT commented out, static build is not supported with mqtt
+ * */
+
+//#include "svc/export-mqtt.h"
 #include "iot/component.h"
 #include "iot/container.h"
 #include "iot/logger.h"
@@ -72,7 +76,7 @@ int main (void)
   iot_container_add_factory (container, iot_threadpool_factory ());
   iot_container_add_factory (container, iot_scheduler_factory ());
   iot_container_add_factory (container, iot_bus_factory ());
-  iot_container_add_factory (container, iot_mqtt_factory ());
+  //iot_container_add_factory (container, iot_mqtt_factory ());
   iot_container_add_factory (container, my_component_factory ());
   iot_container_init (container, "main");
   iot_container_start (container);
@@ -117,6 +121,7 @@ static const char * bus_config =
   "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10,\"Retain\":true}]"
 "}";
 
+/*
 static const char * mqtt_ssl_config =
   "{"
   "\"ssl\":\"true\","
@@ -139,7 +144,7 @@ static const char * mqtt_ssl_config =
   "\"enabled_cipher_suites\":\"ALL\","
   "\"bus\":\"IOT::Bus\","
   "}";
-
+*/
 static const char * my_config =
 "{"
   "\"MyLogger\":\"logger\""
@@ -149,13 +154,12 @@ static const char * my_config =
 
 static const char * config_loader (const char * name)
 {
-  printf ("Name: %s\n", name);
   if (strcmp (name, "main") == 0) return main_config;
   if (strcmp (name, "logger") == 0) return logger_config;
   if (strcmp (name, "pool") == 0) return pool_config;
   if (strcmp (name, "scheduler") == 0) return sched_config;
   if (strcmp (name, "bus") == 0) return bus_config;
-  if (strcmp (name, "mqtt") == 0) return mqtt_ssl_config;
+  //if (strcmp (name, "mqtt") == 0) return mqtt_ssl_config;
   if (strcmp (name, "mycomp") == 0) return my_config;
   return NULL;
 }
