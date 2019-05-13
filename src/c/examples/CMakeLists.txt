@@ -6,10 +6,6 @@ add_executable (data data.c)
 target_include_directories (data PRIVATE ../../../include)
 target_link_libraries (data PRIVATE cutils)
 
-add_executable (pubsub pubsub.c)
-target_include_directories (pubsub PRIVATE ../../../include)
-target_link_libraries (pubsub PRIVATE cutils)
-
 if (IOT_BUILD_COMPONENTS)
   add_executable (container container.c)
   target_include_directories (container PRIVATE ../../../include)

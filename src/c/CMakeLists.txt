@@ -26,13 +26,13 @@ endif ()
 
 # Set files to compile
 
-set (C_FILES bus.c data.c json.c logger.c os.c scheduler.c thread.c threadpool.c)
+set (C_FILES data.c json.c logger.c os.c scheduler.c thread.c threadpool.c)
 if (IOT_BUILD_COMPONENTS)
   set (C_FILES ${C_FILES} container.c)
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIOT_BUILD_COMPONENTS")
 endif ()
 
-# Main sdk library
+# Main library
 
 add_library (cutils ${IOT_LIB_TYPE} ${C_FILES})
 target_include_directories (cutils PRIVATE ../../include)
