@@ -61,7 +61,7 @@ done
 
 # Release build
 
-mkdir -p --mode=a+rw ${BROOT}/release
+mkdir -p -m a+rw ${BROOT}/release
 cd ${BROOT}/release
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
 make 2>&1 | tee release.log
@@ -69,7 +69,7 @@ make package
 
 # Static release build
 
-mkdir -p --mode=a+rw ${BROOT}/static
+mkdir -p -m a+rw ${BROOT}/static
 cd ${BROOT}/static
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DIOT_BUILD_STATIC=ON ${ROOT}/src
 make 2>&1 | tee static.log
@@ -77,7 +77,7 @@ make package
 
 # Debug build
 
-mkdir -p --mode=a+rw ${BROOT}/debug
+mkdir -p -m a+rw ${BROOT}/debug
 cd ${BROOT}/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
 make 2>&1 | tee debug.log
@@ -97,7 +97,7 @@ then
 
   # Build with profiling enabled
 
-  mkdir -p --mode=a+rw ${BROOT}/lcov
+  mkdir -p -m a+rw ${BROOT}/lcov
   cd ${BROOT}/lcov
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON ${ROOT}/src
   make
