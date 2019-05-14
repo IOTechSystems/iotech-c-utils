@@ -9,7 +9,7 @@ arch="$ARCH"
 license="Apache-2.0"
 depends=""
 install=""
-source="cutils-$VER_$ARCH.tar.gz"
+source="cutils-${VER}_${ARCH}.tar.gz"
 builddir="$srcdir/"
 options="!check !strip !tracedeps"
 
