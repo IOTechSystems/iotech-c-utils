@@ -1,10 +1,8 @@
 //
-// Copyright (c) 2019
-// IoTech
+// Copyright (c) 2019 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-
 #include "iot/bus.h"
 
 #define DATA_ARRAY_SIZE 3

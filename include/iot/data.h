@@ -1,10 +1,8 @@
 //
-// Copyright (c) 2019
-// IoTech
+// Copyright (c) 2019 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-
 #ifndef _IOT_DATA_H_
 #define _IOT_DATA_H_
 

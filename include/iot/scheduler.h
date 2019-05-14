@@ -1,12 +1,8 @@
 //
-// Copyright (c) 2018
-// IoTech
+// Copyright (c) 2018 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-/** @file
- *  @brief Scheduler API
- */
 #ifndef _IOT_SCHEDULER_H_
 #define _IOT_SCHEDULER_H_
 
