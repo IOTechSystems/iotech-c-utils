@@ -15,7 +15,7 @@ options="!check !strip !tracedeps"
 
 package() {
     cd "$builddir"
-    install -Dm755 cutils-"$VER"/lib/libcutils.so "$pkgdir"/usr/lib/libcutils.so
+    install -Dm755 cutils-"$VER"_"$ARCH"/lib/libcutils.so "$pkgdir"/usr/lib/libcutils.so
     mkdir -p "$pkgdir"/usr/include/iot/
-    cp -r cutils-"$VER"/include/* "$pkgdir"/usr/include/
+    cp -r cutils-"$VER"_"$ARCH"/include/* "$pkgdir"/usr/include/
 }
