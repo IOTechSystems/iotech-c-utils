@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e -x
 
-ARCH=`uname -m`
 ROOT=$(dirname $(dirname $(readlink -f $0)))
 
 UTEST=false
