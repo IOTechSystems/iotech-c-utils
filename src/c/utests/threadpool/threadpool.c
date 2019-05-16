@@ -128,17 +128,17 @@ static void cunit_threadpool_stop_start (void)
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
   iot_threadpool_start (pool);
   iot_threadpool_wait (pool);
-  CU_ASSERT (counter = 1);
+  CU_ASSERT (counter == 1)
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
   iot_threadpool_wait (pool);
-  CU_ASSERT (counter = 2);
+  CU_ASSERT (counter == 2)
   iot_threadpool_stop (pool);
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
   usleep (500000);
-  CU_ASSERT (counter = 2);
+  CU_ASSERT (counter == 2)
   iot_threadpool_start (pool);
   iot_threadpool_wait (pool);
-  CU_ASSERT (counter = 3);
+  CU_ASSERT (counter == 3)
   iot_threadpool_stop (pool);
   iot_threadpool_free (pool);
 }
