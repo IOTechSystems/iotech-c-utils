@@ -10,7 +10,7 @@ export VER=`cat VERSION`
 build_dist()
 {
   mkdir -p ${ARCH}/build/${SYSTEM}
-  docker build --pull --tag iotech-c-utils-${SYSTEM}-${RAND}:${VER} --file scripts/Dockerfile.${SYSTEM} .
+  docker build --pull --tag iotech-c-utils-${SYSTEM}-${RAND}:${VER} --file scripts/Dockerfile.${SYSTEM} --build-arg UID_ARG=`id -u ${USER}` .
   docker run --cap-add=SYS_NICE --rm -e "TARGET=${TARGET}" -v "$(pwd)"/${ARCH}/${SYSTEM}:/iotech-c-utils/${ARCH} iotech-c-utils-${SYSTEM}-${RAND}:${VER}
   docker rmi iotech-c-utils-${SYSTEM}-${RAND}:${VER}
 }

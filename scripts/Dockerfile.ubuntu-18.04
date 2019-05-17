@@ -1,9 +1,13 @@
 FROM ubuntu:18.04
 MAINTAINER IOTech <support@iotechsys.com>
-RUN apt-get update && apt-get install -y build-essential wget git gcc cmake make valgrind cppcheck lcov gcovr
+ARG UID_ARG
+ENV UID=$UID_ARG
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
-COPY scripts /iotech-c-utils/scripts
+COPY scripts /iotech-c-utils/scripts/
+RUN apt-get update && apt-get install -y build-essential wget git gcc cmake make valgrind cppcheck lcov gcovr \
+  && useradd --uid $UID builder && chown --recursive builder /iotech-c-utils
+USER builder
 WORKDIR /iotech-c-utils
 ENTRYPOINT ["/iotech-c-utils/scripts/wrapper.sh", "/iotech-c-utils/scripts/linux.sh", "-cppcheck", "-lcov", "-valgrind", "-utest"]
