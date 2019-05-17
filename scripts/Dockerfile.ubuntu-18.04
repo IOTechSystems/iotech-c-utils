@@ -4,6 +4,6 @@ RUN apt-get update && apt-get install -y build-essential wget git gcc cmake make
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
-COPY scripts /iotech-c-utils/scripts
+COPY scripts /iotech-c-utils/scripts/
 WORKDIR /iotech-c-utils
 ENTRYPOINT ["/iotech-c-utils/scripts/wrapper.sh", "/iotech-c-utils/scripts/linux.sh", "-cppcheck", "-lcov", "-valgrind", "-utest"]
