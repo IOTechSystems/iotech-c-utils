@@ -42,7 +42,7 @@ done
 
 # Release build
 
-ls -l ${BROOT}/release
+ls -l ${BROOT}
 mkdir ${BROOT}/release
 cd ${BROOT}/release
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
