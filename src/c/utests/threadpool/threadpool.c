@@ -57,7 +57,7 @@ static void cunit_pool_prio_worker (void * arg)
   int prio = *((int*) arg);
   if (prio != iot_thread_current_get_priority ())
   {
-    printf ("\n**** Is CAP_SYS_NICE set for runner ??? ****\n");
+    printf ("\n**** Is CAP_SYS_NICE set for runner ??? **** prio = %d\n", prio);
   }
   CU_ASSERT (prio == iot_thread_current_get_priority ())
 }
