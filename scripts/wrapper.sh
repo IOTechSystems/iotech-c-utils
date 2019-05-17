@@ -29,3 +29,9 @@ esac
 
 mkdir -p ${BROOT}
 $@ -broot ${BROOT}
+RET=$?
+
+# Allow deletion of generated files in mounted volume
+
+chmod -R a+rw ${BROOT}
+exit ${RET}
