@@ -20,10 +20,10 @@ fi
 build_board()
 {
   export BOARD=$1
-  export CONF_FILE=$ROOT/src/etc/zephyr/prj-${BOARD}.conf
+  export CONF_FILE=${ROOT}/src/etc/zephyr/prj-${BOARD}.conf
   mkdir -p ${BROOT}/release
   cd ${BROOT}/release
-  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $ROOT/src/c/zephyr/lib
+  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${ROOT}/src/c/zephyr/lib
   make package 2>&1 | tee release.log
 }
 
@@ -33,7 +33,3 @@ for b in ${BRDS}
 do
   build_board $b
 done
-
-# Allow deletion of generated files in mounted volume
-
-chmod -R a+rw ${BROOT}
