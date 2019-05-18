@@ -84,7 +84,8 @@ int iot_thread_get_priority (pthread_t thread)
 {
   struct sched_param param;
   int policy;
-  pthread_getschedparam (thread, &policy, &param);
+  int ret = pthread_getschedparam (thread, &policy, &param);
+  printf ("pthread_getschedparam ret: %d\n", ret);
   return param.sched_priority;
 }
 
