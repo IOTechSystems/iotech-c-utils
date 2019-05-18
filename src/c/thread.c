@@ -103,6 +103,8 @@ bool iot_thread_set_priority (pthread_t thread, int prio)
 
   if ((prio >= sched_get_priority_min (SCHED_FIFO)) && (prio <= sched_get_priority_max (SCHED_FIFO)))
   {
+    int ret = pthread_setschedparam (thread, SCHED_FIFO, &param);
+    printf ("iot_thread_set_priority prio: %d ret: %d", prio, ret);
     result = (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
   }
   return result;
