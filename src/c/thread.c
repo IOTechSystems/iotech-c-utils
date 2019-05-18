@@ -71,8 +71,10 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
 #endif
     /* If priority set, also set FIFO scheduling */
 
-    pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
-    pthread_attr_setschedparam (&attr, &param);
+    ret = pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
+    printf ("pthread_attr_setschedpolicy ret: %d\n", ret);
+    ret = pthread_attr_setschedparam (&attr, &param);
+    printf ("pthread_attr_setschedparam ret: %d\n", ret);
   }
   ret = pthread_create (tid, &attr, func, arg);
   pthread_attr_destroy (&attr);
