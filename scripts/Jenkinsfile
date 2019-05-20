@@ -91,7 +91,7 @@ def publishDebs (arch, server)
 {
   def debs_x86_64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-9','debian-8']
   def debs_arm64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-9']
-  def debs_arm32 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-9']
+  def debs_arm32 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-9','debian-8']
   def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32]
   def deb_archs = [x86_64: 'x86_64', arm64: 'arm64', arm32: 'armhf']
   def deb_name = ['ubuntu-19.04':'disco','ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-9':'stretch','debian-8':'jessie']
