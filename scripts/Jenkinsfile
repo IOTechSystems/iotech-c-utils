@@ -1,8 +1,8 @@
 #!/usr/bin/env groovy
 
-def systems_x86_64 = ['ubuntu-18.04','ubuntu-19.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30','opensuse-42','photon-3.0','zephyr-1.14','clear'] as String[]
-def systems_arm64 = ['ubuntu-18.04','ubuntu-19.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','fedora-30','opensuse-42','photon-3.0'] as String[]
-def systems_arm32 = ['ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30'] as String[]
+def systems_x86_64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30','opensuse-42','photon-3.0','zephyr-1.14','clear'] as String[]
+def systems_arm64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','fedora-30','opensuse-42','photon-3.0'] as String[]
+def systems_arm32 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30'] as String[]
 def targets = ['x86_64', 'arm64', 'arm32'] as String[]
 def systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32]
 
@@ -29,9 +29,9 @@ def buildStage (systems, arch)
 def metricsStage (systems, arch)
 {
   publishCoreMetrics (systems, arch)
-  if ("${params.System}" == 'ubuntu-18.04' || "${params.System}" == 'all')
+  if ("${params.System}" == 'ubuntu-19.04' || "${params.System}" == 'all')
   {
-    publishAdvancedMetrics ('ubuntu-18.04', arch)
+    publishAdvancedMetrics ('ubuntu-19.04', arch)
   }
 }
 
@@ -89,9 +89,9 @@ def publishAdvancedMetrics (system, arch)
 
 def publishDebs (arch, server)
 {
-  def debs_x86_64 = ['ubuntu-18.04','ubuntu-19.04','ubuntu-16.04','debian-9','debian-8']
-  def debs_arm64 = ['ubuntu-18.04','ubuntu-19.04','ubuntu-16.04','debian-9']
-  def debs_arm32 = ['ubuntu-18.04','ubuntu-16.04','debian-9']
+  def debs_x86_64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-9','debian-8']
+  def debs_arm64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-9']
+  def debs_arm32 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-9']
   def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32]
   def deb_archs = [x86_64: 'x86_64', arm64: 'arm64', arm32: 'armhf']
   def deb_name = ['ubuntu-19.04':'disco','ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-9':'stretch','debian-8':'jessie']
@@ -227,7 +227,7 @@ pipeline
   parameters
   {
     choice (choices: ['None','Development','Release'], description: 'Build Archive Type', name: 'Archive')
-    choice (choices: ['ubuntu-18.04','ubuntu-19.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30','opensuse-42','photon-3.0','zephyr-1.14','clear','all'], description: 'System to Build', name: 'System')
+    choice (choices: ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30','opensuse-42','photon-3.0','zephyr-1.14','clear','all'], description: 'System to Build', name: 'System')
     choice (choices: ['x86_64','arm64','arm32', 'all'], description: 'Build Host Architecture', name: 'Arch')
     choice (choices: ['None','frdm_k64f','native_posix','all'], description: 'Target Board', name: 'Board')
   }
