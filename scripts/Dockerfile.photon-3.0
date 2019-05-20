@@ -4,6 +4,6 @@ RUN tdnf remove -y toybox && tdnf update -y && tdnf install -y wget gcc glibc-de
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
-COPY scripts /iotech-c-utils/scripts
+COPY scripts /iotech-c-utils/scripts/
 WORKDIR /iotech-c-utils
 ENTRYPOINT ["/iotech-c-utils/scripts/wrapper.sh", "/iotech-c-utils/scripts/linux.sh", "-utest"]

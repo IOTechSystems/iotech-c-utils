@@ -6,7 +6,7 @@ RUN yum -y install --setopt=tsflags=nodocs epel-release centos-release-scl \
 COPY VERSION /iotech-c-utils/
 COPY src /iotech-c-utils/src/
 COPY include /iotech-c-utils/include/
-COPY scripts /iotech-c-utils/scripts
+COPY scripts /iotech-c-utils/scripts/
 RUN /opt/rh/devtoolset-7/enable
 ENV CC /opt/rh/devtoolset-7/root/bin/gcc
 WORKDIR /iotech-c-utils
