@@ -8,7 +8,8 @@ The following Utilities are provided:
 * Logging
 * Thread Pool
 * Data
-* Bus
+* Container/Component
+* JSON parser
 
 ## License
 [Apache-2.0](LICENSE)
