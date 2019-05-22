@@ -150,6 +150,7 @@ def publishRpms (arch, server)
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def rpms = rpm_lists[arch]
   def rpm_repo = ['fedora-30':'rpm-fedora30','opensuse-15':'rpm-opensuse15','photon-3.0':'rpm-photon30']
+  def type = ['Release':'-release','Development':'-dev']
 
   for (int i = 0; i < rpms.size(); ++i)
   {
@@ -157,7 +158,7 @@ def publishRpms (arch, server)
     {
       def uploadSpec = """{"files":[{
         "pattern": "${arch}/${rpms[i]}/release/cutils*.rpm",
-        "target": "${rpm_repo[rpms[i]]}",
+        "target": "${rpm_repo[rpms[i]]}${type[params.Archive]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }]}"""
       server.upload (uploadSpec)
