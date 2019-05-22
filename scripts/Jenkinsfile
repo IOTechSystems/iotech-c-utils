@@ -1,8 +1,8 @@
 #!/usr/bin/env groovy
 
-def systems_x86_64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30','opensuse-42','photon-3.0','zephyr-1.14','clear'] as String[]
-def systems_arm64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','fedora-30','opensuse-42','photon-3.0'] as String[]
-def systems_arm32 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30'] as String[]
+def systems_x86_64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30','opensuse-42','photon-3.0','zephyr-1.14','clearlinux'] as String[]
+def systems_arm64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.8','alpine-3.9','debian-9','fedora-30','opensuse-42','photon-3.0'] as String[]
+def systems_arm32 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.8','alpine-3.9','debian-9','debian-8'] as String[]
 def targets = ['x86_64', 'arm64', 'arm32'] as String[]
 def systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32]
 
@@ -116,9 +116,9 @@ def publishDebs (arch, server)
 
 def publishApks (arch, server)
 {
-  def apks_x86_64 = ['alpine-3.7','alpine-3.8','alpine-3.9']
-  def apks_arm64 = ['alpine-3.7','alpine-3.8','alpine-3.9']
-  def apks_arm32 = ['alpine-3.7','alpine-3.8','alpine-3.9']
+  def apks_x86_64 = ['alpine-3.8','alpine-3.9']
+  def apks_arm64 = ['alpine-3.8','alpine-3.9']
+  def apks_arm32 = ['alpine-3.8','alpine-3.9']
   def apk_lists = [x86_64: apks_x86_64, arm64: apks_arm64, arm32: apks_arm32]
   def apk_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def apks = apk_lists[arch]
@@ -145,11 +145,11 @@ def publishRpms (arch, server)
 {
   def rpms_x86_64 = ['fedora-30','opensuse-42','photon-3.0']
   def rpms_arm64 = ['fedora-30','opensuse-42','photon-3.0']
-  def rpms_arm32 = ['fedora-30','opensuse-42']
+  def rpms_arm32 = ['opensuse-42']
   def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32]
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def rpms = rpm_lists[arch]
-  def rpm_repo = ['fedora-30':'rpm-fedora29','opensuse-42':'rpm-opensuse42','photon-3.0':'rpm-photon30']
+  def rpm_repo = ['fedora-30':'rpm-fedora30','opensuse-42':'rpm-opensuse42','photon-3.0':'rpm-photon30']
 
   for (int i = 0; i < rpms.size(); ++i)
   {
@@ -167,9 +167,9 @@ def publishRpms (arch, server)
 
 def publishTars (arch, server)
 {
-  def tars_x86_64 = ['alpine-3.7','alpine-3.8','alpine-3.9','zephyr-1.14','clear']
-  def tars_arm64 = ['alpine-3.7','alpine-3.8','alpine-3.9']
-  def tars_arm32 = ['alpine-3.7','alpine-3.8','alpine-3.9']
+  def tars_x86_64 = ['alpine-3.8','alpine-3.9','zephyr-1.14','clearlinux']
+  def tars_arm64 = ['alpine-3.8','alpine-3.9']
+  def tars_arm32 = ['alpine-3.8','alpine-3.9']
   def tar_lists = [x86_64: tars_x86_64, arm64: tars_arm64, arm32: tars_arm32]
   def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def tars = tar_lists[arch]
@@ -227,7 +227,7 @@ pipeline
   parameters
   {
     choice (choices: ['None','Development','Release'], description: 'Build Archive Type', name: 'Archive')
-    choice (choices: ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.7','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30','opensuse-42','photon-3.0','zephyr-1.14','clear','all'], description: 'System to Build', name: 'System')
+    choice (choices: ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.8','alpine-3.9','debian-9','debian-8','fedora-30','opensuse-42','photon-3.0','zephyr-1.14','clearlinux','all'], description: 'System to Build', name: 'System')
     choice (choices: ['x86_64','arm64','arm32', 'all'], description: 'Build Host Architecture', name: 'Arch')
     choice (choices: ['None','frdm_k64f','native_posix','all'], description: 'Target Board', name: 'Board')
   }
