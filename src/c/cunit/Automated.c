@@ -324,30 +324,28 @@ static void automated_test_complete_message_handler(const CU_pTest pTest,
     size_t szTemp_len = 0;
     size_t cur_len = 0;
 
-    if(NULL != pTempFailure) {
-      if (bJUnitXmlOutput == CU_TRUE) {
-        assert((NULL != pTempFailure->pSuite) && (pTempFailure->pSuite == pSuite));
-        assert((NULL != pTempFailure->pTest) && (pTempFailure->pTest == pTest));
+    if (bJUnitXmlOutput == CU_TRUE) {
+      assert((NULL != pTempFailure->pSuite) && (pTempFailure->pSuite == pSuite));
+      assert((NULL != pTempFailure->pTest) && (pTempFailure->pTest == pTest));
 
-        if (NULL != pTempFailure->strCondition) {
-          cur_len = CU_translated_strlen(pTempFailure->strCondition) + 1;
-          if (cur_len > szTemp_len) {
-            szTemp_len = cur_len;
-            if (NULL != szTemp) {
-              CU_FREE(szTemp);
-            }
-            szTemp = (char *)CU_MALLOC(szTemp_len);
+      if (NULL != pTempFailure->strCondition) {
+        cur_len = CU_translated_strlen(pTempFailure->strCondition) + 1;
+        if (cur_len > szTemp_len) {
+          szTemp_len = cur_len;
+          if (NULL != szTemp) {
+            CU_FREE(szTemp);
           }
-          CU_translate_special_characters(pTempFailure->strCondition, szTemp, sizeof(szTemp));
+          szTemp = (char *)CU_MALLOC(szTemp_len);
         }
+        CU_translate_special_characters(pTempFailure->strCondition, szTemp, sizeof(szTemp));
+      }
 
-        fprintf(f_pTestResultFile, "        <testcase classname=\"%s.%s\" name=\"%s\" time=\"0\">\n",
-                pPackageName,
-                pSuite->pName,
-                (NULL != pTest->pName) ? pTest->pName : "");
-        fprintf(f_pTestResultFile, "            <failure message=\"%s\" type=\"Failure\">\n", szTemp);
-      } /* if */
-    }
+      fprintf(f_pTestResultFile, "        <testcase classname=\"%s.%s\" name=\"%s\" time=\"0\">\n",
+        pPackageName,
+        pSuite->pName,
+        (NULL != pTest->pName) ? pTest->pName : "");
+      fprintf(f_pTestResultFile, "            <failure message=\"%s\" type=\"Failure\">\n", szTemp);
+    } /* if */
 
     while (NULL != pTempFailure) {
 
