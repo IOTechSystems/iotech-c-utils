@@ -1,8 +1,8 @@
 FROM docker.iotechsys.com/services/zephyr-builder:1.14
 MAINTAINER IOTech <support@iotechsys.com>
-COPY VERSION /iotech-c-utils/
-COPY src /iotech-c-utils/src/
-COPY include /iotech-c-utils/include/
-COPY scripts /iotech-c-utils/scripts/
-WORKDIR /iotech-c-utils
-ENTRYPOINT ["/iotech-c-utils/scripts/wrapper.sh", "/iotech-c-utils/scripts/zephyr.sh"]
+COPY VERSION /iotech-iot/
+COPY src /iotech-iot/src/
+COPY include /iotech-iot/include/
+COPY scripts /iotech-iot/scripts/
+WORKDIR /iotech-iot
+ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/zephyr.sh"]

@@ -34,8 +34,8 @@ endif ()
 
 # Main library
 
-add_library (cutils ${IOT_LIB_TYPE} ${C_FILES})
-target_include_directories (cutils PRIVATE ../../include)
+add_library (iotech-iot ${IOT_LIB_TYPE} ${C_FILES})
+target_include_directories (iotech-iot PRIVATE ../../include)
 
 # Build modules
 
@@ -45,5 +45,5 @@ add_subdirectory (utests)
  
 # Configure installer
 
-install (TARGETS cutils LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
+install (TARGETS iotech-iot LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
 install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION include)

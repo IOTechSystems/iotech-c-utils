@@ -73,7 +73,7 @@ def publishAdvancedMetrics (system, arch)
 {
   fileOperations ([fileCopyOperation (includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/', flattenFiles: true),
     fileCopyOperation (includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/', flattenFiles: true)])
-  publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-c-utils/src:src')
+  publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-iot/src:src')
   def cppc = scanForIssues (tool: cppCheck (pattern: "${arch}/${system}/release/cppcheck.xml"))
   publishIssues (issues: [cppc])
   junit (testResults: "${arch}/${system}/release/junit-Results.xml")
@@ -105,7 +105,7 @@ def publishDebs (arch, server)
     {
       def name = deb_name[debs[i]]
       def uploadSpec = """{"files":[{
-        "pattern": "${arch}/${debs[i]}/release/cutils*.deb",
+        "pattern": "${arch}/${debs[i]}/release/iotech-iot*.deb",
         "target": "${repo}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }]}"""
@@ -157,7 +157,7 @@ def publishRpms (arch, server)
     if ("${params.System}" == "${rpms[i]}" || "${params.System}" == 'all')
     {
       def uploadSpec = """{"files":[{
-        "pattern": "${arch}/${rpms[i]}/release/cutils*.rpm",
+        "pattern": "${arch}/${rpms[i]}/release/iotech-iot*.rpm",
         "target": "${rpm_repo[rpms[i]]}${type[params.Archive]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }]}"""
@@ -183,7 +183,7 @@ def publishTars (arch, server)
     {
       def uploadSpec = """{"files":[
       {
-        "pattern": "${arch}/${tars[i]}/release/cutils*.tar.gz",
+        "pattern": "${arch}/${tars[i]}/release/iotech-iot*.tar.gz",
         "target": "${repo}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }

@@ -8,7 +8,7 @@ build_apk()
 {
   DIST=$1
   mkdir -p apk/${DIST}
-  cp ${ARCH}/${DIST}/release/cutils-*.tar.gz apk/${DIST}/
+  cp ${ARCH}/${DIST}/release/iotech-iot-*.tar.gz apk/${DIST}/
   cp scripts/APKBUILD apk/${DIST}/.
   cp VERSION apk/${DIST}/.
   docker pull docker.iotechsys.com/services/iotech-apk-builder-${ARCH}:0.2.0

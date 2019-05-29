@@ -4,9 +4,9 @@ RUN echo "Acquire::Check-Valid-Until no;" > /etc/apt/apt.conf.d/99no-check-valid
   && echo "deb http://archive.debian.org/debian jessie-backports main" >> /etc/apt/sources.list \
   && apt-get update && apt-get install -y build-essential wget git gcc make \
   && apt-get -y -t jessie-backports install cmake
-COPY VERSION /iotech-c-utils/
-COPY src /iotech-c-utils/src/
-COPY include /iotech-c-utils/include/
-COPY scripts /iotech-c-utils/scripts/
-WORKDIR /iotech-c-utils
-ENTRYPOINT ["/iotech-c-utils/scripts/wrapper.sh", "/iotech-c-utils/scripts/linux.sh", "-utest"]
+COPY VERSION /iotech-iot/
+COPY src /iotech-iot/src/
+COPY include /iotech-iot/include/
+COPY scripts /iotech-iot/scripts/
+WORKDIR /iotech-iot
+ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/linux.sh", "-utest"]
