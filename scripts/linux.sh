@@ -48,14 +48,6 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
 make 2>&1 | tee release.log
 make package
 
-# Static release build
-
-mkdir ${BROOT}/static
-cd ${BROOT}/static
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DIOT_BUILD_STATIC=ON ${ROOT}/src
-make 2>&1 | tee static.log
-make package
-
 # Debug build
 
 mkdir ${BROOT}/debug

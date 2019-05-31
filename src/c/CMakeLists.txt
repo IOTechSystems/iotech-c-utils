@@ -1,12 +1,3 @@
-if (IOT_BUILD_STATIC)
-  set (CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set (BUILD_SHARED_LIBS OFF)
-  set (CMAKE_EXE_LINKER_FLAGS "-static")
-  set (IOT_LIB_TYPE "STATIC")
-else ()
-  set (IOT_LIB_TYPE "SHARED")
-endif ()
-
 # Set additional C compiler flags
 
 if (DEFINED CMAKE_C_COMPILER_ID)
@@ -34,8 +25,12 @@ endif ()
 
 # Main library
 
-add_library (iotech-iot ${IOT_LIB_TYPE} ${C_FILES})
+add_library (iotech-iot SHARED ${C_FILES})
+add_library (iotech-iot-static STATIC ${C_FILES})
+set_target_properties (iotech-iot PROPERTIES OUTPUT_NAME iotech-iot CLEAN_DIRECT_OUTPUT 1)
+set_target_properties (iotech-iot-static PROPERTIES OUTPUT_NAME iotech-iot CLEAN_DIRECT_OUTPUT 1)
 target_include_directories (iotech-iot PRIVATE ../../include)
+target_include_directories (iotech-iot-static PRIVATE ../../include)
 
 # Build modules
 
@@ -45,5 +40,6 @@ add_subdirectory (utests)
  
 # Configure installer
 
-install (TARGETS iotech-iot LIBRARY DESTINATION lib ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
+install (TARGETS iotech-iot LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+install (TARGETS iotech-iot-static ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
 install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION include)

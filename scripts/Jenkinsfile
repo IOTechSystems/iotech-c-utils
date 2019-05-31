@@ -63,7 +63,6 @@ def publishCoreMetrics (systems, arch)
     {
       publishMetric ("${arch}/${systems[i]}/release/release.log")
       publishMetric ("${arch}/${systems[i]}/debug/debug.log")
-      publishMetric ("${arch}/${systems[i]}/static/static.log")
       publishMetric ("${arch}/${systems[i]}/release/junit-Results.xml")
     }
   }
