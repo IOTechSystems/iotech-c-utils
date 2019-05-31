@@ -1,9 +1,9 @@
-#include "iot/json.h"
-#include "../../cunit/Basic.h"
-#include "../../cunit/Automated.h"
+#include "iot/iot.h"
 #include "../json/json.h"
 #include "../data/data.h"
 #include "../threadpool/threadpool.h"
+#include "../../cunit/Basic.h"
+#include "../../cunit/Automated.h"
 
 static void usage (void)
 {
