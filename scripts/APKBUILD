@@ -14,8 +14,9 @@ builddir="$srcdir/"
 options="!check !strip !tracedeps"
 
 package() {
-    cd "$builddir"
-    install -Dm755 iotech-iot-"$VER"_"$ARCH"/lib/libiotech-iot.so "$pkgdir"/usr/lib/libiotech-iot.so
-    mkdir -p "$pkgdir"/usr/include/iot/
-    cp -r iotech-iot-"$VER"_"$ARCH"/include/* "$pkgdir"/usr/include/
+  cd "$builddir"
+  install -Dm755 iotech-iot-"$VER"_"$ARCH"/lib/libiotech-iot.so "$pkgdir"/usr/lib/libiotech-iot.so
+  install -Dm755 iotech-iot-"$VER"_"$ARCH"/lib/libiotech-iot.a "$pkgdir"/usr/lib/libiotech-iot.a
+  mkdir -p "$pkgdir"/usr/include/iot/
+  cp -r iotech-iot-"$VER"_"$ARCH"/include/* "$pkgdir"/usr/include/
 }
