@@ -31,6 +31,13 @@ typedef enum iot_data_type_t
   IOT_DATA_ARRAY = 14
 } iot_data_type_t;
 
+typedef enum iot_data_ownership_t
+{
+  IOT_DATA_COPY,  /* Data is copied and copy freed when no longer used */
+  IOT_DATA_TAKE,  /* Data is taken and freed when no longer used */
+  IOT_DATA_REF    /* Data is referenced and never freed */
+} iot_data_ownership_t;
+
 typedef struct iot_data_t iot_data_t;
 
 typedef struct iot_data_map_iter_t
@@ -64,8 +71,8 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
 extern iot_data_t * iot_data_alloc_f32 (float val);
 extern iot_data_t * iot_data_alloc_f64 (double val);
 extern iot_data_t * iot_data_alloc_bool (bool val);
-extern iot_data_t * iot_data_alloc_string (const char * val, bool copy);
-extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, bool copy);
+extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership);
+extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data_ownership_t ownership);
 extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
 extern iot_data_t * iot_data_alloc_array (uint32_t size);
 

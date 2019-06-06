@@ -61,11 +61,27 @@ static void test_data_types (void)
   CU_ASSERT (strcmp (iot_data_type_name (data), "Bool") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
   iot_data_free (data);
-  data = iot_data_alloc_string ("Hello", false);
+  data = iot_data_alloc_string ("Hello", IOT_DATA_REF);
   CU_ASSERT (strcmp (iot_data_type_name (data), "String") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
   iot_data_free (data);
-  data = iot_data_alloc_blob (blob, 4, false);
+  data = iot_data_alloc_string ("Hello", IOT_DATA_COPY);
+  CU_ASSERT (strcmp (iot_data_type_name (data), "String") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
+  iot_data_free (data);
+  data = iot_data_alloc_string (strdup ("Hello"), IOT_DATA_TAKE);
+  CU_ASSERT (strcmp (iot_data_type_name (data), "String") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
+  iot_data_free (data);
+  data = iot_data_alloc_blob (blob, 4, IOT_DATA_REF);
+  CU_ASSERT (strcmp (iot_data_type_name (data), "BLOB") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BLOB)
+  iot_data_free (data);
+  data = iot_data_alloc_blob (calloc (1, sizeof (blob)), 4, IOT_DATA_TAKE);
+  CU_ASSERT (strcmp (iot_data_type_name (data), "BLOB") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BLOB)
+  iot_data_free (data);
+  data = iot_data_alloc_blob (blob, 4, IOT_DATA_COPY);
   CU_ASSERT (strcmp (iot_data_type_name (data), "BLOB") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BLOB)
   iot_data_free (data);
@@ -86,8 +102,8 @@ static void test_data_blob_key (void)
   uint8_t data2 [4] = { 0, 1, 2 ,4 };
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_BLOB);
   CU_ASSERT (iot_data_map_key_type (map) == IOT_DATA_BLOB)
-  iot_data_t * blob1 = iot_data_alloc_blob (data1, sizeof (data1), false);
-  iot_data_t * blob2 = iot_data_alloc_blob (data2, sizeof (data2), false);
+  iot_data_t * blob1 = iot_data_alloc_blob (data1, sizeof (data1), IOT_DATA_REF);
+  iot_data_t * blob2 = iot_data_alloc_blob (data2, sizeof (data2), IOT_DATA_REF);
   iot_data_t * val = iot_data_alloc_ui32 (66u);
   iot_data_t * duffkey = iot_data_alloc_i32 (55);
   iot_data_map_add (map, blob1, val);
@@ -108,8 +124,8 @@ static void test_data_string_array (void)
   uint32_t index = 0;
   iot_data_array_iter_t iter;
   iot_data_t * array = iot_data_alloc_array (2);
-  iot_data_t * str1 = iot_data_alloc_string (strs[0], false);
-  iot_data_t * str2 = iot_data_alloc_string (strs[1], false);
+  iot_data_t * str1 = iot_data_alloc_string (strs[0], IOT_DATA_REF);
+  iot_data_t * str2 = iot_data_alloc_string (strs[1], IOT_DATA_REF);
   iot_data_array_add (array, 0, str1);
   iot_data_array_add (array, 1, str2);
   iot_data_array_iter (array, &iter);
@@ -126,7 +142,7 @@ static void test_data_string_array (void)
 
   int loop = 5;
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_array_add (array, 0, iot_data_alloc_string ("first element", false));
+  iot_data_array_add (array, 0, iot_data_alloc_string ("first element", IOT_DATA_REF));
   while (loop--)
   {
     iot_data_string_map_add (map, "temp", iot_data_alloc_i32 (loop));
@@ -142,10 +158,10 @@ static void test_data_to_json (void)
 {
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * val = iot_data_alloc_ui32 (1u);
-  iot_data_t * key = iot_data_alloc_string ("UInt32", false);
+  iot_data_t * key = iot_data_alloc_string ("UInt32", IOT_DATA_REF);
   iot_data_map_add (map, key, val);
-  val = iot_data_alloc_string ("Lilith", false);
-  key = iot_data_alloc_string ("Name", false);
+  val = iot_data_alloc_string ("Lilith", IOT_DATA_REF);
+  key = iot_data_alloc_string ("Name",IOT_DATA_REF );
   iot_data_map_add (map, key, val);
   char * json = iot_data_to_json (map, false);
   CU_ASSERT (json != NULL)

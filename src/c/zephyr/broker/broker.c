@@ -54,7 +54,7 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters)
   iot_data_array_add (array, index++, iot_data_alloc_i32 (22));
   iot_data_array_add (array, index, iot_data_alloc_i32 (33));
   iot_data_string_map_add (map, "Coords", array);
-  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-54", false));
+  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-54", IOT_DATA_REF));
 
   while (iters--)
   {
@@ -89,7 +89,7 @@ static iot_data_t * publisher_callback (void * self)
 
   f32 = (float) (f32 * 1.02);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-7", false));
+  iot_data_string_map_add (map, "Origin", iot_data_alloc_string ("Sensor-7", IOT_DATA_REF));
   iot_data_string_map_add (map, "Temp", iot_data_alloc_f32 (f32));
   return map;
 }

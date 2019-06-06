@@ -356,22 +356,22 @@ iot_data_t * iot_data_alloc_bool (bool val)
   return (iot_data_t*) data;
 }
 
-iot_data_t * iot_data_alloc_string (const char * val, bool copy)
+iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
 {
   assert (val);
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, copy);
-  data->value.str = copy ? iot_strdup (val) : (char*) val;
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, ownership != IOT_DATA_REF);
+  data->value.str = (ownership == IOT_DATA_COPY) ? iot_strdup (val) : (char*) val;
   return (iot_data_t*) data;
 }
 
-iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, bool copy)
+iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data_ownership_t ownership)
 {
   assert (data && size);
   iot_data_blob_t * blob = iot_data_factory_alloc ();
   blob->base.type = IOT_DATA_BLOB;
   blob->size = size;
-  blob->base.release = copy;
-  if (copy)
+  blob->base.release = ownership != IOT_DATA_REF;
+  if (ownership == IOT_DATA_COPY)
   {
     blob->data = malloc (size);
     memcpy (blob->data, data, size);
@@ -479,7 +479,7 @@ static iot_data_pair_t * iot_data_map_find (iot_data_map_t * map, const iot_data
 void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val)
 {
   assert (key);
-  iot_data_map_add (map, iot_data_alloc_string (key, false), val);
+  iot_data_map_add (map, iot_data_alloc_string (key, IOT_DATA_REF), val);
 }
 
 void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
@@ -517,7 +517,7 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
 const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key)
 {
   assert (map && key);
-  iot_data_t * dkey = iot_data_alloc_string (key, false);
+  iot_data_t * dkey = iot_data_alloc_string (key, IOT_DATA_REF);
   const iot_data_t * value = iot_data_map_get (map, dkey);
   iot_data_free (dkey);
   return value;
@@ -746,7 +746,7 @@ static iot_data_t * iot_data_string_from_json (iot_json_tok_t ** tokens, const c
   char str [IOT_JSON_STRING_MAX];
   iot_data_string_from_json_token (str, json, *tokens);
   (*tokens)++;
-  return iot_data_alloc_string (str, true);
+  return iot_data_alloc_string (str, IOT_DATA_COPY);
 }
 
 static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, const char * json)
@@ -757,7 +757,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
   switch (str[0]) // Check for true/false/null
   {
     case 't': case 'f': return iot_data_alloc_bool (str[0] == 't');
-    case 'n': return iot_data_alloc_string ("null", false);
+    case 'n': return iot_data_alloc_string ("null", IOT_DATA_REF);
     default: break;
   }
 
