@@ -156,7 +156,7 @@ def publishRpms (arch, server)
     {
       def uploadSpec = """{"files":[{
         "pattern": "${arch}/${rpms[i]}/release/iotech-iot*.rpm",
-        "target": "${rpms[i]}-${type[params.Archive]}",
+        "target": "rpm-${rpms[i]}-${type[params.Archive]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }]}"""
       server.upload (uploadSpec)
@@ -207,8 +207,7 @@ for (t in targets)
 {
   def target = t
   def systems = systemMap["${target}"]
-  if (("${params.Arch}" == target || "${params.Arch}" == 'all') &&
-    (systems.count ("${params.System}") != 0 || "${params.System}" == 'all'))
+  if (("${params.Arch}" == target || "${params.Arch}" == 'all') && (systems.count ("${params.System}") != 0 || "${params.System}" == 'all'))
   {
     buildMap[target] = { buildStages (target, systems) }
   }
