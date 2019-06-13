@@ -25,12 +25,12 @@ endif ()
 
 # Main library
 
-add_library (iotech-iot SHARED ${C_FILES})
-add_library (iotech-iot-static STATIC ${C_FILES})
-set_target_properties (iotech-iot PROPERTIES OUTPUT_NAME iotech-iot CLEAN_DIRECT_OUTPUT 1)
-set_target_properties (iotech-iot-static PROPERTIES OUTPUT_NAME iotech-iot CLEAN_DIRECT_OUTPUT 1)
-target_include_directories (iotech-iot PRIVATE ../../include)
-target_include_directories (iotech-iot-static PRIVATE ../../include)
+add_library (iot SHARED ${C_FILES})
+add_library (iot-static STATIC ${C_FILES})
+set_target_properties (iot PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1)
+set_target_properties (iot-static PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1)
+target_include_directories (iot PRIVATE ../../include)
+target_include_directories (iot-static PRIVATE ../../include)
 
 # Build modules
 
@@ -40,6 +40,6 @@ add_subdirectory (utests)
  
 # Configure installer
 
-install (TARGETS iotech-iot LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
-install (TARGETS iotech-iot-static ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
-install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION include)
+install (TARGETS iot LIBRARY DESTINATION /opt/iotech/iot/lib RUNTIME DESTINATION /opt/iotech/iot/bin)
+install (TARGETS iot-static ARCHIVE DESTINATION /opt/iotech/iot/lib RUNTIME DESTINATION /opt/iotech/iot/bin)
+install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION /opt/iotech/iot/include)
