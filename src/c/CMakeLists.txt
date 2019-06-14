@@ -40,6 +40,6 @@ add_subdirectory (utests)
  
 # Configure installer
 
-install (TARGETS iot LIBRARY DESTINATION /opt/iotech/iot/lib RUNTIME DESTINATION /opt/iotech/iot/bin)
-install (TARGETS iot-static ARCHIVE DESTINATION /opt/iotech/iot/lib RUNTIME DESTINATION /opt/iotech/iot/bin)
-install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION /opt/iotech/iot/include)
+install (TARGETS iot LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+install (TARGETS iot-static ARCHIVE DESTINATION lib RUNTIME DESTINATION bin)
+install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION include)

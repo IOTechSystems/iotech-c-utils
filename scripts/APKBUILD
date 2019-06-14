@@ -3,20 +3,27 @@
 pkgname=iotech-iot
 pkgver="$VER"
 pkgrel=0
-pkgdesc="IOTech C utilities"
+pkgdesc="IOT C Framework"
 url="www.iotechsys.com"
 arch="$ARCH"
 license="Apache-2.0"
 depends=""
 install=""
-source="iotech-iot-${VER}_${ARCH}.tar.gz"
+base="iotech-iot-${VER}_${ARCH}"
+source="${base}.tar.gz"
 builddir="$srcdir/"
-options="!check !strip !tracedeps"
+options="!check !strip !tracedeps !fhs"
 
 package() {
   cd "$builddir"
-  install -Dm755 iotech-iot-"$VER"_"$ARCH"/lib/libiotech-iot.so "$pkgdir"/usr/lib/libiotech-iot.so
-  install -Dm755 iotech-iot-"$VER"_"$ARCH"/lib/libiotech-iot.a "$pkgdir"/usr/lib/libiotech-iot.a
-  mkdir -p "$pkgdir"/usr/include/iot/
-  cp -r iotech-iot-"$VER"_"$ARCH"/include/* "$pkgdir"/usr/include/
+  if [ -z "$pkgdir" ]
+  then
+    dest=/opt/iotech/thrift
+  else
+    dest=$pkgdir
+  fi
+  install -Dm755 ${base}/lib/libiotech-iot.so ${dest}/lib/libiotech-iot.so
+  install -Dm755 ${base}/lib/libiotech-iot.a ${dest}/lib/libiotech-iot.a
+  mkdir -p ${dest}/include/iot/
+  cp -r ${base}/include/* ${dest}/include/
 }
