@@ -11,25 +11,25 @@
 // TODO: allow an array of labels in a log message
 
 static const char * iot_log_levels[6] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
+static iot_logger_t iot_logger_dfl;
 
 iot_logger_t * iot_logger_default (void)
 {
-  static iot_logger_t dfl;
   static iot_logger_t * logger = NULL;
   if (logger == NULL)
   {
-    logger = &dfl;
-    memset (&dfl, 0, sizeof (dfl));
-    dfl.level = IOT_LOG_WARN;
-    dfl.impl = iot_logger_console;
-    dfl.dest = "stdout";
+    logger = &iot_logger_dfl;
+    memset (&iot_logger_dfl, 0, sizeof (iot_logger_dfl));
+    iot_logger_dfl.level = IOT_LOG_WARN;
+    iot_logger_dfl.impl = iot_logger_console;
+    iot_logger_dfl.dest = "stdout";
   }
   return logger;
 }
 
 static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t level, va_list args)
 {
-  if (level >= logger->level)
+  if (logger->level >= level)
   {
     char str[1024];
     const char * fmt = va_arg (args, const char *);
@@ -108,7 +108,7 @@ iot_logger_t * iot_logger_alloc (const char * subsys, const char * dest, iot_log
 
 void iot_logger_free (iot_logger_t * logger)
 {
-  if (logger)
+  if (logger && (logger != &iot_logger_dfl))
   {
     iot_logger_free (logger->sub);
     free (logger->subsys);
