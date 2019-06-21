@@ -28,7 +28,7 @@ typedef void (*iot_component_free_fn_t) (iot_component_t * this);
 
 struct iot_component_t
 {
-  iot_component_state_t state;
+  volatile iot_component_state_t state;
   iot_component_start_fn_t start_fn;
   iot_component_stop_fn_t stop_fn;
 };

@@ -1,5 +1,6 @@
 #include "iot/iot.h"
 #include "../json/json.h"
+#include "../logger/logger.h"
 #include "../data/data.h"
 #include "../threadpool/threadpool.h"
 #include "../../cunit/Basic.h"
@@ -58,7 +59,7 @@ int main (int argc, char* argv[])
     fprintf (stderr, "\nInitialization of C Unit Registry failed.");
     return -1;
   }
-
+  cunit_logger_test_init ();
   cunit_json_test_init ();
   cunit_data_test_init ();
   cunit_threadpool_test_init ();

@@ -339,11 +339,8 @@ static void automated_test_complete_message_handler(const CU_pTest pTest,
         }
         CU_translate_special_characters(pTempFailure->strCondition, szTemp, sizeof(szTemp));
       }
-
       fprintf(f_pTestResultFile, "        <testcase classname=\"%s.%s\" name=\"%s\" time=\"0\">\n",
-        pPackageName,
-        pSuite->pName,
-        (NULL != pTest->pName) ? pTest->pName : "");
+        pPackageName, pSuite->pName, (NULL != pTest->pName) ? pTest->pName : "");
       fprintf(f_pTestResultFile, "            <failure message=\"%s\" type=\"Failure\">\n", szTemp);
     } /* if */
 

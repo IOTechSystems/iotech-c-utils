@@ -1,116 +1,82 @@
 //
-// Copyright (c) 2018 IOTech
+// Copyright (c) 2018,2019 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
 #include "iot/data.h"
 #include "iot/logger.h"
-
+#include "iot/container.h"
 #include <stdarg.h>
 
 // TODO: allow an array of labels in a log message
 
-static const char * iot_log_levels[5] = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
+static const char * iot_log_levels[6] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
 
-typedef struct iot_logger_list
-{
-  iot_log_function_t fn;
-  char *dest;
-  struct iot_logger_list *next;
-} iot_logger_list;
-
-struct iot_logger_t
-{
-  iot_component_t component;
-  iot_loglevel_t level;
-  char *subsystem;
-  iot_logger_list *loggers;
-  pthread_mutex_t lock;
-};
-
-static void iot_logger_log (iot_logger_t * logger, iot_loglevel_t l, const char *fmt, va_list ap);
-static void iot_logger_log_to_fd (FILE *, const char *, iot_loglevel_t, time_t, const char *);
-
-iot_logger_t * iot_log_default (void)
+iot_logger_t * iot_logger_default (void)
 {
   static iot_logger_t dfl;
   static iot_logger_t * logger = NULL;
   if (logger == NULL)
   {
     logger = &dfl;
-    dfl.subsystem = NULL;
-    dfl.loggers = NULL;
-    pthread_mutex_init (&dfl.lock, NULL);
+    memset (&dfl, 0, sizeof (dfl));
+    dfl.level = IOT_LOG_WARN;
+    dfl.impl = iot_logger_console;
+    dfl.dest = "stdout";
   }
   return logger;
 }
 
-void iot_log_info (iot_logger_t *logger, const char *fmt, ...)
+static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t level, va_list args)
 {
-  va_list args;
-  va_start (args, fmt);
-  iot_logger_log (logger, INFO, fmt, args);
-  va_end(args);
-}
-
-void iot_log_trace (iot_logger_t *logger, const char *fmt, ...)
-{
-  va_list args;
-  va_start (args, fmt);
-  iot_logger_log (logger, TRACE, fmt, args);
-  va_end(args);
-}
-
-void iot_log_debug (iot_logger_t *logger, const char *fmt, ...)
-{
-  va_list args;
-  va_start (args, fmt);
-  iot_logger_log (logger, DEBUG, fmt, args);
-  va_end(args);
-}
-
-void iot_log_warning (iot_logger_t *logger, const char *fmt, ...)
-{
-  va_list args;
-  va_start (args, fmt);
-  iot_logger_log (logger, WARNING, fmt, args);
-  va_end(args);
-}
-
-void iot_log_error (iot_logger_t *logger, const char *fmt, ...)
-{
-  va_list args;
-  va_start (args, fmt);
-  iot_logger_log (logger, ERROR, fmt, args);
-  va_end(args);
-}
-
-static void iot_logger_log_to_fd (FILE *dest, const char *subsystem, iot_loglevel_t l, time_t timestamp, const char *message)
-{
-  fprintf (dest, "%" PRId64 " %s: %s: %s\n", (int64_t) timestamp, subsystem ? subsystem : "(default)", iot_log_levels[l], message);
-}
-
-bool iot_log_tofile (const char *dest, const char *subsystem, iot_loglevel_t l, time_t timestamp, const char *message)
-{
-  FILE *f;
-  if (strcmp (dest, "-") == 0)
+  if (level >= logger->level)
   {
-    f = stdout;
+    char str[1024];
+    const char * fmt = va_arg (args, const char *);
+    vsnprintf (str, sizeof (str), fmt, args);
+    (logger->impl) (logger, level, time (NULL), str);
   }
-  else
-  {
-    f = fopen (dest, "a");
-  }
-  if (f)
-  {
-    iot_logger_log_to_fd (f, subsystem, l, timestamp, message);
-    if (f != stdout)
-    {
-      fclose (f);
-    }
-    return true;
-  }
-  return false;
+  if (logger->sub) iot_logger_log (logger->sub, level, args);
+}
+
+void iot_log__error (iot_logger_t * logger, ...)
+{
+  va_list args;
+  va_start (args, logger);
+  iot_logger_log (logger, IOT_LOG_ERROR, args);
+  va_end (args);
+}
+
+void iot_log__warn (iot_logger_t * logger, ...)
+{
+  va_list args;
+  va_start (args, logger);
+  iot_logger_log (logger, IOT_LOG_WARN, args);
+  va_end (args);
+}
+
+void iot_log__info (iot_logger_t * logger, ...)
+{
+  va_list args;
+  va_start (args, logger);
+  iot_logger_log (logger, IOT_LOG_INFO, args);
+  va_end (args);
+}
+
+void iot_log__debug (iot_logger_t * logger, ...)
+{
+  va_list args;
+  va_start (args, logger);
+  iot_logger_log (logger, IOT_LOG_DEBUG, args);
+  va_end (args);
+}
+
+void iot_log__trace (iot_logger_t * logger, ...)
+{
+  va_list args;
+  va_start (args, logger);
+  iot_logger_log (logger, IOT_LOG_TRACE, args);
+  va_end (args);
 }
 
 #ifdef __ZEPHYR__
@@ -120,127 +86,106 @@ static time_t time (time_t *t)
 }
 #endif
 
-static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t l, const char *fmt, va_list ap)
+void iot_logger_setlevel (iot_logger_t * logger, iot_loglevel_t level)
 {
-  if (l < logger->level)
-  {
-    return;
-  }
-
-  char str [1024];
-  bool ok = false;
-  time_t created = time (NULL);
-
-  vsnprintf (str, sizeof (str), fmt, ap);
-
-  // TODO: Queue this log message and signal the processing thread
-
-  pthread_mutex_lock (&logger->lock);
-  iot_logger_list * iter = logger->loggers;
-  while (iter)
-  {
-    ok |= iter->fn (iter->dest, logger->subsystem, l, created, str);
-    iter = iter->next;
-  }
-  pthread_mutex_unlock (&logger->lock);
-
-  if (!ok)
-  {
-    iot_logger_log_to_fd (stderr, logger->subsystem, l, created, str);
-  }
+  assert (logger);
+  logger->level = level;
 }
 
-void iot_logger_setlevel (iot_logger_t *logger, iot_loglevel_t l)
+iot_logger_t * iot_logger_alloc (const char * subsys, const char * dest, iot_log_function_t impl, iot_logger_t * sub)
 {
-  logger->level = l;
-}
-
-const char *iot_logger_levelname (iot_loglevel_t l)
-{
-  assert (l >= TRACE && l <= ERROR);
-  return iot_log_levels[l];
-}
-
-iot_logger_t * iot_logger_alloc (const char * subsystem)
-{
-  iot_logger_t * logger;
-  logger = calloc (1, sizeof (iot_logger_t));
-  logger->subsystem = iot_strdup (subsystem);
-  logger->level = TRACE;
+  assert (subsys && dest && impl);
+  iot_logger_t * logger = malloc (sizeof (*logger));
+  logger->impl = impl;
+  logger->subsys = iot_strdup (subsys);
+  logger->dest = iot_strdup (dest);
+  logger->level = IOT_LOG_WARN;
   logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
   logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
-  pthread_mutex_init (&logger->lock, NULL);
+  logger->sub = sub;
   return logger;
 }
 
-void iot_logger_free (iot_logger_t *logger)
+void iot_logger_free (iot_logger_t * logger)
 {
-  iot_logger_list *next;
-  iot_logger_list *i;
-  i = logger->loggers;
-  logger->loggers = NULL;
-  while (i)
+  if (logger)
   {
-    next = i->next;
-    free (i->dest);
-    free (i);
-    i = next;
+    iot_logger_free (logger->sub);
+    free (logger->subsys);
+    free (logger->dest);
+    free (logger);
   }
-  pthread_mutex_destroy (&logger->lock);
-  free (logger->subsystem);
-  free (logger);
 }
 
 bool iot_logger_start (iot_logger_t * logger)
 {
-  (void) logger;
+  assert (logger);
+  logger->component.state = IOT_COMPONENT_RUNNING;
   return true;
 }
 
 void iot_logger_stop (iot_logger_t * logger)
 {
-  (void) logger;
+  assert (logger);
+  logger->component.state = IOT_COMPONENT_STOPPED;
 }
 
-void iot_logger_add (iot_logger_t *logger, iot_log_function_t fn, const char *destination)
+iot_logger_t * iot_logger_sub (iot_logger_t * logger)
 {
-  if (logger == iot_log_default ())
-  {
-    iot_log_error (logger, "Request to add plugin to default logger - ignored");
-    return;
-  }
-  iot_logger_list * addthis = malloc (sizeof (*addthis));
-  addthis->dest = iot_strdup (destination);
-  addthis->fn = fn;
-  pthread_mutex_lock (&logger->lock);
-  addthis->next = logger->loggers;
-  logger->loggers = addthis;
-  pthread_mutex_unlock (&logger->lock);
+  assert (logger);
+  return logger->sub;
 }
 
-void iot_logger_remove (iot_logger_t *logger, iot_log_function_t fn, const char *destination)
+static inline void iot_logger_log_to_fd (FILE * fd, const char *subsys, iot_loglevel_t level, time_t timestamp, const char *message)
 {
-  pthread_mutex_lock (&logger->lock);
-  iot_logger_list **iter = &logger->loggers;
-  while (*iter)
+  fprintf (fd, "%" PRId64 " %s: %s: %s\n", (int64_t) timestamp, subsys ? subsys : "(default)", iot_log_levels[level], message);
+}
+
+void iot_logger_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
+{
+  FILE * fd = fopen (logger->dest, "a");
+  if (fd)
   {
-    if ((*iter)->fn == fn && strcmp ((*iter)->dest, destination) == 0)
-    {
-      iot_logger_list *tmp = *iter;
-      *iter = (*iter)->next;
-      free (tmp);
-      break;
-    }
-    iter = &((*iter)->next);
+    iot_logger_log_to_fd (fd, logger->subsys, level, timestamp, message);
+    fclose (fd);
   }
-  pthread_mutex_unlock (&logger->lock);
+}
+
+extern void iot_logger_console (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
+{
+  FILE * fd = (logger->dest[3] == 'e') ? stderr : stdout;
+  iot_logger_log_to_fd (fd, logger->subsys, level, timestamp, message);
 }
 
 #ifdef IOT_BUILD_COMPONENTS
 
 static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_logger_t * logger = iot_logger_alloc (iot_data_string_map_get_string (map, "SubSystem"));
+  iot_logger_t * sub = NULL;
+  iot_log_function_t impl = NULL;
+  iot_logger_t * logger;
+  const char * dest = iot_data_string_map_get_string (map, "Destination");
+  const char * name = iot_data_string_map_get_string (map, "SubLogger");
+
+  if (dest && strncmp (dest, "file:", 5) == 0 && strlen (dest) > 5)
+  {
+    impl = iot_logger_file; /* Log to file */
+    dest += 5;
+  }
+  else
+  {
+    impl = iot_logger_console; /* log to stderr or stdout */
+    if (dest == NULL || (strcmp (dest, "stderr") != 0))
+    {
+      dest = "stdout";
+    }
+  }
+
+  if (name)
+  {
+    sub = (iot_logger_t*) iot_container_find (cont, name);
+  }
+  logger = iot_logger_alloc (iot_data_string_map_get_string (map, "SubSystem"), dest, impl, sub);
   return &logger->component;
 }
 

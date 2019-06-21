@@ -89,7 +89,8 @@ static const char * main_config =
 
 static const char * logger_config =
 "{"
-  "\"SubSystem\":\"example\""
+  "\"SubSystem\":\"example\","
+  "\"Destination\":\"stdout\""
 "}";
 
 static const char * pool_config =

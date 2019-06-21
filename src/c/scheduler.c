@@ -184,7 +184,6 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
   pthread_mutex_unlock (&scheduler->mutex);
 }
 
-
 /* Create a schedule and insert it into the queue */
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void (*function) (void*), void * arg, uint64_t period, uint64_t start, uint64_t repeat, const int * priority)
 {

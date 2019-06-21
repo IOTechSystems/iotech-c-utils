@@ -14,71 +14,57 @@ extern "C" {
 
 #define IOT_LOGGER_TYPE "IOT::Logger"
 
-typedef enum iot_loglevel_t { TRACE = 0, DEBUG, INFO, WARNING, ERROR } iot_loglevel_t;
-typedef struct iot_logger_t iot_logger_t;
+struct iot_logger_t;
+typedef enum iot_loglevel_t { IOT_LOG_NONE = 0, IOT_LOG_ERROR, IOT_LOG_WARN, IOT_LOG_INFO, IOT_LOG_DEBUG, IOT_LOG_TRACE } iot_loglevel_t;
+typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
 
-/**
- * Plugin function for loggers. This is called whenever a new message is logged.
- * @param destination Plugin-specific specification of where logs should go. Could be a filename, URL etc.
- * @param subsystem Name of the subsystem creating the log message.
- * @param level INFO, TRACE, DEBUG etc.
- * @timestamp When the log message was generated.
- * @message The text of the log message.
- *
- * @return true if the log was successfully posted.
- */
+/* Default set of supported logger implementation functions */
 
-typedef bool (*iot_log_function_t)
-(
-  const char * destination,
-  const char * subsystem,
-  iot_loglevel_t level,
-  time_t timestamp,
-  const char *message
-);
+extern void iot_logger_file (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
+extern void iot_logger_console (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
 
-/* Built-in logger: append to a file */
+typedef struct iot_logger_t
+{
+  iot_component_t component;
+  volatile iot_loglevel_t level;
+  char * subsys;
+  char * dest;
+  iot_log_function_t impl;
+  struct iot_logger_t * sub;
+} iot_logger_t;
 
-extern bool iot_log_tofile
-(
-  const char * dest,
-  const char * subsystem,
-  iot_loglevel_t level,
-  time_t timestamp,
-  const char *message
-);
+/* Logger lifecycle functions */
 
-/* Create and destroy logging clients */
-
-extern iot_logger_t * iot_logger_alloc (const char * subsystem);
+extern iot_logger_t * iot_logger_alloc (const char * subsys, const char * dest, iot_log_function_t impl, iot_logger_t * sub);
 extern void iot_logger_free (iot_logger_t * logger);
 extern bool iot_logger_start (iot_logger_t * logger);
 extern void iot_logger_stop (iot_logger_t * logger);
 
 /* Default logging client: logs to stderr only */
 
-extern iot_logger_t * iot_log_default (void);
+extern iot_logger_t * iot_logger_default (void);
 
-/* Plug in and remove logger implementations */
+/* Get sub logger */
 
-extern void iot_logger_add (iot_logger_t *logger, iot_log_function_t fn, const char * destination);
-extern void iot_logger_remove (iot_logger_t *logger, iot_log_function_t fn, const char * destination);
+extern iot_logger_t * iot_logger_sub (iot_logger_t * logger);
 
-/* Functions to generate logs */
+/* Logging macros */
 
-extern void iot_log_info (iot_logger_t * logger, const char * fmt, ...);
-extern void iot_log_trace (iot_logger_t * logger, const char * fmt, ...);
-extern void iot_log_debug (iot_logger_t * logger, const char * fmt, ...);
-extern void iot_log_warning (iot_logger_t * logger, const char * fmt, ...);
-extern void iot_log_error (iot_logger_t * logger, const char * fmt, ...);
+extern void iot_log__trace (iot_logger_t * logger, ...);
+extern void iot_log__debug (iot_logger_t * logger, ...);
+extern void iot_log__info (iot_logger_t * logger, ...);
+extern void iot_log__warn (iot_logger_t * logger, ...);
+extern void iot_log__error (iot_logger_t * logger, ...);
+
+#define iot_log_trace(l,f,...) if ((l)->level >= IOT_LOG_TRACE) iot_log__trace ((l), __VA_ARGS__)
+#define iot_log_info(l,f,...) if ((l)->level >= IOT_LOG_INFO) iot_log__info ((l), __VA_ARGS__)
+#define iot_log_debug(l,f,...) if ((l)->level >= IOT_LOG_DEBUG) iot_log__debug ((l), __VA_ARGS__)
+#define iot_log_warn(l,...) if ((l)->level >= IOT_LOG_WARN) iot_log__warn ((l), __VA_ARGS__)
+#define iot_log_error(l,f,...) if ((l)->level >= IOT_LOG_ERROR) iot_log__error ((l), __VA_ARGS__)
 
 /* Set log level */
 
 extern void iot_logger_setlevel (iot_logger_t *logger, iot_loglevel_t newlevel);
-
-/* Get name of log level */
-
-extern const char * iot_logger_levelname (iot_loglevel_t level);
 
 /* Logger factory */
 
