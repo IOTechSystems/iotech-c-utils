@@ -13,9 +13,18 @@ static int suite_clean (void)
 
 static uint32_t cunit_custom_log_count = 0;
 
-static void cunit_custom_log_fn (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
+static void cunit_custom_log_fn (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
-   cunit_custom_log_count++;
+  cunit_custom_log_count++;
+}
+
+static void cunit_test_logs (iot_logger_t * logger)
+{
+  iot_log_warn (logger, "Test Warning");
+  iot_log_error (logger, "Test Error");
+  iot_log_trace (logger, "Test Trace");
+  iot_log_debug (logger, "Test Debug");
+  iot_log_info (logger, "Test Error");
 }
 
 static void cunit_logger_default (void)
@@ -32,13 +41,43 @@ static void cunit_logger_default (void)
 static void cunit_logger_impl (void)
 {
   iot_logger_t * logger = iot_logger_alloc ("Custom", "", cunit_custom_log_fn, NULL);
+  iot_logger_setlevel (logger, IOT_LOG_NONE);
+  cunit_test_logs (logger);
+  CU_ASSERT (cunit_custom_log_count == 0)
+  iot_logger_setlevel (logger, IOT_LOG_ERROR);
+  cunit_test_logs (logger);
+  CU_ASSERT (cunit_custom_log_count == 1)
+  iot_logger_setlevel (logger, IOT_LOG_WARN);
+  cunit_test_logs (logger);
+  CU_ASSERT (cunit_custom_log_count == 3)
+  iot_logger_setlevel (logger, IOT_LOG_INFO);
+  cunit_test_logs (logger);
+  CU_ASSERT (cunit_custom_log_count == 6)
+  iot_logger_setlevel (logger, IOT_LOG_DEBUG);
+  cunit_test_logs (logger);
+  CU_ASSERT (cunit_custom_log_count == 10)
+  iot_logger_setlevel (logger, IOT_LOG_TRACE);
+  cunit_test_logs (logger);
+  CU_ASSERT (cunit_custom_log_count == 15)
   iot_logger_free (logger);
 }
 
+static void cunit_logger_sub (void)
+{
+  iot_logger_t * sub = iot_logger_default ();
+  iot_logger_t * logger = iot_logger_alloc ("Custom", "", cunit_custom_log_fn, sub);
+  iot_logger_setlevel (sub, IOT_LOG_NONE);
+  iot_logger_setlevel (logger, IOT_LOG_INFO);
+  cunit_custom_log_count = 0;
+  cunit_test_logs (logger);
+  CU_ASSERT (cunit_custom_log_count == 3)
+  iot_logger_free (logger);
+}
 
 void cunit_logger_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("logger", suite_init, suite_clean);
   CU_add_test (suite, "logger_default", cunit_logger_default);
   CU_add_test (suite, "logger_impl", cunit_logger_impl);
+  CU_add_test (suite, "logger_sub", cunit_logger_sub);
 }

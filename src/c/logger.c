@@ -29,14 +29,12 @@ iot_logger_t * iot_logger_default (void)
 
 static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t level, va_list args)
 {
-  if (logger->level >= level)
-  {
-    char str[1024];
-    const char * fmt = va_arg (args, const char *);
-    vsnprintf (str, sizeof (str), fmt, args);
-    (logger->impl) (logger, level, time (NULL), str);
-  }
-  if (logger->sub) iot_logger_log (logger->sub, level, args);
+  char str[1024];
+  const char * fmt = va_arg (args, const char *);
+  vsnprintf (str, sizeof (str), fmt, args);
+  time_t ts = time (NULL);
+  if (logger->level >= level) (logger->impl) (logger, level, ts, str);
+  if (logger->sub && logger->sub->level >= level) (logger->impl) (logger, level, ts, str);
 }
 
 void iot_log__error (iot_logger_t * logger, ...)
