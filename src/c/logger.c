@@ -92,11 +92,11 @@ void iot_logger_setlevel (iot_logger_t * logger, iot_loglevel_t level)
 
 iot_logger_t * iot_logger_alloc (const char * subsys, const char * dest, iot_log_function_t impl, iot_logger_t * sub)
 {
-  assert (subsys && dest && impl);
+  assert (subsys && impl);
   iot_logger_t * logger = malloc (sizeof (*logger));
   logger->impl = impl;
   logger->subsys = iot_strdup (subsys);
-  logger->dest = iot_strdup (dest);
+  logger->dest = dest ? iot_strdup (dest) : NULL;
   logger->level = IOT_LOG_WARN;
   logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
   logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
@@ -151,8 +151,7 @@ void iot_logger_file (iot_logger_t * logger, iot_loglevel_t level, time_t timest
 
 extern void iot_logger_console (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
-  FILE * fd = (logger->dest[3] == 'e') ? stderr : stdout;
-  iot_logger_log_to_fd (fd, logger->subsys, level, timestamp, message);
+  iot_logger_log_to_fd ((level > IOT_LOG_WARN) ? stdout : stderr, logger->subsys, level, timestamp, message);
 }
 
 #ifdef IOT_BUILD_COMPONENTS
