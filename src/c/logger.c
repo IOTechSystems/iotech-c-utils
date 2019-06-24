@@ -181,15 +181,14 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   name = iot_data_string_map_get_string (map, "Level");
   if (name)
   {
-    switch (toupper (name[0]))
+    int c = toupper (name[0]);
+    for (int lvl = 0; lvl < IOT_LOG_LEVELS; lvl++)
     {
-      case 'N': level = IOT_LOG_NONE; break;
-      case 'E': level = IOT_LOG_ERROR; break;
-      case 'W': level = IOT_LOG_WARN; break;
-      case 'I': level = IOT_LOG_INFO; break;
-      case 'D': level = IOT_LOG_DEBUG; break;
-      case 'T': level = IOT_LOG_TRACE; break;
-      default: break;
+      if (iot_log_levels[lvl][0] == c)
+      {
+        level = lvl;
+        break;
+      }
     }
   }
   logger = iot_logger_alloc (level, iot_data_string_map_get_string (map, "SubSys"), to, impl, sub);
