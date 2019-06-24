@@ -8,8 +8,6 @@
 #include "iot/container.h"
 #include <stdarg.h>
 
-// TODO: allow an array of labels in a log message
-
 static const char * iot_log_levels[6] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
 static iot_logger_t iot_logger_dfl;
 
@@ -22,7 +20,6 @@ iot_logger_t * iot_logger_default (void)
     memset (&iot_logger_dfl, 0, sizeof (iot_logger_dfl));
     iot_logger_dfl.level = IOT_LOG_WARN;
     iot_logger_dfl.impl = iot_logger_console;
-    iot_logger_dfl.dest = "stdout";
   }
   return logger;
 }
@@ -136,7 +133,7 @@ iot_logger_t * iot_logger_sub (iot_logger_t * logger)
 
 static inline void iot_logger_log_to_fd (FILE * fd, const char *subsys, iot_loglevel_t level, time_t timestamp, const char *message)
 {
-  fprintf (fd, "%" PRId64 " %s: %s: %s\n", (int64_t) timestamp, subsys ? subsys : "(default)", iot_log_levels[level], message);
+  fprintf (fd, "%" PRId64 " (%s) %s %s\n", (int64_t) timestamp, subsys ? subsys : "default", iot_log_levels[level], message);
 }
 
 void iot_logger_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
@@ -172,10 +169,6 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   else
   {
     impl = iot_logger_console; /* log to stderr or stdout */
-    if (dest == NULL || (strcmp (dest, "stderr") != 0))
-    {
-      dest = "stdout";
-    }
   }
 
   if (name)
