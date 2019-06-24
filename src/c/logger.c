@@ -33,7 +33,7 @@ static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t level, va_list 
   vsnprintf (str, sizeof (str), fmt, args);
   time_t ts = time (NULL);
   if (logger->level >= level) (logger->impl) (logger, level, ts, str);
-  if (logger->sub && logger->sub->level >= level) (logger->impl) (logger, level, ts, str);
+  if (logger->next && logger->next->level >= level) (logger->impl) (logger, level, ts, str);
 }
 
 void iot_log__error (iot_logger_t * logger, ...)
@@ -89,7 +89,7 @@ void iot_logger_setlevel (iot_logger_t * logger, iot_loglevel_t level)
   logger->level = level;
 }
 
-iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * sub)
+iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * next)
 {
   assert (subsys && impl);
   iot_logger_t * logger = malloc (sizeof (*logger));
@@ -99,7 +99,7 @@ iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, cons
   logger->level = level;
   logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
   logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
-  logger->sub = sub;
+  logger->next = next;
   return logger;
 }
 
@@ -107,7 +107,6 @@ void iot_logger_free (iot_logger_t * logger)
 {
   if (logger && (logger != &iot_logger_dfl))
   {
-    iot_logger_free (logger->sub);
     free (logger->subsys);
     free (logger->to);
     free (logger);
@@ -127,10 +126,10 @@ void iot_logger_stop (iot_logger_t * logger)
   logger->component.state = IOT_COMPONENT_STOPPED;
 }
 
-iot_logger_t * iot_logger_sub (iot_logger_t * logger)
+iot_logger_t * iot_logger_next (iot_logger_t * logger)
 {
   assert (logger);
-  return logger->sub;
+  return logger->next;
 }
 
 static inline void iot_logger_log_to_fd (FILE * fd, const char *subsys, iot_loglevel_t level, time_t timestamp, const char *message)
@@ -157,7 +156,7 @@ extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, time_t
 
 static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_logger_t * sub = NULL;
+  iot_logger_t * next = NULL;
   iot_log_function_t impl = NULL;
   iot_logger_t * logger;
   iot_loglevel_t level = IOT_LOGLEVEL_DEFAULT;
@@ -173,10 +172,10 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   {
     impl = iot_log_console; /* log to stderr or stdout */
   }
-  name = iot_data_string_map_get_string (map, "SubLogger");
+  name = iot_data_string_map_get_string (map, "Next");
   if (name)
   {
-    sub = (iot_logger_t*) iot_container_find (cont, name);
+    next = (iot_logger_t*) iot_container_find (cont, name);
   }
   name = iot_data_string_map_get_string (map, "Level");
   if (name)
@@ -191,7 +190,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
       }
     }
   }
-  logger = iot_logger_alloc (level, iot_data_string_map_get_string (map, "SubSys"), to, impl, sub);
+  logger = iot_logger_alloc (level, iot_data_string_map_get_string (map, "SubSys"), to, impl, next);
   return &logger->component;
 }
 

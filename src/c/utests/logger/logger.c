@@ -69,7 +69,7 @@ static void cunit_logger_sub (void)
   cunit_custom_log_count = 0;
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 3)
-  CU_ASSERT (iot_logger_sub (logger) == sub)
+  CU_ASSERT (iot_logger_next (logger) == sub)
   iot_logger_free (logger);
 }
 

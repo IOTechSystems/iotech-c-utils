@@ -81,17 +81,25 @@ int main (void)
 
 static const char * main_config =
 "{"
+  "\"file_logger\":\"IOT::Logger\","
   "\"logger\":\"IOT::Logger\","
   "\"pool\":\"IOT::ThreadPool\","
   "\"scheduler\":\"IOT::Scheduler\","
   "\"mycomp\":\"MyComponent\""
 "}";
 
+static const char * file_logger_config =
+"{"
+  "\"SubSys\":\"file\","
+  "\"To\":\"file:./log.log\","
+  "\"Level\":\"Warn\""
+"}";
+
 static const char * logger_config =
 "{"
-  "\"SubSys\":\"example\","
-  "\"To\":\"file:./log.log\","
-  "\"Level\":\"INFO\""
+  "\"SubSys\":\"console\","
+  "\"Level\":\"Info\","
+  "\"Next\":\"file_logger\""
 "}";
 
 static const char * pool_config =
@@ -115,6 +123,7 @@ static const char * my_config =
 static const char * config_loader (const char * name)
 {
   if (strcmp (name, "main") == 0) return main_config;
+  if (strcmp (name, "file_logger") == 0) return file_logger_config;
   if (strcmp (name, "logger") == 0) return logger_config;
   if (strcmp (name, "pool") == 0) return pool_config;
   if (strcmp (name, "scheduler") == 0) return sched_config;

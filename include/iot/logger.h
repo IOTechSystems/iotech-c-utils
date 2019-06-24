@@ -31,12 +31,12 @@ typedef struct iot_logger_t
   char * subsys;
   char * to;
   iot_log_function_t impl;
-  struct iot_logger_t * sub;
+  struct iot_logger_t * next;
 } iot_logger_t;
 
 /* Logger lifecycle functions */
 
-extern iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * sub);
+extern iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * next);
 extern void iot_logger_free (iot_logger_t * logger);
 extern bool iot_logger_start (iot_logger_t * logger);
 extern void iot_logger_stop (iot_logger_t * logger);
@@ -47,7 +47,7 @@ extern iot_logger_t * iot_logger_default (void);
 
 /* Get sub logger */
 
-extern iot_logger_t * iot_logger_sub (iot_logger_t * logger);
+extern iot_logger_t * iot_logger_next (iot_logger_t * logger);
 
 /* Logging macros */
 
