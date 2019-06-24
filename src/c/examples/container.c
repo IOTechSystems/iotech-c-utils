@@ -105,7 +105,8 @@ static const char * sched_config =
 
 static const char * my_config =
 "{"
-  "\"MyLogger\":\"logger\""
+  "\"MyLogger\":\"logger\","
+  "\"To\":\"file:./log.log\""
 "}";
 
 /* Configuration resolver function */

@@ -87,13 +87,13 @@ void iot_logger_setlevel (iot_logger_t * logger, iot_loglevel_t level)
   logger->level = level;
 }
 
-iot_logger_t * iot_logger_alloc (const char * subsys, const char * dest, iot_log_function_t impl, iot_logger_t * sub)
+iot_logger_t * iot_logger_alloc (const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * sub)
 {
   assert (subsys && impl);
   iot_logger_t * logger = malloc (sizeof (*logger));
   logger->impl = impl;
   logger->subsys = iot_strdup (subsys);
-  logger->dest = dest ? iot_strdup (dest) : NULL;
+  logger->to = to ? iot_strdup (to) : NULL;
   logger->level = IOT_LOG_WARN;
   logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
   logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
@@ -107,7 +107,7 @@ void iot_logger_free (iot_logger_t * logger)
   {
     iot_logger_free (logger->sub);
     free (logger->subsys);
-    free (logger->dest);
+    free (logger->to);
     free (logger);
   }
 }
@@ -138,7 +138,7 @@ static inline void iot_logger_log_to_fd (FILE * fd, const char *subsys, iot_logl
 
 void iot_logger_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
-  FILE * fd = fopen (logger->dest, "a");
+  FILE * fd = fopen (logger->to, "a");
   if (fd)
   {
     iot_logger_log_to_fd (fd, logger->subsys, level, timestamp, message);
@@ -158,13 +158,13 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   iot_logger_t * sub = NULL;
   iot_log_function_t impl = NULL;
   iot_logger_t * logger;
-  const char * dest = iot_data_string_map_get_string (map, "Destination");
+  const char * to = iot_data_string_map_get_string (map, "To");
   const char * name = iot_data_string_map_get_string (map, "SubLogger");
 
-  if (dest && strncmp (dest, "file:", 5) == 0 && strlen (dest) > 5)
+  if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
   {
     impl = iot_logger_file; /* Log to file */
-    dest += 5;
+    to += 5;
   }
   else
   {
@@ -175,7 +175,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   {
     sub = (iot_logger_t*) iot_container_find (cont, name);
   }
-  logger = iot_logger_alloc (iot_data_string_map_get_string (map, "SubSystem"), dest, impl, sub);
+  logger = iot_logger_alloc (iot_data_string_map_get_string (map, "SubSystem"), to, impl, sub);
   return &logger->component;
 }
 
