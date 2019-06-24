@@ -90,14 +90,14 @@ static const char * main_config =
 
 static const char * file_logger_config =
 "{"
-  "\"SubSys\":\"file\","
+  "\"Name\":\"file\","
   "\"To\":\"file:./log.log\","
   "\"Level\":\"Warn\""
 "}";
 
 static const char * logger_config =
 "{"
-  "\"SubSys\":\"console\","
+  "\"Name\":\"console\","
   "\"Level\":\"Info\","
   "\"Next\":\"file_logger\""
 "}";

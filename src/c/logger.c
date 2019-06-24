@@ -195,7 +195,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
       }
     }
   }
-  logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "SubSys"), level, to, impl, next);
+  logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next);
   return &logger->component;
 }
 
