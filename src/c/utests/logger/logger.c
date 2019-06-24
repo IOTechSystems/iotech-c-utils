@@ -38,6 +38,17 @@ static void cunit_logger_default (void)
   iot_log_info (logger, "ERROR should not see info log");
 }
 
+static void cunit_logger_named (void)
+{
+  iot_logger_t * logger = iot_logger_alloc ("MyLogger", IOT_LOG_ERROR);
+  iot_log_error (logger, "Test Error from my logger");
+  iot_log_warn (logger, "ERROR should not see warn log");
+  iot_log_trace (logger, "ERROR should not see trace log");
+  iot_log_debug (logger, "ERROR should not see debug log");
+  iot_log_info (logger, "ERROR should not see info log");
+  iot_logger_free (logger);
+}
+
 static void cunit_logger_impl (void)
 {
   iot_logger_t * logger = iot_logger_alloc_custom ("Custom", IOT_LOG_NONE, NULL, cunit_custom_log_fn, NULL);
@@ -82,8 +93,7 @@ static void cunit_logger_file (void)
 
 static void cunit_logger_null (void)
 {
-  iot_logger_t * logger = NULL;
-  iot_log_info (logger, "Should be ok with NULL logger");
+  cunit_test_logs (NULL); // Should be able to have logger as NULL
 }
 
 
@@ -91,6 +101,7 @@ void cunit_logger_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("logger", suite_init, suite_clean);
   CU_add_test (suite, "logger_default", cunit_logger_default);
+  CU_add_test (suite, "logger_named", cunit_logger_named);
   CU_add_test (suite, "logger_impl", cunit_logger_impl);
   CU_add_test (suite, "logger_sub", cunit_logger_sub);
   CU_add_test (suite, "logger_file", cunit_logger_file);
