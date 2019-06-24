@@ -19,7 +19,7 @@ iot_logger_t * iot_logger_default (void)
     logger = &iot_logger_dfl;
     memset (&iot_logger_dfl, 0, sizeof (iot_logger_dfl));
     iot_logger_dfl.level = IOT_LOG_WARN;
-    iot_logger_dfl.impl = iot_logger_console;
+    iot_logger_dfl.impl = iot_log_console;
   }
   return logger;
 }
@@ -136,7 +136,7 @@ static inline void iot_logger_log_to_fd (FILE * fd, const char *subsys, iot_logl
   fprintf (fd, "%" PRId64 " (%s) %s %s\n", (int64_t) timestamp, subsys ? subsys : "default", iot_log_levels[level], message);
 }
 
-void iot_logger_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
+void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
   FILE * fd = fopen (logger->to, "a");
   if (fd)
@@ -146,7 +146,7 @@ void iot_logger_file (iot_logger_t * logger, iot_loglevel_t level, time_t timest
   }
 }
 
-extern void iot_logger_console (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
+extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
   iot_logger_log_to_fd ((level > IOT_LOG_WARN) ? stdout : stderr, logger->subsys, level, timestamp, message);
 }
@@ -163,12 +163,12 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
 
   if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
   {
-    impl = iot_logger_file; /* Log to file */
+    impl = iot_log_file; /* Log to file */
     to += 5;
   }
   else
   {
-    impl = iot_logger_console; /* log to stderr or stdout */
+    impl = iot_log_console; /* log to stderr or stdout */
   }
 
   if (name)

@@ -20,8 +20,8 @@ typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t
 
 /* Default set of supported logger implementation functions */
 
-extern void iot_logger_file (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
-extern void iot_logger_console (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
+extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
+extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
 
 typedef struct iot_logger_t
 {

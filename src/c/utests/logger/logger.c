@@ -77,7 +77,7 @@ static void cunit_logger_sub (void)
 
 static void cunit_logger_file (void)
 {
-  iot_logger_t * logger = iot_logger_alloc ("File", "./test.log", iot_logger_file, NULL);
+  iot_logger_t * logger = iot_logger_alloc ("File", "./test.log", iot_log_file, NULL);
   cunit_test_logs (logger);
   iot_logger_free (logger);
 }
