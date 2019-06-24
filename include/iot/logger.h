@@ -28,7 +28,7 @@ typedef struct iot_logger_t
 {
   iot_component_t component;
   volatile iot_loglevel_t level;
-  char * subsys;
+  char * name;
   char * to;
   iot_log_function_t impl;
   struct iot_logger_t * next;
@@ -36,12 +36,13 @@ typedef struct iot_logger_t
 
 /* Logger lifecycle functions */
 
-extern iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * next);
+extern iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next);
+extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level);
 extern void iot_logger_free (iot_logger_t * logger);
 extern bool iot_logger_start (iot_logger_t * logger);
 extern void iot_logger_stop (iot_logger_t * logger);
 
-/* Default logging client: logs to stderr only */
+/* Default logging client: logs to stdout/stderr only */
 
 extern iot_logger_t * iot_logger_default (void);
 
@@ -57,11 +58,11 @@ extern void iot_log__info (iot_logger_t * logger, ...);
 extern void iot_log__warn (iot_logger_t * logger, ...);
 extern void iot_log__error (iot_logger_t * logger, ...);
 
-#define iot_log_trace(l,...) if ((l)->level >= IOT_LOG_TRACE) iot_log__trace ((l), __VA_ARGS__)
-#define iot_log_info(l,...) if ((l)->level >= IOT_LOG_INFO) iot_log__info ((l), __VA_ARGS__)
-#define iot_log_debug(l,...) if ((l)->level >= IOT_LOG_DEBUG) iot_log__debug ((l), __VA_ARGS__)
-#define iot_log_warn(l,...) if ((l)->level >= IOT_LOG_WARN) iot_log__warn ((l), __VA_ARGS__)
-#define iot_log_error(l,...) if ((l)->level >= IOT_LOG_ERROR) iot_log__error ((l), __VA_ARGS__)
+#define iot_log_trace(l,...) if ((l) && (l)->level >= IOT_LOG_TRACE) iot_log__trace ((l), __VA_ARGS__)
+#define iot_log_info(l,...) if ((l) && (l)->level >= IOT_LOG_INFO) iot_log__info ((l), __VA_ARGS__)
+#define iot_log_debug(l,...) if ((l) && (l)->level >= IOT_LOG_DEBUG) iot_log__debug ((l), __VA_ARGS__)
+#define iot_log_warn(l,...) if ((l) && (l)->level >= IOT_LOG_WARN) iot_log__warn ((l), __VA_ARGS__)
+#define iot_log_error(l,...) if ((l) && (l)->level >= IOT_LOG_ERROR) iot_log__error ((l), __VA_ARGS__)
 
 /* Set log level */
 

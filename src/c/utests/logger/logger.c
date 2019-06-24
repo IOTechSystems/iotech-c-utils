@@ -40,7 +40,7 @@ static void cunit_logger_default (void)
 
 static void cunit_logger_impl (void)
 {
-  iot_logger_t * logger = iot_logger_alloc (IOT_LOG_NONE, "Custom", NULL, cunit_custom_log_fn, NULL);
+  iot_logger_t * logger = iot_logger_alloc_custom ("Custom", IOT_LOG_NONE, NULL, cunit_custom_log_fn, NULL);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 0)
   iot_logger_setlevel (logger, IOT_LOG_ERROR);
@@ -64,7 +64,7 @@ static void cunit_logger_impl (void)
 static void cunit_logger_sub (void)
 {
   iot_logger_t * sub = iot_logger_default ();
-  iot_logger_t * logger = iot_logger_alloc (IOT_LOG_INFO, "Custom", NULL, cunit_custom_log_fn, sub);
+  iot_logger_t * logger = iot_logger_alloc_custom ("Custom", IOT_LOG_INFO, NULL, cunit_custom_log_fn, sub);
   iot_logger_setlevel (sub, IOT_LOG_NONE);
   cunit_custom_log_count = 0;
   cunit_test_logs (logger);
@@ -75,10 +75,17 @@ static void cunit_logger_sub (void)
 
 static void cunit_logger_file (void)
 {
-  iot_logger_t * logger = iot_logger_alloc (IOT_LOG_WARN, "File", "./test.log", iot_log_file, NULL);
+  iot_logger_t * logger = iot_logger_alloc_custom ("File", IOT_LOG_WARN, "./test.log", iot_log_file, NULL);
   cunit_test_logs (logger);
   iot_logger_free (logger);
 }
+
+static void cunit_logger_null (void)
+{
+  iot_logger_t * logger = NULL;
+  iot_log_info (logger, "Should be ok with NULL logger");
+}
+
 
 void cunit_logger_test_init (void)
 {
@@ -87,4 +94,5 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_impl", cunit_logger_impl);
   CU_add_test (suite, "logger_sub", cunit_logger_sub);
   CU_add_test (suite, "logger_file", cunit_logger_file);
+  CU_add_test (suite, "logger_null", cunit_logger_null);
 }

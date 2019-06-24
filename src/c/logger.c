@@ -89,12 +89,17 @@ void iot_logger_setlevel (iot_logger_t * logger, iot_loglevel_t level)
   logger->level = level;
 }
 
-iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * next)
+iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level)
 {
-  assert (subsys && impl);
+  return iot_logger_alloc_custom (name, level, NULL, iot_log_console, NULL);
+}
+
+iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next)
+{
+  assert (name && impl);
   iot_logger_t * logger = malloc (sizeof (*logger));
   logger->impl = impl;
-  logger->subsys = iot_strdup (subsys);
+  logger->name = iot_strdup (name);
   logger->to = to ? iot_strdup (to) : NULL;
   logger->level = level;
   logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
@@ -107,7 +112,7 @@ void iot_logger_free (iot_logger_t * logger)
 {
   if (logger && (logger != &iot_logger_dfl))
   {
-    free (logger->subsys);
+    free (logger->name);
     free (logger->to);
     free (logger);
   }
@@ -132,9 +137,9 @@ iot_logger_t * iot_logger_next (iot_logger_t * logger)
   return logger->next;
 }
 
-static inline void iot_logger_log_to_fd (FILE * fd, const char *subsys, iot_loglevel_t level, time_t timestamp, const char *message)
+static inline void iot_logger_log_to_fd (FILE * fd, const char *name, iot_loglevel_t level, time_t timestamp, const char *message)
 {
-  fprintf (fd, "%" PRId64 " (%s) %s %s\n", (int64_t) timestamp, subsys ? subsys : "default", iot_log_levels[level], message);
+  fprintf (fd, "%" PRId64 " (%s) %s %s\n", (int64_t) timestamp, name ? name : "default", iot_log_levels[level], message);
 }
 
 void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
@@ -142,14 +147,14 @@ void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp
   FILE * fd = fopen (logger->to, "a");
   if (fd)
   {
-    iot_logger_log_to_fd (fd, logger->subsys, level, timestamp, message);
+    iot_logger_log_to_fd (fd, logger->name, level, timestamp, message);
     fclose (fd);
   }
 }
 
 extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
-  iot_logger_log_to_fd ((level > IOT_LOG_WARN) ? stdout : stderr, logger->subsys, level, timestamp, message);
+  iot_logger_log_to_fd ((level > IOT_LOG_WARN) ? stdout : stderr, logger->name, level, timestamp, message);
 }
 
 #ifdef IOT_BUILD_COMPONENTS
@@ -190,7 +195,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
       }
     }
   }
-  logger = iot_logger_alloc (level, iot_data_string_map_get_string (map, "SubSys"), to, impl, next);
+  logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "SubSys"), level, to, impl, next);
   return &logger->component;
 }
 
