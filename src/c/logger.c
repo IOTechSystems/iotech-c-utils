@@ -7,6 +7,7 @@
 #include "iot/logger.h"
 #include "iot/container.h"
 #include <stdarg.h>
+#include <ctype.h>
 
 static const char * iot_log_levels[6] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
 static iot_logger_t iot_logger_dfl;
@@ -18,7 +19,7 @@ iot_logger_t * iot_logger_default (void)
   {
     logger = &iot_logger_dfl;
     memset (&iot_logger_dfl, 0, sizeof (iot_logger_dfl));
-    iot_logger_dfl.level = IOT_LOG_WARN;
+    iot_logger_dfl.level = IOT_LOGLEVEL_DEFAULT;
     iot_logger_dfl.impl = iot_log_console;
   }
   return logger;
@@ -87,14 +88,14 @@ void iot_logger_setlevel (iot_logger_t * logger, iot_loglevel_t level)
   logger->level = level;
 }
 
-iot_logger_t * iot_logger_alloc (const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * sub)
+iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * sub)
 {
   assert (subsys && impl);
   iot_logger_t * logger = malloc (sizeof (*logger));
   logger->impl = impl;
   logger->subsys = iot_strdup (subsys);
   logger->to = to ? iot_strdup (to) : NULL;
-  logger->level = IOT_LOG_WARN;
+  logger->level = level;
   logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
   logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
   logger->sub = sub;
@@ -158,8 +159,9 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   iot_logger_t * sub = NULL;
   iot_log_function_t impl = NULL;
   iot_logger_t * logger;
+  iot_loglevel_t level = IOT_LOGLEVEL_DEFAULT;
+  const char * name;
   const char * to = iot_data_string_map_get_string (map, "To");
-  const char * name = iot_data_string_map_get_string (map, "SubLogger");
 
   if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
   {
@@ -170,12 +172,25 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   {
     impl = iot_log_console; /* log to stderr or stdout */
   }
-
+  name = iot_data_string_map_get_string (map, "SubLogger");
   if (name)
   {
     sub = (iot_logger_t*) iot_container_find (cont, name);
   }
-  logger = iot_logger_alloc (iot_data_string_map_get_string (map, "SubSystem"), to, impl, sub);
+  name = iot_data_string_map_get_string (map, "Level");
+  if (name)
+  {
+    switch (toupper (name[0]))
+    {
+      case 'N': level = IOT_LOG_NONE; break;
+      case 'E': level = IOT_LOG_ERROR; break;
+      case 'W': level = IOT_LOG_WARN; break;
+      case 'D': level = IOT_LOG_DEBUG; break;
+      case 'T': level = IOT_LOG_TRACE; break;
+      default: break;
+    }
+  }
+  logger = iot_logger_alloc (level, iot_data_string_map_get_string (map, "SubSys"), to, impl, sub);
   return &logger->component;
 }
 

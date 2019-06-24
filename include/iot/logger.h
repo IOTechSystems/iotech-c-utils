@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #define IOT_LOGGER_TYPE "IOT::Logger"
+#define IOT_LOGLEVEL_DEFAULT IOT_LOG_WARN
 
 struct iot_logger_t;
 typedef enum iot_loglevel_t { IOT_LOG_NONE = 0, IOT_LOG_ERROR, IOT_LOG_WARN, IOT_LOG_INFO, IOT_LOG_DEBUG, IOT_LOG_TRACE } iot_loglevel_t;
@@ -35,7 +36,7 @@ typedef struct iot_logger_t
 
 /* Logger lifecycle functions */
 
-extern iot_logger_t * iot_logger_alloc (const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * sub);
+extern iot_logger_t * iot_logger_alloc (iot_loglevel_t level, const char * subsys, const char * to, iot_log_function_t impl, iot_logger_t * sub);
 extern void iot_logger_free (iot_logger_t * logger);
 extern bool iot_logger_start (iot_logger_t * logger);
 extern void iot_logger_stop (iot_logger_t * logger);

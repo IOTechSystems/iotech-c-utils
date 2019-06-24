@@ -89,7 +89,9 @@ static const char * main_config =
 
 static const char * logger_config =
 "{"
-  "\"SubSystem\":\"example\""
+  "\"SubSys\":\"example\","
+  "\"To\":\"file:./log.log\","
+  "\"Level\":\"INFO\""
 "}";
 
 static const char * pool_config =
@@ -105,8 +107,7 @@ static const char * sched_config =
 
 static const char * my_config =
 "{"
-  "\"MyLogger\":\"logger\","
-  "\"To\":\"file:./log.log\""
+  "\"MyLogger\":\"logger\""
 "}";
 
 /* Configuration resolver function */
