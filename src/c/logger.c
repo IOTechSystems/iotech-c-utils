@@ -185,6 +185,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
       case 'N': level = IOT_LOG_NONE; break;
       case 'E': level = IOT_LOG_ERROR; break;
       case 'W': level = IOT_LOG_WARN; break;
+      case 'I': level = IOT_LOG_INFO; break;
       case 'D': level = IOT_LOG_DEBUG; break;
       case 'T': level = IOT_LOG_TRACE; break;
       default: break;
