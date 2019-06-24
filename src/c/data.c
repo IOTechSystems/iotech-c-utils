@@ -803,8 +803,7 @@ static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char
     case IOT_JSON_PRIMITIVE: data = iot_data_primitive_from_json (tokens, json); break;
     case IOT_JSON_OBJECT: data = iot_data_map_from_json (tokens, json); break;
     case IOT_JSON_ARRAY: data = iot_data_array_from_json (tokens, json); break;
-    case IOT_JSON_STRING: data = iot_data_string_from_json (tokens, json); break;
-    default: break;
+    default: data = iot_data_string_from_json (tokens, json); break;
   }
   return data;
 }
