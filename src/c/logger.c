@@ -9,7 +9,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-static const char * iot_log_levels[6] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
+#define IOT_LOG_LEVELS 6
+static const char * iot_log_levels[IOT_LOG_LEVELS] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
 static iot_logger_t iot_logger_dfl;
 
 iot_logger_t * iot_logger_default (void)
