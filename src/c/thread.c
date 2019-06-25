@@ -95,14 +95,8 @@ int iot_thread_current_get_priority (void)
 
 bool iot_thread_set_priority (pthread_t thread, int prio)
 {
-  bool result = false;
   struct sched_param param = { .sched_priority = prio };
-
-  if ((prio >= sched_get_priority_min (SCHED_FIFO)) && (prio <= sched_get_priority_max (SCHED_FIFO)))
-  {
-    result = (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
-  }
-  return result;
+  return (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
 }
 
 bool iot_thread_current_set_priority (int prio)
