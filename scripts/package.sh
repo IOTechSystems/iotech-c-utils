@@ -9,7 +9,7 @@ build_apk()
 {
   DIST=$1
   mkdir -p apk/${DIST}
-  cp ${ARCH}/${DIST}/release/iotech-thrift-*.tar.gz apk/${DIST}/
+  cp ${ARCH}/${DIST}/release/iotech-iot-*.tar.gz apk/${DIST}/
   cp scripts/APKBUILD apk/${DIST}/.
   cp VERSION apk/${DIST}/.
   docker run --rm -e UID=`id -u ${USER}` -e GID=`id -g ${USER}` -v "$(pwd)"/apk/${DIST}:/home/packager/build ${BUILDER}
