@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 #define IOT_LOG_LEVELS 6
-static const char * iot_log_levels[IOT_LOG_LEVELS] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
+static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
 static iot_logger_t iot_logger_dfl;
 
 iot_logger_t * iot_logger_default (void)
@@ -33,7 +33,10 @@ static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t level, va_list 
   vsnprintf (str, sizeof (str), fmt, args);
   time_t ts = time (NULL);
   if (logger->level >= level) (logger->impl) (logger, level, ts, str);
-  if (logger->next && logger->next->level >= level) (logger->impl) (logger, level, ts, str);
+  while ((logger = logger->next))
+  {
+    if (logger->level >= level) (logger->impl) (logger, level, ts, str);
+  }
 }
 
 void iot_log__error (iot_logger_t * logger, ...)
