@@ -15,22 +15,22 @@ static int suite_clean (void)
 
 static void test_time_msecs (void)
 {
-  volatile uint64_t msecs_time1, msecs_time2;
+  volatile uint64_t msecs_time;
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
-    msecs_time1 = iot_time_msecs ();
+    msecs_time = iot_time_msecs ();
     usleep (1000);
-    msecs_time2 = iot_time_msecs ();
-
-    CU_ASSERT (msecs_time2  > msecs_time1);
+    CU_ASSERT (iot_time_msecs ()  > msecs_time);
   }
 }
 
 static void test_time_nsecs (void)
 {
+  volatile uint64_t nsecs_time;
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
-    CU_ASSERT (iot_time_nsecs () < iot_time_nsecs ());
+    nsecs_time = iot_time_nsecs ();
+    CU_ASSERT (iot_time_nsecs () > nsecs_time);
   }
 }
 
