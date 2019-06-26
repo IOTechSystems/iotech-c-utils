@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 #define IOT_LOG_LEVELS 6
-static const char * iot_log_levels[IOT_LOG_LEVELS] = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
+static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
 static iot_logger_t iot_logger_dfl;
 
 iot_logger_t * iot_logger_default (void)
@@ -20,7 +20,7 @@ iot_logger_t * iot_logger_default (void)
   {
     logger = &iot_logger_dfl;
     memset (&iot_logger_dfl, 0, sizeof (iot_logger_dfl));
-    iot_logger_dfl.level = IOT_LOGLEVEL_DEFAULT;
+    iot_logger_dfl.save = IOT_LOGLEVEL_DEFAULT;
     iot_logger_dfl.impl = iot_log_console;
   }
   return logger;
@@ -33,7 +33,10 @@ static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t level, va_list 
   vsnprintf (str, sizeof (str), fmt, args);
   time_t ts = time (NULL);
   if (logger->level >= level) (logger->impl) (logger, level, ts, str);
-  if (logger->next && logger->next->level >= level) (logger->impl) (logger, level, ts, str);
+  while ((logger = logger->next))
+  {
+    if (logger->level >= level) (logger->impl) (logger, level, ts, str);
+  }
 }
 
 void iot_log__error (iot_logger_t * logger, ...)
@@ -97,11 +100,11 @@ iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level)
 iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next)
 {
   assert (name && impl);
-  iot_logger_t * logger = malloc (sizeof (*logger));
+  iot_logger_t * logger = calloc (1, sizeof (*logger));
   logger->impl = impl;
   logger->name = iot_strdup (name);
   logger->to = to ? iot_strdup (to) : NULL;
-  logger->level = level;
+  logger->save = level;
   logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
   logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
   logger->next = next;
@@ -121,14 +124,23 @@ void iot_logger_free (iot_logger_t * logger)
 bool iot_logger_start (iot_logger_t * logger)
 {
   assert (logger);
-  logger->component.state = IOT_COMPONENT_RUNNING;
+  if (logger->component.state != IOT_COMPONENT_RUNNING)
+  {
+    logger->component.state = IOT_COMPONENT_RUNNING;
+    logger->level = logger->save;
+  }
   return true;
 }
 
 void iot_logger_stop (iot_logger_t * logger)
 {
   assert (logger);
-  logger->component.state = IOT_COMPONENT_STOPPED;
+  if (logger->component.state != IOT_COMPONENT_STOPPED)
+  {
+    logger->component.state = IOT_COMPONENT_STOPPED;
+    logger->save = logger->level;
+    logger->level = IOT_LOG_NONE;
+  }
 }
 
 iot_logger_t * iot_logger_next (iot_logger_t * logger)

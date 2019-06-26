@@ -18,12 +18,12 @@ package() {
   cd "$builddir"
   if [ -z "$pkgdir" ]
   then
-    dest=/opt/iotech/thrift
+    dest=/opt/iotech/iot
   else
     dest=$pkgdir
   fi
-  install -Dm755 ${base}/lib/libiotech-iot.so ${dest}/lib/libiotech-iot.so
-  install -Dm755 ${base}/lib/libiotech-iot.a ${dest}/lib/libiotech-iot.a
+  install -Dm755 ${base}/lib/libiot.so ${dest}/lib/libiot.so
+  install -Dm755 ${base}/lib/libiot.a ${dest}/lib/libiot.a
   mkdir -p ${dest}/include/iot/
   cp -r ${base}/include/* ${dest}/include/
 }

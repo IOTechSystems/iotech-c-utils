@@ -219,7 +219,7 @@ pipeline
   agent none
   options
   {
-    buildDiscarder (logRotator (numToKeepStr: '20'))
+    buildDiscarder (logRotator (numToKeepStr: '10'))
     timeout (time: 1, unit: 'HOURS')
   }
   triggers

@@ -28,6 +28,7 @@ typedef struct iot_logger_t
 {
   iot_component_t component;
   volatile iot_loglevel_t level;
+  volatile iot_loglevel_t save;
   char * name;
   char * to;
   iot_log_function_t impl;
