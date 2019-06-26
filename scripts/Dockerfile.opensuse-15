@@ -1,6 +1,6 @@
 FROM opensuse/leap:15
 MAINTAINER IOTech <support@iotechsys.com>
-RUN zypper --non-interactive in git tar glibc-static cmake make wget rpm-build
+RUN zypper --non-interactive in git tar cmake make wget rpm-build
 COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
