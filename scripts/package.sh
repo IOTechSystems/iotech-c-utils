@@ -13,7 +13,7 @@ build_apk()
   cp scripts/APKBUILD apk/${DIST}/.
   cp VERSION apk/${DIST}/.
   docker run --rm -e UID=`id -u ${USER}` -e GID=`id -g ${USER}` -v "$(pwd)"/apk/${DIST}:/home/packager/build ${BUILDER}
-  docker rmi ${BUILDER}
 }
 
+docker pull ${BUILDER}
 build_apk ${SYSTEM}
