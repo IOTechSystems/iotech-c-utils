@@ -53,7 +53,7 @@ static void cunit_logger_named (void)
 
 static void cunit_logger_impl (void)
 {
-  iot_logger_t * logger = iot_logger_alloc_custom ("Custom", IOT_LOG_NONE, NULL, cunit_custom_log_fn, NULL);
+  iot_logger_t * logger = iot_logger_alloc_custom ("Sub", IOT_LOG_NONE, NULL, cunit_custom_log_fn, NULL);
   iot_logger_start (logger);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 0)
