@@ -22,7 +22,7 @@ static void test_time_msecs (void)
     usleep (1000);
     msecs_time2 = iot_time_msecs ();
 
-    CU_ASSERT (msecs_time1 != msecs_time2);
+    CU_ASSERT (msecs_time2  > msecs_time1);
   }
 }
 
@@ -30,7 +30,7 @@ static void test_time_nsecs (void)
 {
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
-    CU_ASSERT (iot_time_nsecs () != iot_time_nsecs ());
+    CU_ASSERT (iot_time_nsecs () < iot_time_nsecs ());
   }
 }
 

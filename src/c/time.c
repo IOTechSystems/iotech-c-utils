@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include "iot/os.h"
 #include "iot/time.h"
 
 #define IOT_TIME_MILLIS 1000U
