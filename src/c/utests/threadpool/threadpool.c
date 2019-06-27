@@ -144,6 +144,14 @@ static void cunit_threadpool_stop_start (void)
   iot_threadpool_free (pool);
 }
 
+static void cunit_threadpool_refcount (void)
+{
+  iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL);
+  iot_threadpool_addref (pool);
+  iot_threadpool_free (pool);
+  iot_threadpool_free (pool);
+}
+
 void cunit_threadpool_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("threadpool", suite_init, suite_clean);
@@ -152,4 +160,5 @@ void cunit_threadpool_test_init (void)
   CU_add_test (suite, "threadpool_block", cunit_threadpool_block);
   CU_add_test (suite, "threadpool_try_work", cunit_threadpool_try_work);
   CU_add_test (suite, "threadpool_stop_start", cunit_threadpool_stop_start);
+  CU_add_test (suite, "threadpool_refcount", cunit_threadpool_refcount);
 }
