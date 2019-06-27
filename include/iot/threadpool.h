@@ -90,6 +90,13 @@ extern void iot_threadpool_stop (iot_threadpool_t * pool);
  */
 extern void iot_threadpool_free (iot_threadpool_t * pool);
 
+/**
+ * @brief Increment the thread pool reference count
+ *
+ * @param pool the pool on which to increment the reference count
+ */
+extern void iot_threadpool_addref (iot_threadpool_t * pool);
+
 /* Threadpool factory */
 
 extern const iot_component_factory_t * iot_threadpool_factory (void);

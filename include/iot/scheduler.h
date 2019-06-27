@@ -40,6 +40,13 @@ typedef void (*iot_schedule_fn_t) (void * arg);
  */
 extern iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool);
 
+/**
+ * @brief Increment the scheduler reference count
+ *
+ * @param scheduler the scheduler on which to increment the reference count
+ */
+extern void iot_scheduler_addref (iot_scheduler_t * scheduler);
+
 extern iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler);
 
 /**

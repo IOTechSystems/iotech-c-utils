@@ -142,13 +142,20 @@ static void iot_scheduler_thread (void * arg)
 /* Initialise the schedule queue and processing thread */
 iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool)
 {
+  assert (pool);
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1, sizeof (*scheduler));
   iot_mutex_init (&scheduler->mutex);
   pthread_cond_init (&scheduler->cond, NULL);
   scheduler->threadpool = pool;
-  scheduler->component.start_fn = (iot_component_start_fn_t) iot_scheduler_start;
-  scheduler->component.stop_fn = (iot_component_stop_fn_t) iot_scheduler_stop;
+  iot_component_init (&scheduler->component, (iot_component_start_fn_t) iot_scheduler_start, (iot_component_stop_fn_t) iot_scheduler_stop);
+  iot_threadpool_addref (pool);
   return scheduler;
+}
+
+void iot_scheduler_addref (iot_scheduler_t * scheduler)
+{
+  assert (scheduler);
+  atomic_fetch_add (&scheduler->component.refs, 1);
 }
 
 iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler)
@@ -255,18 +262,22 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
 /* Destroy all remaining scheduler resouces */
 void iot_scheduler_free (iot_scheduler_t * scheduler)
 {
-  iot_scheduler_stop (scheduler);
-  while (scheduler->queue.length > 0)
+  if (scheduler && iot_component_free (&scheduler->component))
   {
-    iot_schedule_delete (scheduler, scheduler->queue.front);
+    iot_scheduler_stop (scheduler);
+    while (scheduler->queue.length > 0)
+    {
+      iot_schedule_delete (scheduler, scheduler->queue.front);
+    }
+    while (scheduler->idle_queue.length > 0)
+    {
+      iot_schedule_delete (scheduler, scheduler->idle_queue.front);
+    }
+    pthread_cond_destroy (&scheduler->cond);
+    pthread_mutex_destroy (&scheduler->mutex);
+    iot_threadpool_free (scheduler->threadpool);
+    free (scheduler);
   }
-  while (scheduler->idle_queue.length > 0)
-  {
-    iot_schedule_delete (scheduler, scheduler->idle_queue.front);
-  }
-  pthread_cond_destroy (&scheduler->cond);
-  pthread_mutex_destroy (&scheduler->mutex);
-  free (scheduler);
 }
 
 /* Add a schedule to the queue */

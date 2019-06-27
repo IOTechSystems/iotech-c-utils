@@ -8,6 +8,10 @@
 
 #include "iot/data.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct iot_component_t iot_component_t;
 typedef struct iot_container_t iot_container_t;
 typedef struct iot_component_factory_t iot_component_factory_t;
@@ -31,6 +35,7 @@ struct iot_component_t
   volatile iot_component_state_t state;
   iot_component_start_fn_t start_fn;
   iot_component_stop_fn_t stop_fn;
+  atomic_uint_fast32_t refs;
 };
 
 struct iot_component_factory_t
@@ -40,4 +45,10 @@ struct iot_component_factory_t
   iot_component_free_fn_t free_fn;
 };
 
+extern void iot_component_init (iot_component_t * component, iot_component_start_fn_t start, iot_component_stop_fn_t stop);
+extern bool iot_component_free (iot_component_t * component);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

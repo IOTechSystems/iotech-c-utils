@@ -127,8 +127,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
   pthread_cond_init (&pool->state_cond, NULL);
-  pool->component.start_fn = (iot_component_start_fn_t) iot_threadpool_start;
-  pool->component.stop_fn = (iot_component_stop_fn_t) iot_threadpool_stop;
+  iot_component_init (&pool->component, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
   for (uint32_t n = 0; n < pool->max_threads; n++)
   {
     iot_thread_t *th = &pool->thread_array[n];
@@ -137,6 +136,12 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
     iot_thread_create (&th->pthread, (iot_thread_fn_t) iot_threadpool_thread, th, pool->default_prio);
   }
   return pool;
+}
+
+void iot_threadpool_addref (iot_threadpool_t * pool)
+{
+  assert (pool);
+  atomic_fetch_add (&pool->component.refs, 1);
 }
 
 static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
@@ -272,7 +277,7 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
 
 void iot_threadpool_free (iot_threadpool_t * pool)
 {
-  if (pool)
+  if (pool && iot_component_free (&pool->component))
   {
     iot_job_t * job;
     pthread_mutex_lock (&pool->mutex);

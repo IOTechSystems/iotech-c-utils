@@ -105,21 +105,27 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
   logger->name = iot_strdup (name);
   logger->to = to ? iot_strdup (to) : NULL;
   logger->save = level;
-  logger->component.start_fn = (iot_component_start_fn_t) iot_logger_start;
-  logger->component.stop_fn = (iot_component_stop_fn_t) iot_logger_stop;
   logger->next = next;
+  iot_component_init (&logger->component, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
   return logger;
 }
 
 void iot_logger_free (iot_logger_t * logger)
 {
-  if (logger && (logger != &iot_logger_dfl))
+  if (logger && (logger != &iot_logger_dfl) && iot_component_free (&logger->component))
   {
     free (logger->name);
     free (logger->to);
     free (logger);
   }
 }
+
+void iot_logger_addref (iot_logger_t * logger)
+{
+  assert (logger);
+  atomic_fetch_add (&logger->component.refs, 1);
+}
+
 
 bool iot_logger_start (iot_logger_t * logger)
 {

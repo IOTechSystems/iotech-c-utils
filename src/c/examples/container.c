@@ -36,16 +36,20 @@ static my_component_t * my_component_alloc (iot_logger_t * logger)
 {
   printf ("MyComponent alloc\n");
   my_component_t * mycomp = calloc (1, sizeof (*mycomp));
-  mycomp->component.start_fn = (iot_component_start_fn_t) my_component_start;
-  mycomp->component.stop_fn = (iot_component_stop_fn_t) my_component_stop;
+  iot_component_init (&mycomp->component, (iot_component_start_fn_t) my_component_start, (iot_component_stop_fn_t) my_component_stop);
   mycomp->logger = logger;
+  iot_logger_addref (logger);
   return mycomp;
 }
 
 static void my_component_free (my_component_t * comp)
 {
-  printf ("MyComponent free\n");
-  free (comp);
+  if (comp && iot_component_free (&comp->component))
+  {
+    printf ("MyComponent free\n");
+    iot_logger_free (comp->logger);
+    free (comp);
+  }
 }
 
 static iot_component_t * my_component_config (iot_container_t * cont, const iot_data_t * map)
