@@ -73,6 +73,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
     {
       iot_log_debug (pool->logger, "Thread waiting for pool start or deletion");
       pthread_cond_wait (&pool->state_cond, &pool->mutex); // Wait until running or deleted
+      iot_log_debug (pool->logger, "Thread awake for pool %s", (pool->component.state == IOT_COMPONENT_RUNNING) ? "start" : "deletion");
     }
     if (pool->component.state == IOT_COMPONENT_DELETED)
     {
