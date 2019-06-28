@@ -86,7 +86,7 @@ static time_t time (time_t *t)
 }
 #endif
 
-void iot_logger_setlevel (iot_logger_t * logger, iot_loglevel_t level)
+void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
 {
   assert (logger);
   logger->level = level;

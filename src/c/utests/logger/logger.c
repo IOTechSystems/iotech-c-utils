@@ -57,19 +57,19 @@ static void cunit_logger_impl (void)
   iot_logger_start (logger);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 0)
-  iot_logger_setlevel (logger, IOT_LOG_ERROR);
+  iot_logger_set_level (logger, IOT_LOG_ERROR);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 1)
-  iot_logger_setlevel (logger, IOT_LOG_WARN);
+  iot_logger_set_level (logger, IOT_LOG_WARN);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 3)
-  iot_logger_setlevel (logger, IOT_LOG_INFO);
+  iot_logger_set_level (logger, IOT_LOG_INFO);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 6)
-  iot_logger_setlevel (logger, IOT_LOG_DEBUG);
+  iot_logger_set_level (logger, IOT_LOG_DEBUG);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 10)
-  iot_logger_setlevel (logger, IOT_LOG_TRACE);
+  iot_logger_set_level (logger, IOT_LOG_TRACE);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 15)
   iot_logger_free (logger);
@@ -81,7 +81,7 @@ static void cunit_logger_sub (void)
   iot_logger_t * logger = iot_logger_alloc_custom ("Custom", IOT_LOG_INFO, NULL, cunit_custom_log_fn, sub);
   iot_logger_start (sub);
   iot_logger_start (logger);
-  iot_logger_setlevel (sub, IOT_LOG_NONE);
+  iot_logger_set_level (sub, IOT_LOG_NONE);
   cunit_custom_log_count = 0;
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 3)

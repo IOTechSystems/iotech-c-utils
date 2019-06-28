@@ -77,7 +77,8 @@ static void cunit_threadpool_priority (void)
   prio2 = prio1 + 1;
   prio3 = prio2 + 1;
   iot_threadpool_t * pool = iot_threadpool_alloc (1u, 0u, &prio_min);
-  CU_ASSERT (pool != NULL)
+  iot_logger_t * logger = iot_logger_alloc ("ThreadPool", IOT_LOG_TRACE);
+  iot_threadpool_set_logger (pool, logger);
   iot_threadpool_start (pool);
   iot_threadpool_add_work (pool, cunit_pool_sleeper, NULL, NULL);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio1, &prio1);
@@ -86,6 +87,7 @@ static void cunit_threadpool_priority (void)
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, &prio2);
   iot_threadpool_wait (pool);
   iot_threadpool_free (pool);
+  iot_logger_free (logger);
 }
 
 static void cunit_threadpool_try_work (void)

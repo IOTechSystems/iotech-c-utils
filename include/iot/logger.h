@@ -68,7 +68,7 @@ extern void iot_log__error (iot_logger_t * logger, ...);
 
 /* Set log level */
 
-extern void iot_logger_setlevel (iot_logger_t *logger, iot_loglevel_t level);
+extern void iot_logger_set_level (iot_logger_t *logger, iot_loglevel_t level);
 
 /* Logger factory */
 

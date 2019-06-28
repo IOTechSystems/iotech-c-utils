@@ -1,7 +1,8 @@
 #ifndef _IOT_THREADPOOL_H_
 #define _IOT_THREADPOOL_H_
 
-#include "iot/component.h"
+#include "iot/logger.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,6 +97,14 @@ extern void iot_threadpool_free (iot_threadpool_t * pool);
  * @param pool the pool on which to increment the reference count
  */
 extern void iot_threadpool_addref (iot_threadpool_t * pool);
+
+/**
+ * @brief Sets the thread pool logger
+ *
+ * @param pool The thread pool
+ * @param logger The logger, can be NULL to disable logging
+ */
+extern void iot_threadpool_set_logger (iot_threadpool_t * pool, iot_logger_t * logger);
 
 /* Threadpool factory */
 

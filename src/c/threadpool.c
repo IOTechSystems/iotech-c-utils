@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+#include "iot/container.h"
 #include "iot/threadpool.h"
 #include "iot/thread.h"
 #include "iot/data.h"
@@ -48,6 +49,7 @@ typedef struct iot_threadpool_t
   pthread_cond_t job_cond;           // Job control condition
   pthread_cond_t queue_cond;         // Job queue control condition
   pthread_cond_t state_cond;         // Service state control condition
+  iot_logger_t * logger;             // Logger
 } iot_threadpool_t;
 
 static void * iot_threadpool_thread (iot_thread_t * th)
@@ -67,6 +69,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
   {
     while (pool->component.state < IOT_COMPONENT_RUNNING)
     {
+      iot_log_debug (pool->logger, "Thread waiting for pool start or deletion");
       pthread_cond_wait (&pool->state_cond, &pool->mutex); // Wait until running or deleted
     }
     if (pool->component.state == IOT_COMPONENT_DELETED)
@@ -142,6 +145,17 @@ void iot_threadpool_addref (iot_threadpool_t * pool)
 {
   assert (pool);
   atomic_fetch_add (&pool->component.refs, 1);
+}
+
+void iot_threadpool_set_logger (iot_threadpool_t * pool, iot_logger_t * logger)
+{
+  assert (pool);
+  iot_logger_free (pool->logger);
+  pool->logger = logger;
+  if (logger)
+  {
+    iot_logger_addref (logger);
+  }
 }
 
 static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
@@ -231,6 +245,7 @@ static inline void iot_threadpool_wait_locked (iot_threadpool_t * pool)
 {
   while (pool->jobs || pool->working)
   {
+    iot_log_debug (pool->logger, "iot_threadpool_wait jobs:%u threads:%u", pool->jobs, pool->working);
     pthread_cond_wait (&pool->work_cond, &pool->mutex); // Wait until all jobs processed
   }
 }
@@ -297,6 +312,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
     pthread_cond_destroy (&pool->job_cond);
     pthread_cond_destroy (&pool->state_cond);
     pthread_mutex_destroy (&pool->mutex);
+    iot_logger_free (pool->logger);
     free (pool->thread_array);
     free (pool);
   }
@@ -306,14 +322,20 @@ void iot_threadpool_free (iot_threadpool_t * pool)
 
 static iot_component_t * iot_threadpool_config (iot_container_t * cont, const iot_data_t * map)
 {
-  (void) cont;
+  iot_threadpool_t * pool;
+  iot_logger_t * logger = NULL;
+  const char * name;
   const iot_data_t * value = iot_data_string_map_get (map, "Threads");
   uint32_t threads = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_THREADS_DEFAULT;
   value = iot_data_string_map_get (map, "MaxJobs");
   uint32_t jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_JOBS_DEFAULT;
   value = iot_data_string_map_get (map, "Priority");
   int prio = value ? (int) iot_data_i64 (value) : -1;
-  return (iot_component_t*) iot_threadpool_alloc (threads, jobs, value ? &prio : NULL);
+  pool = iot_threadpool_alloc (threads, jobs, value ? &prio : NULL);
+  name = iot_data_string_map_get_string (map, "Logger");
+  if (name) logger = (iot_logger_t*) iot_container_find (cont, name);
+  iot_threadpool_set_logger (pool, logger);
+  return (iot_component_t*) pool;
 }
 
 const iot_component_factory_t * iot_threadpool_factory (void)
