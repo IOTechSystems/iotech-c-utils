@@ -60,7 +60,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
   char name[32];
 
   snprintf (name, sizeof (name), "iot-pool-%u", th->id);
-  iot_log_debug (pool->logger, "Starting thread: %s", name);
+  iot_log_debug (pool->logger, "Thread: %s starting", name);
 
 #if defined (__linux__)
   prctl (PR_SET_NAME, name);
@@ -107,6 +107,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
         }
       }
       (job.function) (job.arg); // Run job
+      iot_log_debug (pool->logger, "Thread %s completed job", name);
       pthread_mutex_lock (&pool->mutex);
       if (--pool->working == 0)
       {
@@ -121,7 +122,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
     }
   }
   pthread_mutex_unlock (&pool->mutex);
-  iot_log_debug (pool->logger, "Exiting thread: %s", name);
+  iot_log_debug (pool->logger, "Thread %s exiting", name);
   return NULL;
 }
 
