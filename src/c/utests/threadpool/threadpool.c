@@ -155,17 +155,19 @@ static void cunit_threadpool_stop_start (void)
   iot_threadpool_stop (pool);
   printf ("cunit_threadpool_stop_start @4\n");
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
+  printf ("cunit_threadpool_stop_start @5\n");
   usleep (500000);
   CU_ASSERT (counter == 2)
+  printf ("cunit_threadpool_stop_start @5.1\n");
   iot_threadpool_start (pool);
-  printf ("cunit_threadpool_stop_start @5\n");
-  iot_threadpool_wait (pool);
   printf ("cunit_threadpool_stop_start @6\n");
+  iot_threadpool_wait (pool);
+  printf ("cunit_threadpool_stop_start @7\n");
   CU_ASSERT (counter == 3)
   iot_threadpool_stop (pool);
-  printf ("cunit_threadpool_stop_start @7\n");
-  iot_threadpool_free (pool);
   printf ("cunit_threadpool_stop_start @8\n");
+  iot_threadpool_free (pool);
+  printf ("cunit_threadpool_stop_start @9\n");
 }
 
 static void cunit_threadpool_refcount (void)
