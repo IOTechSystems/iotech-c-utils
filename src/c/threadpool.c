@@ -348,8 +348,8 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   value = iot_data_string_map_get (map, "MaxJobs");
   jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_JOBS_DEFAULT;
   value = iot_data_string_map_get (map, "ShutdownDelay");
-  delay = value ? (uint32_t) iot_data_i64 (value) : 0;
-  if (delay < IOT_TP_JOBS_DEFAULT) delay = IOT_TP_SHUTDOWN_MIN;
+  delay = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_SHUTDOWN_MIN;
+  if (delay < IOT_TP_SHUTDOWN_MIN) delay = IOT_TP_SHUTDOWN_MIN;
   value = iot_data_string_map_get (map, "Priority");
   int prio = value ? (int) iot_data_i64 (value) : -1;
   name = iot_data_string_map_get_string (map, "Logger");
