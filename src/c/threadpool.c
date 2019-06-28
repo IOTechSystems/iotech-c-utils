@@ -57,13 +57,13 @@ static void * iot_threadpool_thread (iot_thread_t * th)
   iot_threadpool_t * pool = th->pool;
   pthread_t tid = pthread_self ();
   int priority = iot_thread_get_priority (tid);
-  char thread_name[64];
+  char name[64];
 
-  snprintf (thread_name, sizeof (thread_name), "thread-pool-%u", th->id);
-  iot_log_debug (pool->logger, "Starting thread: %s", thread_name);
+  snprintf (name, sizeof (name), "thread-pool-%u", th->id);
+  iot_log_debug (pool->logger, "Starting thread: %s", name);
 
 #if defined (__linux__)
-  prctl (PR_SET_NAME, thread_name);
+  prctl (PR_SET_NAME, name);
 #endif
 
   pthread_mutex_lock (&pool->mutex);
@@ -117,7 +117,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
     }
   }
   pthread_mutex_unlock (&pool->mutex);
-  iot_log_debug (pool->logger, "Exiting thread: %s", thread_name);
+  iot_log_debug (pool->logger, "Exiting thread: %s", name);
   return NULL;
 }
 
@@ -239,6 +239,7 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), voi
     pthread_cond_wait (&pool->queue_cond, &pool->mutex); // Wait until space in job queue
   }
   iot_threadpool_add_job_locked (pool, func, arg, prio);
+  iot_log_debug (pool->logger, "iot_threadpool_add_work jobs/max: %u/%u", pool->jobs, pool->max_jobs);
   pthread_mutex_unlock (&pool->mutex);
 }
 
@@ -283,6 +284,7 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
   assert (pool);
   iot_log_trace (pool->logger, "iot_threadpool_start()");
   pthread_mutex_lock (&pool->mutex);
+  iot_log_trace (pool->logger, "iot_threadpool_start(locked)");
   if (pool->component.state != IOT_COMPONENT_RUNNING)
   {
     pool->component.state = IOT_COMPONENT_RUNNING;
@@ -295,10 +297,10 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
 
 void iot_threadpool_free (iot_threadpool_t * pool)
 {
-  iot_log_trace (pool->logger, "iot_threadpool_free()");
   if (pool && iot_component_free (&pool->component))
   {
     iot_job_t * job;
+    iot_log_trace (pool->logger, "iot_threadpool_free()");
     pthread_mutex_lock (&pool->mutex);
     iot_threadpool_wait_locked (pool);
     iot_threadpool_stop_locked (pool);

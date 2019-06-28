@@ -157,7 +157,7 @@ iot_logger_t * iot_logger_next (iot_logger_t * logger)
 
 static inline void iot_logger_log_to_fd (FILE * fd, const char *name, iot_loglevel_t level, time_t timestamp, const char *message)
 {
-  fprintf (fd, "%" PRId64 " (%s) %s:%s\n", (int64_t) timestamp, name ? name : "default", iot_log_levels[level], message);
+  fprintf (fd, "%" PRId64 " (%s:%s) %s\n", (int64_t) timestamp, name ? name : "default", iot_log_levels[level], message);
 }
 
 void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)

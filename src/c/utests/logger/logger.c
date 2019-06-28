@@ -100,6 +100,7 @@ static void cunit_logger_file (void)
 static void cunit_logger_null (void)
 {
   cunit_test_logs (NULL); // Should be able to have logger as NULL
+  iot_logger_free (NULL);
 }
 
 static void cunit_logger_start_stop (void)
