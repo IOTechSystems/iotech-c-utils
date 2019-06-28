@@ -325,10 +325,11 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   iot_threadpool_t * pool;
   iot_logger_t * logger = NULL;
   const char * name;
+  uint32_t threads, jobs;
   const iot_data_t * value = iot_data_string_map_get (map, "Threads");
-  uint32_t threads = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_THREADS_DEFAULT;
+  threads = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_THREADS_DEFAULT;
   value = iot_data_string_map_get (map, "MaxJobs");
-  uint32_t jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_JOBS_DEFAULT;
+  jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_JOBS_DEFAULT;
   value = iot_data_string_map_get (map, "Priority");
   int prio = value ? (int) iot_data_i64 (value) : -1;
   pool = iot_threadpool_alloc (threads, jobs, value ? &prio : NULL);

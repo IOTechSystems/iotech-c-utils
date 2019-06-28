@@ -112,8 +112,11 @@ static void cunit_threadpool_try_work (void)
   ret = iot_threadpool_try_work (pool, cunit_pool_blocker, &mutex, NULL);
   CU_ASSERT (! ret)
   pthread_mutex_unlock (&mutex);
+  printf ("cunit_threadpool_try_work @1\n");
   iot_threadpool_wait (pool);
+  printf ("cunit_threadpool_try_work @2\n");
   iot_threadpool_free (pool);
+  printf ("cunit_threadpool_try_work @3\n");
   pthread_mutex_destroy (&mutex);
 }
 
@@ -126,9 +129,12 @@ static void cunit_threadpool_block (void)
   iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
   iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
   iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
+  printf ("cunit_threadpool_block @1\n");
   iot_threadpool_wait (pool);
+  printf ("cunit_threadpool_block @2\n");
   CU_ASSERT (counter_max == 1)
   iot_threadpool_free (pool);
+  printf ("cunit_threadpool_block @3\n");
 }
 
 static void cunit_threadpool_stop_start (void)
@@ -138,20 +144,28 @@ static void cunit_threadpool_stop_start (void)
   iot_threadpool_set_logger (pool, logger);
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
   iot_threadpool_start (pool);
+  printf ("cunit_threadpool_stop_start @1\n");
   iot_threadpool_wait (pool);
+  printf ("cunit_threadpool_stop_start @2\n");
   CU_ASSERT (counter == 1)
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
   iot_threadpool_wait (pool);
+  printf ("cunit_threadpool_stop_start @3\n");
   CU_ASSERT (counter == 2)
   iot_threadpool_stop (pool);
+  printf ("cunit_threadpool_stop_start @4\n");
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
   usleep (500000);
   CU_ASSERT (counter == 2)
   iot_threadpool_start (pool);
+  printf ("cunit_threadpool_stop_start @5\n");
   iot_threadpool_wait (pool);
+  printf ("cunit_threadpool_stop_start @6\n");
   CU_ASSERT (counter == 3)
   iot_threadpool_stop (pool);
+  printf ("cunit_threadpool_stop_start @7\n");
   iot_threadpool_free (pool);
+  printf ("cunit_threadpool_stop_start @8\n");
 }
 
 static void cunit_threadpool_refcount (void)
