@@ -88,8 +88,11 @@ static void cunit_threadpool_priority (void)
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, &prio2);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio3, &prio3);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, &prio2);
+  printf ("cunit_threadpool_priority @1\n");
   iot_threadpool_wait (pool);
+  printf ("cunit_threadpool_priority @2\n");
   iot_threadpool_free (pool);
+  printf ("cunit_threadpool_priority @3\n");
 }
 
 static void cunit_threadpool_try_work (void)
