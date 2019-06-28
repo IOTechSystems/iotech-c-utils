@@ -96,7 +96,7 @@ extern void iot_threadpool_free (iot_threadpool_t * pool);
  *
  * @param pool the pool on which to increment the reference count
  */
-extern void iot_threadpool_addref (iot_threadpool_t * pool);
+extern void iot_threadpool_add_ref (iot_threadpool_t * pool);
 
 /**
  * @brief Sets the thread pool logger

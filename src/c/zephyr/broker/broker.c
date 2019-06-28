@@ -64,7 +64,7 @@ static void publish (iot_bus_pub_t * pub, uint32_t iters)
 
     // Increment map ref count or publish will delete
 
-    iot_data_addref (map);
+    iot_data_add_ref (map);
     iot_bus_pub_push (pub, map, true);
   }
 

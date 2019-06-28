@@ -148,11 +148,11 @@ iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool)
   pthread_cond_init (&scheduler->cond, NULL);
   scheduler->threadpool = pool;
   iot_component_init (&scheduler->component, (iot_component_start_fn_t) iot_scheduler_start, (iot_component_stop_fn_t) iot_scheduler_stop);
-  iot_threadpool_addref (pool);
+  iot_threadpool_add_ref (pool);
   return scheduler;
 }
 
-void iot_scheduler_addref (iot_scheduler_t * scheduler)
+void iot_scheduler_add_ref (iot_scheduler_t * scheduler)
 {
   assert (scheduler);
   atomic_fetch_add (&scheduler->component.refs, 1);

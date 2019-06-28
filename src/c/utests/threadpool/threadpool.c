@@ -9,17 +9,21 @@ static int prio2 = -1;
 static int prio3 = -1;
 static int counter_max = 0;
 static uint32_t counter = 0;
+static iot_logger_t * logger = NULL;
 
 static int suite_init (void)
 {
   prio_max = sched_get_priority_max (SCHED_FIFO);
   prio_min = sched_get_priority_min (SCHED_FIFO);
   printf ("\nFIFO priority max: %d min: %d\n", prio_max, prio_min);
+  logger = iot_logger_alloc ("ThreadPool", IOT_LOG_TRACE);
+  iot_logger_start (logger);
   return 0;
 }
 
 static int suite_clean (void)
 {
+  iot_logger_free (logger);
   return 0;
 }
 
@@ -77,7 +81,6 @@ static void cunit_threadpool_priority (void)
   prio2 = prio1 + 1;
   prio3 = prio2 + 1;
   iot_threadpool_t * pool = iot_threadpool_alloc (1u, 0u, &prio_min);
-  iot_logger_t * logger = iot_logger_alloc ("ThreadPool", IOT_LOG_TRACE);
   iot_threadpool_set_logger (pool, logger);
   iot_threadpool_start (pool);
   iot_threadpool_add_work (pool, cunit_pool_sleeper, NULL, NULL);
@@ -87,7 +90,6 @@ static void cunit_threadpool_priority (void)
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, &prio2);
   iot_threadpool_wait (pool);
   iot_threadpool_free (pool);
-  iot_logger_free (logger);
 }
 
 static void cunit_threadpool_try_work (void)
@@ -97,6 +99,7 @@ static void cunit_threadpool_try_work (void)
   pthread_mutex_init (&mutex, NULL);
   pthread_mutex_lock (&mutex);
   iot_threadpool_t * pool = iot_threadpool_alloc (1u, 2u, NULL);
+  iot_threadpool_set_logger (pool, logger);
   iot_threadpool_start (pool);
   iot_threadpool_add_work (pool, cunit_pool_blocker, &mutex, NULL);
   iot_threadpool_add_work (pool, cunit_pool_blocker, &mutex, NULL);
@@ -114,6 +117,7 @@ static void cunit_threadpool_try_work (void)
 static void cunit_threadpool_block (void)
 {
   iot_threadpool_t * pool = iot_threadpool_alloc (1u, 1u, NULL);
+  iot_threadpool_set_logger (pool, logger);
   iot_threadpool_start (pool);
   iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
   iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
@@ -128,6 +132,7 @@ static void cunit_threadpool_stop_start (void)
 {
   iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL);
   counter = 0;
+  iot_threadpool_set_logger (pool, logger);
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
   iot_threadpool_start (pool);
   iot_threadpool_wait (pool);
@@ -149,7 +154,8 @@ static void cunit_threadpool_stop_start (void)
 static void cunit_threadpool_refcount (void)
 {
   iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL);
-  iot_threadpool_addref (pool);
+  iot_threadpool_set_logger (pool, logger);
+  iot_threadpool_add_ref (pool);
   iot_threadpool_free (pool);
   iot_threadpool_free (pool);
 }

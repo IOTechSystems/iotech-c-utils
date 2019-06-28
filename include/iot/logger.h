@@ -39,7 +39,7 @@ typedef struct iot_logger_t
 
 extern iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next);
 extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level);
-extern void iot_logger_addref (iot_logger_t * logger);
+extern void iot_logger_add_ref (iot_logger_t * logger);
 extern void iot_logger_free (iot_logger_t * logger);
 extern bool iot_logger_start (iot_logger_t * logger);
 extern void iot_logger_stop (iot_logger_t * logger);

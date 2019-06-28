@@ -45,7 +45,7 @@ extern iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool);
  *
  * @param scheduler the scheduler on which to increment the reference count
  */
-extern void iot_scheduler_addref (iot_scheduler_t * scheduler);
+extern void iot_scheduler_add_ref (iot_scheduler_t * scheduler);
 
 extern iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler);
 

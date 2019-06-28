@@ -196,7 +196,7 @@ void iot_data_fini (void)
 #endif
 }
 
-void iot_data_addref (iot_data_t * data)
+void iot_data_add_ref (iot_data_t * data)
 {
   assert (data);
   atomic_fetch_add (&data->refs, 1);

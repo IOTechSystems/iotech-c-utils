@@ -124,7 +124,7 @@ static void cunit_logger_refcount (void)
 {
   iot_logger_t *logger = iot_logger_alloc_custom ("StartStop", IOT_LOG_WARN, NULL, cunit_custom_log_fn, NULL);
   cunit_custom_log_count = 0;
-  iot_logger_addref (logger);
+  iot_logger_add_ref (logger);
   iot_logger_start (logger);
   iot_logger_free (logger);
   cunit_test_logs (logger);

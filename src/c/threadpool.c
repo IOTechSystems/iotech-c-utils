@@ -141,7 +141,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   return pool;
 }
 
-void iot_threadpool_addref (iot_threadpool_t * pool)
+void iot_threadpool_add_ref (iot_threadpool_t * pool)
 {
   assert (pool);
   atomic_fetch_add (&pool->component.refs, 1);
@@ -152,10 +152,7 @@ void iot_threadpool_set_logger (iot_threadpool_t * pool, iot_logger_t * logger)
   assert (pool);
   iot_logger_free (pool->logger);
   pool->logger = logger;
-  if (logger)
-  {
-    iot_logger_addref (logger);
-  }
+  if (logger) iot_logger_add_ref (logger);
 }
 
 static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
@@ -245,7 +242,7 @@ static inline void iot_threadpool_wait_locked (iot_threadpool_t * pool)
 {
   while (pool->jobs || pool->working)
   {
-    iot_log_debug (pool->logger, "iot_threadpool_wait jobs:%u threads:%u", pool->jobs, pool->working);
+    iot_log_debug (pool->logger, "iot_threadpool_wait for jobs:%u threads:%u", pool->jobs, pool->working);
     pthread_cond_wait (&pool->work_cond, &pool->mutex); // Wait until all jobs processed
   }
 }
@@ -260,6 +257,7 @@ void iot_threadpool_wait (iot_threadpool_t * pool)
 
 static inline void iot_threadpool_stop_locked (iot_threadpool_t * pool)
 {
+  iot_log_trace (pool->logger, "iot_threadpool_stop()");
   if (pool->component.state != IOT_COMPONENT_STOPPED)
   {
     pool->component.state = IOT_COMPONENT_STOPPED;
@@ -280,6 +278,7 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
 {
   assert (pool);
   pthread_mutex_lock (&pool->mutex);
+  iot_log_trace (pool->logger, "iot_threadpool_start()");
   if (pool->component.state != IOT_COMPONENT_RUNNING)
   {
     pool->component.state = IOT_COMPONENT_RUNNING;
@@ -292,6 +291,7 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
 
 void iot_threadpool_free (iot_threadpool_t * pool)
 {
+  iot_log_trace (pool->logger, "iot_threadpool_free()");
   if (pool && iot_component_free (&pool->component))
   {
     iot_job_t * job;
