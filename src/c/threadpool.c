@@ -12,9 +12,9 @@
 #include <sys/prctl.h>
 #endif
 
-#define IOT_THREADPOOL_THREADS_DEFAULT 2
-#define IOT_THREADPOOL_JOBS_DEFAULT 0
-#define IOT_THREADPOOL_SHUTDOWN_DELAY 200000
+#define IOT_TP_THREADS_DEFAULT 2
+#define IOT_TP_JOBS_DEFAULT 0
+#define IOT_TP_SHUTDOWN_DEFAULT 200
 
 typedef struct iot_job_t
 {
@@ -40,6 +40,7 @@ typedef struct iot_threadpool_t
   const uint32_t max_jobs;           // Maximum number of queued jobs
   uint32_t jobs;                     // Number of jobs in queue
   uint32_t working;                  // Number of threads currently working
+  uint32_t delay;                    // Shutdown delay in milli seconds
   iot_job_t * front;                 // Front of job queue
   iot_job_t * rear;                  // Rear of job queue
   iot_job_t * cache;                 // Free job cache
@@ -49,7 +50,7 @@ typedef struct iot_threadpool_t
   pthread_cond_t job_cond;           // Job control condition
   pthread_cond_t queue_cond;         // Job queue control condition
   pthread_cond_t state_cond;         // Service state control condition
-  iot_logger_t * logger;             // Logger
+  iot_logger_t * logger;             // Optional logger
 } iot_threadpool_t;
 
 static void * iot_threadpool_thread (iot_thread_t * th)
@@ -252,6 +253,7 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), voi
 
 static inline void iot_threadpool_wait_locked (iot_threadpool_t * pool)
 {
+  iot_log_trace (pool->logger, "iot_threadpool_wait_locked()");
   while (pool->jobs || pool->working)
   {
     iot_log_debug (pool->logger, "iot_threadpool_wait (jobs:%u threads:%u)", pool->jobs, pool->working);
@@ -262,6 +264,7 @@ static inline void iot_threadpool_wait_locked (iot_threadpool_t * pool)
 void iot_threadpool_wait (iot_threadpool_t * pool)
 {
   assert (pool);
+  iot_log_trace (pool->logger, "iot_threadpool_wait()");
   pthread_mutex_lock (&pool->mutex);
   iot_threadpool_wait_locked (pool);
   pthread_mutex_unlock (&pool->mutex);
@@ -319,7 +322,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
       free (job);
     }
     pthread_mutex_unlock (&pool->mutex);
-    usleep (IOT_THREADPOOL_SHUTDOWN_DELAY);
+    usleep (pool->delay * 1000);
     pthread_cond_destroy (&pool->work_cond);
     pthread_cond_destroy (&pool->queue_cond);
     pthread_cond_destroy (&pool->job_cond);
@@ -336,17 +339,22 @@ void iot_threadpool_free (iot_threadpool_t * pool)
 static iot_component_t * iot_threadpool_config (iot_container_t * cont, const iot_data_t * map)
 {
   iot_logger_t * logger = NULL;
+  iot_threadpool_t * pool;
   const char * name;
-  uint32_t threads, jobs;
+  uint32_t threads, jobs, delay;
   const iot_data_t * value = iot_data_string_map_get (map, "Threads");
-  threads = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_THREADS_DEFAULT;
+  threads = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_THREADS_DEFAULT;
   value = iot_data_string_map_get (map, "MaxJobs");
-  jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_JOBS_DEFAULT;
+  jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_JOBS_DEFAULT;
+  value = iot_data_string_map_get (map, "ShutdownDelay");
+  delay = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_SHUTDOWN_DEFAULT;
   value = iot_data_string_map_get (map, "Priority");
   int prio = value ? (int) iot_data_i64 (value) : -1;
   name = iot_data_string_map_get_string (map, "Logger");
   if (name) logger = (iot_logger_t*) iot_container_find (cont, name);
-  return (iot_component_t*) iot_threadpool_alloc (threads, jobs, value ? &prio : NULL, logger);
+  pool = iot_threadpool_alloc (threads, jobs, value ? &prio : NULL, logger);
+  pool->delay = delay;
+  return &pool->component;
 }
 
 const iot_component_factory_t * iot_threadpool_factory (void)
