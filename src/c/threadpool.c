@@ -57,9 +57,9 @@ static void * iot_threadpool_thread (iot_thread_t * th)
   iot_threadpool_t * pool = th->pool;
   pthread_t tid = pthread_self ();
   int priority = iot_thread_get_priority (tid);
-  char name[64];
+  char name[32];
 
-  snprintf (name, sizeof (name), "thread-pool-%u", th->id);
+  snprintf (name, sizeof (name), "iot-pool-%u", th->id);
   iot_log_debug (pool->logger, "Starting thread: %s", name);
 
 #if defined (__linux__)
@@ -71,9 +71,9 @@ static void * iot_threadpool_thread (iot_thread_t * th)
   {
     while (pool->component.state < IOT_COMPONENT_RUNNING)
     {
-      iot_log_debug (pool->logger, "Thread waiting for pool start or deletion");
+      iot_log_debug (pool->logger, "Thread %s waiting for pool start or deletion", name);
       pthread_cond_wait (&pool->state_cond, &pool->mutex); // Wait until running or deleted
-      iot_log_debug (pool->logger, "Thread awake for pool %s", (pool->component.state == IOT_COMPONENT_RUNNING) ? "start" : "deletion");
+      iot_log_debug (pool->logger, "Thread %s awake for pool %s", name, (pool->component.state == IOT_COMPONENT_RUNNING) ? "start" : "deletion");
     }
     if (pool->component.state == IOT_COMPONENT_DELETED)
     {
@@ -83,6 +83,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
     if (first) // Pull job from queue
     {
       iot_job_t job = *first;
+      iot_log_debug (pool->logger, "Thread %s processing job", name);
       pool->front = first->prev;
       first->prev = pool->cache;
       pool->cache = first;
@@ -114,6 +115,7 @@ static void * iot_threadpool_thread (iot_thread_t * th)
     }
     else
     {
+      iot_log_debug (pool->logger, "Thread %s waiting for new job", name);
       pthread_cond_wait (&pool->job_cond, &pool->mutex); // Wait for new job
     }
   }
