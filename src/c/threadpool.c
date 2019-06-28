@@ -14,7 +14,7 @@
 
 #define IOT_TP_THREADS_DEFAULT 2
 #define IOT_TP_JOBS_DEFAULT 0
-#define IOT_TP_SHUTDOWN_DEFAULT 200
+#define IOT_TP_SHUTDOWN_MIN 200
 
 typedef struct iot_job_t
 {
@@ -142,6 +142,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   *(uint32_t*) &pool->max_threads = threads;
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   pool->default_prio = default_prio;
+  pool->delay = IOT_TP_SHUTDOWN_MIN;
   iot_mutex_init (&pool->mutex);
   pthread_cond_init (&pool->work_cond, NULL);
   pthread_cond_init (&pool->queue_cond, NULL);
@@ -347,7 +348,8 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   value = iot_data_string_map_get (map, "MaxJobs");
   jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_JOBS_DEFAULT;
   value = iot_data_string_map_get (map, "ShutdownDelay");
-  delay = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_SHUTDOWN_DEFAULT;
+  delay = value ? (uint32_t) iot_data_i64 (value) : 0;
+  if (delay < IOT_TP_JOBS_DEFAULT) delay = IOT_TP_SHUTDOWN_MIN;
   value = iot_data_string_map_get (map, "Priority");
   int prio = value ? (int) iot_data_i64 (value) : -1;
   name = iot_data_string_map_get_string (map, "Logger");
