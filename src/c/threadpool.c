@@ -109,10 +109,12 @@ static void * iot_threadpool_thread (iot_thread_t * th)
       (job.function) (job.arg); // Run job
       iot_log_debug (pool->logger, "Thread %s completed job", name);
       pthread_mutex_lock (&pool->mutex);
+      iot_log_debug (pool->logger, "Thread %s pre-completion lock", name);
       if (--pool->working == 0)
       {
         pthread_cond_signal (&pool->work_cond); // Signal when no threads working
       }
+      iot_log_debug (pool->logger, "Thread %s loop", name);
     }
     else
     {
@@ -252,7 +254,7 @@ static inline void iot_threadpool_wait_locked (iot_threadpool_t * pool)
 {
   while (pool->jobs || pool->working)
   {
-    iot_log_debug (pool->logger, "iot_threadpool_wait for jobs:%u threads:%u", pool->jobs, pool->working);
+    iot_log_debug (pool->logger, "iot_threadpool_wait (jobs:%u threads:%u)", pool->jobs, pool->working);
     pthread_cond_wait (&pool->work_cond, &pool->mutex); // Wait until all jobs processed
   }
 }
