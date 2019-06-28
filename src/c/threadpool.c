@@ -57,10 +57,12 @@ static void * iot_threadpool_thread (iot_thread_t * th)
   iot_threadpool_t * pool = th->pool;
   pthread_t tid = pthread_self ();
   int priority = iot_thread_get_priority (tid);
+  char thread_name[64];
+
+  snprintf (thread_name, sizeof (thread_name), "thread-pool-%u", th->id);
+  iot_log_debug (pool->logger, "Starting thread: %s", thread_name);
 
 #if defined (__linux__)
-  char thread_name[64];
-  snprintf (thread_name, sizeof (thread_name), "thread-pool-%u", th->id);
   prctl (PR_SET_NAME, thread_name);
 #endif
 
@@ -115,12 +117,19 @@ static void * iot_threadpool_thread (iot_thread_t * th)
     }
   }
   pthread_mutex_unlock (&pool->mutex);
+  iot_log_debug (pool->logger, "Exiting thread: %s", thread_name);
   return NULL;
 }
 
-iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, const int * default_prio)
+iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, const int * default_prio, iot_logger_t * logger)
 {
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
+  if (logger)
+  {
+    pool->logger = logger;
+    iot_logger_add_ref (logger);
+    iot_log_info (logger, "iot_threadpool_alloc (threads: %u max_jobs: %u)", threads, max_jobs);
+  }
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
   *(uint32_t*) &pool->max_threads = threads;
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
@@ -145,14 +154,6 @@ void iot_threadpool_add_ref (iot_threadpool_t * pool)
 {
   assert (pool);
   atomic_fetch_add (&pool->component.refs, 1);
-}
-
-void iot_threadpool_set_logger (iot_threadpool_t * pool, iot_logger_t * logger)
-{
-  assert (pool);
-  iot_logger_free (pool->logger);
-  pool->logger = logger;
-  if (logger) iot_logger_add_ref (logger);
 }
 
 static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
@@ -215,6 +216,7 @@ added:
 bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
 {
   assert (pool && func);
+  iot_log_trace (pool->logger, "iot_threadpool_try_work()");
   bool ret = false;
   pthread_mutex_lock (&pool->mutex);
   if (pool->jobs < pool->max_jobs)
@@ -228,8 +230,8 @@ bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), voi
 
 void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
 {
-  iot_log_trace (pool->logger, "iot_threadpool_add_work()");
   assert (pool && func);
+  iot_log_trace (pool->logger, "iot_threadpool_add_work()");
   pthread_mutex_lock (&pool->mutex);
   if (pool->jobs == pool->max_jobs)
   {
@@ -259,7 +261,6 @@ void iot_threadpool_wait (iot_threadpool_t * pool)
 
 static inline void iot_threadpool_stop_locked (iot_threadpool_t * pool)
 {
-  iot_log_trace (pool->logger, "iot_threadpool_stop()");
   if (pool->component.state != IOT_COMPONENT_STOPPED)
   {
     pool->component.state = IOT_COMPONENT_STOPPED;
@@ -271,6 +272,7 @@ static inline void iot_threadpool_stop_locked (iot_threadpool_t * pool)
 void iot_threadpool_stop (iot_threadpool_t * pool)
 {
   assert (pool);
+  iot_log_trace (pool->logger, "iot_threadpool_stop()");
   pthread_mutex_lock (&pool->mutex);
   iot_threadpool_stop_locked (pool);
   pthread_mutex_unlock (&pool->mutex);
@@ -279,8 +281,8 @@ void iot_threadpool_stop (iot_threadpool_t * pool)
 bool iot_threadpool_start (iot_threadpool_t * pool)
 {
   assert (pool);
-  pthread_mutex_lock (&pool->mutex);
   iot_log_trace (pool->logger, "iot_threadpool_start()");
+  pthread_mutex_lock (&pool->mutex);
   if (pool->component.state != IOT_COMPONENT_RUNNING)
   {
     pool->component.state = IOT_COMPONENT_RUNNING;
@@ -324,7 +326,6 @@ void iot_threadpool_free (iot_threadpool_t * pool)
 
 static iot_component_t * iot_threadpool_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_threadpool_t * pool;
   iot_logger_t * logger = NULL;
   const char * name;
   uint32_t threads, jobs;
@@ -334,11 +335,9 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_THREADPOOL_JOBS_DEFAULT;
   value = iot_data_string_map_get (map, "Priority");
   int prio = value ? (int) iot_data_i64 (value) : -1;
-  pool = iot_threadpool_alloc (threads, jobs, value ? &prio : NULL);
   name = iot_data_string_map_get_string (map, "Logger");
   if (name) logger = (iot_logger_t*) iot_container_find (cont, name);
-  iot_threadpool_set_logger (pool, logger);
-  return (iot_component_t*) pool;
+  return (iot_component_t*) iot_threadpool_alloc (threads, jobs, value ? &prio : NULL, logger);
 }
 
 const iot_component_factory_t * iot_threadpool_factory (void)

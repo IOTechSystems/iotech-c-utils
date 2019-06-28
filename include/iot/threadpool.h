@@ -21,9 +21,10 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  * @param num_threads        number of threads to be created in the threadpool
  * @param max_jobs           maximum number of jobs to queue (before blocking)
  * @param default_prio       default priority for created threads
+ * @param logger             logger, can be NULL
  * @return iot_threadpool_t  created thread pool on success, NULL on error
  */
-extern iot_threadpool_t * iot_threadpool_alloc (uint32_t num_threads, uint32_t max_jobs, const int * default_prio);
+extern iot_threadpool_t * iot_threadpool_alloc (uint32_t num_threads, uint32_t max_jobs, const int * default_prio, iot_logger_t * logger);
 
 /**
  * @brief Add work to the thread pool
@@ -97,14 +98,6 @@ extern void iot_threadpool_free (iot_threadpool_t * pool);
  * @param pool the pool on which to increment the reference count
  */
 extern void iot_threadpool_add_ref (iot_threadpool_t * pool);
-
-/**
- * @brief Sets the thread pool logger
- *
- * @param pool The thread pool
- * @param logger The logger, can be NULL to disable logging
- */
-extern void iot_threadpool_set_logger (iot_threadpool_t * pool, iot_logger_t * logger);
 
 /* Threadpool factory */
 

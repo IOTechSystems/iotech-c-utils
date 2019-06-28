@@ -80,8 +80,7 @@ static void cunit_threadpool_priority (void)
   prio1 = prio_min + 1;
   prio2 = prio1 + 1;
   prio3 = prio2 + 1;
-  iot_threadpool_t * pool = iot_threadpool_alloc (1u, 0u, &prio_min);
-  iot_threadpool_set_logger (pool, logger);
+  iot_threadpool_t * pool = iot_threadpool_alloc (1u, 0u, &prio_min, logger);
   iot_threadpool_start (pool);
   iot_threadpool_add_work (pool, cunit_pool_sleeper, NULL, NULL);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio1, &prio1);
@@ -101,8 +100,7 @@ static void cunit_threadpool_try_work (void)
   pthread_mutex_t mutex;
   pthread_mutex_init (&mutex, NULL);
   pthread_mutex_lock (&mutex);
-  iot_threadpool_t * pool = iot_threadpool_alloc (1u, 2u, NULL);
-  iot_threadpool_set_logger (pool, logger);
+  iot_threadpool_t * pool = iot_threadpool_alloc (1u, 2u, NULL, logger);
   iot_threadpool_start (pool);
   iot_threadpool_add_work (pool, cunit_pool_blocker, &mutex, NULL);
   iot_threadpool_add_work (pool, cunit_pool_blocker, &mutex, NULL);
@@ -122,8 +120,7 @@ static void cunit_threadpool_try_work (void)
 
 static void cunit_threadpool_block (void)
 {
-  iot_threadpool_t * pool = iot_threadpool_alloc (1u, 1u, NULL);
-  iot_threadpool_set_logger (pool, logger);
+  iot_threadpool_t * pool = iot_threadpool_alloc (1u, 1u, NULL, logger);
   iot_threadpool_start (pool);
   iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
   iot_threadpool_add_work (pool, cunit_pool_sole_counter, NULL, NULL);
@@ -139,9 +136,8 @@ static void cunit_threadpool_block (void)
 
 static void cunit_threadpool_stop_start (void)
 {
-  iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL);
+  iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL, logger);
   counter = 0;
-  iot_threadpool_set_logger (pool, logger);
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, NULL);
   iot_threadpool_start (pool);
   printf ("cunit_threadpool_stop_start @1\n");
@@ -172,8 +168,7 @@ static void cunit_threadpool_stop_start (void)
 
 static void cunit_threadpool_refcount (void)
 {
-  iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL);
-  iot_threadpool_set_logger (pool, logger);
+  iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL, logger);
   iot_threadpool_add_ref (pool);
   iot_threadpool_free (pool);
   iot_threadpool_free (pool);
