@@ -53,8 +53,9 @@ typedef struct iot_threadpool_t
   iot_logger_t * logger;             // Optional logger
 } iot_threadpool_t;
 
-static void * iot_threadpool_thread (iot_thread_t * th)
+static void * iot_threadpool_thread (void * arg)
 {
+  iot_thread_t * th = (iot_thread_t*) arg;
   iot_threadpool_t * pool = th->pool;
   pthread_t tid = pthread_self ();
   int priority = iot_thread_get_priority (tid);
@@ -152,7 +153,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
     iot_thread_t * th = &pool->thread_array[n];
     th->pool = pool;
     *(uint32_t*) &th->id = n;
-    iot_thread_create (&th->tid, (iot_thread_fn_t) iot_threadpool_thread, th, pool->default_prio);
+    iot_thread_create (&th->tid, iot_threadpool_thread, th, pool->default_prio);
   }
   return pool;
 }
