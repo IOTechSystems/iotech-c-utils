@@ -144,8 +144,10 @@ static void cunit_scheduler_remove (void)
 
   CU_ASSERT (sched1 != NULL);
   CU_ASSERT (sched2 != NULL);
+  CU_ASSERT (sched3 != NULL);
   CU_ASSERT (iot_schedule_add (scheduler, sched1) == 1);
   CU_ASSERT (iot_schedule_add (scheduler, sched2) == 1);
+  CU_ASSERT (iot_schedule_add (scheduler, sched3) == 1);
 
   iot_scheduler_start (scheduler);
   sleep (1);
@@ -202,6 +204,17 @@ static void cunit_scheduler_delete (void)
   iot_scheduler_free (scheduler);
 }
 
+static void cunit_scheduler_refcount (void)
+{
+  iot_threadpool_t * pool = iot_threadpool_alloc (4, 0, NULL, NULL);
+  iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
+  iot_scheduler_add_ref (scheduler);
+  iot_scheduler_free (scheduler);
+  iot_scheduler_free (scheduler);
+  iot_scheduler_free (NULL);
+  iot_threadpool_free (pool);
+}
+
 
 extern void cunit_scheduler_test_init ()
 {
@@ -211,6 +224,7 @@ extern void cunit_scheduler_test_init ()
   CU_add_test (suite, "scheduler_create", cunit_scheduler_create);
   CU_add_test (suite, "scheduler_remove", cunit_scheduler_remove);
   CU_add_test (suite, "scheduler_delete", cunit_scheduler_delete);
+  CU_add_test (suite, "scheduler_refcount", cunit_scheduler_refcount);
 
 }
 
