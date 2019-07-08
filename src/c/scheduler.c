@@ -155,7 +155,7 @@ iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool)
 void iot_scheduler_add_ref (iot_scheduler_t * scheduler)
 {
   assert (scheduler);
-  atomic_fetch_add (&scheduler->component.refs, 1);
+  iot_component_add_ref (&scheduler->component);
 }
 
 iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler)

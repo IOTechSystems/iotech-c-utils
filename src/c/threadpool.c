@@ -131,12 +131,9 @@ static void * iot_threadpool_thread (void * arg)
 iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, const int * default_prio, iot_logger_t * logger)
 {
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
-  if (logger)
-  {
-    pool->logger = logger;
-    iot_logger_add_ref (logger);
-    iot_log_info (logger, "iot_threadpool_alloc (threads: %u max jobs: %u)", threads, max_jobs);
-  }
+  pool->logger = logger;
+  iot_logger_add_ref (logger);
+  iot_log_info (logger, "iot_threadpool_alloc (threads: %u max jobs: %u)", threads, max_jobs);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
   *(uint32_t*) &pool->max_threads = threads;
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
@@ -161,7 +158,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
 void iot_threadpool_add_ref (iot_threadpool_t * pool)
 {
   assert (pool);
-  atomic_fetch_add (&pool->component.refs, 1);
+  iot_component_add_ref (&pool->component);
 }
 
 static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)

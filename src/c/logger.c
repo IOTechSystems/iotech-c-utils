@@ -122,10 +122,8 @@ void iot_logger_free (iot_logger_t * logger)
 
 void iot_logger_add_ref (iot_logger_t * logger)
 {
-  assert (logger);
-  atomic_fetch_add (&logger->component.refs, 1);
+  if (logger) iot_component_add_ref (&logger->component);
 }
-
 
 bool iot_logger_start (iot_logger_t * logger)
 {
