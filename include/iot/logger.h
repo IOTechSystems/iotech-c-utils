@@ -48,17 +48,19 @@ extern void iot_logger_stop (iot_logger_t * logger);
 
 extern iot_logger_t * iot_logger_default (void);
 
-/* Get sub logger */
+/* Get next logger */
 
 extern iot_logger_t * iot_logger_next (iot_logger_t * logger);
 
-/* Logging macros */
+/* Logging functions */
 
 extern void iot_log__trace (iot_logger_t * logger, ...);
 extern void iot_log__debug (iot_logger_t * logger, ...);
 extern void iot_log__info (iot_logger_t * logger, ...);
 extern void iot_log__warn (iot_logger_t * logger, ...);
 extern void iot_log__error (iot_logger_t * logger, ...);
+
+/* Logging macros */
 
 #define iot_log_trace(l,...) if ((l) && (l)->level >= IOT_LOG_TRACE) iot_log__trace ((l), __VA_ARGS__)
 #define iot_log_info(l,...) if ((l) && (l)->level >= IOT_LOG_INFO) iot_log__info ((l), __VA_ARGS__)
