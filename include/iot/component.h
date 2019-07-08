@@ -46,6 +46,7 @@ struct iot_component_factory_t
 };
 
 extern void iot_component_init (iot_component_t * component, iot_component_start_fn_t start, iot_component_stop_fn_t stop);
+extern void iot_component_add_ref (iot_component_t * component);
 extern bool iot_component_free (iot_component_t * component);
 
 #ifdef __cplusplus

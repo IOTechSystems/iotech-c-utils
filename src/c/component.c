@@ -13,3 +13,9 @@ bool iot_component_free (iot_component_t * component)
   assert (component);
   return (atomic_fetch_add (&component->refs, -1) <= 1);
 }
+
+void iot_component_add_ref (iot_component_t * component)
+{
+  assert (component);
+  atomic_fetch_add (&component->refs, 1);
+}

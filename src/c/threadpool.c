@@ -158,7 +158,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
 void iot_threadpool_add_ref (iot_threadpool_t * pool)
 {
   assert (pool);
-  atomic_fetch_add (&pool->component.refs, 1);
+  iot_component_add_ref (&pool->component);
 }
 
 static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
