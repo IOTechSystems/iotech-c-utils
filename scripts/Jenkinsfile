@@ -8,10 +8,10 @@ def systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_ar
 
 def checkoutStage (arch)
 {
+  currentBuild.displayName = "IOT ${env.BUILD_ID}"
   deleteDir ()
   cleanWs (cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true)
   checkout scm
-  currentBuild.displayName = "IOT ${arch}:${env.BUILD_ID}"
 }
 
 def buildStage (systems, arch)
@@ -73,17 +73,14 @@ def publishAdvancedMetrics (system, arch)
   fileOperations ([fileCopyOperation (includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/', flattenFiles: true),
     fileCopyOperation (includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/', flattenFiles: true)])
   publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-iot/src:src')
-  def cppc = scanForIssues (tool: cppCheck (pattern: "${arch}/${system}/release/cppcheck.xml"))
-  publishIssues (issues: [cppc])
   junit (testResults: "${arch}/${system}/release/junit-Results.xml")
   cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
   archiveArtifacts (artifacts: "${arch}/${system}/lcov/cobertura.xml")
   archiveArtifacts (artifacts: "${arch}/${system}/lcov/html/**")
   // publishCoverage (adapters: [coberturaAdapter("${arch}/${system}/lcov/cobertura.xml")], sourceFileResolver: sourceFiles('NEVER_STORE'))
-  def tasks = scanForIssues (tool: taskScanner (highTags: 'FIXME', includePattern: '**/*.c,**/*.h', lowTags: 'COMMENT', normalTags: 'TODO'))
-  publishIssues (issues: [tasks])
-  def gcc = scanForIssues (tool: gcc4 (pattern: "${arch}/${system}/release/release.log"))
-  publishIssues (issues: [gcc])
+  recordIssues (tools: [cppCheck (id: "CppCheck-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/cppcheck.xml")])
+  recordIssues (tools: [taskScanner (id: "TaskScan-${arch}-${env.BUILD_ID}", highTags: 'FIXME', includePattern: '**/*.c,**/*.h', lowTags: 'COMMENT', normalTags: 'TODO')])
+  recordIssues (tools: [gcc (id: "GCC-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/release.log")])
 }
 
 def publishDebs (arch, server)
