@@ -195,6 +195,7 @@ static void cunit_scheduler_delete (void)
 
   iot_schedule_delete (scheduler, sched2);
   iot_schedule_delete (scheduler, sched3);
+  iot_scheduler_stop (scheduler);
 
   CU_ASSERT (sum_test == 1);
   CU_ASSERT (infinity_test > 20);
