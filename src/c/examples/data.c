@@ -3,13 +3,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-#include "iot/data.h"
+#include "iot/iot.h"
 
 #define ARRAY_SIZE 6
 
 int main (void)
 {
-  iot_data_init ();
+  iot_init ();
 
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_INT16);
   iot_data_t * map2 = iot_data_alloc_map (IOT_DATA_STRING);
@@ -78,7 +78,7 @@ int main (void)
   char * json = iot_data_to_json (map, false);
   printf ("%s\n", json);
   free (json);
-
   iot_data_free (map);
-  iot_data_fini ();
+
+  iot_fini ();
 }

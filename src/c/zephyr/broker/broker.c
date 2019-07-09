@@ -20,7 +20,7 @@ static iot_data_t * publisher_callback (void * self);
 int main (void)
 {
   struct timespec start, stop;
-  iot_data_init ();
+  iot_init ();
   int prio_max = sched_get_priority_max (SCHED_FIFO);
   int prio_min = sched_get_priority_min (SCHED_FIFO);
   printf ("\nFIFO priority max: %d min: %d\n", prio_max, prio_min);
@@ -36,7 +36,7 @@ int main (void)
   printf ("Published %d samples in %d seconds %d nanoseconds\n", PUB_ITERS, stop.tv_sec - start.tv_sec, stop.tv_nsec - start.tv_nsec);
   iot_bus_stop (bus);
   iot_bus_free (bus);
-  iot_data_fini ();
+  iot_fini ();
   printf ("Done\n");
   fflush (stdout);
   return 0;
