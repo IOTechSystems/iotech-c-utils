@@ -3,9 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-#include "iot/component.h"
-#include "iot/container.h"
-#include "iot/logger.h"
+#include "iot/iot.h"
 #include "iot/threadpool.h"
 #include "iot/scheduler.h"
 
@@ -69,7 +67,7 @@ static const iot_component_factory_t * my_component_factory (void)
 int main (void)
 {
   iot_container_t * container = iot_container_alloc (config_loader);
-  iot_data_init ();
+  iot_init ();
   iot_container_add_factory (container, iot_logger_factory ());
   iot_container_add_factory (container, iot_threadpool_factory ());
   iot_container_add_factory (container, iot_scheduler_factory ());
@@ -79,7 +77,7 @@ int main (void)
   sleep (2);
   iot_container_stop (container);
   iot_container_free (container);
-  iot_data_fini ();
+  iot_fini ();
   return 0;
 }
 

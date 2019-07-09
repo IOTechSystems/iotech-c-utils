@@ -52,9 +52,6 @@ typedef struct iot_data_array_iter_t
   uint32_t index;
 } iot_data_array_iter_t ;
 
-extern void iot_data_init (void);
-extern void iot_data_fini (void);
-
 extern void iot_data_add_ref (iot_data_t * data);
 extern void iot_data_free (iot_data_t * data);
 extern iot_data_type_t iot_data_type (const iot_data_t * data);

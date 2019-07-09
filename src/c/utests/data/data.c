@@ -3,13 +3,11 @@
 
 static int suite_init (void)
 {
-  iot_data_init ();
   return 0;
 }
 
 static int suite_clean (void)
 {
-  iot_data_fini ();
   return 0;
 }
 

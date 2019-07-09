@@ -60,6 +60,7 @@ int main (int argc, char* argv[])
     fprintf (stderr, "\nInitialization of C Unit Registry failed.");
     return -1;
   }
+  iot_init ();
   cunit_logger_test_init ();
   cunit_json_test_init ();
   cunit_data_test_init ();
@@ -95,6 +96,7 @@ int main (int argc, char* argv[])
   }
 
   CU_cleanup_registry ();
+  iot_fini ();
 
   return 0;
 }

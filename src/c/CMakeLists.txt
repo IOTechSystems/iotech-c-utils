@@ -17,7 +17,7 @@ endif ()
 
 # Set files to compile
 
-set (C_FILES data.c json.c logger.c os.c scheduler.c thread.c threadpool.c time.c component.c)
+set (C_FILES iot.c data.c json.c logger.c os.c scheduler.c thread.c threadpool.c time.c component.c)
 if (IOT_BUILD_COMPONENTS)
   set (C_FILES ${C_FILES} container.c)
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIOT_BUILD_COMPONENTS")
