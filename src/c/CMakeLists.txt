@@ -11,7 +11,7 @@ if (DEFINED CMAKE_C_COMPILER_ID)
     endif ()
   endif ()
 endif ()
-if ("${IOT_LINUX_SYS}" STREQUAL "Alpine")
+if ("${LINUX_SYS}" STREQUAL "Alpine")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__LIBMUSL__")
 endif ()
 
