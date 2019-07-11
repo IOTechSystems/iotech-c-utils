@@ -79,9 +79,9 @@ static void cunit_json_parse_string (void)
   CU_ASSERT (count == IOT_JSON_ERROR_INVAL);
   dump_parse (json_fail, tokens, count, 0);
 
-  static const char * json_hex = "\"\\uA9\"";
+  static const char * json_hex = "\"\\u4e784\"";
 
-  count = iot_json_parse (&parser, json_hex, strlen (json_hex), tokens, 10);
+  count = iot_json_parse (&parser, json_hex, strlen (json_hex), tokens, 6);
   CU_ASSERT (count != 0);
   dump_parse (json_hex, tokens, count, 0);
 
