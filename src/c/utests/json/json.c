@@ -66,13 +66,24 @@ static void cunit_json_parse_string (void)
   int count;
 
   iot_json_init (&parser);
+
+  static const char * json_fail = "\"\\uMyString\"";
+
+  count = iot_json_parse (&parser, json_fail, strlen (json_fail), NULL, 11);
+  CU_ASSERT (count == IOT_JSON_ERROR_INVAL);
+  dump_parse (json_fail, tokens, count, 0);
+
+  static const char * json_hex = "\"\\uA9\"";
+
+  count = iot_json_parse (&parser, json_hex, strlen (json_hex), tokens, 10);
+  CU_ASSERT (count != 0);
+  dump_parse (json_hex, tokens, count, 0);
+
   static const char * json = "\"MyString\"";
 
   count = iot_json_parse (&parser, json, strlen (json), tokens, 10);
   CU_ASSERT (count != 0);
   printf (" # %d ", count);
-  dump_parse (json, tokens, count, 0);
-  printf (" ");
 }
 
 static void cunit_json_parse_number (void)
