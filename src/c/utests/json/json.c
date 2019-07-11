@@ -85,7 +85,7 @@ static void cunit_json_parse_string (void)
   CU_ASSERT (count != 0);
   dump_parse (json_hex, tokens, count, 0);
 
-  static const char * json = "\"MyString\"";
+  static const char * json = "\"MyString{another}\"";
 
   count = iot_json_parse (&parser, json, strlen (json), NULL, 10);
   CU_ASSERT (count != 0);
