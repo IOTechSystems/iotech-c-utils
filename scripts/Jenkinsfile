@@ -38,11 +38,10 @@ def archiveStage (arch)
 {
   if ("${params.Archive}" != 'None')
   {
-    def server = Artifactory.server 'artifactory'
-    publishDebs (arch, server)
-    publishApks (arch, server)
-    publishRpms (arch, server)
-    publishTars (arch, server)
+    publishDebs (arch)
+    publishApks (arch)
+    publishRpms (arch)
+    publishTars (arch)
   }
 }
 
@@ -82,7 +81,7 @@ def publishAdvancedMetrics (system, arch)
   recordIssues (tools: [gcc (id: "GCC-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/release.log")])
 }
 
-def publishDebs (arch, server)
+def publishDebs (arch)
 {
   def debs_x86_64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9','debian-8']
   def debs_arm64 = ['ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9']
@@ -104,12 +103,12 @@ def publishDebs (arch, server)
         "target": "${repo}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }]}"""
-      server.upload (uploadSpec)
+      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
     }
   }
 }
 
-def publishApks (arch, server)
+def publishApks (arch)
 {
   def apks_x86_64 = ['alpine-3.10','alpine-3.9']
   def apks_arm64 = ['alpine-3.10','alpine-3.9']
@@ -130,12 +129,12 @@ def publishApks (arch, server)
         "props": "distribution=${apks[i]};architecture=${apk_archs[arch]}"
       }
       ]}"""
-      server.upload (uploadSpec)
+      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
     }
   }
 }
 
-def publishRpms (arch, server)
+def publishRpms (arch)
 {
   def rpms_x86_64 = ['fedora-30','opensuse-15','photon-30']
   def rpms_arm64 = ['fedora-30','opensuse-15','photon-30']
@@ -154,12 +153,12 @@ def publishRpms (arch, server)
         "target": "rpm-${rpms[i]}-${type[params.Archive]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }]}"""
-      server.upload (uploadSpec)
+      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
     }
   }
 }
 
-def publishTars (arch, server)
+def publishTars (arch)
 {
   def tars_x86_64 = ['alpine-3.10','alpine-3.9','zephyr-1.14','clearlinux']
   def tars_arm64 = ['alpine-3.10','alpine-3.9']
@@ -181,7 +180,7 @@ def publishTars (arch, server)
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
       ]}"""
-      server.upload (uploadSpec)
+      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
     }
   }
 }
