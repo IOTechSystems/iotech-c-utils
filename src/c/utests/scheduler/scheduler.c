@@ -3,33 +3,31 @@
 #include <CUnit.h>
 #include "scheduler.h"
 
-int sum_test;
-int infinity_test;
+static int sum_test;
+static int infinity_test;
+static int sum_work1, sum_work2, sum_work3;
 
 static void do_work1 (void *in)
 {
-  int sum = 0;
   for (int i = 0; i < 10; ++i)
   {
-    sum += i;
+    sum_work1 += i;
   }
 }
 
 static void do_work2 (void *in)
 {
-  int sum = 0;
   for (int i = 0; i < 20; ++i)
   {
-    sum += i;
+    sum_work2 += i;
   }
 }
 
 static void do_work3 (void *in)
 {
-  int sum = 0;
   for (int i = 0; i < 30; ++i)
   {
-    sum += i;
+    sum_work3 += i;
   }
 }
 
@@ -72,8 +70,12 @@ static void cunit_scheduler_start (void)
   CU_ASSERT (iot_schedule_add (scheduler, sched1) == 1);
   CU_ASSERT (iot_schedule_add (scheduler, sched2) == 1);
 
-  iot_scheduler_start (scheduler);
+ // iot_scheduler_start (scheduler);
   sleep (2);
+
+  CU_ASSERT (sum_work1 > 0);
+  CU_ASSERT (sum_work2 > 0);
+  CU_ASSERT (sum_work3 == 0);
 
   iot_threadpool_free (pool);
   iot_scheduler_free (scheduler);
@@ -92,7 +94,7 @@ static void cunit_scheduler_stop (void)
   CU_ASSERT (sched1 != NULL);
   CU_ASSERT (iot_schedule_add (scheduler, sched1) == 1);
 
-  iot_scheduler_start (scheduler);
+  //iot_scheduler_start (scheduler);
 
   sleep (2);
   iot_scheduler_stop (scheduler);
@@ -149,7 +151,7 @@ static void cunit_scheduler_remove (void)
   CU_ASSERT (iot_schedule_add (scheduler, sched2) == 1);
   CU_ASSERT (iot_schedule_add (scheduler, sched3) == 1);
 
-  iot_scheduler_start (scheduler);
+  //iot_scheduler_start (scheduler);
   sleep (1);
 
   iot_schedule_remove (scheduler, sched2);
@@ -158,10 +160,12 @@ static void cunit_scheduler_remove (void)
   CU_ASSERT (infinity_test > 20);
 
   int temp = infinity_test;
-  iot_scheduler_start (scheduler);
+
+  //iot_scheduler_start (scheduler);
   sleep (1);
 
   CU_ASSERT (temp == infinity_test);
+  //printf ("temp = %d, infinity_test = %d\n", temp, infinity_test);
 
   iot_schedule_delete (scheduler, sched3);
   iot_threadpool_free (pool);
@@ -174,7 +178,7 @@ static void cunit_scheduler_delete (void)
   iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
 
   CU_ASSERT (iot_threadpool_start (pool) == true);
-  CU_ASSERT (iot_scheduler_start (scheduler) == true);
+//  CU_ASSERT (iot_scheduler_start (scheduler) == true);
   sum_test = 0;
 
   iot_schedule_t * sched1 = iot_schedule_create (scheduler, do_work3, NULL, IOT_MS_TO_NS (1), 0, 1, NULL);
