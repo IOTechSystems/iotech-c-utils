@@ -61,6 +61,7 @@ static int dump_parse (const char *js, iot_json_tok_t *t, int count, int indent)
 
 static void cunit_json_parse_string (void)
 {
+
   iot_json_tok_t tokens[10];
   iot_json_parser parser;
   int count;
@@ -71,19 +72,16 @@ static void cunit_json_parse_string (void)
 
   count = iot_json_parse (&parser, json_fail_unknown_symbol, strlen (json_fail_unknown_symbol), tokens, 11);
   CU_ASSERT (count == IOT_JSON_ERROR_INVAL);
-  dump_parse (json_fail_unknown_symbol, tokens, count, 0);
 
   static const char * json_fail = "\"\\uMyString\"";
 
   count = iot_json_parse (&parser, json_fail, strlen (json_fail), tokens, 11);
   CU_ASSERT (count == IOT_JSON_ERROR_INVAL);
-  dump_parse (json_fail, tokens, count, 0);
 
   static const char * json_hex = "\"\\u4e784\"";
 
   count = iot_json_parse (&parser, json_hex, strlen (json_hex), tokens, 6);
   CU_ASSERT (count != 0);
-  dump_parse (json_hex, tokens, count, 0);
 
   static const char * json = "\"MyString{another}\"";
 
