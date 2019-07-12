@@ -8,6 +8,7 @@
 
 #include "iot/threadpool.h"
 #include "iot/component.h"
+#include "iot/logger.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,9 +37,10 @@ typedef void (*iot_schedule_fn_t) (void * arg);
  * @endcode
  *
  * @param  pool              A pointer to the associated thread pool.
+ * @param  logger            logger, can be NULL
  * @return iot_scheduler_t   A pointer to the created scheduler. NULL on error.
  */
-extern iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool);
+extern iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool, iot_logger_t * logger);
 
 /**
  * @brief Increment the scheduler reference count

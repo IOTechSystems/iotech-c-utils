@@ -28,7 +28,7 @@ int main (void)
 
   /* Initialise the scheduler */
   printf ("Initialise the scheduler\n");
-  iot_scheduler_t * scheduler = iot_scheduler_alloc (pool);
+  iot_scheduler_t * scheduler = iot_scheduler_alloc (pool, NULL);
 
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
