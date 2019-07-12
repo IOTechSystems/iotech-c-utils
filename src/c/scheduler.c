@@ -387,11 +387,14 @@ static void remove_schedule_from_queue (iot_schd_queue_t * queue, iot_schedule_t
 
 static iot_component_t * iot_scheduler_config (iot_container_t * cont, const iot_data_t * map)
 {
+  iot_logger_t * logger = NULL;
   const char * name = iot_data_string_map_get_string (map, "ThreadPool");
   assert (name);
   iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find (cont, name);
   assert (pool);
-  return (iot_component_t*) iot_scheduler_alloc (pool);
+  name = iot_data_string_map_get_string (map, "Logger");
+  if (name) logger = (iot_logger_t*) iot_container_find (cont, name);
+  return (iot_component_t*) iot_scheduler_alloc (pool, logger);
 }
 
 const iot_component_factory_t * iot_scheduler_factory (void)
