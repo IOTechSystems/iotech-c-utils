@@ -10,9 +10,9 @@
 
 #if defined (__linux__)
 #include <sys/prctl.h>
-#define IOT_PRCTL_NAME_MAX 16
 #endif
 
+#define IOT_PRCTL_NAME_MAX 16
 #define IOT_TP_THREADS_DEFAULT 2
 #define IOT_TP_JOBS_DEFAULT 0
 #define IOT_TP_SHUTDOWN_MIN 200
