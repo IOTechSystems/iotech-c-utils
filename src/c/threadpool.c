@@ -10,6 +10,7 @@
 
 #if defined (__linux__)
 #include <sys/prctl.h>
+#define IOT_PRCTL_NAME_MAX 16
 #endif
 
 #define IOT_TP_THREADS_DEFAULT 2
@@ -61,10 +62,10 @@ static void * iot_threadpool_thread (void * arg)
   iot_threadpool_t * pool = th->pool;
   pthread_t tid = pthread_self ();
   int priority = iot_thread_get_priority (tid);
-  char name[32];
+  char name[IOT_PRCTL_NAME_MAX];
 
-  snprintf (name, sizeof (name), "iot-pool-%u", th->id);
-  iot_log_debug (pool->logger, "Thread: %s starting", name);
+  snprintf (name, IOT_PRCTL_NAME_MAX, "iot-%u", th->id);
+  iot_log_debug (pool->logger, "Thread %s starting", name);
 
 #if defined (__linux__)
   prctl (PR_SET_NAME, name);
