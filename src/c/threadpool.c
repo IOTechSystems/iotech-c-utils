@@ -22,6 +22,7 @@ typedef struct iot_job_t
   void (*function) (void * arg);     // Function to run
   void * arg;                        // Function's argument
   int priority;                      // Job priority
+  uint32_t id;                       // Job id
   bool prio_set;                     // Whether priority set
 } iot_job_t;
 
@@ -41,6 +42,7 @@ typedef struct iot_threadpool_t
   uint32_t jobs;                     // Number of jobs in queue
   uint32_t working;                  // Number of threads currently working
   uint32_t delay;                    // Shutdown delay in milli seconds
+  uint32_t next_id;                  // Job id counter
   iot_job_t * front;                 // Front of job queue
   iot_job_t * rear;                  // Rear of job queue
   iot_job_t * cache;                 // Free job cache
@@ -85,7 +87,7 @@ static void * iot_threadpool_thread (void * arg)
     if (first) // Pull job from queue
     {
       iot_job_t job = *first;
-      iot_log_debug (pool->logger, "Thread %s processing job", name);
+      iot_log_debug (pool->logger, "Thread %s processing job #%u", name, job.id);
       pool->front = first->prev;
       first->prev = pool->cache;
       pool->cache = first;
@@ -109,7 +111,7 @@ static void * iot_threadpool_thread (void * arg)
         }
       }
       (job.function) (job.arg); // Run job
-      iot_log_debug (pool->logger, "Thread %s completed job", name);
+      iot_log_debug (pool->logger, "Thread %s completed job #%u", name, job.id);
       pthread_mutex_lock (&pool->mutex);
       if (--pool->working == 0)
       {
@@ -177,6 +179,7 @@ static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func)
   job->priority = prio ? *prio : 0;
   job->prio_set = (prio != NULL);
   job->prev = NULL;
+  job->id = pool->next_id++;
 
   if (job->prio_set) // Order job by priority
   {
