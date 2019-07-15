@@ -180,6 +180,7 @@ static void iot_threadpool_add_job_locked (iot_threadpool_t * pool, void (*func)
   job->prio_set = (prio != NULL);
   job->prev = NULL;
   job->id = pool->next_id++;
+  iot_log_debug (pool->logger, "Added new job #%u", job->id);
 
   if (job->prio_set) // Order job by priority
   {
