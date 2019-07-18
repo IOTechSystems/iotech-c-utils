@@ -76,9 +76,9 @@ static void * iot_threadpool_thread (void * arg)
   {
     while (pool->component.state < IOT_COMPONENT_RUNNING)
     {
-      iot_log_debug (pool->logger, "Thread %s waiting for pool start or deletion", name);
+      iot_log_debug (pool->logger, "Thread waiting for pool start or deletion");
       pthread_cond_wait (&pool->state_cond, &pool->mutex); // Wait until running or deleted
-      iot_log_debug (pool->logger, "Thread %s woken for pool %s", name, (pool->component.state == IOT_COMPONENT_RUNNING) ? "start" : "deletion");
+      iot_log_debug (pool->logger, "Thread woken for pool %s", (pool->component.state == IOT_COMPONENT_RUNNING) ? "start" : "deletion");
     }
     if (pool->component.state == IOT_COMPONENT_DELETED)
     {
@@ -88,7 +88,7 @@ static void * iot_threadpool_thread (void * arg)
     if (first) // Pull job from queue
     {
       iot_job_t job = *first;
-      iot_log_debug (pool->logger, "Thread %s processing job #%u", name, job.id);
+      iot_log_debug (pool->logger, "Thread processing job #%u", job.id);
       pool->front = first->prev;
       first->prev = pool->cache;
       pool->cache = first;
@@ -112,7 +112,7 @@ static void * iot_threadpool_thread (void * arg)
         }
       }
       (job.function) (job.arg); // Run job
-      iot_log_debug (pool->logger, "Thread %s completed job #%u", name, job.id);
+      iot_log_debug (pool->logger, "Thread completed job #%u", job.id);
       pthread_mutex_lock (&pool->mutex);
       if (--pool->working == 0)
       {
@@ -121,13 +121,13 @@ static void * iot_threadpool_thread (void * arg)
     }
     else
     {
-      iot_log_debug (pool->logger, "Thread %s waiting for new job", name);
+      iot_log_debug (pool->logger, "Thread waiting for new job", name);
       pthread_cond_wait (&pool->job_cond, &pool->mutex); // Wait for new job
-      iot_log_debug (pool->logger, "Thread %s woken for new job", name);
+      iot_log_debug (pool->logger, "Thread woken for new job", name);
     }
   }
   pthread_mutex_unlock (&pool->mutex);
-  iot_log_debug (pool->logger, "Thread %s exiting", name);
+  iot_log_debug (pool->logger, "Thread exiting", name);
   return NULL;
 }
 
