@@ -22,8 +22,8 @@ package() {
   else
     dest=$pkgdir
   fi
-  install -Dm755 ${base}/lib/libiot.so ${dest}/lib/libiot.so
-  install -Dm755 ${base}/lib/libiot.a ${dest}/lib/libiot.a
+  install -Dm755 ${base}/lib/libiot.so ${dest}/lib
+  install -Dm755 ${base}/lib/libiot.a ${dest}/lib
   mkdir -p ${dest}/include/iot/
   cp -r ${base}/include/* ${dest}/include/
 }
