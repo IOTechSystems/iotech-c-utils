@@ -7,7 +7,7 @@
 #include "iot/threadpool.h"
 #include "iot/scheduler.h"
 
-static const char * config_loader (const char * name);
+static const char * config_loader (const char * name, void * from);
 
 /* Boilerplate code for a component */
 
@@ -66,13 +66,13 @@ static const iot_component_factory_t * my_component_factory (void)
 
 int main (void)
 {
-  iot_container_t * container = iot_container_alloc (config_loader);
+  iot_container_t * container = iot_container_alloc ();
   iot_init ();
   iot_container_add_factory (container, iot_logger_factory ());
   iot_container_add_factory (container, iot_threadpool_factory ());
   iot_container_add_factory (container, iot_scheduler_factory ());
   iot_container_add_factory (container, my_component_factory ());
-  iot_container_init (container, "main");
+  iot_container_init (container, "main", config_loader, NULL);
   iot_container_start (container);
   sleep (2);
   iot_container_stop (container);
@@ -124,7 +124,7 @@ static const char * my_config =
 
 /* Configuration resolver function */
 
-static const char * config_loader (const char * name)
+static const char * config_loader (const char * name, void * from)
 {
   if (strcmp (name, "main") == 0) return main_config;
   if (strcmp (name, "file_logger") == 0) return file_logger_config;

@@ -27,21 +27,18 @@ struct iot_container_t
   iot_logger_t * logger;
   iot_factory_holder_t * factories;
   iot_component_holder_t ** components;
-  iot_container_config_load_fn_t loader;
   uint32_t ccount;
   uint32_t csize;
   pthread_rwlock_t lock;
 };
 
-iot_container_t * iot_container_alloc (iot_container_config_load_fn_t loader)
+iot_container_t * iot_container_alloc (void)
 {
-  assert (loader);
   iot_container_t * cont = calloc (1, sizeof (*cont));
   cont->components = calloc (IOT_COMPONENT_DELTA, sizeof (iot_component_holder_t));
   cont->ccount = 0;
   cont->csize = IOT_COMPONENT_DELTA;
   pthread_rwlock_init (&cont->lock, NULL);
-  cont->loader = loader;
   return cont;
 }
 
@@ -56,10 +53,10 @@ static const iot_component_factory_t * iot_container_find_factory_locked (iot_co
   return iter ? iter->factory : NULL;
 }
 
-bool iot_container_init (iot_container_t * cont, const char * name)
+bool iot_container_init (iot_container_t * cont, const char * name, iot_container_config_load_fn_t loader, void * from)
 {
   bool ret = true;
-  const char * config = (cont->loader) (name);
+  const char * config = (loader) (name, from);
   assert (config);
   iot_data_t * map = iot_data_from_json (config);
   iot_data_map_iter_t iter;
@@ -69,7 +66,7 @@ bool iot_container_init (iot_container_t * cont, const char * name)
     const char * cname = iot_data_map_iter_string_key (&iter);
     const char * ctype = iot_data_map_iter_string_value (&iter);
     const iot_component_factory_t * factory = iot_container_find_factory_locked (cont, ctype);
-    const char * cconf = (cont->loader) (cname);
+    const char * cconf = (loader) (cname, from);
     if (factory && cconf)
     {
       iot_data_t * cmap = iot_data_from_json (cconf);

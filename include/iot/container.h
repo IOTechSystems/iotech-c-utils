@@ -12,10 +12,10 @@
 extern "C" {
 #endif
 
-typedef const char * (*iot_container_config_load_fn_t) (const char * name);
+typedef const char * (*iot_container_config_load_fn_t) (const char * name, void * from);
 
-extern iot_container_t * iot_container_alloc (iot_container_config_load_fn_t loader);
-extern bool iot_container_init (iot_container_t * cont, const char * name);
+extern iot_container_t * iot_container_alloc (void);
+extern bool iot_container_init (iot_container_t * cont, const char * name, iot_container_config_load_fn_t loader, void * from);
 extern bool iot_container_start (iot_container_t * cont);
 extern void iot_container_stop (iot_container_t * cont);
 extern void iot_container_free (iot_container_t * cont);
