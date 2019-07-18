@@ -7,7 +7,12 @@
 #include "iot/logger.h"
 #include "iot/container.h"
 #include <stdarg.h>
-#include <ctype.h>
+
+#if defined (__linux__)
+#include <sys/prctl.h>
+#endif
+
+#define IOT_PRCTL_NAME_MAX 16
 
 #define IOT_LOG_LEVELS 6
 static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
@@ -155,7 +160,11 @@ iot_logger_t * iot_logger_next (iot_logger_t * logger)
 
 static inline void iot_logger_log_to_fd (FILE * fd, const char *name, iot_loglevel_t level, time_t timestamp, const char *message)
 {
-  fprintf (fd, "%" PRId64 " (%s:%s) %s\n", (int64_t) timestamp, name ? name : "default", iot_log_levels[level], message);
+  char tname[IOT_PRCTL_NAME_MAX] = { 0 };
+#if defined (__linux__)
+  prctl (PR_GET_NAME, tname);
+#endif
+  fprintf (fd, "[%s:%" PRIu64 ":%s:%s] %s\n", tname, (uint64_t) timestamp, name ? name : "default", iot_log_levels[level], message);
 }
 
 void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
