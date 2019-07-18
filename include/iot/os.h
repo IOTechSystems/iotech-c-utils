@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <time.h>
+#include <ctype.h>
 #include <stdatomic.h>
 
 #endif
