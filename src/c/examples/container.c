@@ -19,25 +19,25 @@ typedef struct my_component_t
   iot_logger_t * logger;
 } my_component_t;
 
-static bool my_component_start (my_component_t * comp)
+extern bool my_component_start (my_component_t * comp)
 {
   printf ("MyComponent started\n");
-  iot_component_set_running (&pool->component);
+  iot_component_set_running (&comp->component);
   return true;
 }
 
-static void my_component_stop (my_component_t * comp)
+extern void my_component_stop (my_component_t * comp)
 {
   printf ("MyComponent stopped\n");
-  iot_component_set_stopped (&pool->component);
+  iot_component_set_stopped (&comp->component);
 }
 
-void my_component_add_ref (my_component_t * comp)
+extern void my_component_add_ref (my_component_t * comp)
 {
   iot_component_add_ref (&comp->component);
 }
 
-static my_component_t * my_component_alloc (iot_logger_t * logger)
+extern my_component_t * my_component_alloc (iot_logger_t * logger)
 {
   printf ("MyComponent alloc\n");
   my_component_t * mycomp = calloc (1, sizeof (*mycomp));
@@ -47,7 +47,7 @@ static my_component_t * my_component_alloc (iot_logger_t * logger)
   return mycomp;
 }
 
-static void my_component_free (my_component_t * comp)
+extern void my_component_free (my_component_t * comp)
 {
   if (comp && iot_component_dec_ref (&comp->component))
   {
