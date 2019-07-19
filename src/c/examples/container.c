@@ -42,10 +42,11 @@ static my_component_t * my_component_alloc (iot_logger_t * logger)
 
 static void my_component_free (my_component_t * comp)
 {
-  if (comp && iot_component_free (&comp->component))
+  if (comp && iot_component_dec_ref (&comp->component))
   {
     printf ("MyComponent free\n");
     iot_logger_free (comp->logger);
+    iot_component_fini (&comp->component);
     free (comp);
   }
 }

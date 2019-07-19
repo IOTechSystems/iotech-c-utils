@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#define IOT_BILLION 1000000000L
+#define IOT_BILLION 1000000000ULL
 #define IOT_MS_TO_NS(MILLISECONDS) (MILLISECONDS * 1000000)
 #define IOT_SEC_TO_NS(SECONDS) (SECONDS * IOT_BILLION)
 #define IOT_MIN_TO_NS(MINUTES) (MINUTES * IOT_BILLION * 60)
@@ -100,10 +100,9 @@ extern iot_schedule_t * iot_schedule_create
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler_t. 
  * @param  schedule                 A pointer to the iot_schedule to be deleted.
- * @return                          1 on success.
- *                                  0 on error.
+ * @return                          true on success, false on error
  */
-extern int iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
+extern bool iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 /**
  * @brief  Delete a schedule
@@ -112,16 +111,14 @@ extern int iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * sched
  *
  * @code
  *
- *    int return = iot_schedule_remove(myScheduler,mySchedule);
+ *    bool return = iot_schedule_remove (myScheduler, mySchedule);
  *
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler_t. 
- * @param  schedule                #ifdef __cplusplus
- A pointer to the iot_schedule to be deleted.
- * @return                          1 on success.
- *                                  0 on error.
+ * @param  schedule                 A pointer to the iot_schedule to be deleted.
+ * @return                          true on success, false on error
  */
-extern int iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
+extern bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 /**
  * @brief  Delete a schedule
@@ -130,7 +127,7 @@ extern int iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * sc
  *
  * @code
  *
- *    int return = iot_schedule_delete(myScheduler,mySchedule);
+ *    iot_schedule_delete (myScheduler, mySchedule);
  *
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler_t. 
@@ -147,7 +144,7 @@ extern void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * s
  *
  * @code
  *
- *    iot_scheduler_t_stop(myScheduler);
+ *    iot_scheduler_t_stop (myScheduler);
  *
  * @endcode
  * @param  scheduler                A pointer to the iot_scheduler_t. 

@@ -16,7 +16,7 @@ static int suite_init (void)
   prio_max = sched_get_priority_max (SCHED_FIFO);
   prio_min = sched_get_priority_min (SCHED_FIFO);
   printf ("\nFIFO priority max: %d min: %d\n", prio_max, prio_min);
-  logger = iot_logger_alloc ("ThreadPool", IOT_LOG_TRACE);
+  logger = iot_logger_alloc ("ThreadPool", IOT_LOG_WARN);
   iot_logger_start (logger);
   return 0;
 }

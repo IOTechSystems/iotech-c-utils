@@ -117,10 +117,11 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
 
 void iot_logger_free (iot_logger_t * logger)
 {
-  if (logger && (logger != &iot_logger_dfl) && iot_component_free (&logger->component))
+  if (logger && (logger != &iot_logger_dfl) && iot_component_dec_ref (&logger->component))
   {
     free (logger->name);
     free (logger->to);
+    iot_component_fini (&logger->component);
     free (logger);
   }
 }
@@ -133,23 +134,17 @@ void iot_logger_add_ref (iot_logger_t * logger)
 bool iot_logger_start (iot_logger_t * logger)
 {
   assert (logger);
-  if (logger->component.state != IOT_COMPONENT_RUNNING)
-  {
-    logger->component.state = IOT_COMPONENT_RUNNING;
-    logger->level = logger->save;
-  }
+  iot_component_set_running (&logger->component);
+  logger->level = logger->save;
   return true;
 }
 
 void iot_logger_stop (iot_logger_t * logger)
 {
   assert (logger);
-  if (logger->component.state != IOT_COMPONENT_STOPPED)
-  {
-    logger->component.state = IOT_COMPONENT_STOPPED;
-    logger->save = logger->level;
-    logger->level = IOT_LOG_NONE;
-  }
+  iot_component_set_stopped (&logger->component);
+  logger->save = logger->level;
+  logger->level = IOT_LOG_NONE;
 }
 
 iot_logger_t * iot_logger_next (iot_logger_t * logger)
@@ -158,13 +153,15 @@ iot_logger_t * iot_logger_next (iot_logger_t * logger)
   return logger->next;
 }
 
-static inline void iot_logger_log_to_fd (FILE * fd, const char *name, iot_loglevel_t level, time_t timestamp, const char *message)
+static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_loglevel_t level, time_t timestamp, const char *message)
 {
   char tname[IOT_PRCTL_NAME_MAX] = { 0 };
 #if defined (__linux__)
   prctl (PR_GET_NAME, tname);
 #endif
-  fprintf (fd, "[%s:%" PRIu64 ":%s:%s] %s\n", tname, (uint64_t) timestamp, name ? name : "default", iot_log_levels[level], message);
+  pthread_mutex_lock (&logger->component.mutex);
+  fprintf (fd, "[%s:%" PRIu64 ":%s:%s] %s\n", tname, (uint64_t) timestamp, logger->name ? logger->name : "default", iot_log_levels[level], message);
+  pthread_mutex_unlock (&logger->component.mutex);
 }
 
 void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
@@ -172,14 +169,14 @@ void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp
   FILE * fd = fopen (logger->to, "a");
   if (fd)
   {
-    iot_logger_log_to_fd (fd, logger->name, level, timestamp, message);
+    iot_logger_log_to_fd (logger, fd, level, timestamp, message);
     fclose (fd);
   }
 }
 
 extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
-  iot_logger_log_to_fd ((level > IOT_LOG_WARN) ? stdout : stderr, logger->name, level, timestamp, message);
+  iot_logger_log_to_fd (logger, (level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message);
 }
 
 #ifdef IOT_BUILD_COMPONENTS

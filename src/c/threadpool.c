@@ -48,11 +48,9 @@ typedef struct iot_threadpool_t
   iot_job_t * rear;                  // Rear of job queue
   iot_job_t * cache;                 // Free job cache
   const int * default_prio;          // Default thread priority
-  pthread_mutex_t mutex;             // Concurrency guard mutex
   pthread_cond_t work_cond;          // Work control condition
   pthread_cond_t job_cond;           // Job control condition
   pthread_cond_t queue_cond;         // Job queue control condition
-  pthread_cond_t state_cond;         // Service state control condition
   iot_logger_t * logger;             // Optional logger
 } iot_threadpool_t;
 
@@ -63,6 +61,7 @@ static void * iot_threadpool_thread (void * arg)
   pthread_t tid = pthread_self ();
   int priority = iot_thread_get_priority (tid);
   char name[IOT_PRCTL_NAME_MAX];
+  iot_component_state_t state;
 
   snprintf (name, IOT_PRCTL_NAME_MAX, "iot-%u", th->id);
   iot_log_debug (pool->logger, "Thread %s starting", name);
@@ -71,16 +70,11 @@ static void * iot_threadpool_thread (void * arg)
   prctl (PR_SET_NAME, name);
 #endif
 
-  pthread_mutex_lock (&pool->mutex);
   while (true)
   {
-    while (pool->component.state < IOT_COMPONENT_RUNNING)
-    {
-      iot_log_debug (pool->logger, "Thread waiting for pool start or deletion");
-      pthread_cond_wait (&pool->state_cond, &pool->mutex); // Wait until running or deleted
-      iot_log_debug (pool->logger, "Thread woken for pool %s", (pool->component.state == IOT_COMPONENT_RUNNING) ? "start" : "deletion");
-    }
-    if (pool->component.state == IOT_COMPONENT_DELETED)
+    state = iot_component_wait_and_lock (&pool->component, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+
+    if (state == IOT_COMPONENT_DELETED)
     {
       break; // Exit thread on deletion
     }
@@ -103,7 +97,7 @@ static void * iot_threadpool_thread (void * arg)
         pthread_cond_broadcast (&pool->queue_cond); // Signal now space in job queue
       }
       pool->working++;
-      pthread_mutex_unlock (&pool->mutex);
+      pthread_mutex_unlock (&pool->component.mutex);
       if (job.prio_set && (job.priority != priority)) // If required, set thread priority
       {
         if (iot_thread_set_priority (tid, job.priority))
@@ -113,20 +107,21 @@ static void * iot_threadpool_thread (void * arg)
       }
       (job.function) (job.arg); // Run job
       iot_log_debug (pool->logger, "Thread completed job #%u", job.id);
-      pthread_mutex_lock (&pool->mutex);
+      pthread_mutex_lock (&pool->component.mutex);
       if (--pool->working == 0)
       {
         pthread_cond_signal (&pool->work_cond); // Signal when no threads working
       }
+      pthread_mutex_unlock (&pool->component.mutex);
     }
     else
     {
-      iot_log_debug (pool->logger, "Thread waiting for new job", name);
-      pthread_cond_wait (&pool->job_cond, &pool->mutex); // Wait for new job
-      iot_log_debug (pool->logger, "Thread woken for new job", name);
+      iot_log_debug (pool->logger, "Thread waiting for new job");
+      pthread_cond_wait (&pool->job_cond, &pool->component.mutex); // Wait for new job
+      pthread_mutex_unlock (&pool->component.mutex);
     }
   }
-  pthread_mutex_unlock (&pool->mutex);
+  pthread_mutex_unlock (&pool->component.mutex);
   iot_log_debug (pool->logger, "Thread exiting", name);
   return NULL;
 }
@@ -142,11 +137,10 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   pool->default_prio = default_prio;
   pool->delay = IOT_TP_SHUTDOWN_MIN;
-  iot_mutex_init (&pool->mutex);
+  iot_mutex_init (&pool->component.mutex);
   pthread_cond_init (&pool->work_cond, NULL);
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
-  pthread_cond_init (&pool->state_cond, NULL);
   iot_component_init (&pool->component, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
   for (uint32_t n = 0; n < pool->max_threads; n++)
   {
@@ -228,13 +222,13 @@ bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), voi
   assert (pool && func);
   iot_log_trace (pool->logger, "iot_threadpool_try_work()");
   bool ret = false;
-  pthread_mutex_lock (&pool->mutex);
+  pthread_mutex_lock (&pool->component.mutex);
   if (pool->jobs < pool->max_jobs)
   {
     iot_threadpool_add_work_locked (pool, func, arg, prio);
     ret = true;
   }
-  pthread_mutex_unlock (&pool->mutex);
+  pthread_mutex_unlock (&pool->component.mutex);
   return ret;
 }
 
@@ -242,23 +236,23 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), voi
 {
   assert (pool && func);
   iot_log_trace (pool->logger, "iot_threadpool_add_work()");
-  pthread_mutex_lock (&pool->mutex);
+  pthread_mutex_lock (&pool->component.mutex);
   if (pool->jobs == pool->max_jobs)
   {
     iot_log_debug (pool->logger, "iot_threadpool_add_work jobs at max (%u), waiting for job completion", pool->max_jobs);
-    pthread_cond_wait (&pool->queue_cond, &pool->mutex); // Wait until space in job queue
+    pthread_cond_wait (&pool->queue_cond, &pool->component.mutex); // Wait until space in job queue
   }
   iot_threadpool_add_work_locked (pool, func, arg, prio);
   iot_log_debug (pool->logger, "iot_threadpool_add_work jobs/max: %u/%u", pool->jobs, pool->max_jobs);
-  pthread_mutex_unlock (&pool->mutex);
+  pthread_mutex_unlock (&pool->component.mutex);
 }
 
 static inline void iot_threadpool_wait_locked (iot_threadpool_t * pool)
 {
   while (pool->jobs || pool->working)
   {
-    iot_log_debug (pool->logger, "iot_threadpool_wait (jobs:%u threads:%u)", pool->jobs, pool->working);
-    pthread_cond_wait (&pool->work_cond, &pool->mutex); // Wait until all jobs processed
+    iot_log_debug (pool->logger, "iot_threadpool_wait (jobs:%u active threads:%u)", pool->jobs, pool->working);
+    pthread_cond_wait (&pool->work_cond, &pool->component.mutex); // Wait until all jobs processed
   }
 }
 
@@ -266,70 +260,48 @@ void iot_threadpool_wait (iot_threadpool_t * pool)
 {
   assert (pool);
   iot_log_trace (pool->logger, "iot_threadpool_wait()");
-  pthread_mutex_lock (&pool->mutex);
+  pthread_mutex_lock (&pool->component.mutex);
   iot_threadpool_wait_locked (pool);
-  pthread_mutex_unlock (&pool->mutex);
-}
-
-static inline void iot_threadpool_stop_locked (iot_threadpool_t * pool)
-{
-  if (pool->component.state != IOT_COMPONENT_STOPPED)
-  {
-    pool->component.state = IOT_COMPONENT_STOPPED;
-    pthread_cond_broadcast (&pool->state_cond);
-    pthread_cond_broadcast (&pool->job_cond);
-  }
+  pthread_mutex_unlock (&pool->component.mutex);
 }
 
 void iot_threadpool_stop (iot_threadpool_t * pool)
 {
   assert (pool);
   iot_log_trace (pool->logger, "iot_threadpool_stop()");
-  pthread_mutex_lock (&pool->mutex);
-  iot_threadpool_stop_locked (pool);
-  pthread_mutex_unlock (&pool->mutex);
+  iot_component_set_stopped (&pool->component);
+  pthread_cond_broadcast (&pool->job_cond);
 }
 
 bool iot_threadpool_start (iot_threadpool_t * pool)
 {
   assert (pool);
   iot_log_trace (pool->logger, "iot_threadpool_start()");
-  pthread_mutex_lock (&pool->mutex);
-  if (pool->component.state != IOT_COMPONENT_RUNNING)
-  {
-    pool->component.state = IOT_COMPONENT_RUNNING;
-    pthread_cond_broadcast (&pool->state_cond);
-    pthread_cond_broadcast (&pool->job_cond);
-  }
-  pthread_mutex_unlock (&pool->mutex);
+  iot_component_set_running (&pool->component);
+  pthread_cond_broadcast (&pool->job_cond);
   return true;
 }
 
 void iot_threadpool_free (iot_threadpool_t * pool)
 {
-  if (pool && iot_component_free (&pool->component))
+  if (pool && iot_component_dec_ref (&pool->component))
   {
     iot_job_t * job;
     iot_log_trace (pool->logger, "iot_threadpool_free()");
-    pthread_mutex_lock (&pool->mutex);
-    iot_threadpool_wait_locked (pool);
-    iot_threadpool_stop_locked (pool);
-    pool->component.state = IOT_COMPONENT_DELETED;
-    pthread_cond_broadcast (&pool->state_cond);
+    iot_threadpool_stop (pool);
+    iot_component_set_deleted (&pool->component);
     while ((job = pool->cache))
     {
       pool->cache = job->prev;
       free (job);
     }
-    pthread_mutex_unlock (&pool->mutex);
     usleep (pool->delay * 1000);
     pthread_cond_destroy (&pool->work_cond);
     pthread_cond_destroy (&pool->queue_cond);
     pthread_cond_destroy (&pool->job_cond);
-    pthread_cond_destroy (&pool->state_cond);
-    pthread_mutex_destroy (&pool->mutex);
     iot_logger_free (pool->logger);
     free (pool->thread_array);
+    iot_component_fini (&pool->component);
     free (pool);
   }
 }
