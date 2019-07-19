@@ -22,12 +22,19 @@ typedef struct my_component_t
 static bool my_component_start (my_component_t * comp)
 {
   printf ("MyComponent started\n");
+  iot_component_set_running (&pool->component);
   return true;
 }
 
 static void my_component_stop (my_component_t * comp)
 {
   printf ("MyComponent stopped\n");
+  iot_component_set_stopped (&pool->component);
+}
+
+void my_component_add_ref (my_component_t * comp)
+{
+  iot_component_add_ref (&comp->component);
 }
 
 static my_component_t * my_component_alloc (iot_logger_t * logger)
