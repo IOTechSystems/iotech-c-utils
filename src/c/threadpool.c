@@ -290,6 +290,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
     iot_log_trace (pool->logger, "iot_threadpool_free()");
     iot_threadpool_stop (pool);
     iot_component_set_deleted (&pool->component);
+    usleep (pool->delay * 1000);
     while ((job = pool->cache))
     {
       pool->cache = job->prev;
@@ -300,7 +301,6 @@ void iot_threadpool_free (iot_threadpool_t * pool)
       pool->front = job->prev;
       free (job);
     }
-    usleep (pool->delay * 1000);
     pthread_cond_destroy (&pool->work_cond);
     pthread_cond_destroy (&pool->queue_cond);
     pthread_cond_destroy (&pool->job_cond);
