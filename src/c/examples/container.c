@@ -4,10 +4,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 #include "iot/iot.h"
-#include "iot/threadpool.h"
-#include "iot/scheduler.h"
 
-static const char * config_loader (const char * name, void * from);
+/* Configuration loader function */
+
+static char * config_loader (const char * name, void * from);
 
 /* Boilerplate code for a component */
 
@@ -30,13 +30,14 @@ extern const iot_component_factory_t * my_component_factory (void);
 
 int main (void)
 {
+  iot_container_config_t config  = { config_loader, NULL, NULL };
   iot_container_t * container = iot_container_alloc ();
   iot_init ();
   iot_container_add_factory (container, iot_logger_factory ());
   iot_container_add_factory (container, iot_threadpool_factory ());
   iot_container_add_factory (container, iot_scheduler_factory ());
   iot_container_add_factory (container, my_component_factory ());
-  iot_container_init (container, "main", config_loader, NULL);
+  iot_container_init (container, "main", &config);
   iot_container_start (container);
   sleep (2);
   iot_container_stop (container);
@@ -44,6 +45,8 @@ int main (void)
   iot_fini ();
   return 0;
 }
+
+/* Custom component boilerplate function implementations */
 
 extern my_component_t * my_component_alloc (iot_logger_t * logger)
 {
@@ -98,6 +101,8 @@ extern const iot_component_factory_t * my_component_factory (void)
   return &factory;
 }
 
+/* Example component JSON configurations */
+
 static const char * main_config =
 "{"
   "\"file_logger\":\"IOT::Logger\","
@@ -139,15 +144,15 @@ static const char * my_config =
   "\"MyLogger\":\"logger\""
 "}";
 
-/* Configuration resolver function */
+/* Configuration loader function */
 
-static const char * config_loader (const char * name, void * from)
+static char * config_loader (const char * name, void * from)
 {
-  if (strcmp (name, "main") == 0) return main_config;
-  if (strcmp (name, "file_logger") == 0) return file_logger_config;
-  if (strcmp (name, "logger") == 0) return logger_config;
-  if (strcmp (name, "pool") == 0) return pool_config;
-  if (strcmp (name, "scheduler") == 0) return sched_config;
-  if (strcmp (name, "mycomp") == 0) return my_config;
+  if (strcmp (name, "main") == 0) return (char*) main_config;
+  if (strcmp (name, "file_logger") == 0) return (char*) file_logger_config;
+  if (strcmp (name, "logger") == 0) return (char*) logger_config;
+  if (strcmp (name, "pool") == 0) return (char*) pool_config;
+  if (strcmp (name, "scheduler") == 0) return (char*) sched_config;
+  if (strcmp (name, "mycomp") == 0) return (char*) my_config;
   return NULL;
 }

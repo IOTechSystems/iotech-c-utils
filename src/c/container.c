@@ -53,10 +53,11 @@ static const iot_component_factory_t * iot_container_find_factory_locked (iot_co
   return iter ? iter->factory : NULL;
 }
 
-bool iot_container_init (iot_container_t * cont, const char * name, iot_container_config_load_fn_t loader, void * from)
+bool iot_container_init (iot_container_t * cont, const char * name, iot_container_config_t * conf)
 {
+  assert (conf);
   bool ret = true;
-  const char * config = (loader) (name, from);
+  const char * config = (conf->load) (name, conf->from);
   assert (config);
   iot_data_t * map = iot_data_from_json (config);
   iot_data_map_iter_t iter;
@@ -66,7 +67,7 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
     const char * cname = iot_data_map_iter_string_key (&iter);
     const char * ctype = iot_data_map_iter_string_value (&iter);
     const iot_component_factory_t * factory = iot_container_find_factory_locked (cont, ctype);
-    const char * cconf = (loader) (cname, from);
+    const char * cconf = (conf->load) (cname, conf->from);
     if (factory && cconf)
     {
       iot_data_t * cmap = iot_data_from_json (cconf);
