@@ -30,7 +30,7 @@ extern const iot_component_factory_t * my_component_factory (void);
 
 int main (void)
 {
-  iot_container_config_t config  = { config_loader, NULL, NULL };
+  iot_container_config_t config = { config_loader, NULL, NULL };
   iot_container_t * container = iot_container_alloc ();
   iot_init ();
   iot_container_add_factory (container, iot_logger_factory ());

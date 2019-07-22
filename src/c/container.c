@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 #include "iot/container.h"
-#include "iot/data.h"
 #include "iot/logger.h"
 
 #define IOT_COMPONENT_DELTA 4
@@ -57,34 +56,39 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
 {
   assert (conf);
   bool ret = true;
-  const char * config = (conf->load) (name, conf->from);
+  char * config = (conf->load) (name, conf->from);
   assert (config);
   iot_data_t * map = iot_data_from_json (config);
   iot_data_map_iter_t iter;
   iot_data_map_iter (map, &iter);
+  if (conf->free) (conf->free) (config);
   while (iot_data_map_iter_next (&iter))
   {
     const char * cname = iot_data_map_iter_string_key (&iter);
     const char * ctype = iot_data_map_iter_string_value (&iter);
     const iot_component_factory_t * factory = iot_container_find_factory_locked (cont, ctype);
-    const char * cconf = (conf->load) (cname, conf->from);
-    if (factory && cconf)
+    if (factory)
     {
-      iot_data_t * cmap = iot_data_from_json (cconf);
-      iot_component_t * comp = (factory->config_fn) (cont, cmap);
-      iot_data_free (cmap);
-      if (comp)
+      config = (conf->load) (cname, conf->from);
+      if (config)
       {
-        iot_component_holder_t * ch = malloc (sizeof (*ch));
-        ch->component = comp;
-        ch->name = iot_strdup (cname);
-        ch->factory = factory;
-        if ((cont->ccount + 1) == cont->csize)
+        iot_data_t *cmap = iot_data_from_json (config);
+        iot_component_t *comp = (factory->config_fn) (cont, cmap);
+        iot_data_free (cmap);
+        if (conf->free) (conf->free) (config);
+        if (comp)
         {
-          cont->csize += IOT_COMPONENT_DELTA;
-          cont->components = realloc (cont->components, cont->csize * sizeof (iot_component_holder_t));
+          iot_component_holder_t *ch = malloc (sizeof (*ch));
+          ch->component = comp;
+          ch->name = iot_strdup (cname);
+          ch->factory = factory;
+          if ((cont->ccount + 1) == cont->csize)
+          {
+            cont->csize += IOT_COMPONENT_DELTA;
+            cont->components = realloc (cont->components, cont->csize * sizeof (iot_component_holder_t));
+          }
+          cont->components[cont->ccount++] = ch;
         }
-        cont->components[cont->ccount++] = ch;
       }
     }
   }
