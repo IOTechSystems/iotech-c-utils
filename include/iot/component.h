@@ -52,9 +52,11 @@ extern void iot_component_add_ref (iot_component_t * component);
 extern bool iot_component_dec_ref (iot_component_t * component);
 extern void iot_component_fini (iot_component_t * component);
 
-extern void iot_component_set_running (iot_component_t * component);
-extern void iot_component_set_stopped (iot_component_t * component);
-extern void iot_component_set_deleted (iot_component_t * component);
+/* Sets state of component. Returns whether state transition occurred. */
+
+extern bool iot_component_set_running (iot_component_t * component);
+extern bool iot_component_set_stopped (iot_component_t * component);
+extern bool iot_component_set_deleted (iot_component_t * component);
 
 extern iot_component_state_t iot_component_wait  (iot_component_t * component, uint32_t states);
 extern iot_component_state_t iot_component_wait_and_lock  (iot_component_t * component, uint32_t states);

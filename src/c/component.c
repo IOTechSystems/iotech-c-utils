@@ -27,24 +27,27 @@ bool iot_component_dec_ref (iot_component_t * component)
   return (atomic_fetch_add (&component->refs, -1) <= 1);
 }
 
-static void iot_component_set_state (iot_component_t * component, uint32_t state)
+static bool iot_component_set_state (iot_component_t * component, uint32_t state)
 {
   assert (component);
-  bool ok;
+  bool valid;
+  bool changed = false;
   pthread_mutex_lock (&component->mutex);
   switch (state)
   {
     case IOT_COMPONENT_STOPPED:
-    case IOT_COMPONENT_RUNNING: ok = (component->state != IOT_COMPONENT_DELETED); break;
-    case IOT_COMPONENT_DELETED: ok = (component->state != IOT_COMPONENT_RUNNING); break;
+    case IOT_COMPONENT_RUNNING: valid = (component->state != IOT_COMPONENT_DELETED); break;
+    case IOT_COMPONENT_DELETED: valid = (component->state != IOT_COMPONENT_RUNNING); break;
     default: assert (0);
   }
-  if (ok)
+  if (valid)
   {
+    changed = component->state == state;
     component->state = state;
     pthread_cond_broadcast (&component->cond);
   }
   pthread_mutex_unlock (&component->mutex);
+  return changed;
 }
 
 extern iot_component_state_t iot_component_wait (iot_component_t * component, uint32_t states)
@@ -78,17 +81,17 @@ iot_component_state_t iot_component_unlock (iot_component_t * component)
   return state;
 }
 
-void iot_component_set_running (iot_component_t * component)
+bool iot_component_set_running (iot_component_t * component)
 {
-  iot_component_set_state (component, IOT_COMPONENT_RUNNING);
+  return iot_component_set_state (component, IOT_COMPONENT_RUNNING);
 }
 
-void iot_component_set_stopped (iot_component_t * component)
+bool iot_component_set_stopped (iot_component_t * component)
 {
-  iot_component_set_state (component, IOT_COMPONENT_STOPPED);
+  return iot_component_set_state (component, IOT_COMPONENT_STOPPED);
 }
 
-void iot_component_set_deleted (iot_component_t * component)
+bool iot_component_set_deleted (iot_component_t * component)
 {
-  iot_component_set_state (component, IOT_COMPONENT_DELETED);
+  return iot_component_set_state (component, IOT_COMPONENT_DELETED);
 }
