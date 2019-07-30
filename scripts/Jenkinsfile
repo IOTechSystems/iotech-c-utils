@@ -90,7 +90,6 @@ def publishDebs (arch)
   def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32]
   def deb_archs = [x86_64: 'amd64', arm64: 'arm64', arm32: 'armhf']
   def deb_name = ['ubuntu-19.04':'disco','ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-10':'buster','debian-9':'stretch','debian-8':'jessie']
-  def repo = "debian-${releaseType[params.Archive]}"
   def debs = deb_lists[arch]
 
   for (int i = 0; i < debs.size(); ++i)
@@ -100,7 +99,7 @@ def publishDebs (arch)
       def name = deb_name[debs[i]]
       def uploadSpec = """{"files":[{
         "pattern": "${arch}/${debs[i]}/release/iotech-iot*.deb",
-        "target": "${repo}/pool/${name}/",
+        "target": "debian-${releaseType[params.Archive]}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }]}"""
       rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
@@ -165,7 +164,6 @@ def publishTars (arch)
   def tar_lists = [x86_64: tars_x86_64, arm64: tars_arm64, arm32: tars_arm32]
   def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7']
   def tars = tar_lists[arch]
-  def repo = "generic-${releaseType[params.Archive]}"
 
   for (int i = 0; i < tars.size(); ++i)
   {
@@ -174,7 +172,7 @@ def publishTars (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${tars[i]}/release/iotech-iot*.tar.gz",
-        "target": "${repo}/${tars[i]}/",
+        "target": "generic-${releaseType[params.Archive]}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
       ]}"""
