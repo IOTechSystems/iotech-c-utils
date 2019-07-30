@@ -42,7 +42,7 @@ static bool iot_component_set_state (iot_component_t * component, uint32_t state
   }
   if (valid)
   {
-    changed = component->state == state;
+    changed = component->state != state;
     component->state = state;
     pthread_cond_broadcast (&component->cond);
   }
