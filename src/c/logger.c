@@ -208,11 +208,11 @@ static iot_loglevel_t iot_logger_config_level (const iot_data_t * map)
 
 static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_logger_t * next = NULL;
-  iot_log_function_t impl = NULL;
+  iot_logger_t * next;
   iot_logger_t * logger;
-  iot_loglevel_t level = iot_logger_config_level (map);
   const char * name;
+  iot_log_function_t impl = iot_log_console; /* log to stderr or stdout */
+  iot_loglevel_t level = iot_logger_config_level (map);
   const char * to = iot_data_string_map_get_string (map, "To");
 
   if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
@@ -220,15 +220,8 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
     impl = iot_log_file; /* Log to file */
     to += 5;
   }
-  else
-  {
-    impl = iot_log_console; /* log to stderr or stdout */
-  }
   name = iot_data_string_map_get_string (map, "Next");
-  if (name)
-  {
-    next = (iot_logger_t*) iot_container_find (cont, name);
-  }
+  next = name ? (iot_logger_t*) iot_container_find (cont, name) : NULL;
 
   logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next);
   return &logger->component;
@@ -236,8 +229,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
 
 static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map)
 {
-  iot_logger_t * logger = (iot_logger_t*) comp;
-  logger->level = iot_logger_config_level (map);
+  ((iot_logger_t*) comp)->level = iot_logger_config_level (map);
   return true;
 }
 
