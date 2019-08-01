@@ -45,7 +45,6 @@ int main (void)
 
   /* Create components from configuration files */
 
-  reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
   iot_container_init (container, "main", &config);
 
   /* Start everything */
@@ -59,6 +58,7 @@ int main (void)
 
   /* Update logger configuration (what can be reconfigured depends on component) */
 
+  reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
   iot_component_reconfig (logger, container, reconfig);
   iot_data_free (reconfig);
 
