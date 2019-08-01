@@ -33,6 +33,7 @@ int main (void)
   iot_container_config_t config = { config_loader, NULL, NULL };
   iot_container_t * container = iot_container_alloc ();
   iot_component_t * logger;
+  iot_data_t * data = iot_data_from_json ("{\"Level\":\"Trace\"}");
   iot_init ();
   iot_container_add_factory (container, iot_logger_factory ());
   iot_container_add_factory (container, iot_threadpool_factory ());
@@ -42,7 +43,8 @@ int main (void)
   iot_container_start (container);
   sleep (2);
   logger = iot_container_find (container, "logger");
-  iot_component_reconfig (logger, container, iot_data_from_json ("{\"Level\":\"Trace\"}"));
+  iot_component_reconfig (logger, container, data);
+  iot_data_free (data);
   iot_container_stop (container);
   iot_container_free (container);
   iot_fini ();
