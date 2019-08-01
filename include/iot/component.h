@@ -26,9 +26,18 @@ typedef enum
 iot_component_state_t;
 
 typedef iot_component_t * (*iot_component_config_fn_t) (iot_container_t * cont, const iot_data_t * map);
+typedef bool (*iot_component_reconfig_fn_t) (iot_component_t * this, iot_container_t * cont, const iot_data_t * map);
 typedef bool (*iot_component_start_fn_t) (iot_component_t * this);
 typedef void (*iot_component_stop_fn_t) (iot_component_t * this);
 typedef void (*iot_component_free_fn_t) (iot_component_t * this);
+
+struct iot_component_factory_t
+{
+  const char * const type;
+  iot_component_config_fn_t config_fn;
+  iot_component_free_fn_t free_fn;
+  iot_component_reconfig_fn_t reconfig_fn;
+};
 
 struct iot_component_t
 {
@@ -38,16 +47,11 @@ struct iot_component_t
   iot_component_start_fn_t start_fn;
   iot_component_stop_fn_t stop_fn;
   atomic_uint_fast32_t refs;
+  const iot_component_factory_t * factory;
 };
 
-struct iot_component_factory_t
-{
-  const char * const type;
-  iot_component_config_fn_t config_fn;
-  iot_component_free_fn_t free_fn;
-};
-
-extern void iot_component_init (iot_component_t * component, iot_component_start_fn_t start, iot_component_stop_fn_t stop);
+extern void iot_component_init (iot_component_t * component, const iot_component_factory_t * factory, iot_component_start_fn_t start, iot_component_stop_fn_t stop);
+extern bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont, const iot_data_t * map);
 extern void iot_component_add_ref (iot_component_t * component);
 extern bool iot_component_dec_ref (iot_component_t * component);
 extern void iot_component_fini (iot_component_t * component);

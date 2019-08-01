@@ -11,6 +11,12 @@
 #define IOT_NS_TO_SEC(s) ((s) / IOT_BILLION)
 #define IOT_NS_REMAINING(s) ((s) % IOT_BILLION)
 
+#ifdef IOT_BUILD_COMPONENTS
+#define IOT_SCHEDULER_FACTORY iot_scheduler_factory ()
+#else
+#define IOT_SCHEDULER_FACTORY NULL
+#endif
+
 /* Schedule */
 struct iot_schedule_t
 {
@@ -166,7 +172,7 @@ iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool, iot_logger_t * l
   assert (pool);
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1, sizeof (*scheduler));
   scheduler->threadpool = pool;
-  iot_component_init (&scheduler->component, (iot_component_start_fn_t) iot_scheduler_start, (iot_component_stop_fn_t) iot_scheduler_stop);
+  iot_component_init (&scheduler->component, IOT_SCHEDULER_FACTORY, (iot_component_start_fn_t) iot_scheduler_start, (iot_component_stop_fn_t) iot_scheduler_stop);
   iot_threadpool_add_ref (pool);
   scheduler->logger = logger;
   iot_logger_add_ref (logger);

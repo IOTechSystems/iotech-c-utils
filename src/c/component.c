@@ -1,14 +1,21 @@
 #include "iot/component.h"
 #include "iot/thread.h"
 
-extern void iot_component_init (iot_component_t * component, iot_component_start_fn_t start, iot_component_stop_fn_t stop)
+void iot_component_init (iot_component_t * component, const iot_component_factory_t * factory, iot_component_start_fn_t start, iot_component_stop_fn_t stop)
 {
   assert (component && start && stop);
   component->start_fn = start;
   component->stop_fn = stop;
+  component->factory = factory,
   iot_mutex_init (&component->mutex);
   pthread_cond_init (&component->cond, NULL);
   atomic_store (&component->refs, 1);
+}
+
+bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont, const iot_data_t * map)
+{
+  assert (component && cont && map);
+  return (component->factory && component->factory->reconfig_fn) ? (component->factory->reconfig_fn) (component, cont, map) : false;
 }
 
 void iot_component_fini (iot_component_t * component)

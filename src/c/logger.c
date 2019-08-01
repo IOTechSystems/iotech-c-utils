@@ -13,8 +13,14 @@
 #endif
 
 #define IOT_PRCTL_NAME_MAX 16
-
 #define IOT_LOG_LEVELS 6
+
+#ifdef IOT_BUILD_COMPONENTS
+#define IOT_LOGGER_FACTORY iot_logger_factory ()
+#else
+#define IOT_LOGGER_FACTORY NULL
+#endif
+
 static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
 static iot_logger_t iot_logger_dfl;
 
@@ -111,7 +117,7 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
   logger->to = to ? iot_strdup (to) : NULL;
   logger->save = level;
   logger->next = next;
-  iot_component_init (&logger->component, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
+  iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
   return logger;
 }
 
@@ -181,12 +187,31 @@ extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, time_t
 
 #ifdef IOT_BUILD_COMPONENTS
 
+static iot_loglevel_t iot_logger_config_level (const iot_data_t * map)
+{
+  iot_loglevel_t level = IOT_LOGLEVEL_DEFAULT;
+  const char * name = iot_data_string_map_get_string (map, "Level");
+  if (name)
+  {
+    int c = toupper (name[0]);
+    for (int lvl = 0; lvl < IOT_LOG_LEVELS; lvl++)
+    {
+      if (iot_log_levels[lvl][0] == c)
+      {
+        level = lvl;
+        break;
+      }
+    }
+  }
+  return level;
+}
+
 static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_data_t * map)
 {
   iot_logger_t * next = NULL;
   iot_log_function_t impl = NULL;
   iot_logger_t * logger;
-  iot_loglevel_t level = IOT_LOGLEVEL_DEFAULT;
+  iot_loglevel_t level = iot_logger_config_level (map);
   const char * name;
   const char * to = iot_data_string_map_get_string (map, "To");
 
@@ -204,26 +229,21 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   {
     next = (iot_logger_t*) iot_container_find (cont, name);
   }
-  name = iot_data_string_map_get_string (map, "Level");
-  if (name)
-  {
-    int c = toupper (name[0]);
-    for (int lvl = 0; lvl < IOT_LOG_LEVELS; lvl++)
-    {
-      if (iot_log_levels[lvl][0] == c)
-      {
-        level = lvl;
-        break;
-      }
-    }
-  }
+
   logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next);
   return &logger->component;
 }
 
+static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map)
+{
+  iot_logger_t * logger = (iot_logger_t*) comp;
+  logger->level = iot_logger_config_level (map);
+  return true;
+}
+
 const iot_component_factory_t * iot_logger_factory (void)
 {
-  static iot_component_factory_t factory = { IOT_LOGGER_TYPE, iot_logger_config, (iot_component_free_fn_t) iot_logger_free };
+  static iot_component_factory_t factory = { IOT_LOGGER_TYPE, iot_logger_config, (iot_component_free_fn_t) iot_logger_free,  iot_logger_reconfig };
   return &factory;
 }
 

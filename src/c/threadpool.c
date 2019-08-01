@@ -17,6 +17,12 @@
 #define IOT_TP_JOBS_DEFAULT 0
 #define IOT_TP_SHUTDOWN_MIN 200
 
+#ifdef IOT_BUILD_COMPONENTS
+#define IOT_THREADPOOL_FACTORY iot_threadpool_factory ()
+#else
+#define IOT_THREADPOOL_FACTORY NULL
+#endif
+
 typedef struct iot_job_t
 {
   struct iot_job_t * prev;           // Pointer to previous job
@@ -141,7 +147,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   pthread_cond_init (&pool->work_cond, NULL);
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
-  iot_component_init (&pool->component, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
+  iot_component_init (&pool->component, IOT_THREADPOOL_FACTORY, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
   for (uint32_t n = 0; n < pool->max_threads; n++)
   {
     iot_thread_t * th = &pool->thread_array[n];
