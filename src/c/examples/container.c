@@ -33,18 +33,37 @@ int main (void)
   iot_container_config_t config = { config_loader, NULL, NULL };
   iot_container_t * container = iot_container_alloc ();
   iot_component_t * logger;
-  iot_data_t * data = iot_data_from_json ("{\"Level\":\"Trace\"}");
+  iot_data_t * reconfig;
   iot_init ();
+
+  /* Add factories for supported component types */
+
   iot_container_add_factory (container, iot_logger_factory ());
   iot_container_add_factory (container, iot_threadpool_factory ());
   iot_container_add_factory (container, iot_scheduler_factory ());
   iot_container_add_factory (container, my_component_factory ());
+
+  /* Create components from configuration files */
+
+  reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
   iot_container_init (container, "main", &config);
+
+  /* Start everything */
+
   iot_container_start (container);
   sleep (2);
+
+  /* Find instantiated component - the logger */
+
   logger = iot_container_find (container, "logger");
-  iot_component_reconfig (logger, container, data);
-  iot_data_free (data);
+
+  /* Update logger configuration (what can be reconfigured depends on component) */
+
+  iot_component_reconfig (logger, container, reconfig);
+  iot_data_free (reconfig);
+
+  /* Stop everything and clean up */
+
   iot_container_stop (container);
   iot_container_free (container);
   iot_fini ();
