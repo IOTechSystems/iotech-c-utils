@@ -3,7 +3,7 @@
 #include "../logger/logger.h"
 #include "../data/data.h"
 #include "../threadpool/threadpool.h"
-#include "../time/time.h"
+#include "../misc/misc.h"
 #include "../../cunit/Basic.h"
 #include "../../cunit/Automated.h"
 #include "../scheduler/scheduler.h"
@@ -66,7 +66,7 @@ int main (int argc, char* argv[])
   cunit_json_test_init ();
   cunit_data_test_init ();
   cunit_threadpool_test_init ();
-  cunit_time_test_init ();
+  cunit_misc_test_init ();
   cunit_scheduler_test_init ();
 
   CU_set_error_action (error_action);

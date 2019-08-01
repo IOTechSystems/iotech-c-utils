@@ -7,6 +7,8 @@
 #define _IOT_IOT_H_
 
 #include "iot/data.h"
+#include "iot/time.h"
+#include "iot/hash.h"
 #include "iot/component.h"
 #include "iot/container.h"
 #include "iot/logger.h"

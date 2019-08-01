@@ -1,4 +1,5 @@
-#include "time.h"
+#include "iot/iot.h"
+#include "misc.h"
 #include "CUnit.h"
 
 #define MAX_COUNTER 1000
@@ -34,9 +35,16 @@ static void test_time_nsecs (void)
   }
 }
 
-void cunit_time_test_init (void)
+static void test_hash (void)
+{
+  uint32_t hash = iot_hash ("Dummy");
+  CU_ASSERT (hash == 3802084562);
+}
+
+void cunit_misc_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("time", suite_init, suite_clean);
   CU_add_test (suite, "time_msecs", test_time_msecs);
   CU_add_test (suite, "time_nsecs", test_time_nsecs);
+  CU_add_test (suite, "hash", test_hash);
 }
