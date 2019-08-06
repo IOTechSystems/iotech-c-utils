@@ -56,6 +56,7 @@ extern void iot_data_add_ref (iot_data_t * data);
 extern void iot_data_free (iot_data_t * data);
 extern iot_data_type_t iot_data_type (const iot_data_t * data);
 extern const char * iot_data_type_name (const iot_data_t * data);
+extern void * iot_data_address (const iot_data_t * data);
 
 extern iot_data_t * iot_data_alloc_i8 (int8_t val);
 extern iot_data_t * iot_data_alloc_ui8 (uint8_t val);

@@ -238,6 +238,11 @@ iot_data_type_t iot_data_type (const iot_data_t * data)
   return data->type;
 }
 
+void * iot_data_address (const iot_data_t * data)
+{
+  return (data && data->type <= IOT_DATA_BLOB) ? ((data->type == IOT_DATA_BLOB) ? (void*)((iot_data_blob_t*) data)->data : (void*)&(((iot_data_value_t*) data)->value)) : NULL;
+}
+
 void iot_data_free (iot_data_t * data)
 {
   if (data && (atomic_fetch_add (&data->refs, -1) <= 1))

@@ -183,6 +183,26 @@ static void test_data_from_json (void)
   iot_data_free (map);
 }
 
+static void test_data_address (void)
+{
+  uint32_t * ui32ptr;
+  char ** strptr;
+  uint8_t buff [4] = { 0, 1, 2 ,3 };
+  iot_data_t * data = iot_data_alloc_blob (buff, sizeof (buff), IOT_DATA_REF);
+  CU_ASSERT (iot_data_address (data) == buff)
+  iot_data_free (data);
+  data = iot_data_alloc_ui32 (5u);
+  ui32ptr = (uint32_t*) iot_data_address (data);
+  *ui32ptr = 6u;
+  CU_ASSERT (iot_data_ui32 (data) == 6u);
+  iot_data_free (data);
+  data = iot_data_alloc_string ("Hello", IOT_DATA_COPY);
+  strptr = (char**) iot_data_address (data);
+  *strptr[0] = 'h';
+  CU_ASSERT (strcmp (iot_data_string (data), "hello") == 0)
+  iot_data_free (data);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -191,4 +211,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_string_array", test_data_string_array);
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
+  CU_add_test (suite, "data_address", test_data_address);
 }
