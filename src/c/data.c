@@ -9,7 +9,6 @@
 
 #define IOT_DATA_BLOCK_SIZE 64
 #define IOT_JSON_BUFF_SIZE 512
-#define IOT_JSON_STRING_MAX 256
 
 typedef union iot_data_union_t
 {
@@ -742,37 +741,38 @@ char * iot_data_to_json (const iot_data_t * data, bool wrap)
   return holder.str;
 }
 
-static inline void iot_data_string_from_json_token (char * str, const char * json, iot_json_tok_t * token)
+static char * iot_data_string_from_json_token (const char * json, iot_json_tok_t * token)
 {
-  size_t len = (size_t) (((token->end - token->start) > IOT_JSON_STRING_MAX) ? IOT_JSON_STRING_MAX : (token->end - token->start));
-  strncpy (str, json + token->start, len);
+  size_t len = (size_t) (token->end - token->start);
+  char * str = malloc (len + 1);
+  memcpy (str, json + token->start, len);
   str[len] = 0;
+  return str;
 }
 
 static iot_data_t * iot_data_string_from_json (iot_json_tok_t ** tokens, const char * json)
 {
-  char str [IOT_JSON_STRING_MAX];
-  iot_data_string_from_json_token (str, json, *tokens);
+  char * str = iot_data_string_from_json_token (json, *tokens);
   (*tokens)++;
-  return iot_data_alloc_string (str, IOT_DATA_COPY);
+  return iot_data_alloc_string (str, IOT_DATA_TAKE);
 }
 
 static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, const char * json)
 {
-  char str [IOT_JSON_STRING_MAX];
-  iot_data_string_from_json_token (str, json, *tokens);
+  iot_data_t * ret;
+  char * str = iot_data_string_from_json_token (json, *tokens);
   (*tokens)++;
-  switch (str[0]) // Check for true/false/null
+  switch (str[0])
   {
-    case 't': case 'f': return iot_data_alloc_bool (str[0] == 't');
-    case 'n': return iot_data_alloc_string ("null", IOT_DATA_REF);
-    default: break;
+    case 't': case 'f': ret = iot_data_alloc_bool (str[0] == 't'); break; // true/false
+    case 'n': ret = iot_data_alloc_string ("null", IOT_DATA_REF); break; // null
+    default: // Handle all floating point numbers as doubles and integers as uint64_t
+      ret = (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E')) ?
+        iot_data_alloc_f64 (strtod (str, NULL)) : iot_data_alloc_i64 (strtol (str, NULL, 0));
+      break;
   }
-
-  // Handle all floating point numbers as doubles and integers as uint64_t
-
-  return (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E')) ?
-    iot_data_alloc_f64 (strtod (str, NULL)) : iot_data_alloc_i64 (strtol (str, NULL, 0));
+  free (str);
+  return ret;
 }
 
 static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char * json)
