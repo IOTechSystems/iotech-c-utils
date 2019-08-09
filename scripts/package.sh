@@ -3,7 +3,7 @@ set -x -e
 SYSTEM=$1
 ARCH=$2
 export VER=$(cat VERSION)
-BUILDER=iotech-services.jfrog.io/iotech-apk-builder-${ARCH}:0.2.0
+BUILDER=iotechsys/iotech-apk-builder:0.2.0
 
 build_apk()
 {
