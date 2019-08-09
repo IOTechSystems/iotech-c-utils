@@ -23,8 +23,7 @@ package() {
     dest=$pkgdir
   fi
   mkdir -p ${dest}/lib
-  cp ${base}/lib/libiot.so ${dest}/lib
-  cp ${base}/lib/libiot.a ${dest}/lib
+  cp ${base}/lib/lib*.* ${dest}/lib
   chmod 755 ${dest}/lib/*
   mkdir -p ${dest}/include/iot/
   cp -r ${base}/include/* ${dest}/include/
