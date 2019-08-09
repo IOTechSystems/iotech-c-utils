@@ -54,6 +54,7 @@ mkdir ${BROOT}/debug
 cd ${BROOT}/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
 make 2>&1 | tee debug.log
+make package
 
 # Unit tests
 
