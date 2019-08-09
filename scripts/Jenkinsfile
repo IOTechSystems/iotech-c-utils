@@ -120,7 +120,7 @@ def publishApks (arch)
   {
     if ("${params.System}" == "${apks[i]}" || "${params.System}" == 'all')
     {
-      sh "./scripts/package.sh ${apks[i]} ${arch}"
+      sh "./scripts/package.sh ${apks[i]} ${apk_archs[arch]}"
       def uploadSpec = """{"files":[
       {
         "pattern": "apk/${apks[i]}/packager/${apk_archs[arch]}/*.apk",
