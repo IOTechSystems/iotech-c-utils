@@ -220,7 +220,7 @@ static void test_data_name_type (void)
   CU_ASSERT (iot_data_name_type ("blob") == IOT_DATA_BLOB)
   CU_ASSERT (iot_data_name_type ("map") == IOT_DATA_MAP)
   CU_ASSERT (iot_data_name_type ("array") == IOT_DATA_ARRAY)
-  CU_ASSERT (iot_data_name_type ("dummy") == -1)
+  CU_ASSERT (iot_data_name_type ("dummy") == (iot_data_type_t) -1)
 }
 
 static void test_data_from_string (void)
@@ -294,6 +294,16 @@ static void test_data_from_string (void)
   CU_ASSERT (data == NULL)
 }
 
+static void test_data_from_strings (void)
+{
+  iot_data_t * data;
+  data = iot_data_alloc_from_strings ("Int8", "-6");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT8)
+  CU_ASSERT (iot_data_i8 (data) == -6)
+  iot_data_free (data);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -305,4 +315,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_name_type", test_data_name_type);
   CU_add_test (suite, "data_from_string", test_data_from_string);
+  CU_add_test (suite, "data_from_strings", test_data_from_strings);
 }

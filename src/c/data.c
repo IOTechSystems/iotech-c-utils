@@ -312,6 +312,11 @@ iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * valu
   return NULL;
 }
 
+iot_data_t * iot_data_alloc_from_strings (const char * type, const char * value)
+{
+  return iot_data_alloc_from_string (iot_data_name_type (type), value);
+}
+
 iot_data_t * iot_data_alloc_i8 (int8_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT8, false);
