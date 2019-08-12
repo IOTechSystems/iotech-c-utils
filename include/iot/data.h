@@ -74,6 +74,7 @@ extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_
 extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data_ownership_t ownership);
 extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
 extern iot_data_t * iot_data_alloc_array (uint32_t size);
+extern iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value);
 
 extern int8_t iot_data_i8 (const iot_data_t * data);
 extern uint8_t iot_data_ui8 (const iot_data_t * data);

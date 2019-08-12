@@ -114,14 +114,7 @@ static void * iot_data_factory_alloc (void)
 #else
   pthread_mutex_unlock (&iot_data_mutex);
 #endif
-  if (data)
-  {
-    memset (data, 0, IOT_DATA_BLOCK_SIZE);
-  }
-  else
-  {
-    data = calloc (1, IOT_DATA_BLOCK_SIZE);
-  }
+  data = (data) ? memset (data, 0, IOT_DATA_BLOCK_SIZE) : calloc (1, IOT_DATA_BLOCK_SIZE);
   atomic_store (&data->refs, 1);
   return data;
 }
@@ -295,6 +288,28 @@ void iot_data_free (iot_data_t * data)
     }
     iot_data_factory_free (data);
   }
+}
+
+iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value)
+{
+  assert (value && strlen (value));
+  switch (type)
+  {
+    case IOT_DATA_INT8: return iot_data_alloc_i8 ((int8_t) atoi (value));
+    case IOT_DATA_UINT8:return iot_data_alloc_ui8 ((uint8_t) atoi (value));
+    case IOT_DATA_INT16: return iot_data_alloc_i16 ((int16_t) atoi (value));
+    case IOT_DATA_UINT16:return iot_data_alloc_ui16 ((uint16_t) atoi (value));
+    case IOT_DATA_INT32: return iot_data_alloc_i32 ((int32_t) atol (value));
+    case IOT_DATA_UINT32:return iot_data_alloc_ui32 ((uint32_t) atol (value));
+    case IOT_DATA_INT64: return iot_data_alloc_i64 ((int64_t) atoll (value));
+    case IOT_DATA_UINT64:return iot_data_alloc_ui64 ((uint64_t) atoll (value));
+    case IOT_DATA_FLOAT32: return iot_data_alloc_f32 ((float) atof (value));
+    case IOT_DATA_FLOAT64: return iot_data_alloc_f64 (atof (value));
+    case IOT_DATA_BOOL: return iot_data_alloc_bool (value[0] == 't' || value[0] == 'T');
+    case IOT_DATA_STRING: return iot_data_alloc_string (value, IOT_DATA_COPY);
+    default: break;
+  }
+  return NULL;
 }
 
 iot_data_t * iot_data_alloc_i8 (int8_t val)
