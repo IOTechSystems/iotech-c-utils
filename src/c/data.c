@@ -10,6 +10,8 @@
 #define IOT_DATA_BLOCK_SIZE 64
 #define IOT_JSON_BUFF_SIZE 512
 
+static const char * iot_data_type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","BLOB","Map","Array"};
+
 typedef union iot_data_union_t
 {
   int8_t i8;
@@ -204,12 +206,21 @@ void iot_data_add_ref (iot_data_t * data)
   atomic_fetch_add (&data->refs, 1);
 }
 
+iot_data_type_t iot_data_name_type (const char * name)
+{
+  int type = 0;
+  while (type >= 0)
+  {
+    if (strcasecmp (name, iot_data_type_names[type]) == 0) break;
+    type = (type == IOT_DATA_ARRAY) ? -1 : (type + 1);
+  }
+  return type;
+}
+
 const char * iot_data_type_name (const iot_data_t * data)
 {
-  static const char * type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","BLOB","Map","Array"};
-  assert (data);
-  assert (data->type <= IOT_DATA_ARRAY);
-  return type_names[data->type];
+  assert (data && (data->type <= IOT_DATA_ARRAY));
+  return iot_data_type_names[data->type];
 }
 
 iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)

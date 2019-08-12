@@ -203,6 +203,26 @@ static void test_data_address (void)
   iot_data_free (data);
 }
 
+static void test_data_name_type (void)
+{
+  CU_ASSERT (iot_data_name_type ("int8") == IOT_DATA_INT8)
+  CU_ASSERT (iot_data_name_type ("uint8") == IOT_DATA_UINT8)
+  CU_ASSERT (iot_data_name_type ("int16") == IOT_DATA_INT16)
+  CU_ASSERT (iot_data_name_type ("uint16") == IOT_DATA_UINT16)
+  CU_ASSERT (iot_data_name_type ("int32") == IOT_DATA_INT32)
+  CU_ASSERT (iot_data_name_type ("uint32") == IOT_DATA_UINT32)
+  CU_ASSERT (iot_data_name_type ("int64") == IOT_DATA_INT64)
+  CU_ASSERT (iot_data_name_type ("uin64") == IOT_DATA_UINT64)
+  CU_ASSERT (iot_data_name_type ("float32") == IOT_DATA_FLOAT32)
+  CU_ASSERT (iot_data_name_type ("float64") == IOT_DATA_FLOAT64)
+  CU_ASSERT (iot_data_name_type ("bool") == IOT_DATA_BOOL)
+  CU_ASSERT (iot_data_name_type ("string") == IOT_DATA_STRING)
+  CU_ASSERT (iot_data_name_type ("blob") == IOT_DATA_BLOB)
+  CU_ASSERT (iot_data_name_type ("map") == IOT_DATA_MAP)
+  CU_ASSERT (iot_data_name_type ("map") == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_name_type ("dummy") == -1)
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -212,4 +232,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
   CU_add_test (suite, "data_address", test_data_address);
+  CU_add_test (suite, "data_name_type", test_data_name_type);
 }
