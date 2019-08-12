@@ -235,6 +235,7 @@ static void test_data_from_string (void)
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT8);
   CU_ASSERT (iot_data_ui8 (data) == 4)
+  iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_INT16, "-22222");
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_INT16)
@@ -244,6 +245,7 @@ static void test_data_from_string (void)
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT16)
   CU_ASSERT (iot_data_ui16 (data) == 44444)
+  iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_INT32, "-2222222");
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_INT32);
