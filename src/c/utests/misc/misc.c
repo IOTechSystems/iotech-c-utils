@@ -27,11 +27,15 @@ static void test_time_msecs (void)
 
 static void test_time_nsecs (void)
 {
-  volatile uint64_t nsecs_time;
-  for (int counter = 0; counter < MAX_COUNTER; counter++)
+  unsigned counter;
+  uint64_t times[MAX_COUNTER];
+  for (counter = 0; counter < MAX_COUNTER; counter++)
   {
-    nsecs_time = iot_time_nsecs ();
-    CU_ASSERT (iot_time_nsecs () > nsecs_time);
+    times[counter] = iot_time_nsecs ();
+  }
+  for (counter = 0; counter < (MAX_COUNTER - 1); counter++)
+  {
+    CU_ASSERT (times[counter] < times[counter + 1]);
   }
 }
 
