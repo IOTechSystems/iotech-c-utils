@@ -143,7 +143,6 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   pool->default_prio = default_prio;
   pool->delay = IOT_TP_SHUTDOWN_MIN;
-  iot_mutex_init (&pool->component.mutex);
   pthread_cond_init (&pool->work_cond, NULL);
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
@@ -276,7 +275,9 @@ void iot_threadpool_stop (iot_threadpool_t * pool)
   assert (pool);
   iot_log_trace (pool->logger, "iot_threadpool_stop()");
   iot_component_set_stopped (&pool->component);
+  iot_component_lock (&pool->component);
   pthread_cond_broadcast (&pool->job_cond);
+  iot_component_unlock (&pool->component);
 }
 
 bool iot_threadpool_start (iot_threadpool_t * pool)
@@ -284,7 +285,9 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
   assert (pool);
   iot_log_trace (pool->logger, "iot_threadpool_start()");
   iot_component_set_running (&pool->component);
+  iot_component_lock (&pool->component);
   pthread_cond_broadcast (&pool->job_cond);
+  iot_component_unlock (&pool->component);
   return true;
 }
 
