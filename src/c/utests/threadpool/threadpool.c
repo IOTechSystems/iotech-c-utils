@@ -152,6 +152,7 @@ static void cunit_threadpool_refcount (void)
   iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, NULL, logger);
   iot_threadpool_add_ref (pool);
   iot_threadpool_free (pool);
+  usleep (500000);
   iot_threadpool_free (pool);
   iot_threadpool_free (NULL);
 }
