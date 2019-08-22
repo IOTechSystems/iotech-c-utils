@@ -6,6 +6,7 @@
 #include "iot/os.h"
 #include "iot/data.h"
 #include "iot/json.h"
+#include "iot/base64.h"
 
 #define IOT_DATA_BLOCK_SIZE 64
 #define IOT_JSON_BUFF_SIZE 512
@@ -421,6 +422,28 @@ iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data_owners
   return (iot_data_t*) blob;
 }
 
+iot_data_t * iot_data_alloc_blob_from_base64 (const char * value)
+{
+  size_t len;
+  uint8_t * data;
+  iot_data_t * result = NULL;
+  assert (value);
+  len = iot_b64_maxdecodesize (value);
+  data = malloc (len);
+  assert (data);
+
+  if (iot_b64_decode (value, data, &len))
+  {
+    result = iot_data_alloc_blob (data, len, IOT_DATA_TAKE);
+  }
+  else
+  {
+    free (data);
+  }
+
+  return result;
+}
+
 int8_t iot_data_i8 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT8));
@@ -544,6 +567,32 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   pair->key = key;
 }
 
+bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * key)
+{
+  bool result = false;
+  iot_data_map_t * mp = (iot_data_map_t*) map;
+
+  assert (mp && (mp->base.type == IOT_DATA_MAP));
+  assert (key && key->type == mp->key_type);
+
+  iot_data_pair_t * pair = iot_data_map_find (mp, key);
+  if (pair && (pair->value->type == IOT_DATA_STRING))
+  {
+    const char * str = ((iot_data_value_t*) pair->value)->value.str;
+    iot_data_t * blob = iot_data_alloc_blob_from_base64 (str);
+
+    result = (blob != NULL);
+
+    if (result)
+    {
+      iot_data_free (pair->value);
+      pair->value = blob;
+    }
+  }
+
+  return result;
+}
+
 const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key)
 {
   iot_data_map_t * mp = (iot_data_map_t*) map;
@@ -662,16 +711,125 @@ const char * iot_data_array_iter_string (const iot_data_array_iter_t * iter)
   return (iter->index <= iter->array->size) ? iot_data_string (iter->array->values[iter->index - 1]) : NULL;
 }
 
-static void iot_data_strcat (iot_string_holder_t * holder, const char * add)
+static size_t iot_data_repr_size (char c)
+{
+  size_t result = 1;
+  switch (c)
+  {
+    case '\"': case '\\': case '\b': case '\f': case '\n': case '\r': case '\t':
+    {
+      result = 2;
+      break;
+    }
+    case '\x00': case '\x01': case '\x02': case '\x03':
+    case '\x04': case '\x05': case '\x06': case '\x07':
+    case '\x0b': case '\x0e': case '\x0f': case '\x10':
+    case '\x11': case '\x12': case '\x13': case '\x14':
+    case '\x15': case '\x16': case '\x17': case '\x18':
+    case '\x19': case '\x1a': case '\x1b': case '\x1c':
+    case '\x1d': case '\x1e': case '\x1f':
+    {
+      result = 6;
+      break;
+    }
+  }
+  return result;
+}
+
+static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape)
 {
   size_t len = strlen (add);
+  size_t adj_len = len;
+  size_t i;
+  if (escape)
+  {
+    adj_len = 0;
+    for (i = 0; i < len; i++)
+    {
+      adj_len += iot_data_repr_size (add[i]);
+    }
+  }
+  if (holder->free < adj_len)
+  {
+    holder->size += adj_len;
+    holder->free += adj_len;
+    holder->str = realloc (holder->str, holder->size);
+  }
+  if (len == adj_len)
+  {
+    strcat (holder->str, add);
+  }
+  else
+  {
+    static const char * hex = "0123456789abcdef";
+    char *ptr = holder->str + strlen (holder->str);
+    for (i = 0; i < len; i++)
+    {
+      char c = add[i];
+      switch (iot_data_repr_size (c))
+      {
+        case 1:
+        {
+          *ptr++ = c;
+          break;
+        }
+        case 2:
+        {
+          *ptr++ = '\\';
+          switch (c)
+          {
+            case '\"': *ptr++ = '\"'; break;
+            case '\\': *ptr++ = '\\'; break;
+            case '\b': *ptr++ = 'b'; break;
+            case '\f': *ptr++ = 'f'; break;
+            case '\n': *ptr++ = 'n'; break;
+            case '\r': *ptr++ = 'r'; break;
+            case '\t': *ptr++ = 't'; break;
+          }
+          break;
+        }
+        case 6:
+        {
+          *ptr++ = '\\';
+          *ptr++ = 'u';
+          *ptr++ = '0';
+          *ptr++ = '0';
+          *ptr++ = (c & 0x10) ? '1' : '0';
+          *ptr++ = hex[c & 0xf];
+          break;
+        }
+      }
+    }
+    *ptr = '\0';
+  }
+  holder->free -= adj_len;
+}
+
+static void iot_data_strcat (iot_string_holder_t * holder, const char * add)
+{
+  iot_data_strcat_escape (holder, add, true);
+}
+
+static void iot_data_add_quote (iot_string_holder_t * holder)
+{
+  iot_data_strcat_escape (holder, "\"", false);
+}
+
+static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data_t * blob)
+{
+  uint32_t inLen;
+  const uint8_t * data = iot_data_blob (blob, &inLen);
+  char * out = holder->str + strlen (holder->str);
+  size_t len = iot_b64_encodesize (inLen);
+
   if (holder->free < len)
   {
     holder->size += len;
     holder->free += len;
     holder->str = realloc (holder->str, holder->size);
   }
-  strcat (holder->str, add);
+
+  iot_b64_encode (data, inLen, out, holder->free);
   holder->free -= len;
 }
 
@@ -692,14 +850,14 @@ static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * 
     case IOT_DATA_UINT64: sprintf (buff, "%" PRIu64, iot_data_ui64 (data)); break;
     case IOT_DATA_FLOAT32: sprintf (buff, "%f", iot_data_f32 (data)); break;
     case IOT_DATA_FLOAT64: sprintf (buff, "%lf", iot_data_f64 (data)); break;
-    default: sprintf (buff, "%s", iot_data_bool (data) ? "true" : "false"); break;
+    default: strcpy (buff, iot_data_bool (data) ? "true" : "false"); break;
   }
   if (wrap)
   {
-    iot_data_strcat (holder, "\"");
+    iot_data_add_quote (holder);
     strcat (buff, "\"");
   }
-  iot_data_strcat (holder, buff);
+  iot_data_strcat_escape (holder, buff, false);
 }
 
 static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
@@ -708,16 +866,16 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
   {
     case IOT_DATA_STRING:
     {
-      iot_data_strcat (holder, "\"");
+      iot_data_add_quote (holder);
       iot_data_strcat (holder, iot_data_string (data));
-      iot_data_strcat (holder, "\"");
+      iot_data_add_quote (holder);
       break;
     }
     case IOT_DATA_BLOB:
     {
-      uint32_t size;
-      iot_data_blob (data, &size);
-      iot_data_strcat (holder, "\"BLOB\""); // FIXME: base64 encode as string
+      iot_data_add_quote (holder);
+      iot_data_base64_encode (holder, data);
+      iot_data_add_quote (holder);
       break;
     }
     case IOT_DATA_MAP:

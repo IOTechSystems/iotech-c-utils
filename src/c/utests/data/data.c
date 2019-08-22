@@ -154,13 +154,17 @@ static void test_data_string_array (void)
 
 static void test_data_to_json (void)
 {
+  uint8_t data [4] = { 0, 1, 2 , 3 };
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * val = iot_data_alloc_ui32 (1u);
   iot_data_t * key = iot_data_alloc_string ("UInt32", IOT_DATA_REF);
+  iot_data_t * blob = iot_data_alloc_blob (data, sizeof (data), IOT_DATA_REF);
   iot_data_map_add (map, key, val);
   val = iot_data_alloc_string ("Lilith", IOT_DATA_REF);
-  key = iot_data_alloc_string ("Name",IOT_DATA_REF );
+  key = iot_data_alloc_string ("Name", IOT_DATA_REF);
   iot_data_map_add (map, key, val);
+  key = iot_data_alloc_string ("Data", IOT_DATA_REF);
+  iot_data_map_add (map, key, blob);
   char * json = iot_data_to_json (map, false);
   CU_ASSERT (json != NULL)
   printf (" %s ", json);
@@ -304,6 +308,39 @@ static void test_data_from_strings (void)
   iot_data_free (data);
 }
 
+static void test_data_from_base64 (void)
+{
+  iot_data_t * data;
+  const uint8_t * bytes;
+  uint32_t len;
+  data = iot_data_alloc_blob_from_base64 ("SGVsbG8gV29ybGQhCg==");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BLOB)
+  bytes = iot_data_blob (data, &len);
+  CU_ASSERT (len == 13)
+  CU_ASSERT (strncmp ((char *) bytes, "Hello World!", len) == 0)
+  iot_data_free (data);
+}
+
+static void test_data_map_base64_to_blob (void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * key = iot_data_alloc_string ("key1", IOT_DATA_REF);
+  iot_data_t * val = iot_data_alloc_string ("SGVsbG8gV29ybGQhCg==", IOT_DATA_REF);
+  const iot_data_t * data;
+  const uint8_t * bytes;
+  uint32_t len;
+  iot_data_map_add (map, key, val);
+  CU_ASSERT (iot_data_map_base64_to_blob (map, key))
+  data = iot_data_map_get (map, key);
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BLOB)
+  bytes = iot_data_blob (data, &len);
+  CU_ASSERT (len == 13)
+  CU_ASSERT (strncmp ((char *) bytes, "Hello World!", len) == 0)
+  iot_data_free (map);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -316,4 +353,6 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_name_type", test_data_name_type);
   CU_add_test (suite, "data_from_string", test_data_from_string);
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
+  CU_add_test (suite, "data_from_base64", test_data_from_base64);
+  CU_add_test (suite, "date_map_base64_to_blob", test_data_map_base64_to_blob);
 }
