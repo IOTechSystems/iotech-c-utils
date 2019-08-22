@@ -165,9 +165,12 @@ static void test_data_to_json (void)
   iot_data_map_add (map, key, val);
   key = iot_data_alloc_string ("Data", IOT_DATA_REF);
   iot_data_map_add (map, key, blob);
+  key = iot_data_alloc_string ("Escaped", IOT_DATA_REF);
+  val = iot_data_alloc_string ("abc\t\n123\x0b\x1fxyz", IOT_DATA_REF);
+  iot_data_map_add (map, key, val);
   char * json = iot_data_to_json (map, false);
   CU_ASSERT (json != NULL)
-  printf (" %s ", json);
+  CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\"}") == 0)
   free (json);
   iot_data_free (map);
 }
@@ -318,7 +321,7 @@ static void test_data_from_base64 (void)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BLOB)
   bytes = iot_data_blob (data, &len);
   CU_ASSERT (len == 13)
-  CU_ASSERT (strncmp ((char *) bytes, "Hello World!", len) == 0)
+  CU_ASSERT (strncmp ((char *) bytes, "Hello World!\n", len) == 0)
   iot_data_free (data);
 }
 
@@ -337,7 +340,7 @@ static void test_data_map_base64_to_blob (void)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BLOB)
   bytes = iot_data_blob (data, &len);
   CU_ASSERT (len == 13)
-  CU_ASSERT (strncmp ((char *) bytes, "Hello World!", len) == 0)
+  CU_ASSERT (strncmp ((char *) bytes, "Hello World!\n", len) == 0)
   iot_data_free (map);
 }
 
