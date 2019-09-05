@@ -140,7 +140,7 @@ static void cunit_scheduler_create (void)
   CU_ASSERT (iot_schedule_add (scheduler, sched2))
   iot_scheduler_start (scheduler);
 
-  sleep (1);
+  sleep (2);
   iot_scheduler_stop (scheduler);
   CU_ASSERT (atomic_load (&sum_test) == 1u)
   CU_ASSERT (atomic_load (&infinity_test) > 5u)
