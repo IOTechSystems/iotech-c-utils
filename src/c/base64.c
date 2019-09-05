@@ -34,8 +34,7 @@ static const unsigned char dec[] =
   66, 66, 66, 66, 66, 66, 66, 66, 66
 };
 
-static const char enc[] =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char enc[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 size_t iot_b64_encodesize (size_t binsize)
 {

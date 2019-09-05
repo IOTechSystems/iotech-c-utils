@@ -713,27 +713,9 @@ const char * iot_data_array_iter_string (const iot_data_array_iter_t * iter)
 
 static size_t iot_data_repr_size (char c)
 {
-  size_t result = 1;
-  switch (c)
-  {
-    case '\"': case '\\': case '\b': case '\f': case '\n': case '\r': case '\t':
-    {
-      result = 2;
-      break;
-    }
-    case '\x00': case '\x01': case '\x02': case '\x03':
-    case '\x04': case '\x05': case '\x06': case '\x07':
-    case '\x0b': case '\x0e': case '\x0f': case '\x10':
-    case '\x11': case '\x12': case '\x13': case '\x14':
-    case '\x15': case '\x16': case '\x17': case '\x18':
-    case '\x19': case '\x1a': case '\x1b': case '\x1c':
-    case '\x1d': case '\x1e': case '\x1f':
-    {
-      result = 6;
-      break;
-    }
-  }
-  return result;
+  if (strchr ("\"\\\b\f\n\r\t", c)) return 2;
+  if (c >= '\x00' && c <=  '\x1f') return 6;
+  return 1;
 }
 
 static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape)
@@ -762,7 +744,8 @@ static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * a
   else
   {
     static const char * hex = "0123456789abcdef";
-    char *ptr = holder->str + strlen (holder->str);
+    assert (strlen (holder->str) == (holder->size - holder->free - 1));
+    char * ptr = holder->str + holder->size - holder->free - 1;
     for (i = 0; i < len; i++)
     {
       char c = add[i];
@@ -819,8 +802,9 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
 {
   uint32_t inLen;
   const uint8_t * data = iot_data_blob (blob, &inLen);
-  char * out = holder->str + strlen (holder->str);
-  size_t len = iot_b64_encodesize (inLen);
+  assert (strlen (holder->str) == (holder->size - holder->free - 1));
+  char * out = holder->str + holder->size - holder->free - 1;
+  size_t len = iot_b64_encodesize (inLen) - 1; /* Allow for string terminator */
 
   if (holder->free < len)
   {
