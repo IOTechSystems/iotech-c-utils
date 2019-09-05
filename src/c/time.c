@@ -6,18 +6,18 @@
 
 #include "iot/time.h"
 
-#define IOT_TIME_MILLIS 1000U
-#define IOT_TIME_NANOS 1000000000U
+#define IOT_TIME_NANOS_PER_MIL 1000000U
+#define IOT_TIME_NANOS_PER_SEC 1000000000U
 
-static uint64_t iot_time_nanosecs (void)
+static inline uint64_t iot_time_nanosecs (void)
 {
   struct timespec ts;
-  return ((clock_gettime (CLOCK_REALTIME, &ts) == 0) ? ((uint64_t) ts.tv_sec * IOT_TIME_NANOS + ts.tv_nsec) : ((uint64_t) time (NULL) * IOT_TIME_NANOS));
+  return ((clock_gettime (CLOCK_REALTIME, &ts) == 0) ? ((uint64_t) ts.tv_sec * IOT_TIME_NANOS_PER_SEC + ts.tv_nsec) : ((uint64_t) time (NULL) * IOT_TIME_NANOS_PER_SEC));
 }
 
 uint64_t iot_time_msecs ()
 {
-  return iot_time_nanosecs () / (IOT_TIME_NANOS / IOT_TIME_MILLIS);
+  return iot_time_nanosecs () / IOT_TIME_NANOS_PER_MIL;
 }
 
 uint64_t iot_time_nsecs ()
