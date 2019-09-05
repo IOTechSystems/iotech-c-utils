@@ -52,8 +52,8 @@ typedef struct
 typedef struct
 {
   uint32_t pos;     /* offset in the JSON string */
-  int32_t toknext;    /* next token to allocate */
-  int32_t toksuper;   /* superior token node, e.g parent object or array */
+  int32_t toknext;  /* next token to allocate */
+  int32_t toksuper; /* superior token node, e.g parent object or array */
 } iot_json_parser;
 
 /**
@@ -70,5 +70,4 @@ int iot_json_parse (iot_json_parser * parser, const char * json, size_t len, iot
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _IOT_JSON_H_ */
+#endif
