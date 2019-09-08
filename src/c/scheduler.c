@@ -75,7 +75,7 @@ static uint64_t getTimeAsUInt64 (void)
 {
   struct timespec ts;
   clock_gettime (CLOCK_REALTIME, &ts);
-  return (uint64_t) (ts.tv_sec * IOT_BILLION + ts.tv_nsec);
+  return (uint64_t)ts.tv_sec * IOT_BILLION + ts.tv_nsec;
 }
 
 /* Scheduler Thread */
