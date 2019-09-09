@@ -713,9 +713,7 @@ const char * iot_data_array_iter_string (const iot_data_array_iter_t * iter)
 
 static size_t iot_data_repr_size (char c)
 {
-  if (strchr ("\"\\\b\f\n\r\t", c)) return 2;
-  if (c >= '\x00' && c <=  '\x1f') return 6;
-  return 1;
+  return (strchr ("\"\\\b\f\n\r\t", c)) ? 2 : ((c >= '\x00' && c <=  '\x1f') ? 6 : 1);
 }
 
 static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape)
