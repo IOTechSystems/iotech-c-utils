@@ -47,7 +47,7 @@ static void test_data_types (void)
   CU_ASSERT (strcmp (iot_data_type_name (data), "UInt64") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT64)
   iot_data_free (data);
-  data = iot_data_alloc_f32 (5.0);
+  data = iot_data_alloc_f32 (5.0f);
   CU_ASSERT (strcmp (iot_data_type_name (data), "Float32") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_FLOAT32)
   iot_data_free (data);
@@ -185,6 +185,7 @@ static void test_data_from_json (void)
     "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10,\"Retain\":true}],"
     "\"Dummy\": null"
   "}";
+
   iot_data_t * map = iot_data_from_json (bus_config);
   CU_ASSERT (map != NULL)
   iot_data_free (map);
@@ -201,7 +202,7 @@ static void test_data_address (void)
   data = iot_data_alloc_ui32 (5u);
   ui32ptr = (uint32_t*) iot_data_address (data);
   *ui32ptr = 6u;
-  CU_ASSERT (iot_data_ui32 (data) == 6u);
+  CU_ASSERT (iot_data_ui32 (data) == 6u)
   iot_data_free (data);
   data = iot_data_alloc_string ("Hello", IOT_DATA_COPY);
   strptr = (char**) iot_data_address (data);
@@ -240,7 +241,7 @@ static void test_data_from_string (void)
   iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_UINT8, "4");
   CU_ASSERT (data != NULL)
-  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT8);
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT8)
   CU_ASSERT (iot_data_ui8 (data) == 4)
   iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_INT16, "-22222");
@@ -255,8 +256,8 @@ static void test_data_from_string (void)
   iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_INT32, "-2222222");
   CU_ASSERT (data != NULL)
-  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT32);
-  CU_ASSERT (iot_data_i32 (data) == -2222222);
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT32)
+  CU_ASSERT (iot_data_i32 (data) == -2222222)
   iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_UINT32, "4444444");
   CU_ASSERT (data != NULL)
@@ -344,6 +345,96 @@ static void test_data_map_base64_to_blob (void)
   iot_data_free (map);
 }
 
+static void test_data_increment (void)
+{
+  iot_data_t * data;
+  data = iot_data_alloc_i8 (1);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_i8 (data) == 2)
+  iot_data_free (data);
+  data = iot_data_alloc_ui8 (1);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_ui8 (data) == 2)
+  iot_data_free (data);
+  data = iot_data_alloc_i16 (1);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_i16 (data) == 2)
+  iot_data_free (data);
+  data = iot_data_alloc_ui16 (1);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_ui16 (data) == 2)
+  iot_data_free (data);
+  data = iot_data_alloc_i32 (1);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_i32 (data) == 2)
+  iot_data_free (data);
+  data = iot_data_alloc_ui32 (1);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_ui32 (data) == 2)
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (1);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_i64 (data) == 2)
+  iot_data_free (data);
+  data = iot_data_alloc_ui64 (1);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_ui64 (data) == 2)
+  iot_data_free (data);
+  data = iot_data_alloc_f32 (1.0f);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_f32 (data) == 2.0)
+  iot_data_free (data);
+  data = iot_data_alloc_f64 (1.0);
+  iot_data_increment (data);
+  CU_ASSERT (iot_data_f64 (data) == 2.0)
+  iot_data_free (data);
+}
+
+static void test_data_decrement (void)
+{
+  iot_data_t * data;
+  data = iot_data_alloc_i8 (2);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_i8 (data) == 1)
+  iot_data_free (data);
+  data = iot_data_alloc_ui8 (2);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_ui8 (data) == 1)
+  iot_data_free (data);
+  data = iot_data_alloc_i16 (2);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_i16 (data) == 1)
+  iot_data_free (data);
+  data = iot_data_alloc_ui16 (2);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_ui16 (data) == 1)
+  iot_data_free (data);
+  data = iot_data_alloc_i32 (2);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_i32 (data) == 1)
+  iot_data_free (data);
+  data = iot_data_alloc_ui32 (2);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_ui32 (data) == 1)
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (2);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_i64 (data) == 1)
+  iot_data_free (data);
+  data = iot_data_alloc_ui64 (2);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_ui64 (data) == 1)
+  iot_data_free (data);
+  data = iot_data_alloc_f32 (2.0f);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_f32 (data) == 1.0)
+  iot_data_free (data);
+  data = iot_data_alloc_f64 (2.0);
+  iot_data_decrement (data);
+  CU_ASSERT (iot_data_f64 (data) == 1.0)
+  iot_data_free (data);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -358,4 +449,6 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
   CU_add_test (suite, "data_from_base64", test_data_from_base64);
   CU_add_test (suite, "date_map_base64_to_blob", test_data_map_base64_to_blob);
+  CU_add_test (suite, "date_increment", test_data_increment);
+  CU_add_test (suite, "date_decrement", test_data_decrement);
 }
