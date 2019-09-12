@@ -175,6 +175,7 @@ def publishTars (arch)
   def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7']
   def tars = tar_lists[arch]
   def sys = getSystemParam ()
+  def archive = getArchiveParam ()
 
   for (int i = 0; i < tars.size(); ++i)
   {
@@ -183,7 +184,7 @@ def publishTars (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${tars[i]}/release/iotech-iot*.tar.gz",
-        "target": "generic-${releaseType[params.Archive]}/${tars[i]}/",
+        "target": "generic-${releaseType[archive]}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
       ]}"""
