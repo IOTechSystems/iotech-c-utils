@@ -16,10 +16,10 @@ def checkoutStage (arch)
 
 def buildStage (systems, arch)
 {
+  def sys = getSystemParam ()
   for (int i = 0; i < systems.size(); ++i)
   {
     def system = systems[i]
-    def sys = getSystemParam ()
     if ("${sys}" == "${system}" || "${sys}" == 'all')
     {
       sh "./scripts/docker.sh ${system} ${arch} ${env.BUILD_ID} ${params.Board}"
@@ -29,8 +29,9 @@ def buildStage (systems, arch)
 
 def metricsStage (systems, arch)
 {
+  def sys = getSystemParam ()
   publishCoreMetrics (systems, arch)
-  if ("${params.System}" == 'ubuntu-19.04' || "${params.System}" == 'all')
+  if ("${sys}" == 'ubuntu-19.04' || "${sys}" == 'all')
   {
     publishAdvancedMetrics ('ubuntu-19.04', arch)
   }
@@ -57,9 +58,10 @@ def publishMetric (file)
 
 def publishCoreMetrics (systems, arch)
 {
+  def sys = getSystemParam ()
   for (int i = 0; i < systems.size(); ++i)
   {
-    if ("${params.System}" == "${systems[i]}" || "${params.System}" == 'all')
+    if ("${sys}" == "${systems[i]}" || "${sys}" == 'all')
     {
       publishMetric ("${arch}/${systems[i]}/release/release.log")
       publishMetric ("${arch}/${systems[i]}/debug/debug.log")
@@ -92,10 +94,11 @@ def publishDebs (arch)
   def deb_archs = [x86_64: 'amd64', arm64: 'arm64', arm32: 'armhf']
   def deb_name = ['ubuntu-19.04':'disco','ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-10':'buster','debian-9':'stretch','debian-8':'jessie']
   def debs = deb_lists[arch]
+  def sys = getSystemParam ()
 
   for (int i = 0; i < debs.size(); ++i)
   {
-    if ("${params.System}" == "${debs[i]}" || "${params.System}" == 'all')
+    if ("${sys}" == "${debs[i]}" || "${sys}" == 'all')
     {
       def name = deb_name[debs[i]]
       def uploadSpec = """{"files":[{
@@ -116,10 +119,11 @@ def publishApks (arch)
   def apk_lists = [x86_64: apks_x86_64, arm64: apks_arm64, arm32: apks_arm32]
   def apk_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7']
   def apks = apk_lists[arch]
+  def sys = getSystemParam ()
 
   for (int i = 0; i < apks.size(); ++i)
   {
-    if ("${params.System}" == "${apks[i]}" || "${params.System}" == 'all')
+    if ("${sys}" == "${apks[i]}" || "${sys}" == 'all')
     {
       sh "./scripts/package.sh ${apks[i]} ${arch}"
       def uploadSpec = """{"files":[
@@ -142,10 +146,11 @@ def publishRpms (arch)
   def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32]
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def rpms = rpm_lists[arch]
+  def sys = getSystemParam ()
 
   for (int i = 0; i < rpms.size(); ++i)
   {
-    if ("${params.System}" == "${rpms[i]}" || "${params.System}" == 'all')
+    if ("${sys}" == "${rpms[i]}" || "${sys}" == 'all')
     {
       def uploadSpec = """{"files":[{
         "pattern": "${arch}/${rpms[i]}/release/iotech-iot*.rpm",
@@ -165,10 +170,11 @@ def publishTars (arch)
   def tar_lists = [x86_64: tars_x86_64, arm64: tars_arm64, arm32: tars_arm32]
   def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7']
   def tars = tar_lists[arch]
+  def sys = getSystemParam ()
 
   for (int i = 0; i < tars.size(); ++i)
   {
-    if ("${params.System}" == "${tars[i]}" || "${params.System}" == 'all')
+    if ("${sys}" == "${tars[i]}" || "${sys}" == 'all')
     {
       def uploadSpec = """{"files":[
       {
@@ -207,8 +213,9 @@ buildMap = [:]
 for (t in targets)
 {
   def target = t
+  def sys = getSystemParam ()
   def systems = systemMap["${target}"]
-  if (("${params.Arch}" == target || "${params.Arch}" == 'all') && (systems.count ("${params.System}") != 0 || "${params.System}" == 'all'))
+  if (("${params.Arch}" == target || "${params.Arch}" == 'all') && (systems.count ("${sys}") != 0 || "${sys}" == 'all'))
   {
     buildMap[target] = { buildStages (target, systems) }
   }
