@@ -19,7 +19,8 @@ def buildStage (systems, arch)
   for (int i = 0; i < systems.size(); ++i)
   {
     def system = systems[i]
-    if ("${params.System}" == "${system}" || "${params.System}" == 'all')
+    def sys = getSystemParam ()
+    if ("${sys}" == "${system}" || "${sys}" == 'all')
     {
       sh "./scripts/docker.sh ${system} ${arch} ${env.BUILD_ID} ${params.Board}"
     }
@@ -37,7 +38,7 @@ def metricsStage (systems, arch)
 
 def archiveStage (arch)
 {
-  if ("${params.Archive}" != 'None')
+  if ("${params.Archive}" != 'None' && "${params.Archive}" != '')
   {
     publishDebs (arch)
     publishApks (arch)
@@ -190,6 +191,16 @@ def buildStages (target, systems)
     stage ("Metrics ${target}") { metricsStage (systems, target) }
     stage ("Archive ${target}") { archiveStage (target) }
   }
+}
+
+def String getSystemParam ()
+{
+  def ret = "${params.System}"
+  if ("${ret}" == '')
+  {
+    ret = 'ubuntu-19.04'
+  }
+  return ret
 }
 
 buildMap = [:]
