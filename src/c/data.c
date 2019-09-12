@@ -313,6 +313,35 @@ iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * valu
   return NULL;
 }
 
+static void iot_data_inc_dec (iot_data_t * data, int8_t val)
+{
+  assert (data);
+  switch (data->type)
+  {
+    case IOT_DATA_INT8: ((iot_data_value_t*) data)->value.i8 += val; break;
+    case IOT_DATA_UINT8: ((iot_data_value_t*) data)->value.ui8 += val; break;
+    case IOT_DATA_INT16: ((iot_data_value_t*) data)->value.i16 += val; break;
+    case IOT_DATA_UINT16: ((iot_data_value_t*) data)->value.ui16 += val; break;
+    case IOT_DATA_INT32: ((iot_data_value_t*) data)->value.i32 += val; break;
+    case IOT_DATA_UINT32: ((iot_data_value_t*) data)->value.ui32 += val; break;
+    case IOT_DATA_INT64: ((iot_data_value_t*) data)->value.i64 += val; break;
+    case IOT_DATA_UINT64: ((iot_data_value_t*) data)->value.ui64 += val; break;
+    case IOT_DATA_FLOAT32: ((iot_data_value_t*) data)->value.f32 += val; break;
+    case IOT_DATA_FLOAT64: ((iot_data_value_t*) data)->value.f64 += val; break;
+    default: break;
+  }
+}
+
+void iot_data_increment (iot_data_t * data)
+{
+  iot_data_inc_dec (data, 1);
+}
+
+void iot_data_decrement (iot_data_t * data)
+{
+  iot_data_inc_dec (data, -1);
+}
+
 iot_data_t * iot_data_alloc_from_strings (const char * type, const char * value)
 {
   return iot_data_alloc_from_string (iot_data_name_type (type), value);

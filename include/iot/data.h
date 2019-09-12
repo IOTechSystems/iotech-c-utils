@@ -78,6 +78,9 @@ extern iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char
 extern iot_data_t * iot_data_alloc_from_strings (const char * type, const char * value);
 extern iot_data_t * iot_data_alloc_blob_from_base64 (const char * value);
 
+extern void iot_data_increment (iot_data_t * data);
+extern void iot_data_decrement (iot_data_t * data);
+
 extern int8_t iot_data_i8 (const iot_data_t * data);
 extern uint8_t iot_data_ui8 (const iot_data_t * data);
 extern int16_t iot_data_i16 (const iot_data_t * data);
