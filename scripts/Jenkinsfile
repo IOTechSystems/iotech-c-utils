@@ -204,6 +204,7 @@ def String getSystemParam ()
   def ret = "${params.System}"
   if (ret == null)
   {
+    print "System is NULL"
     ret = 'ubuntu-19.04'
   }
   print "System ${ret}"
