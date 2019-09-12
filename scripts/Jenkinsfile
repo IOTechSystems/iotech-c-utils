@@ -199,7 +199,7 @@ def buildStages (target, systems)
   }
 }
 
-def String getSystemParam ()
+def String getSystemParam () 
 {
   def ret = "${params.System}"
   if ("${ret}" == '')
