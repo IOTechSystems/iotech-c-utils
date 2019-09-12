@@ -203,7 +203,7 @@ def String getSystemParam ()
 {
   def ret = "${params.System}"
   print "val ${ret}"
-  if (ret == '')
+  if ("${ret}" == 'null')
   {
     print "System is NULL"
     ret = 'ubuntu-19.04'
@@ -215,7 +215,7 @@ def String getSystemParam ()
 def String getArchParam ()
 {
   def ret = "${params.Arch}"
-  if (ret == null)
+  if ("${ret}" == 'null')
   {
     ret = 'x86_64'
   }
