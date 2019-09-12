@@ -202,7 +202,8 @@ def buildStages (target, systems)
 def String getSystemParam ()
 {
   def ret = "${params.System}"
-  if (ret == null)
+  print "val ${ret}"
+  if (ret == '')
   {
     print "System is NULL"
     ret = 'ubuntu-19.04'
