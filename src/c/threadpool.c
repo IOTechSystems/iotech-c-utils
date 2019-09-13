@@ -47,8 +47,9 @@ typedef struct iot_threadpool_t
   const uint32_t max_jobs;           // Maximum number of queued jobs
   const uint16_t max_threads;        // Maximum number of threads
   const uint16_t id;                 // Thread pool id
+  uint16_t working;                  // Number of threads currently working
+  _Atomic uint16_t created;          // Number of threads created
   uint32_t jobs;                     // Number of jobs in queue
-  uint32_t working;                  // Number of threads currently working
   uint32_t delay;                    // Shutdown delay in milli seconds
   uint32_t next_id;                  // Job id counter
   iot_job_t * front;                 // Front of job queue
@@ -76,7 +77,7 @@ static void * iot_threadpool_thread (void * arg)
 #if defined (__linux__)
   prctl (PR_SET_NAME, name);
 #endif
-
+  atomic_fetch_add (&pool->created, 1u);
   while (true)
   {
     state = iot_component_wait_and_lock (&pool->component, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
@@ -130,6 +131,7 @@ static void * iot_threadpool_thread (void * arg)
   }
   iot_component_unlock (&pool->component);
   iot_log_debug (pool->logger, "Thread exiting", name);
+  atomic_fetch_add (&pool->created, -1);
   return NULL;
 }
 
@@ -147,6 +149,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, co
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   pool->default_prio = default_prio;
   pool->delay = IOT_TP_SHUTDOWN_MIN;
+  atomic_store (&pool->created, 0u);
   pthread_cond_init (&pool->work_cond, NULL);
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
@@ -158,7 +161,10 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, co
     *(uint16_t*) &th->id = n;
     iot_thread_create (&th->tid, iot_threadpool_thread, th, pool->default_prio);
   }
-  /* TODO: Wait until all created threads active or may have shutdown race */
+  while (atomic_load (&pool->created) != threads)
+  {
+    usleep (100); /* Wait until all threads running */
+  }
   return pool;
 }
 
