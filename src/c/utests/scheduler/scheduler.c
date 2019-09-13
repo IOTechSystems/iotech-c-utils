@@ -4,15 +4,14 @@
 #include "scheduler.h"
 
 static atomic_uint_fast32_t sum_test;
-static atomic_uint_fast32_t infinity_test;
-static atomic_uint_fast32_t sum_work1, sum_work2, sum_work3;
+static atomic_uint_fast32_t sum_work1, sum_work2, sum_work3, sum_work5;
 static atomic_uint_fast32_t counter;
 static iot_logger_t *logger = NULL;
 
 static void reset_counters (void)
 {
   atomic_store (&sum_test, 0);
-  atomic_store (&infinity_test, 0);
+  atomic_store (&sum_work5, 0);
   atomic_store (&sum_work1, 0);
   atomic_store (&sum_work2, 0);
   atomic_store (&sum_work3, 0);
@@ -50,7 +49,7 @@ static void do_work4 (void *in)
 
 static void do_work5 (void *in)
 {
-  atomic_fetch_add (&infinity_test, 1u);
+  atomic_fetch_add (&sum_work5, 1u);
 }
 
 static void do_count (void *in)
@@ -143,7 +142,7 @@ static void cunit_scheduler_create (void)
   sleep (2);
   iot_scheduler_stop (scheduler);
   CU_ASSERT (atomic_load (&sum_test) == 1u)
-  CU_ASSERT (atomic_load (&infinity_test) > 5u)
+  CU_ASSERT (atomic_load (&sum_work5) > 5u)
 
   iot_threadpool_free (pool);
   iot_scheduler_free (scheduler);
@@ -183,12 +182,12 @@ static void cunit_scheduler_remove (void)
   iot_schedule_remove (scheduler, sched2);
   iot_schedule_remove (scheduler, sched3);
   CU_ASSERT (atomic_load (&sum_test) == 1u)
-  CU_ASSERT (atomic_load (&infinity_test) > 20u)
+  CU_ASSERT (atomic_load (&sum_work5) > 20u)
 
-  uint32_t temp = atomic_load (&infinity_test);
+  uint32_t temp = atomic_load (&sum_work5);
   sleep (1);
 
-  CU_ASSERT (temp <= (atomic_load (&infinity_test) + 2u))
+  CU_ASSERT (temp <= (atomic_load (&sum_work5) + 2u))
 
   iot_schedule_delete (scheduler, sched3);
   iot_threadpool_free (pool);
@@ -230,13 +229,13 @@ static void cunit_scheduler_delete (void)
   iot_scheduler_stop (scheduler);
 
   CU_ASSERT (atomic_load (&sum_test) == 1u)
-  CU_ASSERT (atomic_load (&infinity_test) > 20u)
+  CU_ASSERT (atomic_load (&sum_work5) > 20u)
 
-  uint32_t temp = atomic_load (&infinity_test);
+  uint32_t temp = atomic_load (&sum_work5);
   iot_scheduler_start (scheduler);
   sleep (1);
 
-  CU_ASSERT (temp == atomic_load (&infinity_test))
+  CU_ASSERT (temp == atomic_load (&sum_work5))
   iot_threadpool_free (pool);
   iot_scheduler_free (scheduler);
 }
