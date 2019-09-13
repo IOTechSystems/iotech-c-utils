@@ -204,9 +204,9 @@ static void cunit_scheduler_delete (void)
 
   iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work3, NULL, IOT_MS_TO_NS (1), 0, 1, NULL);
   iot_schedule_t *sched2 = iot_schedule_create (scheduler, do_work4, NULL, IOT_MS_TO_NS (1), 0, 1, NULL);
-  iot_schedule_t *sched3 = iot_schedule_create (scheduler, do_work5, NULL, IOT_MS_TO_NS (1), 0, 0, NULL);
+  iot_schedule_t *sched3 = iot_schedule_create (scheduler, do_work3, NULL, IOT_MS_TO_NS (1), 0, 0, NULL);
   iot_schedule_t *sched4 = iot_schedule_create (scheduler, do_work3, NULL, IOT_MS_TO_NS (1), 0, 0, NULL);
-  iot_schedule_t *sched5 = iot_schedule_create (scheduler, do_work3, NULL, IOT_MS_TO_NS (1), 0, 0, NULL);
+  iot_schedule_t *sched5 = iot_schedule_create (scheduler, do_work5, NULL, IOT_MS_TO_NS (1), 0, 0, NULL);
   iot_schedule_t *sched6 = iot_schedule_create (scheduler, do_work3, NULL, IOT_MS_TO_NS (1), 0, 0, NULL);
 
   CU_ASSERT (sched1 != NULL)
@@ -225,7 +225,7 @@ static void cunit_scheduler_delete (void)
   iot_scheduler_start (scheduler);
   sleep (1);
 
-  iot_schedule_delete (scheduler, sched3);
+  iot_schedule_delete (scheduler, sched5);
   iot_scheduler_stop (scheduler);
 
   CU_ASSERT (atomic_load (&sum_test) == 1u)
