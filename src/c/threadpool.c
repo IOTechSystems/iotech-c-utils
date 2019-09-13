@@ -141,7 +141,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, co
   pool->logger = logger;
   *(uint16_t*) &pool->id = atomic_fetch_add (&pool_id, 1u);
   iot_logger_add_ref (logger);
-  iot_log_info (logger, "iot_threadpool_alloc (threads: %u max jobs: %u)", threads, max_jobs);
+  iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max jobs: %u)", threads, max_jobs);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
   *(uint16_t*) &pool->max_threads = threads;
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
@@ -332,9 +332,10 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   iot_logger_t * logger = NULL;
   iot_threadpool_t * pool;
   const char * name;
-  uint32_t threads, jobs, delay;
+  uint16_t threads;
+  uint32_t jobs, delay;
   const iot_data_t * value = iot_data_string_map_get (map, "Threads");
-  threads = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_THREADS_DEFAULT;
+  threads = value ? (uint16_t) iot_data_i64 (value) : IOT_TP_THREADS_DEFAULT;
   value = iot_data_string_map_get (map, "MaxJobs");
   jobs = value ? (uint32_t) iot_data_i64 (value) : IOT_TP_JOBS_DEFAULT;
   value = iot_data_string_map_get (map, "ShutdownDelay");
