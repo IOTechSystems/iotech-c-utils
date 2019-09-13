@@ -24,7 +24,7 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  * @param logger             logger, can be NULL
  * @return iot_threadpool_t  created thread pool on success, NULL on error
  */
-extern iot_threadpool_t * iot_threadpool_alloc (uint32_t num_threads, uint32_t max_jobs, const int * default_prio, iot_logger_t * logger);
+extern iot_threadpool_t * iot_threadpool_alloc (uint16_t num_threads, uint32_t max_jobs, const int * default_prio, iot_logger_t * logger);
 
 /**
  * @brief Add work to the thread pool

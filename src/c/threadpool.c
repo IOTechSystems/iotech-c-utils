@@ -44,8 +44,8 @@ typedef struct iot_threadpool_t
 {
   iot_component_t component;         // Component base type
   iot_thread_t * thread_array;       // Array of threads
-  const uint32_t max_threads;        // Maximum number of threads
   const uint32_t max_jobs;           // Maximum number of queued jobs
+  const uint16_t max_threads;        // Maximum number of threads
   const uint16_t id;                 // Thread pool id
   uint32_t jobs;                     // Number of jobs in queue
   uint32_t working;                  // Number of threads currently working
@@ -133,7 +133,7 @@ static void * iot_threadpool_thread (void * arg)
   return NULL;
 }
 
-iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, const int * default_prio, iot_logger_t * logger)
+iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, const int * default_prio, iot_logger_t * logger)
 {
   static _Atomic uint16_t pool_id = ATOMIC_VAR_INIT (0);
 
@@ -143,7 +143,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   iot_logger_add_ref (logger);
   iot_log_info (logger, "iot_threadpool_alloc (threads: %u max jobs: %u)", threads, max_jobs);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
-  *(uint32_t*) &pool->max_threads = threads;
+  *(uint16_t*) &pool->max_threads = threads;
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   pool->default_prio = default_prio;
   pool->delay = IOT_TP_SHUTDOWN_MIN;
@@ -151,7 +151,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint32_t threads, uint32_t max_jobs, co
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
   iot_component_init (&pool->component, IOT_THREADPOOL_FACTORY, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
-  for (uint32_t n = 0; n < pool->max_threads; n++)
+  for (uint16_t n = 0; n < pool->max_threads; n++)
   {
     iot_thread_t * th = &pool->thread_array[n];
     th->pool = pool;
