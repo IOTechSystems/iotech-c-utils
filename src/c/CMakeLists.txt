@@ -2,7 +2,7 @@
 
 if (DEFINED CMAKE_C_COMPILER_ID)
   if (CMAKE_C_COMPILER_ID MATCHES GNU)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Wmissing-prototypes")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Wmissing-prototypes -Werror=implicit-function-declaration")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -pipe")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
     if (IOT_BUILD_LCOV)
