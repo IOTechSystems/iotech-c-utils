@@ -165,9 +165,9 @@ static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_l
 #if defined (__linux__)
   prctl (PR_GET_NAME, tname);
 #endif
-  pthread_mutex_lock (&logger->component.mutex);
+  iot_component_lock (&logger->component);
   fprintf (fd, "[%s:%" PRIu64 ":%s:%s] %s\n", tname, (uint64_t) timestamp, logger->name ? logger->name : "default", iot_log_levels[level], message);
-  pthread_mutex_unlock (&logger->component.mutex);
+  iot_component_unlock (&logger->component);
 }
 
 void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)

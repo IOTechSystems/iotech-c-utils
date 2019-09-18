@@ -65,21 +65,22 @@ static void * iot_threadpool_thread (void * arg)
 {
   iot_thread_t * th = (iot_thread_t*) arg;
   iot_threadpool_t * pool = th->pool;
+  iot_component_t * comp = &pool->component;
   pthread_t tid = pthread_self ();
   int priority = iot_thread_get_priority (tid);
   char name[IOT_PRCTL_NAME_MAX];
   iot_component_state_t state;
 
   snprintf (name, IOT_PRCTL_NAME_MAX, "iot-%" PRIu16 "-%" PRIu16, th->pool->id, th->id);
-  iot_log_debug (pool->logger, "Thread %s starting", name);
-
 #if defined (__linux__)
   prctl (PR_SET_NAME, name);
 #endif
+  iot_log_debug (pool->logger, "Thread %s starting", name);
+
   atomic_fetch_add (&pool->created, 1u);
   while (true)
   {
-    state = iot_component_wait_and_lock (&pool->component, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+    state = iot_component_wait_and_lock (comp, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
 
     if (state == IOT_COMPONENT_DELETED)
     {
@@ -104,7 +105,7 @@ static void * iot_threadpool_thread (void * arg)
         pthread_cond_broadcast (&pool->queue_cond); // Signal now space in job queue
       }
       pool->working++;
-      iot_component_unlock (&pool->component);
+      iot_component_unlock (comp);
       if (job.prio_set && (job.priority != priority)) // If required, set thread priority
       {
         if (iot_thread_set_priority (tid, job.priority))
@@ -114,21 +115,21 @@ static void * iot_threadpool_thread (void * arg)
       }
       (job.function) (job.arg); // Run job
       iot_log_debug (pool->logger, "Thread completed job #%u", job.id);
-      iot_component_lock (&pool->component);
+      iot_component_lock (comp);
       if (--pool->working == 0)
       {
         pthread_cond_signal (&pool->work_cond); // Signal when no threads working
       }
-      iot_component_unlock (&pool->component);
+      iot_component_unlock (comp);
     }
     else
     {
       iot_log_debug (pool->logger, "Thread waiting for new job");
-      pthread_cond_wait (&pool->job_cond, &pool->component.mutex); // Wait for new job
-      iot_component_unlock (&pool->component);
+      pthread_cond_wait (&pool->job_cond, &comp->mutex); // Wait for new job
+      iot_component_unlock (comp);
     }
   }
-  iot_component_unlock (&pool->component);
+  iot_component_unlock (comp);
   iot_log_debug (pool->logger, "Thread exiting", name);
   atomic_fetch_add (&pool->created, -1);
   return NULL;
