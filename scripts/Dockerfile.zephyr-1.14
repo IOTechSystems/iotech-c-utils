@@ -1,4 +1,4 @@
-FROM docker.iotechsys.com/services/zephyr-builder:1.14
+FROM iotechsys/zephyr-builder:1.14
 MAINTAINER IOTech <support@iotechsys.com>
 COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/
