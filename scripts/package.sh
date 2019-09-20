@@ -9,11 +9,9 @@ APKARCH=x86_64
 case ${ARCH} in
   arm64)
     APKARCH=aarch64
-    break
   ;;
   arm32)
     APKARCH=armv7
-    break
   ;;
 esac
 

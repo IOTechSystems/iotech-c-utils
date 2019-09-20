@@ -7,19 +7,15 @@ ROOT=$(dirname $(dirname $(readlink -f $0)))
 case ${ARCH} in
   armv6l)
     BROOT=${ROOT}/arm32
-    break
   ;;
   armv7l)
     BROOT=${ROOT}/arm32
-    break
   ;;
   aarch64)
     BROOT=${ROOT}/arm64
-    break
   ;;
   x86_64)
     BROOT=${ROOT}/x86_64
-    break
   ;;
   *)
     echo "Unsupported: ${ARCH}"

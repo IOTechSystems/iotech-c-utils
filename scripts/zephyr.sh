@@ -8,7 +8,7 @@ TARGETS="frdm_k64f native_posix"
 if [ -z "${TARGET}" -o "${TARGET}" = "None" ]
 then
   echo "Zephyr Target BOARD not set"
-  exit -1
+  exit 1
 fi
 if [ "${TARGET}" = "all" ]
 then
