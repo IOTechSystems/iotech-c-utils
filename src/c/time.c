@@ -12,12 +12,18 @@
 static inline uint64_t iot_time_nanosecs (void)
 {
   struct timespec ts;
-  return ((clock_gettime (CLOCK_REALTIME, &ts) == 0) ? ((uint64_t) ts.tv_sec * IOT_TIME_NANOS_PER_SEC + ts.tv_nsec) : ((uint64_t) time (NULL) * IOT_TIME_NANOS_PER_SEC));
+  return ((clock_gettime (CLOCK_REALTIME, &ts) == 0) ? ((uint64_t) ts.tv_sec * IOT_TIME_NANOS_PER_SEC + ts.tv_nsec) : 0);
 }
 
 uint64_t iot_time_msecs ()
 {
   return iot_time_nanosecs () / IOT_TIME_NANOS_PER_MIL;
+}
+
+extern uint64_t iot_time_secs (void)
+{
+  struct timespec ts;
+  return (clock_gettime (CLOCK_REALTIME, &ts) == 0) ? ts.tv_sec : 0;
 }
 
 uint64_t iot_time_nsecs ()
