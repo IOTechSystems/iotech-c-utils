@@ -28,10 +28,10 @@ extern uint64_t iot_time_secs (void)
 
 uint64_t iot_time_nsecs ()
 {
-  static atomic_uint_fast64_t lasttime = 0;
+  static atomic_uint_fast64_t lasttime = ATOMIC_VAR_INIT (0);
   uint64_t prev;
   uint64_t result = iot_time_nanosecs ();
-  prev = lasttime;
+  prev = atomic_load (&lasttime);
   do
   {
     if (result <= prev)
