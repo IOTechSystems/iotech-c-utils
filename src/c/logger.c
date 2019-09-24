@@ -12,6 +12,13 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef __ZEPHYR__
+static time_t time (time_t *t)
+{
+  return k_uptime_get () / 1000;
+}
+#endif
+
 #define IOT_PRCTL_NAME_MAX 16
 #define IOT_LOG_LEVELS 6
 
@@ -89,13 +96,6 @@ void iot_log__trace (iot_logger_t * logger, ...)
   iot_logger_log (logger, IOT_LOG_TRACE, args);
   va_end (args);
 }
-
-#ifdef __ZEPHYR__
-static time_t time (time_t *t)
-{
-  return k_uptime_get () / 1000;
-}
-#endif
 
 void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
 {

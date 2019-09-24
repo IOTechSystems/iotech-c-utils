@@ -47,7 +47,7 @@ typedef struct iot_threadpool_t
   const uint32_t max_jobs;           // Maximum number of queued jobs
   const uint16_t id;                 // Thread pool id
   uint16_t working;                  // Number of threads currently working
-  _Atomic uint16_t created;          // Number of threads created
+  atomic_uint_fast16_t created;      // Number of threads created
   uint32_t jobs;                     // Number of jobs in queue
   uint32_t delay;                    // Shutdown delay in milli seconds
   uint32_t next_id;                  // Job id counter
@@ -137,7 +137,7 @@ static void * iot_threadpool_thread (void * arg)
 
 iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, const int * default_prio, iot_logger_t * logger)
 {
-  static _Atomic uint16_t pool_id = ATOMIC_VAR_INIT (0);
+  static atomic_uint_fast16_t pool_id = ATOMIC_VAR_INIT (0);
 
   uint16_t created;
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));

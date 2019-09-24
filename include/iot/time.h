@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+extern uint64_t iot_time_secs (void);
 extern uint64_t iot_time_msecs (void);
 extern uint64_t iot_time_nsecs (void);
 
