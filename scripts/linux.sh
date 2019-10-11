@@ -17,6 +17,10 @@ do
       UTEST=true
       shift 1
     ;;
+    -examples)
+      EXAMPLES=true
+      shift 1
+    ;;
     -valgrind)
       VALG=true
       shift 1
@@ -44,7 +48,7 @@ done
 
 mkdir ${BROOT}/release
 cd ${BROOT}/release
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
 make 2>&1 | tee release.log
 make package
 
@@ -52,9 +56,17 @@ make package
 
 mkdir ${BROOT}/debug
 cd ${BROOT}/debug
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
 make 2>&1 | tee debug.log
 make package
+
+run_examples ()
+{
+  c/examples/scheduler
+  c/examples/data
+  c/examples/container
+  c/examples/container_dynamiclink
+}
 
 # Unit tests
 
@@ -62,6 +74,13 @@ if [ "$UTEST" = "true" ]
 then
   cd ${BROOT}/release
   c/utests/runner/runner -a -j
+fi
+
+# examples
+if [ "$EXAMPLES" = "true"]
+then
+  cd ${BROOT}/release
+  run_examples
 fi
 
 # Coverage
@@ -73,14 +92,10 @@ then
 
   mkdir ${BROOT}/lcov
   cd ${BROOT}/lcov
-  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON ${ROOT}/src
+  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON ${ROOT}/src
   make
 
-  # Run executables
-
-  c/examples/scheduler
-  c/examples/data
-  c/examples/container
+  run_examples
   c/utests/runner/runner -a -j
 
   # Generate coverage html report
@@ -110,5 +125,6 @@ then
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container
+  valgrind $VG_FLAGS --xml-file=container_dl_vg.xml c/examples/container_dynamiclink
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi

@@ -16,11 +16,13 @@ if ("${LINUX_SYS}" STREQUAL "Alpine")
 endif ()
 
 # Set files to compile
-
 set (C_FILES iot.c data.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c)
 if (IOT_BUILD_COMPONENTS)
   set (C_FILES ${C_FILES} container.c)
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIOT_BUILD_COMPONENTS")
+  if (IOT_BUILD_DYNAMIC_LOAD)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIOT_BUILD_DYNAMIC_LOAD")
+  endif ()
 endif ()
 
 # Main library
@@ -28,6 +30,10 @@ endif ()
 add_library (iot SHARED ${C_FILES})
 add_library (iot-static STATIC ${C_FILES})
 set_target_properties (iot PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1)
+if (IOT_BUILD_DYNAMIC_LOAD)
+  target_link_libraries (iot ${CMAKE_DL_LIBS})
+  target_link_libraries (iot-static ${CMAKE_DL_LIBS})
+endif ()
 set_target_properties (iot-static PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1)
 target_include_directories (iot PRIVATE ../../include)
 target_include_directories (iot-static PRIVATE ../../include)
