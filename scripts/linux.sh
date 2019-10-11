@@ -65,7 +65,6 @@ run_examples ()
   c/examples/scheduler
   c/examples/data
   c/examples/container
-  ls -al c/examples
   c/examples/container_dynamiclink
 }
 
