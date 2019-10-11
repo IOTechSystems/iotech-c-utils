@@ -5,6 +5,9 @@
 //
 #include "iot/container.h"
 #include "iot/logger.h"
+#ifdef IOT_BUILD_DYNAMIC_LOAD
+#include <dlfcn.h>
+#endif
 
 #define IOT_COMPONENT_DELTA 4
 
@@ -13,6 +16,12 @@ typedef struct iot_factory_holder_t
   struct iot_factory_holder_t * next;
   const iot_component_factory_t * factory;
 } iot_factory_holder_t;
+
+typedef struct iot_dlhandle_holder_t
+{
+  struct iot_dlhandle_holder_t * next;
+  void * load_handle;
+} iot_dlhandle_holder_t;
 
 typedef struct iot_component_holder_t
 {
@@ -25,6 +34,7 @@ struct iot_container_t
 {
   iot_logger_t * logger;
   iot_factory_holder_t * factories;
+  iot_dlhandle_holder_t * handles;
   iot_component_holder_t ** components;
   uint32_t ccount;
   uint32_t csize;
@@ -52,6 +62,19 @@ static const iot_component_factory_t * iot_container_find_factory_locked (iot_co
   return iter ? iter->factory : NULL;
 }
 
+#ifdef IOT_BUILD_DYNAMIC_LOAD
+static void iot_container_add_handle (iot_container_t * cont,  void * handle)
+{
+  assert (cont && handle);
+  iot_dlhandle_holder_t * holder = malloc (sizeof (*holder));
+  holder->load_handle = handle;
+  pthread_rwlock_wrlock(&cont->lock);
+  holder->next = cont->handles;
+  cont->handles = holder;
+  pthread_rwlock_unlock(&cont->lock);
+}
+#endif
+
 bool iot_container_init (iot_container_t * cont, const char * name, iot_container_config_t * conf)
 {
   assert (conf);
@@ -61,7 +84,66 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
   iot_data_t * map = iot_data_from_json (config);
   iot_data_map_iter_t iter;
   iot_data_map_iter (map, &iter);
-  if (conf->free) (conf->free) (config);
+  if (conf->free)  (conf->free) (config);
+
+  //pre-pass to find the factory to be added to support dynamic loading of libraries
+#ifdef IOT_BUILD_DYNAMIC_LOAD
+  while (iot_data_map_iter_next(&iter))
+  {
+    const char *cname = iot_data_map_iter_string_key(&iter);
+    const iot_component_factory_t *factory = NULL;
+    void *handle = NULL;
+
+    const char * ctype = iot_data_map_iter_string_value (&iter);
+    factory = iot_container_find_factory_locked (cont, ctype);
+    if (!factory)
+    {
+      config = (conf->load)(cname, conf->from);
+      if (config)
+      {
+        iot_data_t *cmap = iot_data_from_json(config);
+        const iot_data_t *value = iot_data_string_map_get(cmap, "Library");
+        if (value)
+        {
+          const char *library_name = (const char *) (iot_data_string(value));
+          handle = dlopen(library_name, RTLD_LAZY);
+          if (handle)
+          {
+            //find the symbol and call config_fn
+            value = iot_data_string_map_get(cmap, "Factory");
+            if (value)
+            {
+              const char *factory_name = (const char *) (iot_data_string(value));
+              const iot_component_factory_t *(*factory_fn)(void);
+              factory_fn = dlsym(handle, factory_name);
+              if (factory_fn)
+              {
+                factory = factory_fn();
+                iot_container_add_factory (cont, factory);
+                iot_container_add_handle (cont, handle);
+              }
+              else
+              {
+                fprintf (stderr, "ERROR: Invalid configuration, Incorrect Factory name\n");
+              }
+            }
+            else
+            {
+              fprintf (stderr, "ERROR, Incomplete configuration, Factory name not available\n");
+              dlclose (handle);
+            }
+          }
+          else
+          {
+            fprintf (stderr, "ERROR, Incomplete configuration, Library name not available\n");
+          }
+        }
+        iot_data_free (cmap);
+      }
+    }
+  }
+#endif
+
   while (iot_data_map_iter_next (&iter))
   {
     const char * cname = iot_data_map_iter_string_key (&iter);
@@ -72,13 +154,13 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
       config = (conf->load) (cname, conf->from);
       if (config)
       {
-        iot_data_t *cmap = iot_data_from_json (config);
-        iot_component_t *comp = (factory->config_fn) (cont, cmap);
+        iot_data_t * cmap = iot_data_from_json (config);
+        iot_component_t * comp = (factory->config_fn) (cont, cmap);
         iot_data_free (cmap);
         if (conf->free) (conf->free) (config);
         if (comp)
         {
-          iot_component_holder_t *ch = malloc (sizeof (*ch));
+          iot_component_holder_t * ch = malloc (sizeof (*ch));
           ch->component = comp;
           ch->name = iot_strdup (cname);
           ch->factory = factory;
@@ -92,6 +174,7 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
       }
     }
   }
+
   iot_data_free (map);
   return ret;
 }
@@ -112,6 +195,15 @@ void iot_container_free (iot_container_t * cont)
     cont->factories = fh->next;
     free (fh);
   }
+#ifdef IOT_BUILD_DYNAMIC_LOAD
+  while (cont->handles)
+  {
+    iot_dlhandle_holder_t *dl_handles = cont->handles;
+    cont->handles = dl_handles->next;
+    dlclose (dl_handles->load_handle);
+    free (dl_handles);
+  }
+#endif
   pthread_rwlock_destroy (&cont->lock);
   free (cont);
 }

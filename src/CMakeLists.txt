@@ -16,8 +16,8 @@ string (REGEX REPLACE "^...." "" VERSION_PATCH ${IOT_DOT_VERSION})
 message (STATUS "IOT ${IOT_DOT_VERSION} for ${CMAKE_SYSTEM_NAME}")
 
 # Configuration variables
-
 set (IOT_BUILD_COMPONENTS ON CACHE BOOL "Build component support")
+set (IOT_BUILD_DYNAMIC_LOAD ON CACHE BOOL "Build dynamic library load support")
 set (IOT_BUILD_LCOV OFF CACHE BOOL "Build LCov")
 
 # Configure for different target systems
