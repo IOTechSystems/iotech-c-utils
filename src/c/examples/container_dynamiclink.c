@@ -87,7 +87,7 @@ static const char * sched_config =
 
 static const char * my_config =
 "{"
-  "\"Library\":\"./libmycomponent.so\","
+  "\"Library\":\"./c/examples/libmycomponent.so\","
   "\"Factory\":\"my_component_factory\","
   "\"MyLogger\":\"logger\""
 "}";
