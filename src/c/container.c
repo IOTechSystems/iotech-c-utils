@@ -129,17 +129,18 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
             }
             else
             {
-              fprintf (stderr, "ERROR, Incomplete configuration, Factory name not available\n");
+              fprintf (stderr, "ERROR: Incomplete configuration, Factory name not available\n");
               dlclose (handle);
             }
           }
           else
           {
-            fprintf (stderr, "ERROR, Incomplete configuration, Library name not available\n");
+            fprintf (stderr, "ERROR: Incomplete configuration, Library name not available\n");
           }
         }
         iot_data_free (cmap);
       }
+      if (conf->free)  (conf->free) (config);
     }
   }
 #endif
