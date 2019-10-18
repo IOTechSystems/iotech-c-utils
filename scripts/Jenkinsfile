@@ -32,9 +32,9 @@ def metricsStage (systems, arch)
 {
   def sys = getSystemParam ()
   publishCoreMetrics (systems, arch)
-  if ("${sys}" == 'ubuntu-19.04' || "${sys}" == 'all')
+  if ("${sys}" == 'ubuntu-19.10' || "${sys}" == 'all')
   {
-    publishAdvancedMetrics ('ubuntu-19.04', arch)
+    publishAdvancedMetrics ('ubuntu-19.10', arch)
   }
 }
 
@@ -209,7 +209,7 @@ def String getSystemParam ()
   def ret = "${params.System}"
   if ("${ret}" == 'null')
   {
-    ret = 'ubuntu-19.04'
+    ret = 'ubuntu-19.10'
   }
   return ret
 }
@@ -274,7 +274,7 @@ pipeline
   parameters
   {
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
-    choice (name: 'System', choices: ['ubuntu-19.04','ubuntu-19.10','ubuntu-18.04','ubuntu-16.04','alpine-3.10','alpine-3.9','debian-10','debian-9','debian-8','centos-8','fedora-30','opensuse-15','photon-30','zephyr-1.14','clearlinux','all'], description: 'System to Build')
+    choice (name: 'System', choices: ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.10','alpine-3.9','debian-10','debian-9','debian-8','centos-8','fedora-30','opensuse-15','photon-30','zephyr-1.14','clearlinux','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','arm64','arm32', 'all'], description: 'Build Host Architecture')
     choice (name: 'Board', choices: ['None','frdm_k64f','native_posix','all'], description: 'Target Board')
   }
