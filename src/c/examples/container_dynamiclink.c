@@ -39,6 +39,8 @@ int main (void)
   iot_component_reconfig (logger, container, reconfig);
   iot_data_free (reconfig);
 
+  sleep (2);
+
   /* Stop everything and clean up */
 
   iot_container_stop (container);
@@ -69,7 +71,8 @@ static const char * logger_config =
 "{"
   "\"Name\":\"console\","
   "\"Level\":\"Info\","
-  "\"Next\":\"file_logger\""
+  "\"Next\":\"file_logger\","
+  "\"Start\": 1"
 "}";
 
 static const char * pool_config =
@@ -82,7 +85,8 @@ static const char * pool_config =
 
 static const char * sched_config =
 "{"
-  "\"ThreadPool\":\"pool\""
+  "\"ThreadPool\":\"pool\","
+  "\"Logger\":\"logger\""
 "}";
 
 static const char * my_config =
