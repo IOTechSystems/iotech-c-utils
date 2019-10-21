@@ -108,3 +108,36 @@ bool iot_component_set_deleted (iot_component_t * component)
 {
   return iot_component_set_state (component, IOT_COMPONENT_DELETED);
 }
+
+char * iot_component_file_config_loader (const char * name, void * from)
+{
+  char * ret = NULL;
+  long size;
+  size_t items;
+  char path [128];
+  FILE * fd;
+
+  strcpy (path, (char*) from);
+  strcat (path, "/");
+  strcat (path, name);
+  strcat (path, ".json");
+  fd = fopen (path, "r");
+  if (fd)
+  {
+    fseek (fd, 0, SEEK_END);
+    size = ftell (fd);
+    rewind (fd);
+    ret = malloc (size + 1);
+    items = fread (ret, size, 1, fd);
+    assert (items == 1);
+    (void) items;
+    ret[size] = 0;
+    fclose (fd);
+  }
+  return ret;
+}
+
+void iot_component_config_free (char *conf)
+{
+  free (conf);
+}
