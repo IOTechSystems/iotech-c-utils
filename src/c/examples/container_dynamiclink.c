@@ -72,7 +72,7 @@ static const char * logger_config =
   "\"Name\":\"console\","
   "\"Level\":\"Info\","
   "\"Next\":\"file_logger\","
-  "\"Start\": 1"
+  "\"Start\": true"
 "}";
 
 static const char * pool_config =
