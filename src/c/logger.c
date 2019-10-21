@@ -103,12 +103,12 @@ void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
   logger->level = level;
 }
 
-iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level)
+iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool self_start)
 {
-  return iot_logger_alloc_custom (name, level, NULL, iot_log_console, NULL);
+  return iot_logger_alloc_custom (name, level, NULL, iot_log_console, NULL, self_start);
 }
 
-iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next)
+iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next, bool self_start)
 {
   assert (name && impl);
   iot_logger_t * logger = calloc (1, sizeof (*logger));
@@ -118,6 +118,7 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
   logger->save = level;
   logger->next = next;
   iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
+  (self_start == true) ? iot_logger_start (logger) : 0;
   return logger;
 }
 
@@ -211,6 +212,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   iot_logger_t * next;
   iot_logger_t * logger;
   const char * name;
+  bool self_start = false;
   iot_log_function_t impl = iot_log_console; /* log to stderr or stdout */
   iot_loglevel_t level = iot_logger_config_level (map);
   const char * to = iot_data_string_map_get_string (map, "To");
@@ -222,8 +224,10 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   }
   name = iot_data_string_map_get_string (map, "Next");
   next = name ? (iot_logger_t*) iot_container_find (cont, name) : NULL;
+  iot_data_t *start = iot_data_string_map_get (map, "Start");
+  self_start = start ? iot_data_bool (start) : false;
 
-  logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next);
+  logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next, self_start);
   return &logger->component;
 }
 

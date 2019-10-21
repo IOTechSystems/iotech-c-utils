@@ -59,8 +59,7 @@ static void do_count (void *in)
 
 static int suite_init (void)
 {
-  logger = iot_logger_alloc ("Test", IOT_LOG_WARN);
-  iot_logger_start (logger);
+  logger = iot_logger_alloc ("Test", IOT_LOG_WARN, true);
   return 0;
 }
 

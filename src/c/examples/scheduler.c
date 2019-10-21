@@ -22,13 +22,9 @@ static void testFunc3 (void *in)
 
 int main (void)
 {
-  iot_logger_t * plogger = iot_logger_alloc ("Scheduler", IOT_LOG_WARN);
-  iot_logger_t * slogger = iot_logger_alloc ("ThreadPool", IOT_LOG_WARN);
-  iot_logger_t * mlogger = iot_logger_alloc ("main", IOT_LOG_INFO);
-
-  iot_logger_start (slogger);
-  iot_logger_start (mlogger);
-  iot_logger_start (plogger);
+  iot_logger_t * plogger = iot_logger_alloc ("Scheduler", IOT_LOG_WARN, true);
+  iot_logger_t * slogger = iot_logger_alloc ("ThreadPool", IOT_LOG_WARN, true);
+  iot_logger_t * mlogger = iot_logger_alloc ("main", IOT_LOG_INFO, true);
 
   /* Create a threadpool */
   iot_log_info (mlogger, "Creating threadpool");
