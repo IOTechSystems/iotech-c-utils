@@ -135,8 +135,8 @@ static void cunit_logger_refcount (void)
 
 static void cunit_logger_selfstart (void)
 {
-  iot_logger_t *logger = iot_logger_alloc_custom ("SelfStart", IOT_LOG_TRACE, NULL, cunit_custom_log_fn, NULL, 1);
-  iot_log_trace (logger, "Test logger start");
+  iot_logger_t *logger = iot_logger_alloc ("MyLogger", IOT_LOG_TRACE, 1);
+  iot_log_trace (logger, "TRACE: Test logger start");
   iot_logger_free (logger);
 }
 
