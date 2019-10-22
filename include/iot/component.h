@@ -67,9 +67,8 @@ extern iot_component_state_t iot_component_wait_and_lock  (iot_component_t * com
 extern iot_component_state_t iot_component_lock (iot_component_t * component);
 extern iot_component_state_t iot_component_unlock (iot_component_t * component);
 
-/* Function to load the configuration from json files and free the memory allocated */
+/* Function to load a JSON configuration from file */
 extern char * iot_component_file_config_loader (const char * name, void * from);
-extern void iot_component_config_free (char *conf);
 
 #ifdef __cplusplus
 }

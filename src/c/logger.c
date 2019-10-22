@@ -224,7 +224,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   }
   name = iot_data_string_map_get_string (map, "Next");
   next = name ? (iot_logger_t*) iot_container_find (cont, name) : NULL;
-  iot_data_t *start = iot_data_string_map_get (map, "Start");
+  const iot_data_t * start = iot_data_string_map_get (map, "Start");
   self_start = start ? iot_data_bool (start) : false;
 
   logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next, self_start);

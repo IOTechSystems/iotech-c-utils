@@ -13,12 +13,10 @@ extern "C" {
 #endif
 
 typedef char * (*iot_container_config_load_fn_t) (const char * name, void * from);
-typedef void (*iot_container_config_free_fn_t) (char * config);
 
 typedef struct iot_container_config_t
 {
   iot_container_config_load_fn_t load;
-  iot_container_config_free_fn_t free;
   void * from;
 } iot_container_config_t;
 

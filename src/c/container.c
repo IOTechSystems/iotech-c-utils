@@ -84,7 +84,7 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
   iot_data_t * map = iot_data_from_json (config);
   iot_data_map_iter_t iter;
   iot_data_map_iter (map, &iter);
-  if (conf->free)  (conf->free) (config);
+  free (config);
 
   //pre-pass to find the factory to be added to support dynamic loading of libraries
 #ifdef IOT_BUILD_DYNAMIC_LOAD
@@ -140,7 +140,7 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
         }
         iot_data_free (cmap);
       }
-      if (conf->free)  (conf->free) (config);
+      free (config);
     }
   }
 #endif
@@ -158,7 +158,7 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
         iot_data_t * cmap = iot_data_from_json (config);
         iot_component_t * comp = (factory->config_fn) (cont, cmap);
         iot_data_free (cmap);
-        if (conf->free) (conf->free) (config);
+        free (config);
         if (comp)
         {
           iot_component_holder_t * ch = malloc (sizeof (*ch));

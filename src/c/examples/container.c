@@ -11,7 +11,7 @@ static char * config_loader (const char * name, void * from);
 
 int main (void)
 {
-  iot_container_config_t config = { config_loader, NULL, NULL };
+  iot_container_config_t config = { config_loader, NULL };
   iot_container_t * container = iot_container_alloc ();
   iot_component_t * logger;
   iot_data_t * reconfig;
@@ -98,11 +98,11 @@ static const char * my_config =
 
 static char * config_loader (const char * name, void * from)
 {
-  if (strcmp (name, "main") == 0) return (char*) main_config;
-  if (strcmp (name, "file_logger") == 0) return (char*) file_logger_config;
-  if (strcmp (name, "logger") == 0) return (char*) logger_config;
-  if (strcmp (name, "pool") == 0) return (char*) pool_config;
-  if (strcmp (name, "scheduler") == 0) return (char*) sched_config;
-  if (strcmp (name, "mycomp") == 0) return (char*) my_config;
+  if (strcmp (name, "main") == 0) return strdup (main_config);
+  if (strcmp (name, "file_logger") == 0) return strdup (file_logger_config);
+  if (strcmp (name, "logger") == 0) return strdup (logger_config);
+  if (strcmp (name, "pool") == 0) return strdup (pool_config);
+  if (strcmp (name, "scheduler") == 0) return strdup (sched_config);
+  if (strcmp (name, "mycomp") == 0) return strdup (my_config);
   return NULL;
 }
