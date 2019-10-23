@@ -62,10 +62,10 @@ make package
 
 run_examples ()
 {
-  scheduler
-  data
-  container
-  container_dl
+  ./scheduler
+  ./data
+  ./container
+  ./container_dl
 }
 
 # Unit tests
