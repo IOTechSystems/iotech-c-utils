@@ -48,7 +48,7 @@ static const char * logger_config =
 
 static const char * my_config =
 "{"
-  "\"Library\":\"./c/examples/libmycomponent.so\","
+  "\"Library\":\"libmycomponent.so\","
   "\"Factory\":\"my_component_factory\","
   "\"MyLogger\":\"logger\""
 "}";

@@ -62,10 +62,10 @@ make package
 
 run_examples ()
 {
-  c/examples/scheduler
-  c/examples/data
-  c/examples/container
-  c/examples/container_dl
+  scheduler
+  data
+  container
+  container_dl
 }
 
 # Unit tests
@@ -79,7 +79,7 @@ fi
 # examples
 if [ "$EXAMPLES" = "true"]
 then
-  cd ${BROOT}/release
+  cd ${BROOT}/release/c/examples
   run_examples
 fi
 
@@ -95,7 +95,9 @@ then
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON ${ROOT}/src
   make
 
+  cd ${BROOT}/lcov/c/examples
   run_examples
+  cd ${BROOT}/lcov
   c/utests/runner/runner -a -j
 
   # Generate coverage html report
