@@ -125,9 +125,10 @@ then
   cd ${BROOT}/debug
   VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
   VG_SUPP="--suppressions=${ROOT}/scripts/valgrind.supp"
+  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:.
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. valgrind $VG_FLAGS $VG_SUPP --xml-file=container_dl_vg.xml c/examples/container_dl
+  valgrind $VG_FLAGS $VG_SUPP --xml-file=container_dl_vg.xml c/examples/container_dl
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi
