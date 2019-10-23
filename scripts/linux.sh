@@ -65,7 +65,7 @@ run_examples ()
   ./scheduler
   ./data
   ./container
-  ./container_dl
+  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./container_dl
 }
 
 # Unit tests
