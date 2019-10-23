@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <inttypes.h>
