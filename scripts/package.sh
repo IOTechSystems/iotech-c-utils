@@ -5,11 +5,12 @@ ARCH=$2
 APKARCH=$3
 VER=$(cat VERSION)
 BUILDER=iotechsys/iotech-apk-builder:0.2.0
-ARCHIVE="${ARCH}/${DIST}/release/iotech-iot-${VER}_${APKARCH}.tar.gz"
+TGZ="iotech-iot-${VER}_${APKARCH}.tar.gz"
 
 build_apk()
 {
   DIST=$1
+  ARCHIVE="${ARCH}/${DIST}/release/${TGZ}"
   mkdir -p "apk/${DIST}"
   cp "${ARCHIVE}" "apk/${DIST}/"
   cp scripts/APKBUILD "apk/${DIST}/."
@@ -20,6 +21,7 @@ build_apk()
 build_dbg_apk()
 {
   DIST=$1
+  ARCHIVE="${ARCH}/${DIST}/release/${TGZ}"
   rm "apk/${DIST}/packager/${APKARCH}/APKINDEX.tar.gz"
   cp "${ARCHIVE}" "apk/${DIST}/"
   sed -e's/pkgname=iotech-iot/&-dbg/' <scripts/APKBUILD >"apk/${DIST}/APKBUILD"
