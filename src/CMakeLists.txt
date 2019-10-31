@@ -22,7 +22,7 @@ set (IOT_BUILD_LCOV OFF CACHE BOOL "Build LCov")
 
 # Configure for different target systems
 
-set (OS_ARCH amd64)
+set (OS_ARCH x86_64)
 set (CPACK_GENERATOR TGZ)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -44,9 +44,7 @@ else ()
       set (OS_ARCH armhf)
     endif ()
     if (EXISTS /etc/alpine-release)
-      if (${OS_ARCH} STREQUAL "amd64")
-        set (OS_ARCH x86_64)
-      elseif (${OS_ARCH} STREQUAL "arm64")
+      if (${OS_ARCH} STREQUAL "arm64")
         set (OS_ARCH aarch64)
       elseif (${OS_ARCH} STREQUAL "armhf")
         set (OS_ARCH armv7)
