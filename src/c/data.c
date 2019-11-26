@@ -82,31 +82,33 @@ typedef struct iot_string_holder_t
 extern void iot_data_init (void);
 extern void iot_data_fini (void);
 
-// Data cache and guard mutex or spin lock
-
-static iot_data_t * iot_data_cache = NULL;
-
 #if defined (_GNU_SOURCE) || defined (__LIBMUSL__)
 #define IOT_HAS_SPINLOCK
 #endif
 
+// Data cache and guard mutex or spin lock. Only enabled for release builds as makes leak checking difficult.
+
+#ifdef NDEBUG
+static iot_data_t * iot_data_cache = NULL;
 #ifdef IOT_HAS_SPINLOCK
 static pthread_spinlock_t iot_data_slock;
 #else
 static pthread_mutex_t iot_data_mutex;
+#endif
 #endif
 
 static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
 
 static void * iot_data_factory_alloc (void)
 {
+  iot_data_t * data;
+#ifdef NDEBUG
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
   pthread_mutex_lock (&iot_data_mutex);
 #endif
-  iot_data_t * data = iot_data_cache;
-  if (data)
+  if ((data = iot_data_cache))
   {
     iot_data_cache = data->next;
   }
@@ -116,12 +118,16 @@ static void * iot_data_factory_alloc (void)
   pthread_mutex_unlock (&iot_data_mutex);
 #endif
   data = (data) ? memset (data, 0, IOT_DATA_BLOCK_SIZE) : calloc (1, IOT_DATA_BLOCK_SIZE);
+#else
+  data = calloc (1, IOT_DATA_BLOCK_SIZE);
+#endif
   atomic_store (&data->refs, 1);
   return data;
 }
 
 static inline void iot_data_factory_free (iot_data_t * data)
 {
+#ifdef NDEBUG
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
@@ -133,6 +139,9 @@ static inline void iot_data_factory_free (iot_data_t * data)
   pthread_spin_unlock (&iot_data_slock);
 #else
   pthread_mutex_unlock (&iot_data_mutex);
+#endif
+#else
+  free (data);
 #endif
 }
 
@@ -172,15 +181,18 @@ void iot_data_init (void)
   _Static_assert (sizeof (iot_data_array_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_blob_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_pair_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+#ifdef NDEBUG
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
 #else
   pthread_mutex_init (&iot_data_mutex, NULL);
 #endif
+#endif
 }
 
 void iot_data_fini (void)
 {
+#ifdef NDEBUG
   while (iot_data_cache)
   {
     iot_data_t * data = iot_data_cache;
@@ -191,6 +203,7 @@ void iot_data_fini (void)
   pthread_spin_destroy (&iot_data_slock);
 #else
   pthread_mutex_destroy (&iot_data_mutex);
+#endif
 #endif
 }
 
@@ -548,7 +561,7 @@ const char * iot_data_string (const iot_data_t * data)
 const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size)
 {
   assert (data && (data->type == IOT_DATA_BLOB));
-  if (size) *size =  ((iot_data_blob_t*) data)->size;
+  if (size) *size = ((iot_data_blob_t*) data)->size;
   return ((iot_data_blob_t*) data)->data;
 }
 
