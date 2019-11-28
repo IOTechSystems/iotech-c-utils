@@ -346,7 +346,7 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   int prio = (int) iot_data_string_map_get_i64 (map, "Priority", -666);
   int affinity = (int) iot_data_string_map_get_i64 (map, "Affinity", IOT_THREAD_NO_AFFINITY);
   uint32_t delay = iot_data_string_map_get_i64 (map, "ShutdownDelay", IOT_TP_SHUTDOWN_MIN);
-  iot_threadpool_t * pool = iot_threadpool_alloc (threads, jobs, (prio == -666) ? &prio : NULL, affinity, logger);
+  iot_threadpool_t * pool = iot_threadpool_alloc (threads, jobs, (prio == -666) ? NULL : &prio, affinity, logger);
   pool->delay = (delay < IOT_TP_SHUTDOWN_MIN) ? IOT_TP_SHUTDOWN_MIN : delay;
   return &pool->component;
 }
