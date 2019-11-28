@@ -716,12 +716,12 @@ const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter)
 
 const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * iter)
 {
-  return iot_data_string (iot_data_map_iter_key (iter));
+  return (iter->pair) ? iot_data_string (iot_data_map_iter_key (iter)) : NULL;
 }
 
 const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter)
 {
-  return iot_data_string (iot_data_map_iter_value (iter));
+  return (iter->pair) ? iot_data_string (iot_data_map_iter_value (iter)) : NULL;
 }
 
 void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter)
