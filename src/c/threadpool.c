@@ -146,7 +146,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, co
   pool->logger = logger;
   *(uint16_t*) &pool->id = atomic_fetch_add (&pool_id, 1u);
   iot_logger_add_ref (logger);
-  iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max jobs: %u)", threads, max_jobs);
+  iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max jobs: %u affinity: %d)", threads, max_jobs, affinity);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   pool->default_prio = default_prio;
