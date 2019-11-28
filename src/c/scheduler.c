@@ -389,13 +389,8 @@ static void iot_schedule_dequeue (iot_schd_queue_t * queue, iot_schedule_t * sch
 
 static iot_component_t * iot_scheduler_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_logger_t * logger;
-  const char * name = iot_data_string_map_get_string (map, "ThreadPool");
-  assert (name);
-  iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find (cont, name);
-  assert (pool);
-  name = iot_data_string_map_get_string (map, "Logger");
-  logger = (name) ? (iot_logger_t*) iot_container_find (cont, name) : NULL;
+  iot_logger_t * logger = (iot_logger_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "Logger"));
+  iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "ThreadPool"));
   return (iot_component_t*) iot_scheduler_alloc (pool, logger);
 }
 

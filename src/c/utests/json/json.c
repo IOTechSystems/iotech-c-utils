@@ -163,11 +163,11 @@ static void cunit_json_parse_config (void)
 
   iot_json_init (&parser);
   static const char * json =
-    "{"
+  "{"
     "\"Interval\": 200000000,"
     "\"Threads\": 10,"
     "\"Topics\": [{ \"Topic\": \"test/tube\", \"Priority\": 10 }]"
-    "}";
+  "}";
 
   count = iot_json_parse (&parser, json, strlen (json), tokens, 20);
   CU_ASSERT (count != 0);

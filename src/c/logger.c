@@ -211,7 +211,6 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
 {
   iot_logger_t * next;
   iot_logger_t * logger;
-  const char * name;
   bool self_start = false;
   iot_log_function_t impl = iot_log_console; /* log to stderr or stdout */
   iot_loglevel_t level = iot_logger_config_level (map);
@@ -222,8 +221,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
     impl = iot_log_file; /* Log to file */
     to += 5;
   }
-  name = iot_data_string_map_get_string (map, "Next");
-  next = name ? (iot_logger_t*) iot_container_find (cont, name) : NULL;
+  next = (iot_logger_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "Next"));
   const iot_data_t * start = iot_data_string_map_get (map, "Start");
   self_start = start ? iot_data_bool (start) : false;
 

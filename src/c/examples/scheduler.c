@@ -28,7 +28,7 @@ int main (void)
 
   /* Create a threadpool */
   iot_log_info (mlogger, "Creating threadpool");
-  iot_threadpool_t * pool = iot_threadpool_alloc (4, 0, NULL, plogger);
+  iot_threadpool_t * pool = iot_threadpool_alloc (4, 0, NULL, IOT_THREAD_NO_AFFINITY, plogger);
 
   /* Create a scheduler */
   iot_log_info (mlogger, "Creating scheduler");

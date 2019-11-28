@@ -31,7 +31,8 @@ int main (void)
   /* Start everything */
 
   iot_container_start (container);
-  sleep (2);
+
+  sleep (5);
 
   /* Find instantiated component - the logger */
 

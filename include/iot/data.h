@@ -100,6 +100,7 @@ extern void iot_data_string_map_add (iot_data_t * map, const char * key, iot_dat
 extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key);
 extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key);
 extern const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key);
+extern int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val);
 extern iot_data_type_t iot_data_map_key_type (const iot_data_t * map);
 extern bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * key);
 
