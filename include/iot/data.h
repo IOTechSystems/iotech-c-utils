@@ -53,7 +53,7 @@ typedef struct iot_data_array_iter_t
 } iot_data_array_iter_t ;
 
 /**
- * @brief Add 1 to data reference
+ * @brief Increment the data reference count
  *
  * The function to increment reference count of data by 1
  *
@@ -71,12 +71,12 @@ extern void iot_data_add_ref (iot_data_t * data);
 extern void iot_data_free (iot_data_t * data);
 
 /**
- * @brief Return the data_type
+ * @brief Get data_type
  *
  * The function to return data_type for the data
  *
- * @param data              Pointer to data
- * @return iot_data_type_t  Datatype from the enum defined in iot_data_type_t
+ * @param data  Pointer to data
+ * @return      Datatype from the enum defined in iot_data_type_t
  */
 extern iot_data_type_t iot_data_type (const iot_data_t * data);
 
@@ -85,8 +85,8 @@ extern iot_data_type_t iot_data_type (const iot_data_t * data);
  *
  * The function to return data_type for the typename
  *
- * @param name              Datatype string
- * @return iot_data_type_t  Datatype from the enum defined in iot_data_type_t
+ * @param name   Datatype string
+ * @return       Datatype from the enum defined in iot_data_type_t
  */
 extern iot_data_type_t iot_data_name_type (const char * name);
 
@@ -95,8 +95,8 @@ extern iot_data_type_t iot_data_name_type (const char * name);
  *
  * The function to return the typename corresponding to data
  *
- * @param data           Pointer to data
- * @return const char *  String that indicates the data_type
+ * @param  data  Pointer to data
+ * @return       String that indicates the data_type
  */
 extern const char * iot_data_type_name (const iot_data_t * data);
 
@@ -105,8 +105,8 @@ extern const char * iot_data_type_name (const iot_data_t * data);
  *
  * The function to return the address allocated for data
  *
- * @param data     Pointer to data
- * @return void *  Pointer that holds the address of data
+ * @param data  Pointer to data
+ * @return      Pointer that holds the address of data
  */
 extern void * iot_data_address (const iot_data_t * data); /* Not for Maps or Arrays */
 
@@ -115,8 +115,8 @@ extern void * iot_data_address (const iot_data_t * data); /* Not for Maps or Arr
  *
  * The function to allocate memory for data_type int8
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_i8 (int8_t val);
 
@@ -125,8 +125,8 @@ extern iot_data_t * iot_data_alloc_i8 (int8_t val);
  *
  * The function to allocate memory for data_type uint8
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_ui8 (uint8_t val);
 
@@ -135,8 +135,8 @@ extern iot_data_t * iot_data_alloc_ui8 (uint8_t val);
  *
  * The function to allocate memory for data_type int16
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_i16 (int16_t val);
 
@@ -145,8 +145,8 @@ extern iot_data_t * iot_data_alloc_i16 (int16_t val);
  *
  * The function to allocate memory for data_type uint16
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_ui16 (uint16_t val);
 
@@ -155,8 +155,8 @@ extern iot_data_t * iot_data_alloc_ui16 (uint16_t val);
  *
  * The function to allocate memory for data_type int32
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_i32 (int32_t val);
 
@@ -165,8 +165,8 @@ extern iot_data_t * iot_data_alloc_i32 (int32_t val);
  *
  * The function to allocate memory for data_type uint32
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_ui32 (uint32_t val);
 
@@ -175,8 +175,8 @@ extern iot_data_t * iot_data_alloc_ui32 (uint32_t val);
  *
  * The function to allocate memory for data_type int64
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_i64 (int64_t val);
 
@@ -185,8 +185,8 @@ extern iot_data_t * iot_data_alloc_i64 (int64_t val);
  *
  * The function to allocate memory for data_type uint64
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
 
@@ -195,8 +195,8 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
  *
  * The function to allocate memory for data_type float
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_f32 (float val);
 
@@ -205,8 +205,8 @@ extern iot_data_t * iot_data_alloc_f32 (float val);
  *
  * The function to allocate memory for data_type double
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_f64 (double val);
 
@@ -215,8 +215,8 @@ extern iot_data_t * iot_data_alloc_f64 (double val);
  *
  * The function to allocate memory for data_type bool
  *
- * @param val            Datavalue
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val  Datavalue
+ * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_bool (bool val);
 
@@ -225,10 +225,10 @@ extern iot_data_t * iot_data_alloc_bool (bool val);
  *
  * The function to allocate memory for a string
  *
- * @param val            String
- * @param ownership      If the ownership is set to IOT_DATA_COPY, input val is duplicated with the address allocated, else
- *                       the address passed is stored
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param val        String
+ * @param ownership  If the ownership is set to IOT_DATA_COPY, input val is duplicated with the address allocated, else
+ *                   the address passed is stored
+ * @return           Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership);
 
@@ -237,11 +237,11 @@ extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_
  *
  * The function to allocate memory for a blob of size passed.
  *
- * @param data           Blob data
- * @param size           Size of the blob to allocate
- * @param ownership      If the ownership is set to IOT_DATA_COPY, a new allocation is made and data is copied to the allocated
- *                       memory, else the address of the data passed is stored
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param data       Blob data
+ * @param size       Size of the blob to allocate
+ * @param ownership  If the ownership is set to IOT_DATA_COPY, a new allocation is made and data is copied to the allocated
+ *                   memory, else the address of the data passed is stored
+ * @return           Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data_ownership_t ownership);
 
@@ -250,8 +250,8 @@ extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data
  *
  * The function to allocate memory for a map with a key type
  *
- * @param key_type       Datatype of the key associated with the map
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param key_type  Datatype of the key associated with the map
+ * @return          Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
 
@@ -260,8 +260,8 @@ extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
  *
  * The function to allocate memory for an array type
  *
- * @param size           Length of the array for allocation
- * @return iot_data_t *  Pointer to the allocated memory
+ * @param size  Length of the array for allocation
+ * @return      Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_array (uint32_t size);
 
@@ -270,9 +270,9 @@ extern iot_data_t * iot_data_alloc_array (uint32_t size);
  *
  * The function to allocate memory of data_type type for a string value
  *
- * @param type           Datatype for memory allocation
- * @param value          String value
- * @return iot_data_t *  Pointer to the allocated memory for valid type, NULL on error
+ * @param type   Datatype for memory allocation
+ * @param value  String value
+ * @return       Pointer to the allocated memory for valid type, NULL on error
  *
  */
 extern iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value);
@@ -282,9 +282,9 @@ extern iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char
  *
  * The function to allocate memory of data_type that correspond to typename for a string value
  *
- * @param type           Typename of the data_type
- * @param value          String value
- * @return iot_data_t *  Pointer to the allocated memory for valid type, NULL on error
+ * @param type   Typename of the data_type
+ * @param value  String value
+ * @return       Pointer to the allocated memory for valid type, NULL on error
  */
 extern iot_data_t * iot_data_alloc_from_strings (const char * type, const char * value);
 
@@ -293,8 +293,8 @@ extern iot_data_t * iot_data_alloc_from_strings (const char * type, const char *
  *
  * The function to allocate memory of data_type blob for base64 decoded data
  *
- * @param value          Data to decode from base64
- * @return iot_data_t *  Pointer to the allocated memory of blob data_type with the base64 decoded value, NULL on error
+ * @param value  Data to decode from base64
+ * @return       Pointer to the allocated memory of blob data_type with the base64 decoded value, NULL on error
  */
 extern iot_data_t * iot_data_alloc_blob_from_base64 (const char * value);
 
@@ -321,8 +321,8 @@ extern void iot_data_decrement (iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data     Data pointer to retrieve value
- * @return int8_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern int8_t iot_data_i8 (const iot_data_t * data);
 
@@ -331,8 +331,8 @@ extern int8_t iot_data_i8 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data      Data pointer to retrieve value
- * @return uint8_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern uint8_t iot_data_ui8 (const iot_data_t * data);
 
@@ -341,8 +341,8 @@ extern uint8_t iot_data_ui8 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data      Data pointer to retrieve value
- * @return int16_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern int16_t iot_data_i16 (const iot_data_t * data);
 
@@ -351,8 +351,8 @@ extern int16_t iot_data_i16 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data       Data pointer to retrieve value
- * @return uint16_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern uint16_t iot_data_ui16 (const iot_data_t * data);
 
@@ -361,8 +361,8 @@ extern uint16_t iot_data_ui16 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data      Data pointer to retrieve value
- * @return int32_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern int32_t iot_data_i32 (const iot_data_t * data);
 
@@ -371,8 +371,8 @@ extern int32_t iot_data_i32 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data       Data pointer to retrieve value
- * @return uint32_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern uint32_t iot_data_ui32 (const iot_data_t * data);
 
@@ -381,8 +381,8 @@ extern uint32_t iot_data_ui32 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data      Data pointer to retrieve value
- * @return int64_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern int64_t iot_data_i64 (const iot_data_t * data);
 
@@ -391,8 +391,8 @@ extern int64_t iot_data_i64 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data       Data pointer to retrieve value
- * @return uint64_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern uint64_t iot_data_ui64 (const iot_data_t * data);
 
@@ -401,8 +401,8 @@ extern uint64_t iot_data_ui64 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data    Data pointer to retrieve value
- * @return float  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern float iot_data_f32 (const iot_data_t * data);
 
@@ -411,8 +411,8 @@ extern float iot_data_f32 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data     Data pointer to retrieve value
- * @return double  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern double iot_data_f64 (const iot_data_t * data);
 
@@ -421,8 +421,8 @@ extern double iot_data_f64 (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data   Data pointer to retrieve value
- * @return bool  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern bool iot_data_bool (const iot_data_t * data);
 
@@ -431,8 +431,8 @@ extern bool iot_data_bool (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data          Data pointer to retrieve value
- * @return const char*  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern const char * iot_data_string (const iot_data_t * data);
 
@@ -441,8 +441,8 @@ extern const char * iot_data_string (const iot_data_t * data);
  *
  * The function to get the value stored in data
  *
- * @param data       Data pointer to retrieve value
- * @return uint16_t  Value stored in the address pointed by data
+ * @param data  Data pointer to retrieve value
+ * @return      Value stored in the address pointed by data
  */
 extern const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size);
 
@@ -469,35 +469,35 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
 extern void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val);
 
 /**
- * @brief  Get value from a map for a key provided
+ * @brief  Get value from the map for a key provided
  *
- * The function to get the value corresponding to an input key from a map
+ * The function to get the value corresponding to an input key from the map
  *
- * @param map            Map to get the value
- * @param key            Input key
- * @return iot_data_t *  Value corresponding to the key
+ * @param map  Map to get the value
+ * @param key  Input key
+ * @return     Pointer to a value corresponding to the key of type iot_data
  */
 extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key);
 
 /**
- * @brief  Get value from a map for a key provided
+ * @brief  Get value from the map for a key provided
  *
- * The function to get the value from a map for an input key provided as a string
+ * The function to get the value from the map for an input key provided as a string
  *
- * @param map            Map to get the value
- * @param key            Input key of type String
- * @return iot_data_t *  Value corresponding to the key
+ * @param map  Map to get the value
+ * @param key  Input key of type String
+ * @return     Pointer to a value corresponding to the key of type iot_data
  */
 extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key);
 
 /**
- * @brief  Get string value from a map for a key provided
+ * @brief  Get string value from the map for a key provided
  *
- * The function to get the string value from a map for an input key provided as a string
+ * The function to get the string value from the map for an input key provided as a string
  *
- * @param map            Map to get the value
- * @param key            Input key of type String
- * @return const char *  String value corresponding to the key
+ * @param map  Map to get the value
+ * @param key  Input key of type String
+ * @return     String value corresponding to the key
  */
 extern const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key);
 
@@ -506,8 +506,8 @@ extern const char * iot_data_string_map_get_string (const iot_data_t * map, cons
  *
  * The function to get the key type of the input map
  *
- * @param map               Input map
- * @return iot_data_type_t  Data type of the map
+ * @param map  Input map
+ * @return     Data type of the map
  */
 extern iot_data_type_t iot_data_map_key_type (const iot_data_t * map);
 
@@ -516,9 +516,9 @@ extern iot_data_type_t iot_data_map_key_type (const iot_data_t * map);
  *
  * The function to decode base64 value in a map store it as a blob for an input key
  *
- * @param map    Input map
- * @param key    Input key
- * @return bool  'true' on Success, 'false' on Failure
+ * @param map  Input map
+ * @param key  Input key
+ * @return     'true' on Success, 'false' on Failure
  */
 extern bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * key);
 
@@ -529,18 +529,18 @@ extern bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * ke
  *
  * @param array  Input array to add an element
  * @param index  Index in an array
- * @param val    Value to add
+ * @param val    Pointer to a value of type iot_data to add
  */
 extern void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val);
 
 /**
- * @brief Get a value at an index from an array
+ * @brief Get a value at an index from then array
  *
- * The function to get the value from an array at a given index
+ * The function to get the value from then array at a given index
  *
- * @param array          Input array
- * @param index          Index of an array to get the value
- * @return iot_data_t *  Data at the index
+ * @param array  Input array
+ * @param index  Index of an array to get the value
+ * @return       Pointer to a value at the index
  */
 extern const iot_data_t * iot_data_array_get (const iot_data_t * array, uint32_t index);
 
@@ -549,18 +549,18 @@ extern const iot_data_t * iot_data_array_get (const iot_data_t * array, uint32_t
  *
  * The function to get the length of the input array
  *
- * @param array      Input array
- * @return uint32_t  Size of the array
+ * @param array  Input array
+ * @return       Size of an array
  */
 extern uint32_t iot_data_array_size (const iot_data_t * array);
 
 /**
- * @brief Initialize iterator for a map
+ * @brief Initialise iterator for a map
  *
- * The function that initializes the iterator to point to the beginning of a map
+ * The function that initialises the iterator to point to the beginning of a map
  *
  * @param map   Input map
- * @param iter  Iterator to initialize
+ * @param iter  Iterator to initialise
  */
 extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter);
 
@@ -570,55 +570,55 @@ extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * ite
  * The function to set the iterator to point to the next element within a map. On reaching end of the map,
  * iterator is set to point to first element in the map.
  *
- * @param iter   Input iterator
- * @return bool  'true' on Success, 'false' when the iterator reaches end of the map
+ * @param iter  Input iterator
+ * @return      'true' on Success, 'false' when the iterator reaches end of the map
  */
 extern bool iot_data_map_iter_next (iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Key from a map referenced by an input iterator
+ * @brief Get Key from the map referenced by an input iterator
  *
- * The function to get the key in a map pointed by the iterator
+ * The function to get the key in a map referenced by the iterator
  *
- * @param iter           Input iterator
- * @return iot_data_t *  Key if iter is valid, NULL otherwise
+ * @param iter  Input iterator
+ * @return      Pointer to the key of type iot_data if iter is valid, NULL otherwise
  */
 extern const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Value from a map referenced by an input iterator
+ * @brief Get Value from the map referenced by an input iterator
  *
- * The function to get the value from a map referenced by an input iterator
+ * The function to get the value from the map referenced by the iterator
  *
- * @param iter           Input iterator
- * @return iot_data_t *  Value if iter is valid, NULL otherwise
+ * @param iter  Input iterator
+ * @return      Pointer to the value of type iot_data if iter is valid, NULL otherwise
  */
 extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Key from a map referenced by an input iterator
+ * @brief Get Key from the map referenced by an input iterator
  *
- * The function to get string type key from a map referenced by an input iterator
+ * The function to get string type key from the map referenced by an input iterator
  *
- * @param iter           Input iterator
- * @return const char *  String type key if iter is valid, NULL otherwise
+ * @param iter  Input iterator
+ * @return      String type key if iter is valid, NULL otherwise
  */
 extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Value from a map referenced by an input iterator
+ * @brief Get Value from the map referenced by an input iterator
  *
- * The function to get the string type value from a map referenced by an input iterator
+ * The function to get the string type value from the map referenced by an input iterator
  *
- * @param iter           Input iterator
- * @return const char *  String type value if iter is valid, NULL otherwise
+ * @param iter  Input iterator
+ * @return      String type value from the map if iter is valid, NULL otherwise
  */
 extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Initialize iterator to an array
+ * @brief Initialise iterator to an array
  *
- * The function to initialize an iterator to to point to an array
+ * The function to initialise an iterator to to point to an array
  *
  * @param array  Input array
  * @param iter   Input iterator
@@ -631,7 +631,7 @@ extern void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t
  * The function to set the iterator to point to the next element in an array
  *
  * @param  iter  Input iterator
- * @return bool  'true' if the iterator index is <= array length, 'false' otherwise
+ * @return       'true' if the iterator index is <= array length, 'false' otherwise
  */
 extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 
@@ -640,30 +640,30 @@ extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
  *
  * The function to return the index of an array referenced by iterator
  *
- * @param  iter      Input iterator
- * @return uint32_t  Index of an array, referenced by iterator
+ * @param  iter  Input iterator
+ * @return       Index of an array, referenced by iterator
  */
 extern uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter);
 
 /**
- * @brief Get the value from an array at an index referenced by iterator
+ * @brief Get the value from the array at an index referenced by iterator
  *
- * The function to return the value from an array at an index referenced by iterator. If iterator index exceeds
+ * The function to return the value from the array at an index referenced by iterator. If iterator index exceeds
  * size of an array, NULL is returned
  *
- * @param  iter          Input iterator
- * @return iot_data_t *  Data value from an array index pointed by iterator if valid, NULL otherwise
+ * @param  iter  Input iterator
+ * @return       Pointer to a data value from the array index pointed by iterator if valid, NULL otherwise
  */
 extern const iot_data_t * iot_data_array_iter_value (const iot_data_array_iter_t * iter);
 
 /**
- * @brief Get the value as string type from an array at an index referenced by iterator
+ * @brief Get the value as string type from the array at an index referenced by iterator
  *
- * The function to return the value of string type from an array at an index referenced by iterator. If iterator index exceeds
+ * The function to return the value of string type from the array at an index referenced by iterator. If iterator index exceeds
  * size of an array, NULL is returned
  *
- * @param  iter           Input iterator
- * @return const char *  Value of string type from an array index pointed by iterator if valid, NULL otherwise
+ * @param  iter  Input iterator
+ * @return       Value of string type from the array index pointed by iterator if valid, NULL otherwise
  */
 extern const char * iot_data_array_iter_string (const iot_data_array_iter_t * iter);
 
@@ -672,9 +672,9 @@ extern const char * iot_data_array_iter_string (const iot_data_array_iter_t * it
  *
  * The function to convert data to a json string
  *
- * @param  data     Input data
- * @param  wrap     wrap data for basic types if set
- * @return char *  json string
+ * @param  data  Input data
+ * @param  wrap  wrap data for basic types if set
+ * @return       json string
  */
 extern char * iot_data_to_json (const iot_data_t * data, bool wrap);
 
@@ -682,9 +682,9 @@ extern char * iot_data_to_json (const iot_data_t * data, bool wrap);
  * @brief Convert json to iot_data_t type
  *
  * The function to convert input json string to iot_data
- * 
+ *
  * @param  json  Input json string
- * @return iot_data_t *  Converted iot_data if input string is a json object, NULL otherwise
+ * @return       Pointer to data of type iot_data if input string is a json object, NULL otherwise
  */
 extern iot_data_t * iot_data_from_json (const char * json);
 
