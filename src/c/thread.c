@@ -93,7 +93,7 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
     cpu_set_t cpus;
     CPU_ZERO (&cpus);
     CPU_SET (affinity, &cpus);
-    pthread_setaffinity_np (tid, sizeof (cpu_set_t), &cpus)
+    pthread_setaffinity_np (*tid, sizeof (cpu_set_t), &cpus);
   }
 #endif
 
