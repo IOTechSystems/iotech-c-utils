@@ -29,13 +29,23 @@ static void * zephyr_func_wrapper (void * data)
 
 #endif
 
-int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const int * prio)
+int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const int * priority, int affinity)
 {
   int ret;
   pthread_attr_t attr;
 
   pthread_attr_init (&attr);
   pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
+
+#if defined (_GNU_SOURCE) && ! defined (__LIBMUSL__)
+  if (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN))
+  {
+    cpu_set_t cpus;
+    CPU_ZERO (&cpus);
+    CPU_SET (affinity, &cpus);
+    pthread_attr_setaffinity_np (&attr, sizeof (cpu_set_t), &cpus);
+  }
+#endif
 
 #ifdef __ZEPHYR__
 
@@ -59,15 +69,15 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
   assert (wrapper);
 
 #else
-  if (prio)
+  if (priority)
 #endif
   {
     struct sched_param param;
 #ifdef __ZEPHYR__
-    param.sched_priority = prio ? *prio : CONFIG_NUM_COOP_PRIORITIES - 1;
+    param.sched_priority = priority ? *priority : CONFIG_NUM_COOP_PRIORITIES - 1;
     pthread_attr_setstack (&attr, stack, IOT_ZEPHYR_STACK_SIZE);
 #else
-    param.sched_priority = *prio;
+    param.sched_priority = *priority;
 #endif
     /* If priority set, also set FIFO scheduling */
 
@@ -76,6 +86,16 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
   }
   ret = pthread_create (tid, &attr, func, arg);
   pthread_attr_destroy (&attr);
+
+#if defined (_GNU_SOURCE) && defined (__LIBMUSL__)
+  if ((ret == 0) && (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN)))
+  {
+    cpu_set_t cpus;
+    CPU_ZERO (&cpus);
+    CPU_SET (affinity, &cpus);
+    pthread_setaffinity_np (*tid, sizeof (cpu_set_t), &cpus);
+  }
+#endif
 
   return ret;
 }

@@ -49,8 +49,7 @@ extern void my_component_stop (my_component_t * comp)
 
 static iot_component_t * my_component_config (iot_container_t * cont, const iot_data_t * map)
 {
-  const char * name = iot_data_string_map_get_string (map, "MyLogger");
-  iot_logger_t * logger = (iot_logger_t*) iot_container_find (cont, name);
+  iot_logger_t * logger = (iot_logger_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "MyLogger"));
   return (iot_component_t*) my_component_alloc (logger);
 }
 

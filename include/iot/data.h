@@ -491,7 +491,7 @@ extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_da
 extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key);
 
 /**
- * @brief  Get string value from the map for a key provided
+ * @brief Get string value from the map for a key provided
  *
  * The function to get the string value from the map for an input key provided as a string
  *
@@ -500,6 +500,24 @@ extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const
  * @return     String value corresponding to the key
  */
 extern const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key);
+
+/**
+ * @brief
+ * @param map
+ * @param key
+ * @param default_val
+ * @return
+ */
+extern int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val);
+
+/**
+ *
+ * @param map
+ * @param key
+ * @param default_val
+ * @return
+ */
+extern bool iot_data_string_map_get_bool (const iot_data_t * map, const char * key, bool default_val);
 
 /**
  * @brief  Get the key type of map

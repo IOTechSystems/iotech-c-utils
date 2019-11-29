@@ -71,7 +71,7 @@ static int suite_clean (void)
 
 static void cunit_scheduler_start (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, -1, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
 
   reset_counters ();
@@ -100,7 +100,7 @@ static void cunit_scheduler_start (void)
 
 static void cunit_scheduler_stop (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, -1, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
 
   reset_counters ();
@@ -122,7 +122,7 @@ static void cunit_scheduler_stop (void)
 
 static void cunit_scheduler_create (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, -1, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
 
   CU_ASSERT (iot_threadpool_start (pool))
@@ -149,7 +149,7 @@ static void cunit_scheduler_create (void)
 
 static void cunit_scheduler_remove (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, -1, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
 
   CU_ASSERT (iot_threadpool_start (pool))
@@ -195,7 +195,7 @@ static void cunit_scheduler_remove (void)
 
 static void cunit_scheduler_delete (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, -1, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
 
   CU_ASSERT (iot_threadpool_start (pool))
@@ -241,7 +241,7 @@ static void cunit_scheduler_delete (void)
 
 static void cunit_scheduler_refcount (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, -1, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
   iot_scheduler_add_ref (scheduler);
   iot_scheduler_free (scheduler);
@@ -252,7 +252,7 @@ static void cunit_scheduler_refcount (void)
 
 static void cunit_scheduler_iot_scheduler_thread_pool (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (4, 0, NULL, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
   assert (pool == iot_scheduler_thread_pool (scheduler));
   iot_scheduler_free (scheduler);
@@ -261,7 +261,7 @@ static void cunit_scheduler_iot_scheduler_thread_pool (void)
 
 static void cunit_scheduler_nrepeat (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (2, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (2, 0, NULL, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
   CU_ASSERT (scheduler != NULL)
 
@@ -283,7 +283,7 @@ static void cunit_scheduler_nrepeat (void)
 
 static void cunit_scheduler_starttime (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (2, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (2, 0, NULL, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
   CU_ASSERT (scheduler != NULL)
 
@@ -305,7 +305,7 @@ static void cunit_scheduler_setpriority (void)
 {
   int prio_max = sched_get_priority_max (SCHED_FIFO);
   int prio_min = sched_get_priority_min (SCHED_FIFO);
-  iot_threadpool_t *pool = iot_threadpool_alloc (2, 0, NULL, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (2, 0, NULL, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (pool, logger);
   CU_ASSERT (scheduler != NULL)
 

@@ -658,6 +658,18 @@ const char * iot_data_string_map_get_string (const iot_data_t * map, const char 
   return data ? iot_data_string (data) : NULL;
 }
 
+int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_INT64)) ? iot_data_i64 (data) : default_val;
+}
+
+bool iot_data_string_map_get_bool (const iot_data_t * map, const char * key, bool default_val)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_BOOL)) ? iot_data_bool (data) : default_val;
+}
+
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 {
   assert (map);
