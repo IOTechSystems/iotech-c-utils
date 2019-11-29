@@ -37,8 +37,8 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
   pthread_attr_init (&attr);
   pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
 
-#ifdef _GNU_SOURCE
-  if (affinity >= 0)
+#if defined (_GNU_SOURCE) && ! defined (__LIBMUSL__)
+  if (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN))
   {
     cpu_set_t cpus;
     CPU_ZERO (&cpus);
@@ -86,6 +86,16 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
   }
   ret = pthread_create (tid, &attr, func, arg);
   pthread_attr_destroy (&attr);
+
+#if defined (_GNU_SOURCE) && defined (__LIBMUSL__)
+  if ((ret == 0) && (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN)))
+  {
+    cpu_set_t cpus;
+    CPU_ZERO (&cpus);
+    CPU_SET (affinity, &cpus);
+    pthread_setaffinity_np (ret, sizeof (cpu_set_t), &cpus)
+  }
+#endif
 
   return ret;
 }
