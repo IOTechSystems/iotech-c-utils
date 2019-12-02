@@ -77,7 +77,7 @@ then
 fi
 
 # examples
-if [ "$EXAMPLES" = "true"]
+if [ "$EXAMPLES" = "true" ]
 then
   cd ${BROOT}/release/c/examples
   run_examples

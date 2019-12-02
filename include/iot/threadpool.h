@@ -17,26 +17,26 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  * The function to allocate memory and initialise a thread pool. This function does not return until all
  * threads have initialised successfully.
  *
- * @param num_threads   Number of threads to be created in the thread pool
- * @param max_jobs      Maximum number of jobs to queue (before blocking)
- * @param default_prio  priority to be set for created threads
- * @param affinity      Processor affinity for the created threads
- * @param logger        Logger, can be NULL
- * @return              Pointer to a created thread pool on success, NULL on error
+ * @param num_threads        Number of threads to be created in the threadpool
+ * @param max_jobs           Maximum number of jobs to queue (before blocking)
+ * @param default_prio       Default priority for created threads (not set if -1)
+ * @param affinity           Processor affinity for pool threads (not set if less than zero)
+ * @param logger             Logger, can be NULL
+ * @return iot_threadpool_t  Created thread pool on success, NULL on error
  */
-extern iot_threadpool_t * iot_threadpool_alloc (uint16_t num_threads, uint32_t max_jobs, const int * default_prio, int affinity, iot_logger_t * logger);
+extern iot_threadpool_t * iot_threadpool_alloc (uint16_t num_threads, uint32_t max_jobs, int default_prio, int affinity, iot_logger_t * logger);
 
 /**
  * @brief Add work to the thread pool
  *
  * The function to add a function to the thread pool's job queue. This function will wait until a space is available in the job queue to add new work.
  *
- * @param  pool      Pool to which the work will be added
- * @param  function  Function to add as work
- * @param  arg       Function argument
- * @param  priority  Priority to run thread at (not set if NULL)
+ * @param  pool          Pool to which the work will be added
+ * @param  function      Function to add as work
+ * @param  arg           Function argument
+ * @param  priority      Priority to run thread at (not set if -1)
  */
-extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, const int * priority);
+extern void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*function) (void*), void * arg, int priority);
 
 /**
  * @brief Try to add work to the thread pool
@@ -44,13 +44,13 @@ extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (
  * The function to add a function to the thread pool's job queue. This function will return the status immediately and doesn't block.
  * Work is not added to the thread pool if the maximum number of queued jobs is exceeded the maximum limit.
  *
- * @param  pool      Pool to which the work will be added
- * @param  function  Function to add as work
- * @param  arg       Function argument
- * @param  priority  Priority to run thread at (not set if NULL)
- * @returns          'true' if the work is successfully added to the pool, 'false' otherwise
+ * @param  pool          Pool to which the work will be added
+ * @param  function      Function to add as work
+ * @param  arg           Function argument
+ * @param  priority      Priority to run thread at (not set if -1)
+ * @returns              whether the work was added. 'true' if the work is successfully added to the pool, 'false' otherwise
  */
-extern bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, const int * priority);
+extern bool iot_threadpool_try_work (iot_threadpool_t * pool, void * (*function) (void*), void * arg, int priority);
 
 /**
  * @brief Wait for all queued jobs to finish

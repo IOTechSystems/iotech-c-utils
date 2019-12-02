@@ -5,6 +5,9 @@
 //
 #include "iot/thread.h"
 
+static int iot_thread_fifo_max_priority = -2;
+static int iot_thread_fifo_min_priority = -2;
+
 #ifdef __ZEPHYR__
 
 typedef struct zephyr_thread_wrap
@@ -29,7 +32,17 @@ static void * zephyr_func_wrapper (void * data)
 
 #endif
 
-int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const int * priority, int affinity)
+bool iot_thread_priority_valid (int priority)
+{
+  if (iot_thread_fifo_max_priority == -2)
+  {
+    iot_thread_fifo_max_priority = sched_get_priority_max (SCHED_FIFO);
+    iot_thread_fifo_min_priority = sched_get_priority_min (SCHED_FIFO);
+  }
+  return (priority >= iot_thread_fifo_min_priority && priority <= iot_thread_fifo_max_priority);
+}
+
+int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity)
 {
   int ret;
   pthread_attr_t attr;
@@ -69,7 +82,7 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
   assert (wrapper);
 
 #else
-  if (priority)
+  if (iot_thread_priority_valid (priority))
 #endif
   {
     struct sched_param param;
@@ -77,7 +90,7 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const 
     param.sched_priority = priority ? *priority : CONFIG_NUM_COOP_PRIORITIES - 1;
     pthread_attr_setstack (&attr, stack, IOT_ZEPHYR_STACK_SIZE);
 #else
-    param.sched_priority = *priority;
+    param.sched_priority = priority;
 #endif
     /* If priority set, also set FIFO scheduling */
 
@@ -113,15 +126,15 @@ int iot_thread_current_get_priority (void)
   return iot_thread_get_priority (pthread_self ());
 }
 
-bool iot_thread_set_priority (pthread_t thread, int prio)
+bool iot_thread_set_priority (pthread_t thread, int priority)
 {
-  struct sched_param param = { .sched_priority = prio };
+  struct sched_param param = { .sched_priority = priority };
   return (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
 }
 
-bool iot_thread_current_set_priority (int prio)
+bool iot_thread_current_set_priority (int priority)
 {
-  return iot_thread_set_priority (pthread_self (), prio);
+  return iot_thread_set_priority (pthread_self (), priority);
 }
 
 void iot_mutex_init (pthread_mutex_t * mutex)
