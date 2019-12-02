@@ -21,7 +21,7 @@ extern "C" {
 
 typedef struct iot_scheduler_t iot_scheduler_t;
 typedef struct iot_schedule_t iot_schedule_t;
-typedef void (*iot_schedule_fn_t) (void * arg);
+typedef void * (*iot_schedule_fn_t) (void * arg);
 
 #define IOT_SCHEDULER_TYPE "IOT::Scheduler"
 

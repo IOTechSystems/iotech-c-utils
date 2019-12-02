@@ -18,43 +18,49 @@ static void reset_counters (void)
   atomic_store (&counter, 0);
 }
 
-static void do_work1 (void *in)
+static void * do_work1 (void *in)
 {
   for (uint32_t i = 0; i < 10; ++i)
   {
     atomic_fetch_add (&sum_work1, 1u);
   }
+  return NULL;
 }
 
-static void do_work2 (void *in)
+static void * do_work2 (void *in)
 {
   for (uint32_t i = 0; i < 20; ++i)
   {
     atomic_fetch_add (&sum_work2, i);
   }
+  return NULL;
 }
 
-static void do_work3 (void *in)
+static void * do_work3 (void *in)
 {
   for (int i = 0; i < 30; ++i)
   {
     atomic_fetch_add (&sum_work3, i);
   }
+  return NULL;
 }
 
-static void do_work4 (void *in)
+static void * do_work4 (void *in)
 {
   atomic_fetch_add (&sum_test, 1u);
+  return NULL;
 }
 
-static void do_work5 (void *in)
+static void * do_work5 (void *in)
 {
   atomic_fetch_add (&sum_work5, 1u);
+  return NULL;
 }
 
-static void do_count (void *in)
+static void * do_count (void *in)
 {
   atomic_fetch_add (&counter, 1u);
+  return NULL;
 }
 
 static int suite_init (void)

@@ -26,7 +26,7 @@
 typedef struct iot_job_t
 {
   struct iot_job_t * prev;           // Pointer to previous job
-  void (*function) (void * arg);     // Function to run
+  void * (*function) (void * arg);   // Function to run
   void * arg;                        // Function's argument
   int priority;                      // Job priority
   uint32_t id;                       // Job id
@@ -174,11 +174,10 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
 
 void iot_threadpool_add_ref (iot_threadpool_t * pool)
 {
-  assert (pool);
-  iot_component_add_ref (&pool->component);
+  if (pool) iot_component_add_ref (&pool->component);
 }
 
-static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, int prio)
+static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void * (*func) (void*), void * arg, int prio)
 {
   iot_job_t * job = pool->cache;
   if (job)
@@ -236,7 +235,7 @@ added:
   pthread_cond_signal (&pool->job_cond); // Signal new job added
 }
 
-bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, int prio)
+bool iot_threadpool_try_work (iot_threadpool_t * pool, void * (*func) (void*), void * arg, int prio)
 {
   assert (pool && func);
   iot_log_trace (pool->logger, "iot_threadpool_try_work()");
@@ -251,7 +250,7 @@ bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), voi
   return ret;
 }
 
-void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, int prio)
+void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*func) (void*), void * arg, int prio)
 {
   assert (pool && func);
   iot_log_trace (pool->logger, "iot_threadpool_add_work()");
