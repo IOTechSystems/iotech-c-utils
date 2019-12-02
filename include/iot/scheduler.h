@@ -97,7 +97,7 @@ extern iot_schedule_t * iot_schedule_create
  *
  * @code
  *
- *    int return = iot_schedule_add(myScheduler, mySchedule);
+ *    bool return = iot_schedule_add(myScheduler, mySchedule);
  *
  * @endcode
  *
@@ -152,7 +152,7 @@ extern void iot_scheduler_stop (iot_scheduler_t * scheduler);
 
 
 /**
- * @brief  Free the resources used by the scheduler
+ * @brief  Free resources used by the scheduler, only if it is the last reference i.e reference count <= 1
  *
  * @code
  *

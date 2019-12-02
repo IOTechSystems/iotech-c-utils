@@ -131,6 +131,12 @@ extern bool iot_component_set_deleted (iot_component_t * component);
  * The function that acquires a lock and blocks the calling thread for the component until the state does not change to state(s) provided.
  * This function releases the lock before returning
  *
+ * @code
+ *
+ *   iot_component_state_t state = iot_component_wait (myComponent, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+ *
+ * @endcode
+ *
  * @param component  Pointer to the component
  * @param states     Component state(s) to check for unblocking
  * @return           State of the component that resulted in unblocking
@@ -142,6 +148,12 @@ extern iot_component_state_t iot_component_wait  (iot_component_t * component, u
  *
  * The function that acquires a lock and blocks the calling thread for the component until the state does not change to state(s) provided.
  * The caller must release the mutex
+ *
+ * @code
+ *
+ *   iot_component_state_t state = iot_component_wait_and_lock (myComponent, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+ *
+ * @endcode
  *
  * @param component  Pointer to the component
  * @param states     Component state(s) to check for unblocking

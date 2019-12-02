@@ -17,9 +17,10 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  * The function to allocate memory and initialise a thread pool. This function does not return until all
  * threads have initialised successfully.
  *
- * @param num_threads   Number of threads to be created in the threadpool
+ * @param num_threads   Number of threads to be created in the thread pool
  * @param max_jobs      Maximum number of jobs to queue (before blocking)
- * @param default_prio  Default priority for created threads
+ * @param default_prio  priority to be set for created threads
+ * @param affinity      Processor affinity for the created threads
  * @param logger        Logger, can be NULL
  * @return              Pointer to a created thread pool on success, NULL on error
  */
@@ -40,7 +41,7 @@ extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (
 /**
  * @brief Try to add work to the thread pool
  *
- * The function to add a function to the thread pool's job queue. This function will never block adn return the status.
+ * The function to add a function to the thread pool's job queue. This function will return the status immediately and doesn't block.
  * Work is not added to the thread pool if the maximum number of queued jobs is exceeded the maximum limit.
  *
  * @param  pool      Pool to which the work will be added
