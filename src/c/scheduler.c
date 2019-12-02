@@ -24,12 +24,12 @@ struct iot_schedule_t
   iot_schedule_t * previous;       /* The previous schedule */
   void (*function) (void * arg);   /* The function called by the schedule */
   void * arg;                      /* Function input arg */
+  iot_threadpool_t * threadpool;   /* Thread pool used to run scheduled function */
+  int priority;                    /* Schedule priority (pool override) */
   uint64_t period;                 /* The period of the schedule, in ns */
   uint64_t start;                  /* The start time of the schedule, in ns, */
   uint64_t repeat;                 /* The number of repetitions, 0 = infinite */
-  int priority;                    /* Thread priority */
   bool scheduled;                  /* A flag to indicate schedule status */
-  bool prio_set;                   /* Whether priority set */
 };
 
 /* Schedule Queue */
@@ -45,8 +45,8 @@ struct iot_scheduler_t
   iot_component_t component;      /* Component base type */
   iot_schd_queue_t queue;         /* Active schedule queue */
   iot_schd_queue_t idle_queue;    /* Idle schedule queue */
-  iot_threadpool_t * threadpool;  /* Thread pool to post jobs to */
   iot_logger_t * logger;          /* Optional logger */
+  pthread_t tid;                  /* Scheduler thread */
   struct timespec schd_time;      /* Time for next schedule */
 };
 
@@ -78,8 +78,8 @@ static uint64_t getTimeAsUInt64 (void)
   return (uint64_t)ts.tv_sec * IOT_BILLION + ts.tv_nsec;
 }
 
-/* Scheduler Thread */
-static void iot_scheduler_thread (void * arg)
+/* Scheduler thread function */
+static void * iot_scheduler_thread (void * arg)
 {
   iot_component_state_t state;
   uint64_t ns;
@@ -126,7 +126,7 @@ static void iot_scheduler_thread (void * arg)
         iot_log_debug (scheduler->logger, "Adding schedule to threadpool");
 
         /* Post the work to the threadpool */
-        iot_threadpool_add_work (scheduler->threadpool, current->function, current->arg, current->prio_set ? &current->priority : NULL);
+        iot_threadpool_add_work (current->threadpool, current->function, current->arg, current->priority);
 
         /* Recalculate the next start time for the schedule */
         current->start = getTimeAsUInt64 () + current->period;
@@ -164,19 +164,17 @@ static void iot_scheduler_thread (void * arg)
     iot_component_unlock (&scheduler->component);
   }
   iot_component_unlock (&scheduler->component);
+  return NULL;
 }
 
 /* Initialise the schedule queue and processing thread */
-iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool, iot_logger_t * logger)
+iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t * logger)
 {
-  assert (pool);
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1, sizeof (*scheduler));
-  scheduler->threadpool = pool;
   iot_component_init (&scheduler->component, IOT_SCHEDULER_FACTORY, (iot_component_start_fn_t) iot_scheduler_start, (iot_component_stop_fn_t) iot_scheduler_stop);
-  iot_threadpool_add_ref (pool);
   scheduler->logger = logger;
   iot_logger_add_ref (logger);
-  iot_threadpool_add_work (pool, iot_scheduler_thread, scheduler, NULL);
+  iot_thread_create (&scheduler->tid, iot_scheduler_thread, scheduler, priority, affinity);
   return scheduler;
 }
 
@@ -184,12 +182,6 @@ void iot_scheduler_add_ref (iot_scheduler_t * scheduler)
 {
   assert (scheduler);
   iot_component_add_ref (&scheduler->component);
-}
-
-iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler)
-{
-  assert (scheduler);
-  return scheduler->threadpool;
 }
 
 /* Start the scheduler thread */
@@ -208,7 +200,7 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
 }
 
 /* Create a schedule and insert it into the queue */
-iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void (*function) (void*), void * arg, uint64_t period, uint64_t start, uint64_t repeat, const int * priority)
+iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void (*function) (void*), void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
   iot_log_trace (scheduler->logger, "iot_schedule_create()");
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));
@@ -217,8 +209,8 @@ iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void (*functi
   schedule->period = period;
   schedule->start = start;
   schedule->repeat = repeat;
-  schedule->priority = (priority) ? *priority : 0;
-  schedule->prio_set = (priority != NULL);
+  schedule->threadpool = pool;
+  schedule->priority = priority;
 
   iot_component_lock (&scheduler->component);
   iot_schedule_enqueue (&scheduler->idle_queue, schedule);
@@ -271,6 +263,7 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
   iot_component_lock (&scheduler->component);
   iot_schedule_dequeue (schedule->scheduled ? &scheduler->queue : &scheduler->idle_queue, schedule);
   iot_component_unlock (&scheduler->component);
+  iot_threadpool_free (schedule->threadpool);
   free (schedule);
 }
 
@@ -294,7 +287,6 @@ void iot_scheduler_free (iot_scheduler_t * scheduler)
     {
       iot_schedule_delete (scheduler, scheduler->idle_queue.front);
     }
-    iot_threadpool_free (scheduler->threadpool);
     iot_logger_free (scheduler->logger);
     iot_component_fini (&scheduler->component);
     free (scheduler);
@@ -360,7 +352,7 @@ static void iot_schedule_dequeue (iot_schd_queue_t * queue, iot_schedule_t * sch
 {
   if (schedule->next == NULL && schedule->previous == NULL)
   {
-    /* If only one schedule exsists in the queue */
+    /* If only one schedule exists in the queue */
     queue->front = NULL;
   }
   else if (schedule->next == NULL && schedule->previous != NULL)
@@ -390,8 +382,9 @@ static void iot_schedule_dequeue (iot_schd_queue_t * queue, iot_schedule_t * sch
 static iot_component_t * iot_scheduler_config (iot_container_t * cont, const iot_data_t * map)
 {
   iot_logger_t * logger = (iot_logger_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "Logger"));
-  iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "ThreadPool"));
-  return (iot_component_t*) iot_scheduler_alloc (pool, logger);
+  int affinity = (int) iot_data_string_map_get_i64 (map, "Affinity", IOT_THREAD_NO_AFFINITY);
+  int prio = (int) iot_data_string_map_get_i64 (map, "Priority", IOT_THREAD_NO_PRIORITY);
+  return (iot_component_t*) iot_scheduler_alloc (prio, affinity, logger);
 }
 
 const iot_component_factory_t * iot_scheduler_factory (void)

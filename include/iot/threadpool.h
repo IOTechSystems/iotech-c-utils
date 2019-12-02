@@ -20,12 +20,12 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  *
  * @param num_threads        number of threads to be created in the threadpool
  * @param max_jobs           maximum number of jobs to queue (before blocking)
- * @param default_prio       default priority for created threads
+ * @param default_prio       default priority for created threads (not set if -1)
  * @param affinity           processor affinity for pool threads (not set if less than zero)
  * @param logger             logger, can be NULL
  * @return iot_threadpool_t  created thread pool on success, NULL on error
  */
-extern iot_threadpool_t * iot_threadpool_alloc (uint16_t num_threads, uint32_t max_jobs, const int * default_prio, int affinity, iot_logger_t * logger);
+extern iot_threadpool_t * iot_threadpool_alloc (uint16_t num_threads, uint32_t max_jobs, int default_prio, int affinity, iot_logger_t * logger);
 
 /**
  * @brief Add work to the thread pool
@@ -36,9 +36,9 @@ extern iot_threadpool_t * iot_threadpool_alloc (uint16_t num_threads, uint32_t m
  * @param  pool          pool to which the work will be added
  * @param  function      function to add as work
  * @param  arg           function argument
- * @param  priority      priority to run thread at (not set if NULL)
+ * @param  priority      priority to run thread at (not set if -1)
  */
-extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, const int * priority);
+extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, int priority);
 
 /**
  * @brief Try to add work to the thread pool
@@ -50,10 +50,10 @@ extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (
  * @param  pool          pool to which the work will be added
  * @param  function      function to add as work
  * @param  arg           function argument
- * @param  priority      priority to run thread at (not set if NULL)
+ * @param  priority      priority to run thread at (not set if -1)
  * @returns bool         whether the work was added
  */
-extern bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, const int * priority);
+extern bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, int priority);
 
 /**
  * @brief Wait for all queued jobs to finish

@@ -28,19 +28,19 @@ int main (void)
 
   /* Create a threadpool */
   iot_log_info (mlogger, "Creating threadpool");
-  iot_threadpool_t * pool = iot_threadpool_alloc (4, 0, NULL, IOT_THREAD_NO_AFFINITY, plogger);
+  iot_threadpool_t * pool = iot_threadpool_alloc (4, 0, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, plogger);
 
   /* Create a scheduler */
   iot_log_info (mlogger, "Creating scheduler");
-  iot_scheduler_t * scheduler = iot_scheduler_alloc (pool, slogger);
+  iot_scheduler_t * scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, slogger);
 
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
 
   /* Create two schedules */
   iot_log_info (mlogger, "Create two schedules");
-  iot_schedule_t * sched1 = iot_schedule_create (scheduler, testFunc1, NULL, IOT_MS_TO_NS (500), 0, 0, NULL);
-  iot_schedule_t * sched2 = iot_schedule_create (scheduler, testFunc2, NULL, IOT_SEC_TO_NS (1), 0, 0, NULL);
+  iot_schedule_t * sched1 = iot_schedule_create (scheduler, testFunc1, NULL, IOT_MS_TO_NS (500), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_t * sched2 = iot_schedule_create (scheduler, testFunc2, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
 
   /* Add two schedules to the scheduler */
   iot_log_info (mlogger,"Add two schedules");
@@ -55,7 +55,7 @@ int main (void)
   /* Create and add a third schedule */
   printf ("\n");
   iot_log_info (mlogger, "Create and add schedule 3");
-  iot_schedule_t * sched3 = iot_schedule_create (scheduler, testFunc3, NULL, IOT_SEC_TO_NS (2), 0, 2, NULL);
+  iot_schedule_t * sched3 = iot_schedule_create (scheduler, testFunc3, NULL, IOT_SEC_TO_NS (2), 0, 2, pool, IOT_THREAD_NO_PRIORITY);
   iot_schedule_add (scheduler, sched3);
   sleep (5);
 

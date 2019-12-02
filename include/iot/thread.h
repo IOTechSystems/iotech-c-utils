@@ -13,14 +13,15 @@ extern "C" {
 #endif
 
 #define IOT_THREAD_NO_AFFINITY -1
+#define IOT_THREAD_NO_PRIORITY -1
 
 typedef void * (*iot_thread_fn_t) (void * arg);
 
-extern int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, const int * priority, int affinity);
+extern int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity);
 extern int iot_thread_current_get_priority (void);
-extern bool iot_thread_current_set_priority (int prio);
+extern bool iot_thread_current_set_priority (int priority);
 extern int iot_thread_get_priority (pthread_t thread);
-extern bool iot_thread_set_priority (pthread_t thread, int prio);
+extern bool iot_thread_set_priority (pthread_t thread, int priority);
 
 extern void iot_mutex_init (pthread_mutex_t * mutex);
 

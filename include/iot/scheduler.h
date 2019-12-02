@@ -32,15 +32,16 @@ typedef void (*iot_schedule_fn_t) (void * arg);
  *
  * @code
  *
- *    iot_scheduler_t * myScheduler  = iot_scheduler_alloc (&thpool);
+ *    iot_scheduler_t * myScheduler  = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
  *
  * @endcode
  *
- * @param  pool              A pointer to the associated thread pool.
- * @param  logger            logger, can be NULL
+ * @param  priority          The thread priority for running the scheduler, (not set if -1).
+ * @param  affinity          The processor affinity for the scheduler (not set if less than zero).
+ * @param  logger            logger, can be NULL.
  * @return iot_scheduler_t   A pointer to the created scheduler. NULL on error.
  */
-extern iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool, iot_logger_t * logger);
+extern iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t * logger);
 
 /**
  * @brief Increment the scheduler reference count
@@ -48,8 +49,6 @@ extern iot_scheduler_t * iot_scheduler_alloc (iot_threadpool_t * pool, iot_logge
  * @param scheduler the scheduler on which to increment the reference count
  */
 extern void iot_scheduler_add_ref (iot_scheduler_t * scheduler);
-
-extern iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler);
 
 /**
  * @brief  Start the scheduler
@@ -82,11 +81,12 @@ extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
  * @param  period             The period of the schedule (in nanoseconds).
  * @param  start              The start time of the schedule (in nanoseconds).
  * @param  repeat             The number of times the schedule should repeat, (0 = infinite).
- * @param  priority           The thread priority for running the schedule, (NULL = not set).
+ * @param  pool               The thread pool used to run the schedule.
+ * @param  priority           The thread priority for running the schedule, (not set if -1).
  * @return iot_schedule       A pointer to the created schedule. NULL on error.
  */
 extern iot_schedule_t * iot_schedule_create
-  (iot_scheduler_t * schd, iot_schedule_fn_t func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, const int * priority);
+  (iot_scheduler_t * schd, iot_schedule_fn_t func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority);
 
 /**
  * @brief  Delete a schedule

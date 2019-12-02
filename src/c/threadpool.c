@@ -30,7 +30,6 @@ typedef struct iot_job_t
   void * arg;                        // Function's argument
   int priority;                      // Job priority
   uint32_t id;                       // Job id
-  bool prio_set;                     // Whether priority set
 } iot_job_t;
 
 typedef struct iot_thread_t
@@ -54,7 +53,7 @@ typedef struct iot_threadpool_t
   iot_job_t * front;                 // Front of job queue
   iot_job_t * rear;                  // Rear of job queue
   iot_job_t * cache;                 // Free job cache
-  const int * default_prio;          // Default thread priority
+  int default_prio;                  // Default thread priority
   int affinity;                      // Pool threads processor affinity
   pthread_cond_t work_cond;          // Work control condition
   pthread_cond_t job_cond;           // Job control condition
@@ -107,7 +106,7 @@ static void * iot_threadpool_thread (void * arg)
       }
       pool->working++;
       iot_component_unlock (comp);
-      if (job.prio_set && (job.priority != priority)) // If required, set thread priority
+      if ((job.priority != IOT_THREAD_NO_PRIORITY) && (job.priority != priority)) // If required, set thread priority
       {
         if (iot_thread_set_priority (tid, job.priority))
         {
@@ -136,7 +135,7 @@ static void * iot_threadpool_thread (void * arg)
   return NULL;
 }
 
-iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, const int * default_prio, int affinity, iot_logger_t * logger)
+iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, int default_prio, int affinity, iot_logger_t * logger)
 {
   static atomic_uint_fast16_t pool_id = ATOMIC_VAR_INIT (0);
 
@@ -146,7 +145,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, co
   pool->logger = logger;
   *(uint16_t*) &pool->id = atomic_fetch_add (&pool_id, 1u);
   iot_logger_add_ref (logger);
-  iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max jobs: %u affinity: %d)", threads, max_jobs, affinity);
+  iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max_jobs: %u default_priority: %d affinity: %d)", threads, max_jobs, default_prio, affinity);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
   pool->default_prio = default_prio;
@@ -179,7 +178,7 @@ void iot_threadpool_add_ref (iot_threadpool_t * pool)
   iot_component_add_ref (&pool->component);
 }
 
-static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
+static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void (*func) (void*), void * arg, int prio)
 {
   iot_job_t * job = pool->cache;
   if (job)
@@ -192,19 +191,18 @@ static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void (*func
   }
   job->function = func;
   job->arg = arg;
-  job->priority = prio ? *prio : 0;
-  job->prio_set = (prio != NULL);
+  job->priority = prio;
   job->prev = NULL;
   job->id = pool->next_id++;
   iot_log_debug (pool->logger, "Added new job #%u", job->id);
 
-  if (job->prio_set) // Order job by priority
+  if (job->priority != IOT_THREAD_NO_PRIORITY) // Order job by priority
   {
     iot_job_t * iter = pool->front;
     iot_job_t * prev = NULL;
     while (iter)
     {
-      if (! iter->prio_set || iter->priority < job->priority)
+      if (iter->priority == IOT_THREAD_NO_PRIORITY || iter->priority < job->priority)
       {
         job->prev = iter;
         if (prev)
@@ -238,7 +236,7 @@ added:
   pthread_cond_signal (&pool->job_cond); // Signal new job added
 }
 
-bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
+bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, int prio)
 {
   assert (pool && func);
   iot_log_trace (pool->logger, "iot_threadpool_try_work()");
@@ -253,7 +251,7 @@ bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*func) (void*), voi
   return ret;
 }
 
-void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, const int * prio)
+void iot_threadpool_add_work (iot_threadpool_t * pool, void (*func) (void*), void * arg, int prio)
 {
   assert (pool && func);
   iot_log_trace (pool->logger, "iot_threadpool_add_work()");
@@ -343,10 +341,10 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   iot_logger_t * logger = (iot_logger_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "Logger"));
   uint16_t threads = (uint16_t) iot_data_string_map_get_i64 (map, "Threads", IOT_TP_THREADS_DEFAULT);
   uint32_t jobs = (uint32_t) iot_data_string_map_get_i64 (map, "MaxJobs", IOT_TP_JOBS_DEFAULT);
-  int prio = (int) iot_data_string_map_get_i64 (map, "Priority", -666);
+  int prio = (int) iot_data_string_map_get_i64 (map, "Priority", IOT_THREAD_NO_PRIORITY);
   int affinity = (int) iot_data_string_map_get_i64 (map, "Affinity", IOT_THREAD_NO_AFFINITY);
   uint32_t delay = iot_data_string_map_get_i64 (map, "ShutdownDelay", IOT_TP_SHUTDOWN_MIN);
-  iot_threadpool_t * pool = iot_threadpool_alloc (threads, jobs, (prio == -666) ? NULL : &prio, affinity, logger);
+  iot_threadpool_t * pool = iot_threadpool_alloc (threads, jobs, prio, affinity, logger);
   pool->delay = (delay < IOT_TP_SHUTDOWN_MIN) ? IOT_TP_SHUTDOWN_MIN : delay;
   return &pool->component;
 }
