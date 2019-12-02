@@ -502,20 +502,26 @@ extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const
 extern const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key);
 
 /**
- * @brief
- * @param map
- * @param key
- * @param default_val
- * @return
+ * @brief Get value corresponding to key from the map, if the datatype of the value is IOT_DATA_INT64
+ *
+ * The function to get int64 value corresponding to key from the map, if the value type is IOT_DATA_INT64, else return default_val
+ *
+ * @param map          Map to get the value
+ * @param key          Key to get the corresponding value
+ * @param default_val  Default Value
+ * @return             Value corresponding to the key if the datatype is int64, else default_val
  */
 extern int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val);
 
 /**
+ * @brief Get value corresponding to key from the map, if the datatype of the value is IOT_DATA_BOOL
  *
- * @param map
- * @param key
- * @param default_val
- * @return
+ * The function to get bool value corresponding to key from the map, if the value type is IOT_DATA_BOOL, else return default_val
+ *
+ * @param map          Map to get the value
+ * @param key          Key to get the corresponding value
+ * @param default_val  Default Value
+ * @return             Value corresponding to the key if the datatype is bool, else default_val
  */
 extern bool iot_data_string_map_get_bool (const iot_data_t * map, const char * key, bool default_val);
 
