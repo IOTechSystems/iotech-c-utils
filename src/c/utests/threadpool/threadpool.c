@@ -26,20 +26,22 @@ static int suite_clean (void)
   return 0;
 }
 
-static void cunit_pool_sleeper (void * arg)
+static void * cunit_pool_sleeper (void * arg)
 {
   (void) arg;
   sleep (1);
+  return NULL;
 }
 
-static void cunit_pool_blocker (void * arg)
+static void * cunit_pool_blocker (void * arg)
 {
   pthread_mutex_t * mutex = (pthread_mutex_t*) arg;
   pthread_mutex_lock (mutex);
   pthread_mutex_unlock (mutex);
+  return NULL;
 }
 
-static void cunit_pool_sole_counter (void * arg)
+static void * cunit_pool_sole_counter (void * arg)
 {
   (void) arg;
   counter++;
@@ -47,15 +49,17 @@ static void cunit_pool_sole_counter (void * arg)
   usleep (500000);
   CU_ASSERT (counter == 1)
   counter--;
+  return NULL;
 }
 
-static void cunit_pool_counter (void * arg)
+static void * cunit_pool_counter (void * arg)
 {
   (void) arg;
   counter++;
+  return NULL;
 }
 
-static void cunit_pool_prio_worker (void * arg)
+static void * cunit_pool_prio_worker (void * arg)
 {
   int prio = *((int*) arg);
   int current = iot_thread_current_get_priority ();
@@ -64,6 +68,7 @@ static void cunit_pool_prio_worker (void * arg)
     printf ("\n**** Is CAP_SYS_NICE set for runner ??? **** prio %d != %d\n", current, prio);
   }
   CU_ASSERT (prio == iot_thread_current_get_priority ())
+  return NULL;
 }
 
 static void cunit_threadpool_priority_range (void)

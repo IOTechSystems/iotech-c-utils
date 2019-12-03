@@ -38,7 +38,7 @@ extern iot_threadpool_t * iot_threadpool_alloc (uint16_t num_threads, uint32_t m
  * @param  arg           function argument
  * @param  priority      priority to run thread at (not set if -1)
  */
-extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, int priority);
+extern void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*function) (void*), void * arg, int priority);
 
 /**
  * @brief Try to add work to the thread pool
@@ -53,7 +53,7 @@ extern void iot_threadpool_add_work (iot_threadpool_t * pool, void (*function) (
  * @param  priority      priority to run thread at (not set if -1)
  * @returns bool         whether the work was added
  */
-extern bool iot_threadpool_try_work (iot_threadpool_t * pool, void (*function) (void*), void * arg, int priority);
+extern bool iot_threadpool_try_work (iot_threadpool_t * pool, void * (*function) (void*), void * arg, int priority);
 
 /**
  * @brief Wait for all queued jobs to finish

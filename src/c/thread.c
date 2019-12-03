@@ -32,16 +32,20 @@ static void * zephyr_func_wrapper (void * data)
 
 #endif
 
-int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity)
+bool iot_thread_priority_valid (int priority)
 {
-  int ret;
-  pthread_attr_t attr;
-
   if (iot_thread_fifo_max_priority == -2)
   {
     iot_thread_fifo_max_priority = sched_get_priority_max (SCHED_FIFO);
     iot_thread_fifo_min_priority = sched_get_priority_min (SCHED_FIFO);
   }
+  return (priority >= iot_thread_fifo_min_priority && priority <= iot_thread_fifo_max_priority);
+}
+
+int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity)
+{
+  int ret;
+  pthread_attr_t attr;
 
   pthread_attr_init (&attr);
   pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
@@ -78,7 +82,7 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int pr
   assert (wrapper);
 
 #else
-  if (priority >= iot_thread_fifo_min_priority && priority <= iot_thread_fifo_max_priority)
+  if (iot_thread_priority_valid (priority))
 #endif
   {
     struct sched_param param;

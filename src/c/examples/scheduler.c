@@ -5,19 +5,22 @@
 //
 #include "iot/iot.h"
 
-static void testFunc1 (void *in)
+static void * testFunc1 (void *in)
 {
   printf ("FN-1 ");
+  return NULL;
 }
 
-static void testFunc2 (void *in)
+static void * testFunc2 (void *in)
 {
   printf ("FN-2 ");
+  return NULL;
 }
 
-static void testFunc3 (void *in)
+static void * testFunc3 (void *in)
 {
   printf ("FN-3 ");
+  return NULL;
 }
 
 int main (void)

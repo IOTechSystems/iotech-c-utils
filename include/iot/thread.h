@@ -22,6 +22,7 @@ extern int iot_thread_current_get_priority (void);
 extern bool iot_thread_current_set_priority (int priority);
 extern int iot_thread_get_priority (pthread_t thread);
 extern bool iot_thread_set_priority (pthread_t thread, int priority);
+extern bool iot_thread_priority_valid (int priority);
 
 extern void iot_mutex_init (pthread_mutex_t * mutex);
 
