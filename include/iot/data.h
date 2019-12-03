@@ -6,6 +6,11 @@
 #ifndef _IOT_DATA_H_
 #define _IOT_DATA_H_
 
+/**
+ * @file
+ * @brief IOTech Data representation API
+ */
+
 #include "iot/os.h"
 
 #ifdef __cplusplus

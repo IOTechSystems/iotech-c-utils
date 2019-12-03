@@ -6,6 +6,11 @@
 #ifndef _IOT_LOGGER_H_
 #define _IOT_LOGGER_H_
 
+/**
+ * @file
+ * @brief IOTech Logger API
+ */
+
 #include "iot/component.h"
 
 #ifdef __cplusplus

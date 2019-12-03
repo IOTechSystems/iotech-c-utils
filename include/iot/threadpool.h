@@ -1,6 +1,11 @@
 #ifndef _IOT_THREADPOOL_H_
 #define _IOT_THREADPOOL_H_
 
+/**
+ * @file
+ * @brief IOTech Thread Pool API
+ */
+
 #include "iot/logger.h"
 
 #ifdef __cplusplus

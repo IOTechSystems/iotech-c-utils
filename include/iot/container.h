@@ -6,6 +6,11 @@
 #ifndef _IOT_CONTAINER_H_
 #define _IOT_CONTAINER_H_
 
+/**
+ * @file
+ * @brief IOTech Container API
+ */
+
 #include "iot/component.h"
 
 #ifdef __cplusplus

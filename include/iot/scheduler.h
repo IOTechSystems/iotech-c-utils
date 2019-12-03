@@ -6,6 +6,11 @@
 #ifndef _IOT_SCHEDULER_H_
 #define _IOT_SCHEDULER_H_
 
+/**
+ * @file
+ * @brief IOTech Scheduler API
+ */
+
 #include "iot/threadpool.h"
 #include "iot/component.h"
 #include "iot/logger.h"
