@@ -157,11 +157,14 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   iot_component_init (&pool->component, IOT_THREADPOOL_FACTORY, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
   for (created = 0; created < threads; created++)
   {
+    int ret;
     iot_thread_t * th = &pool->thread_array[created];
     th->pool = pool;
     th->id = created;
-    if (iot_thread_create (&th->tid, iot_threadpool_thread, th, default_prio, affinity) != 0)
+    ret = iot_thread_create (&th->tid, iot_threadpool_thread, th, default_prio, affinity);
+    if (ret != 0)
     {
+      iot_log_warn (logger, "iot_threadpool_alloc failed to create thread. ret: %d", ret);
       break;
     }
   }

@@ -82,7 +82,7 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int pr
   assert (wrapper);
 
 #else
-  if (iot_thread_priority_valid (priority))
+  if (iot_thread_priority_valid (priority) && (getuid () == 0))
 #endif
   {
     struct sched_param param;
