@@ -41,7 +41,7 @@ bool iot_thread_priority_valid (int priority)
   return (priority >= min_priority && priority <= max_priority);
 }
 
-int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity)
+bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger)
 {
   int ret;
   pthread_attr_t attr;
@@ -94,10 +94,13 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int pr
 #endif
     /* If priority set, also set FIFO scheduling */
 
-    pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
-    pthread_attr_setschedparam (&attr, &param);
+    ret = pthread_attr_setschedpolicy (&attr, SCHED_FIFO);
+    if (ret != 0) iot_log_warn (logger, "pthread_attr_setschedpolicy failed ret: %d", ret);
+    ret = pthread_attr_setschedparam (&attr, &param);
+    if (ret != 0) iot_log_warn (logger, "pthread_attr_setschedparam failed ret: %d", ret);
   }
   ret = pthread_create (tid, &attr, func, arg);
+  if (ret != 0) iot_log_error (logger, "pthread_create failed ret: %d", ret);
   pthread_attr_destroy (&attr);
 
 #if defined (_GNU_SOURCE) && defined (__LIBMUSL__)
@@ -110,7 +113,7 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int pr
   }
 #endif
 
-  return ret;
+  return ret == 0;
 }
 
 int iot_thread_get_priority (pthread_t thread)
