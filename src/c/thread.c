@@ -5,9 +5,6 @@
 //
 #include "iot/thread.h"
 
-static int iot_thread_fifo_max_priority = -2;
-static int iot_thread_fifo_min_priority = -2;
-
 #ifdef __ZEPHYR__
 
 typedef struct zephyr_thread_wrap
@@ -34,12 +31,14 @@ static void * zephyr_func_wrapper (void * data)
 
 bool iot_thread_priority_valid (int priority)
 {
-  if (iot_thread_fifo_max_priority == -2)
+  static int max_priority = -2;
+  static int min_priority = -2;
+  if (max_priority == -2)
   {
-    iot_thread_fifo_max_priority = sched_get_priority_max (SCHED_FIFO);
-    iot_thread_fifo_min_priority = sched_get_priority_min (SCHED_FIFO);
+    max_priority = sched_get_priority_max (SCHED_FIFO);
+    min_priority = sched_get_priority_min (SCHED_FIFO);
   }
-  return (priority >= iot_thread_fifo_min_priority && priority <= iot_thread_fifo_max_priority);
+  return (priority >= min_priority && priority <= max_priority);
 }
 
 int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity)
@@ -49,6 +48,7 @@ int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int pr
 
   pthread_attr_init (&attr);
   pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
+  pthread_attr_setinheritsched (&attr, PTHREAD_EXPLICIT_SCHED);
 
 #if defined (_GNU_SOURCE) && ! defined (__LIBMUSL__)
   if (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN))
