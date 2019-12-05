@@ -82,7 +82,7 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   assert (wrapper);
 
 #else
-  if (iot_thread_priority_valid (priority) && (getuid () == 0))
+  if (iot_thread_priority_valid (priority) && (geteuid () == 0)) // No guarantee that can set RT policies in container
 #endif
   {
     struct sched_param param;
@@ -100,7 +100,11 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
     if (ret != 0) iot_log_warn (logger, "pthread_attr_setschedparam failed ret: %d", ret);
   }
   ret = pthread_create (tid, &attr, func, arg);
-  if (ret != 0) iot_log_error (logger, "pthread_create failed ret: %d", ret);
+  if (ret != 0)
+  {
+    ret = pthread_create (tid, NULL, func, arg);
+    if (ret != 0) iot_log_error (logger, "pthread_create failed ret: %d", ret);
+  }
   pthread_attr_destroy (&attr);
 
 #if defined (_GNU_SOURCE) && defined (__LIBMUSL__)
