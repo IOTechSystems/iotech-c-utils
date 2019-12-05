@@ -45,6 +45,9 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
 {
   int ret;
   pthread_attr_t attr;
+  pthread_t id;
+
+  if (tid == NULL) tid = &id;
 
   pthread_attr_init (&attr);
   pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
