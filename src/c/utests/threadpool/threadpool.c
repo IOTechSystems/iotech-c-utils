@@ -29,7 +29,7 @@ static int suite_clean (void)
 static void * cunit_pool_sleeper (void * arg)
 {
   (void) arg;
-  sleep (1);
+  usleep (1000000);
   return NULL;
 }
 

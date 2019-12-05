@@ -6,7 +6,7 @@
 #ifndef _IOT_THREAD_H_
 #define _IOT_THREAD_H_
 
-#include "iot/os.h"
+#include "iot/logger.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,7 +17,7 @@ extern "C" {
 
 typedef void * (*iot_thread_fn_t) (void * arg);
 
-extern int iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity);
+extern bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger);
 extern int iot_thread_current_get_priority (void);
 extern bool iot_thread_current_set_priority (int priority);
 extern int iot_thread_get_priority (pthread_t thread);

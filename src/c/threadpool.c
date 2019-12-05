@@ -160,7 +160,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
     iot_thread_t * th = &pool->thread_array[created];
     th->pool = pool;
     th->id = created;
-    if (iot_thread_create (&th->tid, iot_threadpool_thread, th, default_prio, affinity) != 0)
+    if (! iot_thread_create (&th->tid, iot_threadpool_thread, th, default_prio, affinity, logger))
     {
       break;
     }

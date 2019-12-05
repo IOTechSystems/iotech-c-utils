@@ -133,7 +133,7 @@ static void * iot_scheduler_thread (void * arg)
         {
           pthread_t tid;
           iot_log_debug (scheduler->logger, "Running schedule as thread");
-          iot_thread_create (&tid, current->function, current->arg, current->priority, IOT_THREAD_NO_AFFINITY);
+          iot_thread_create (&tid, current->function, current->arg, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger);
         }
 
         /* Recalculate the next start time for the schedule */
@@ -183,7 +183,7 @@ iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t 
   iot_component_init (&scheduler->component, IOT_SCHEDULER_FACTORY, (iot_component_start_fn_t) iot_scheduler_start, (iot_component_stop_fn_t) iot_scheduler_stop);
   scheduler->logger = logger;
   iot_logger_add_ref (logger);
-  iot_thread_create (&tid, iot_scheduler_thread, scheduler, priority, affinity);
+  iot_thread_create (&tid, iot_scheduler_thread, scheduler, priority, affinity, logger);
   return scheduler;
 }
 
