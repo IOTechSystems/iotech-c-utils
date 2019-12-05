@@ -2,6 +2,7 @@
 set -e -x
 
 ROOT=$(dirname $(dirname $(readlink -f $0)))
+ARCH=$(uname -m)
 
 UTEST=false
 VALG=false
@@ -22,7 +23,10 @@ do
       shift 1
     ;;
     -valgrind)
-      VALG=true
+      if [ "${ARCH}" = "x86_64" ]
+      then
+        VALG=true
+      fi
       shift 1
     ;;
     -cppcheck)
