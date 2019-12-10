@@ -6,6 +6,11 @@
 #ifndef _IOT_COMPONENT_H_
 #define _IOT_COMPONENT_H_
 
+/**
+ * @file
+ * @brief IOTech Component API
+ */
+
 #include "iot/data.h"
 
 #ifdef __cplusplus
@@ -50,24 +55,142 @@ struct iot_component_t
   const iot_component_factory_t * factory;
 };
 
+/**
+ * @brief Initialise component
+ *
+ * The function to initialise the component
+ *
+ * @param component  Pointer to the component
+ * @param factory    Function pointer to the component factory
+ * @param start      Function pointer to the component start function
+ * @param stop       Function pointer to the component stop function
+ */
 extern void iot_component_init (iot_component_t * component, const iot_component_factory_t * factory, iot_component_start_fn_t start, iot_component_stop_fn_t stop);
+
+/**
+ * @brief Reconfigure component
+ *
+ * The function to reconfigure a component, if supported. Reconfiguration of parameters depends on the support available by the component
+ * @param component  Pointer to the component
+ * @param cont       Pointer to the container that holds the component
+ * @param map        Reconfigurable parameters in a map
+ * @return           'true' if the component support reconfiguration and able to update the configuration, 'false' otherwise
+ */
 extern bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont, const iot_data_t * map);
+
+/**
+ * @brief Increment the component reference count
+ *
+ * The function to increment the component reference count
+ *
+ * @param component  Pointer to the component
+ */
 extern void iot_component_add_ref (iot_component_t * component);
+
+/**
+ * @brief Decrement the component reference count
+ *
+ * The function to decrement the component reference count
+ *
+ * @param component Pointer to the component
+ * @return          'true', if the reference count of the component is <=1, 'false' otherwise
+ */
 extern bool iot_component_dec_ref (iot_component_t * component);
+
+/**
+ * @brief Free the resources used by the component
+ *
+ * The function to release the resources used by the component
+ *
+ * @param component  Pointer to the component
+ */
 extern void iot_component_fini (iot_component_t * component);
 
-/* Sets state of component. Returns whether state transition occurred. */
-
+/**
+ * @brief Set the component state to IOT_COMPONENT_RUNNING
+ *
+ * @param component  Pointer to the component
+ * @return           'true', if the state transition occurred, 'false' otherwise
+ */
 extern bool iot_component_set_running (iot_component_t * component);
+
+/**
+ * @brief Set the component state to IOT_COMPONENT_STOPPED
+ *
+ * @param component  Pointer to the component
+ * @return           'true', if the state transition occurred, 'false' otherwise
+ */
 extern bool iot_component_set_stopped (iot_component_t * component);
+
+/**
+ * @brief Set the component state to IOT_COMPONENT_DELETED
+ *
+ * @param component  Pointer to the component
+ * @return           'true', if the state transition occurred, 'false' otherwise
+ */
 extern bool iot_component_set_deleted (iot_component_t * component);
 
+/**
+ * @brief Block until the component state is changed to states
+ *
+ * The function that acquires a lock and blocks the calling thread for the component until the state does not change to state(s) provided.
+ * This function releases the lock before returning
+ *
+ * @code
+ *
+ *   iot_component_state_t state = iot_component_wait (myComponent, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+ *
+ * @endcode
+ *
+ * @param component  Pointer to the component
+ * @param states     Component state(s) to check for unblocking
+ * @return           State of the component that resulted in unblocking
+ */
 extern iot_component_state_t iot_component_wait  (iot_component_t * component, uint32_t states);
+
+/**
+ * @brief Block until the component state is changed to states
+ *
+ * The function that acquires a lock and blocks the calling thread for the component until the state does not change to state(s) provided.
+ * The caller must release the mutex
+ *
+ * @code
+ *
+ *   iot_component_state_t state = iot_component_wait_and_lock (myComponent, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+ *
+ * @endcode
+ *
+ * @param component  Pointer to the component
+ * @param states     Component state(s) to check for unblocking
+ * @return           State of the component that resulted in unblocking
+ */
 extern iot_component_state_t iot_component_wait_and_lock  (iot_component_t * component, uint32_t states);
+
+/**
+ * @brief Acquire lock on the component
+ *
+ * @param component  Pointer to the component
+ * @return           Current state of the component
+ */
 extern iot_component_state_t iot_component_lock (iot_component_t * component);
+
+/**
+ * @brief Release lock held by the component
+ *
+ * @param component  Pointer to the component
+ * @return           Current state of the component
+ */
 extern iot_component_state_t iot_component_unlock (iot_component_t * component);
 
-/* Function to load a JSON configuration from file */
+/**
+ * @brief Load JSON configuration from file
+ *
+ * The function to load JSON configuration from a file
+ *
+ * @param name  Name of the root configuration file
+ * @param from  Location at which the configuration file is available
+ * @return      JSON string loaded from the file
+ */
 extern char * iot_component_file_config_loader (const char * name, void * from);
 
 #ifdef __cplusplus

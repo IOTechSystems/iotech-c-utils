@@ -79,7 +79,10 @@ endif ()
 # Build modules
 
 add_subdirectory (c)
- 
+
+# Documentation
+add_subdirectory (docs)
+
 # Configure generic installer options
 
 set (CPACK_PACKAGE_NAME "iotech-iot")
