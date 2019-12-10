@@ -1,6 +1,8 @@
 FROM centos:8
 MAINTAINER IOTech <support@iotechsys.com>
-RUN yum -y install --setopt=tsflags=nodocs wget git cmake gcc make rpm-build
+RUN dnf -y install 'dnf-command(config-manager)' \
+  && dnf -y config-manager --set-enabled PowerTools \
+  && yum -y install --setopt=tsflags=nodocs wget git cmake gcc make rpm-build doxygen graphviz
 COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
