@@ -255,7 +255,7 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*func) (void*), v
   assert (pool && func);
   iot_log_trace (pool->logger, "iot_threadpool_add_work()");
   iot_component_lock (&pool->component);
-  if (pool->jobs == pool->max_jobs)
+  while (pool->jobs == pool->max_jobs)
   {
     iot_log_debug (pool->logger, "iot_threadpool_add_work jobs at max (%u), waiting for job completion", pool->max_jobs);
     pthread_cond_wait (&pool->queue_cond, &pool->component.mutex); // Wait until space in job queue
