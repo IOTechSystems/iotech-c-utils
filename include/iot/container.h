@@ -38,7 +38,7 @@ extern iot_container_t * iot_container_alloc (void);
 /**
  * @brief Initialise the container for a given configuration
  *
- * The function to initialise the container  with a configuration provided
+ * The function to initialise the container with a configuration provided
  *
  * @param cont  Pointer to the container to initialise
  * @param name  Name of the root configuration, that defines configuration of all the components
