@@ -82,9 +82,10 @@ static void * iot_threadpool_thread (void * arg)
   {
     state = iot_component_wait_and_lock (comp, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
 
-    if (state == IOT_COMPONENT_DELETED)
+    if (state == IOT_COMPONENT_DELETED) // Exit thread on deletion
     {
-      break; // Exit thread on deletion
+      iot_component_unlock (comp);
+      break;
     }
     iot_job_t * first = pool->front;
     if (first) // Pull job from queue
@@ -120,16 +121,14 @@ static void * iot_threadpool_thread (void * arg)
       {
         pthread_cond_signal (&pool->work_cond); // Signal when no threads working
       }
-      iot_component_unlock (comp);
     }
     else
     {
       iot_log_debug (pool->logger, "Thread waiting for new job");
       pthread_cond_wait (&pool->job_cond, &comp->mutex); // Wait for new job
-      iot_component_unlock (comp);
     }
+    iot_component_unlock (comp);
   }
-  iot_component_unlock (comp);
   iot_log_debug (pool->logger, "Thread exiting", name);
   atomic_fetch_add (&pool->created, -1);
   return NULL;
