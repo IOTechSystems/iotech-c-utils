@@ -265,21 +265,16 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*func) (void*), v
   iot_component_unlock (&pool->component);
 }
 
-static inline void iot_threadpool_wait_locked (iot_threadpool_t * pool)
-{
-  while (pool->jobs || pool->working)
-  {
-    iot_log_debug (pool->logger, "iot_threadpool_wait (jobs:%u active threads:%u)", pool->jobs, pool->working);
-    pthread_cond_wait (&pool->work_cond, &pool->component.mutex); // Wait until all jobs processed
-  }
-}
-
 void iot_threadpool_wait (iot_threadpool_t * pool)
 {
   assert (pool);
   iot_log_trace (pool->logger, "iot_threadpool_wait()");
   iot_component_lock (&pool->component);
-  iot_threadpool_wait_locked (pool);
+  while (pool->jobs || pool->working)
+  {
+    iot_log_debug (pool->logger, "iot_threadpool_wait (jobs:%u active threads:%u)", pool->jobs, pool->working);
+    pthread_cond_wait (&pool->work_cond, &pool->component.mutex); // Wait until all jobs processed
+  }
   iot_component_unlock (&pool->component);
 }
 
