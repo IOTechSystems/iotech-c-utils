@@ -267,7 +267,7 @@ for (t in targets)
 
   if (("${arch}" == target || "${arch}" == 'all') && (systems.count ("${sys}") != 0 || "${sys}" == 'all'))
   {
-    buildMap[target] = { buildStages (target, systems) }
+    buildMap[target] = { buildStages (target, systems) } 
   }
 }
 buildMap.failFast = false
