@@ -119,7 +119,7 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
   logger->save = level;
   logger->next = next;
   iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
-  (self_start == true) ? iot_logger_start (logger) : 0;
+  if (self_start) iot_logger_start (logger);
   return logger;
 }
 
