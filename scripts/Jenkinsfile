@@ -250,7 +250,7 @@ def String getGitRefParam ()
 {
   def tag = "${params.GitTag}"
   def ref = 'refs/heads/master'
-  if ("${tag}" != 'null')
+  if ("${tag}" != 'null' && "${tag}" != '')
   {
     ref = "refs/tags/${tag}"
   }
