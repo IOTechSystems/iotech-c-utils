@@ -717,6 +717,17 @@ extern char * iot_data_to_json (const iot_data_t * data, bool wrap);
  */
 extern iot_data_t * iot_data_from_json (const char * json);
 
+/**
+ * @brief Check for equality of 2 iot_data types
+ *
+ * The function to check the values of the 2 iot_data types and return true if the data is same
+ *
+ * @param  data1 Input data1
+ * @param  data2 Input data2
+ * @return       'true' if data1 & data2 are equal, 'false' otherwise
+ */
+extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
+
 #ifdef __cplusplus
 }
 #endif
