@@ -259,8 +259,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
           const iot_data_t * key2 = iot_data_map_iter_key (&iter2);
           const iot_data_t * value2 = iot_data_map_iter_value (&iter2);
 
-          if (!iot_data_equal (key1, key2)) return false;
-          if (!iot_data_equal (value1, value2)) return false;
+          if (!iot_data_equal (key1, key2) || !iot_data_equal (value1, value2)) return false;
         }
         return true;
       }

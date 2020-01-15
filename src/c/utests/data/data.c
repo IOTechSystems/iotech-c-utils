@@ -658,7 +658,6 @@ static void test_data_unequal_value_map (void)
   iot_data_map_add (data_map2, key2, val2);
 
   val1 = iot_data_alloc_ui32 (77u);
-  val2 = iot_data_alloc_ui32 (77u);
   key1 = iot_data_alloc_string ("key2", IOT_DATA_REF);
   iot_data_map_add (data_map1, key1, val1);
 
@@ -738,6 +737,10 @@ static void test_data_unequal_nested_array (void)
   iot_data_free (array2);
 }
 
+static void test_data_equal_array_map (void)
+{
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -769,4 +772,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_check_unequal_value_map", test_data_unequal_value_map);
   CU_add_test (suite, "data_check_equal_nested_array", test_data_equal_nested_array);
   CU_add_test (suite, "data_check_unequal_nested_array", test_data_unequal_nested_array);
+  CU_add_test (suite, "data_check_equal_array_map", test_data_equal_array_map);
 }
