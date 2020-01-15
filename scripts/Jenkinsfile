@@ -12,7 +12,7 @@ def checkoutStage (arch)
   def ref = getGitRefParam ()
   currentBuild.displayName = "IOT ${env.BUILD_ID}"
   cleanWs (cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true)
-  if ("${ref}" == 'refs/heads/master')
+  if ("${ref}" == '')
   {
     checkout scm
   }
@@ -256,7 +256,7 @@ def String getBoardParam ()
 def String getGitRefParam ()
 {
   def tag = "${params.GitTag}"
-  def ref = 'refs/heads/master'
+  def ref = ''
   if ("${tag}" != 'null' && "${tag}" != 'None')
   {
     ref = "refs/tags/${tag}"
