@@ -713,7 +713,6 @@ void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
 
-#if 1
   CU_add_test (suite, "data_types", test_data_types);
   CU_add_test (suite, "data_blob_key", test_data_blob_key);
   CU_add_test (suite, "data_string_array", test_data_string_array);
@@ -727,7 +726,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_map_base64_to_blob", test_data_map_base64_to_blob);
   CU_add_test (suite, "data_increment", test_data_increment);
   CU_add_test (suite, "data_decrement", test_data_decrement);
-#endif
+
   CU_add_test (suite, "data_check_equal_int8", test_data_equal_int8);
   CU_add_test (suite, "data_check_equal_uint16", test_data_equal_uint16);
   CU_add_test (suite, "data_check_equal_float32", test_data_equal_float32);
