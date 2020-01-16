@@ -599,7 +599,8 @@ extern uint32_t iot_data_array_size (const iot_data_t * array);
 /**
  * @brief Initialise iterator for a map
  *
- * The function that initialises the iterator to point to the beginning of a map
+ * The function initialises an iterator to point to the beginning of a map. Note that
+ * the iterator is unsafe in that the map cannot be modified when being iterated.
  *
  * @param map   Input map
  * @param iter  Iterator to initialise
@@ -660,7 +661,8 @@ extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * 
 /**
  * @brief Initialise iterator to an array
  *
- * The function to initialise an iterator to to point to an array
+ * The function initialises an iterator to to point to an array. Note that
+ * the iterator is unsafe in that the array cannot be modified when being iterated.
  *
  * @param array  Input array
  * @param iter   Input iterator
