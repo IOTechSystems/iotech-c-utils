@@ -660,7 +660,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   pair->key = key;
 }
 
-uint32_t iot_data_map_size (iot_data_t * map)
+uint32_t iot_data_map_size (const iot_data_t * map)
 {
   iot_data_map_t * mp = (iot_data_map_t*) map;
   assert (mp && (mp->base.type == IOT_DATA_MAP));

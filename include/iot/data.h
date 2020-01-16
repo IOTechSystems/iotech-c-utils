@@ -471,7 +471,7 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
  * @param map Get the size of the map
  * @return    map size
  */
-extern uint32_t iot_data_map_size (iot_data_t * map);
+extern uint32_t iot_data_map_size (const iot_data_t * map);
 
 /**
  * @brief Add key-value pair to a map
