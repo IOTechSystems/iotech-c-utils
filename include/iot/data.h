@@ -464,6 +464,16 @@ extern const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size);
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
 /**
+ * @brief Get the size of a map
+ *
+ * The function to get the map size
+ *
+ * @param map Get the size of the map
+ * @return    map size
+ */
+extern uint32_t iot_data_map_size (iot_data_t * map);
+
+/**
  * @brief Add key-value pair to a map
  *
  * The function to add a key-value pair to a map where a key is of string type
