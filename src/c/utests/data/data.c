@@ -438,10 +438,10 @@ static void test_data_decrement (void)
 static void test_data_equal_int8 (void)
 {
   iot_data_t * data1;
-  data1 = iot_data_alloc_i8 (1);
+  data1 = iot_data_alloc_i8 (-1);
 
   iot_data_t * data2;
-  data2 = iot_data_alloc_i8 (1);
+  data2 = iot_data_alloc_i8 (-1);
 
   CU_ASSERT (iot_data_equal (data1, data2));
   CU_ASSERT (iot_data_equal (data1, data1));
