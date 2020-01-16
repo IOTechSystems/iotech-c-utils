@@ -654,7 +654,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
     if (mp->tail) mp->tail->base.next = &pair->base;
     mp->tail = pair;
     if (mp->head == NULL) mp->head = pair;
-    ++mp->size;
+    mp->size++;
   }
   pair->value = val;
   pair->key = key;

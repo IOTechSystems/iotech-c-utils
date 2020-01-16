@@ -468,8 +468,8 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
  *
  * The function to get the map size
  *
- * @param map Get the size of the map
- * @return    map size
+ * @param map Map to get the size
+ * @return    Size of the map
  */
 extern uint32_t iot_data_map_size (const iot_data_t * map);
 
