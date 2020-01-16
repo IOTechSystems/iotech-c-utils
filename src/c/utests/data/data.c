@@ -435,9 +435,399 @@ static void test_data_decrement (void)
   iot_data_free (data);
 }
 
+static void test_data_equal_int8 (void)
+{
+  iot_data_t * data1;
+  data1 = iot_data_alloc_i8 (-1);
+
+  iot_data_t * data2;
+  data2 = iot_data_alloc_i8 (-1);
+
+  CU_ASSERT (iot_data_equal (data1, data2));
+  CU_ASSERT (iot_data_equal (data1, data1));
+
+  iot_data_increment (data1);
+  CU_ASSERT (!iot_data_equal (data1, data2));
+
+  iot_data_free (data1);
+  iot_data_free (data2);
+}
+
+static void test_data_equal_uint16 (void)
+{
+  iot_data_t * data1;
+  data1 = iot_data_alloc_ui16 (1);
+
+  iot_data_t * data2;
+  data2 = iot_data_alloc_ui16 (1);
+
+  CU_ASSERT (iot_data_equal (data1, data2));
+  CU_ASSERT (iot_data_equal (data1, data1));
+
+  iot_data_increment (data1);
+  CU_ASSERT (!iot_data_equal (data1, data2));
+
+  iot_data_free (data1);
+  iot_data_free (data2);
+}
+
+static void test_data_equal_float32 (void)
+{
+  iot_data_t * data1;
+  data1 = iot_data_alloc_f32 (1.0f);
+
+  iot_data_t * data2;
+  data2 = iot_data_alloc_f32 (1.0f);
+
+  CU_ASSERT (iot_data_equal (data1, data2));
+  CU_ASSERT (iot_data_equal (data1, data1));
+
+  iot_data_increment (data1);
+  CU_ASSERT (!iot_data_equal (data1, data2));
+
+  iot_data_free (data1);
+  iot_data_free (data2);
+}
+
+static void test_data_equal_array_ui8 (void)
+{
+  int array_index = 0;
+  iot_data_t *array1 = iot_data_alloc_array (5);
+  iot_data_t *array2 = iot_data_alloc_array (5);
+
+  while (array_index < 5)
+  {
+    iot_data_array_add (array1, array_index, iot_data_alloc_ui8(array_index));
+    iot_data_array_add (array2, array_index, iot_data_alloc_ui8(array_index));
+    array_index++;
+  }
+
+  CU_ASSERT (iot_data_equal (array1, array2));
+  iot_data_free (array1);
+  iot_data_free (array2);
+}
+
+static void test_data_equal_array_ui8_refcount (void)
+{
+  int array_index = 0;
+  iot_data_t *array1 = iot_data_alloc_array (5);
+  iot_data_t *array2 = iot_data_alloc_array (5);
+
+  while (array_index < 5)
+  {
+    iot_data_t *value = iot_data_alloc_ui8(array_index);
+
+    iot_data_array_add (array1, array_index, value);
+    iot_data_add_ref (value);
+
+    iot_data_array_add (array2, array_index, value);
+    array_index++;
+  }
+
+  CU_ASSERT (iot_data_equal (array1, array2));
+  iot_data_free (array1);
+  iot_data_free (array2);
+}
+
+static void test_data_unequal_array_ui8 (void)
+{
+  int array_index = 0;
+  iot_data_t *array1 = iot_data_alloc_array (5);
+  iot_data_t *array2 = iot_data_alloc_array (5);
+
+  while (array_index < 5)
+  {
+    iot_data_array_add (array1, array_index, iot_data_alloc_ui8(array_index));
+    iot_data_array_add (array2, array_index, iot_data_alloc_ui8(array_index+1));
+
+    array_index++;
+  }
+
+  CU_ASSERT (!iot_data_equal (array1, array2));
+  iot_data_free (array1);
+  iot_data_free (array2);
+}
+
+static void test_data_equal_array_string (void)
+{
+  const char *strs [2] = { "Test", "Tube" };
+
+  iot_data_t * array1 = iot_data_alloc_array (2);
+  iot_data_t * array2 = iot_data_alloc_array (2);
+
+  iot_data_t * str1 = iot_data_alloc_string (strs[0], IOT_DATA_REF);
+  iot_data_t * str2 = iot_data_alloc_string (strs[1], IOT_DATA_REF);
+
+  iot_data_t * str3 = iot_data_alloc_string (strs[0], IOT_DATA_REF);
+  iot_data_t * str4 = iot_data_alloc_string (strs[1], IOT_DATA_REF);
+
+  iot_data_array_add (array1, 0, str1);
+  iot_data_array_add (array1, 1, str2);
+
+  iot_data_array_add (array2, 0, str3);
+  iot_data_array_add (array2, 1, str4);
+
+  CU_ASSERT (iot_data_equal (array1, array2));
+  iot_data_free (array1);
+  iot_data_free (array2);
+}
+
+static void test_data_equal_blob (void)
+{
+  uint8_t data [4] = { 0, 1, 2, 3 };
+  iot_data_t * blob1 = iot_data_alloc_blob (data, sizeof (data), IOT_DATA_REF);
+  iot_data_t * blob2 = iot_data_alloc_blob (data, sizeof (data), IOT_DATA_REF);
+
+  CU_ASSERT (iot_data_equal (blob1, blob2));
+  iot_data_free (blob1);
+  iot_data_free (blob2);
+}
+
+static void test_data_equal_map (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * data_map2 = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_t * val1 = iot_data_alloc_ui32 (66u);
+  iot_data_t * key1 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+
+  iot_data_t * val2 = iot_data_alloc_ui32 (66u);
+  iot_data_t * key2 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key1, val1);
+  iot_data_map_add (data_map2, key2, val2);
+
+  val1 = iot_data_alloc_ui32 (77u);
+  key1 = iot_data_alloc_string ("key2", IOT_DATA_REF);
+  iot_data_map_add (data_map1, key1, val1);
+
+  val2 = iot_data_alloc_ui32 (77u);
+  key2 = iot_data_alloc_string ("key2", IOT_DATA_REF);
+  iot_data_map_add (data_map2, key2, val2);
+  
+  CU_ASSERT (iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+
+static void test_data_equal_map_refcount (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * data_map2 = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_t * val = iot_data_alloc_ui32 (66u);
+  iot_data_t * key = iot_data_alloc_string ("key1", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key, val);
+  iot_data_add_ref (key);
+  iot_data_add_ref (val);
+
+  iot_data_map_add (data_map2, key, val);
+
+  val = iot_data_alloc_ui32 (77u);
+  key = iot_data_alloc_string ("key2", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key, val);
+  iot_data_add_ref (key);
+  iot_data_add_ref (val);
+
+  iot_data_map_add (data_map1, key, val);
+
+  CU_ASSERT (iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+
+
+
+static void test_data_unequal_key_map (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * data_map2 = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_t * val1 = iot_data_alloc_ui32 (66u);
+  iot_data_t * val2 = iot_data_alloc_ui32 (66u);
+  iot_data_t * key1 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+  iot_data_t * key2 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key1, val1);
+  iot_data_map_add (data_map2, key2, val2);
+
+  val1 = iot_data_alloc_ui32 (77u);
+  val2 = iot_data_alloc_ui32 (77u);
+  key1 = iot_data_alloc_string ("key3", IOT_DATA_REF);
+  key2 = iot_data_alloc_string ("key4", IOT_DATA_REF);
+  iot_data_map_add (data_map1, key1, val1);
+  iot_data_map_add (data_map2, key2, val2);
+  
+  CU_ASSERT (!iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+
+static void test_data_unequal_value_map (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * data_map2 = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_t * val1 = iot_data_alloc_ui32 (66u);
+  iot_data_t * val2 = iot_data_alloc_ui32 (66u);
+  iot_data_t * key1 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+  iot_data_t * key2 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+  iot_data_map_add (data_map1, key1, val1);
+  iot_data_map_add (data_map2, key2, val2);
+
+  val1 = iot_data_alloc_ui32 (77u);
+  key1 = iot_data_alloc_string ("key2", IOT_DATA_REF);
+  iot_data_map_add (data_map1, key1, val1);
+
+  key2 = iot_data_alloc_string ("key2", IOT_DATA_REF);
+  val2 = iot_data_alloc_ui32 (88u);
+  iot_data_map_add (data_map2, key2, val2);
+  
+  CU_ASSERT (!iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+	
+static void test_data_equal_nested_array (void)
+{
+  iot_data_t *array1 = iot_data_alloc_array (2);
+  iot_data_t *array2 = iot_data_alloc_array (2);
+
+  iot_data_t *array3 = iot_data_alloc_array (2);
+  iot_data_t *array4 = iot_data_alloc_array (2);
+
+  iot_data_t *array5 = iot_data_alloc_array (2);
+  iot_data_t *array6 = iot_data_alloc_array (2);
+
+  iot_data_array_add (array3, 0, iot_data_alloc_ui8(10));
+  iot_data_array_add (array3, 1, iot_data_alloc_ui8(20));
+  iot_data_array_add (array4, 0, iot_data_alloc_ui8(30));
+  iot_data_array_add (array4, 1, iot_data_alloc_ui8(40));
+
+  iot_data_array_add (array5, 0, iot_data_alloc_ui8(10));
+  iot_data_array_add (array5, 1, iot_data_alloc_ui8(20));
+  iot_data_array_add (array6, 0, iot_data_alloc_ui8(30));
+  iot_data_array_add (array6, 1, iot_data_alloc_ui8(40));
+
+  iot_data_array_add (array1, 0, array3);
+  iot_data_array_add (array1, 1, array4);
+
+  iot_data_array_add (array2, 0, array5);
+  iot_data_array_add (array2, 1, array6);
+  
+  CU_ASSERT (iot_data_equal (array1, array2));
+
+  iot_data_free (array1);
+  iot_data_free (array2);
+}
+
+static void test_data_unequal_nested_array (void)
+{
+  iot_data_t *array1 = iot_data_alloc_array (2);
+  iot_data_t *array2 = iot_data_alloc_array (2);
+
+  iot_data_t *array3 = iot_data_alloc_array (2);
+  iot_data_t *array4 = iot_data_alloc_array (2);
+
+  iot_data_t *array5 = iot_data_alloc_array (2);
+  iot_data_t *array6 = iot_data_alloc_array (2);
+
+  iot_data_array_add (array3, 0, iot_data_alloc_ui8(10));
+  iot_data_array_add (array3, 1, iot_data_alloc_ui8(20));
+  iot_data_array_add (array4, 0, iot_data_alloc_ui8(30));
+  iot_data_array_add (array4, 1, iot_data_alloc_ui8(40));
+
+  iot_data_array_add (array5, 0, iot_data_alloc_ui8(10));
+  iot_data_array_add (array5, 1, iot_data_alloc_ui8(20));
+  iot_data_array_add (array6, 0, iot_data_alloc_ui8(30));
+  iot_data_array_add (array6, 1, iot_data_alloc_ui8(50));
+
+  iot_data_array_add (array1, 0, array3);
+  iot_data_array_add (array1, 1, array4);
+
+  iot_data_array_add (array2, 0, array5);
+  iot_data_array_add (array2, 1, array6);
+  
+  CU_ASSERT (!iot_data_equal (array1, array2));
+
+  iot_data_free (array1);
+  iot_data_free (array2);
+}
+
+static void test_data_equal_array_map (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * data_map2 = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_t * key1 = iot_data_alloc_string ("Array", IOT_DATA_REF);
+
+  iot_data_t * array1 = iot_data_alloc_array (2);
+  iot_data_array_add (array1, 0, iot_data_alloc_ui8(10));
+  iot_data_array_add (array1, 1, iot_data_alloc_ui8(20));
+
+  iot_data_map_add (data_map1, key1, array1);
+  iot_data_add_ref (key1);
+  iot_data_add_ref (array1);
+
+  iot_data_t * key2 = iot_data_alloc_string ("String", IOT_DATA_REF);
+  iot_data_t * val = iot_data_alloc_string ("test", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key2, val);
+  iot_data_add_ref (key2);
+  iot_data_add_ref (val);
+
+  iot_data_map_add (data_map2, key1, array1);
+  iot_data_map_add (data_map2, key2, val);
+
+  CU_ASSERT (iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+
+static void test_data_unequal_array_map (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * data_map2 = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_t * key1 = iot_data_alloc_string ("Array", IOT_DATA_REF);
+
+  iot_data_t * array1 = iot_data_alloc_array (2);
+  iot_data_array_add (array1, 0, iot_data_alloc_ui8(10));
+  iot_data_array_add (array1, 1, iot_data_alloc_ui8(20));
+
+  iot_data_map_add (data_map1, key1, array1);
+  iot_data_add_ref (key1);
+  iot_data_add_ref (array1);
+
+  iot_data_t * key2 = iot_data_alloc_string ("String", IOT_DATA_REF);
+  iot_data_t * val = iot_data_alloc_string ("test", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key2, val);
+  iot_data_add_ref (key2);
+
+  iot_data_map_add (data_map2, key1, array1);
+
+  val = iot_data_alloc_string ("test2", IOT_DATA_REF);
+  iot_data_map_add (data_map2, key2, val);
+
+  CU_ASSERT (!iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
+
   CU_add_test (suite, "data_types", test_data_types);
   CU_add_test (suite, "data_blob_key", test_data_blob_key);
   CU_add_test (suite, "data_string_array", test_data_string_array);
@@ -448,7 +838,24 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_from_string", test_data_from_string);
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
   CU_add_test (suite, "data_from_base64", test_data_from_base64);
-  CU_add_test (suite, "date_map_base64_to_blob", test_data_map_base64_to_blob);
-  CU_add_test (suite, "date_increment", test_data_increment);
-  CU_add_test (suite, "date_decrement", test_data_decrement);
+  CU_add_test (suite, "data_map_base64_to_blob", test_data_map_base64_to_blob);
+  CU_add_test (suite, "data_increment", test_data_increment);
+  CU_add_test (suite, "data_decrement", test_data_decrement);
+
+  CU_add_test (suite, "data_check_equal_int8", test_data_equal_int8);
+  CU_add_test (suite, "data_check_equal_uint16", test_data_equal_uint16);
+  CU_add_test (suite, "data_check_equal_float32", test_data_equal_float32);
+  CU_add_test (suite, "data_check_equal_array_ui8", test_data_equal_array_ui8);
+  CU_add_test (suite, "data_check_equal_array_ui8_refcount", test_data_equal_array_ui8_refcount);
+  CU_add_test (suite, "data_check_unequal_array_ui8", test_data_unequal_array_ui8);
+  CU_add_test (suite, "data_check_equal_array_string", test_data_equal_array_string);
+  CU_add_test (suite, "data_check_equal_blob", test_data_equal_blob);
+  CU_add_test (suite, "data_check_equal_map", test_data_equal_map);
+  CU_add_test (suite, "data_check_equal_map_refcount", test_data_equal_map_refcount);
+  CU_add_test (suite, "data_check_unequal_key_map", test_data_unequal_key_map);
+  CU_add_test (suite, "data_check_unequal_value_map", test_data_unequal_value_map);
+  CU_add_test (suite, "data_check_equal_nested_array", test_data_equal_nested_array);
+  CU_add_test (suite, "data_check_unequal_nested_array", test_data_unequal_nested_array);
+  CU_add_test (suite, "data_check_equal_array_map", test_data_equal_array_map);
+  CU_add_test (suite, "data_check_unequal_array_map", test_data_unequal_array_map);
 }

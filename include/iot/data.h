@@ -459,6 +459,7 @@ extern const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size);
  * @param map  Map to add a new key-value pair
  * @param key  Input key
  * @param val  Input value
+ * Note: The ownership of key and value supplied to a map is owned by the map and cannot be reused, unless reference counted
  */
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
@@ -470,6 +471,7 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
  * @param map  Map to add a new key-value pair
  * @param key  Input key of string type
  * @param val  Input value
+ * Note: The ownership of key and value supplied to a map is owned by the map and cannot be reused, unless reference counted
  */
 extern void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val);
 
@@ -559,6 +561,7 @@ extern bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * ke
  * @param array  Input array to add an element
  * @param index  Index in an array
  * @param val    Pointer to a value of type iot_data to add
+ * Note: The ownership of the value supplied to array is owned by the array and cannot be reused, unless reference counted
  */
 extern void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val);
 
@@ -716,6 +719,17 @@ extern char * iot_data_to_json (const iot_data_t * data, bool wrap);
  * @return       Pointer to data of type iot_data if input string is a json object, NULL otherwise
  */
 extern iot_data_t * iot_data_from_json (const char * json);
+
+/**
+ * @brief Check for equality of 2 iot_data types
+ *
+ * The function to check the values of the 2 iot_data types and return true if the data is same
+ *
+ * @param  data1 Input data1
+ * @param  data2 Input data2
+ * @return       'true' if data1 & data2 are equal, 'false' otherwise
+ */
+extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 
 #ifdef __cplusplus
 }
