@@ -730,7 +730,6 @@ void iot_data_array_add (iot_data_t * array, uint32_t index, iot_data_t * val)
   iot_data_t * element = arr->values[index];
   iot_data_free (element);
   arr->values[index] = val;
-
 }
 
 const iot_data_t * iot_data_array_get (const iot_data_t * array, uint32_t index)
@@ -1117,4 +1116,41 @@ iot_data_t * iot_data_from_json (const char * json)
   }
   free (tokens);
   return data;
+}
+
+iot_data_t * iot_data_copy (const iot_data_t * src)
+{
+  assert (src);
+
+  iot_data_t * data = (iot_data_t *)src;
+
+  if (data->release != true) //data created using IOT_DATA_REF ownership
+  {
+    iot_data_add_ref (data);
+    return data;
+  }
+
+  switch (data->type)
+  {
+    case IOT_DATA_STRING:
+      return iot_data_alloc_string (((iot_data_value_t*) data)->value.str, IOT_DATA_COPY);
+
+    case IOT_DATA_BLOB:
+    {
+      iot_data_blob_t * b1 = (iot_data_blob_t*) data;
+      iot_data_t * dest = iot_data_alloc_blob (calloc (1, sizeof(b1->data)), b1->size, IOT_DATA_TAKE);
+
+      int index = 0;
+      iot_data_blob_t * blob = (iot_data_blob_t *)dest;
+      while (b1->size && index < b1->size)
+      {
+        blob->data[index] = b1->data[index];
+        index++;
+      }
+      return dest;
+    }
+
+    default:
+      return NULL;
+  }
 }
