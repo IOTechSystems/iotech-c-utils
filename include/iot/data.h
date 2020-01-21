@@ -747,7 +747,7 @@ extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 /**
  * @brief Copy data
  *
- * The function to copy data from the src passed
+ * The function to copy data from src and return the pointer of the copied data
  *
  * @param src Data to copy
  * @return    Pointer to the copied data. The caller should free memory after use
