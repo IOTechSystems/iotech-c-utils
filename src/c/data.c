@@ -68,6 +68,7 @@ typedef struct iot_data_map_t
 {
   iot_data_t base;
   iot_data_type_t key_type;
+  uint32_t size;
   iot_data_pair_t * head;
   iot_data_pair_t * tail;
 } iot_data_map_t;
@@ -245,6 +246,8 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
       }
       case IOT_DATA_MAP:
       {
+        if (iot_data_map_size (v1) != iot_data_map_size (v2)) return false;
+
         iot_data_map_iter_t iter1;
         iot_data_map_iter (v1, &iter1);
 
@@ -331,6 +334,7 @@ void iot_data_free (iot_data_t * data)
           map->head = (iot_data_pair_t *) pair->base.next;
           iot_data_factory_free (&pair->base);
         }
+        map->size = 0;
         break;
       }
       case IOT_DATA_ARRAY:
@@ -341,6 +345,7 @@ void iot_data_free (iot_data_t * data)
           iot_data_free (array->values[i]);
         }
         free (array->values);
+        array->size = 0;
         break;
       }
       default: break;
@@ -649,9 +654,17 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
     if (mp->tail) mp->tail->base.next = &pair->base;
     mp->tail = pair;
     if (mp->head == NULL) mp->head = pair;
+    mp->size++;
   }
   pair->value = val;
   pair->key = key;
+}
+
+uint32_t iot_data_map_size (const iot_data_t * map)
+{
+  iot_data_map_t * mp = (iot_data_map_t*) map;
+  assert (mp && (mp->base.type == IOT_DATA_MAP));
+  return ((iot_data_map_t*) mp)->size;
 }
 
 bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * key)
@@ -676,7 +689,6 @@ bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * key)
       pair->value = blob;
     }
   }
-
   return result;
 }
 

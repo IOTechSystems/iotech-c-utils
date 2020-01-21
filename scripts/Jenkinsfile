@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
-systems_x86_64 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.9','debian-10','debian-9','debian-8','centos-8','fedora-30','opensuse-15','photon-30','zephyr-1.14','clearlinux'] as String[]
-systems_arm64 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.9','debian-10','debian-9','fedora-30','opensuse-15','photon-30'] as String[]
+systems_x86_64 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.9','debian-10','debian-9','debian-8','centos-8','fedora-31','fedora-30','opensuse-15','photon-30','zephyr-1.14','clearlinux'] as String[]
+systems_arm64 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.9','debian-10','debian-9','fedora-31','fedora-30','opensuse-15','photon-30'] as String[]
 systems_arm32 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.9','debian-10','debian-9','debian-8','opensuse-15'] as String[]
 targets = ['x86_64', 'arm64', 'arm32'] as String[]
 systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32]
@@ -152,8 +152,8 @@ def publishApks (arch)
 
 def publishRpms (arch)
 {
-  def rpms_x86_64 = ['fedora-30','opensuse-15','photon-30','centos-8']
-  def rpms_arm64 = ['fedora-30','opensuse-15','photon-30']
+  def rpms_x86_64 = ['fedora-31','fedora-30','opensuse-15','photon-30','centos-8']
+  def rpms_arm64 = ['fedora-31','fedora-30','opensuse-15','photon-30']
   def rpms_arm32 = ['opensuse-15']
   def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32]
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
@@ -295,7 +295,7 @@ pipeline
   {
     string (name: 'GitTag', defaultValue: "None", description: 'Git Tag to build')
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
-    choice (name: 'System', choices: ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.9','debian-10','debian-9','debian-8','centos-8','fedora-30','opensuse-15','photon-30','zephyr-1.14','clearlinux','all'], description: 'System to Build')
+    choice (name: 'System', choices: ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.9','debian-10','debian-9','debian-8','centos-8','fedora-31','fedora-30','opensuse-15','photon-30','zephyr-1.14','clearlinux','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','arm64','arm32', 'all'], description: 'Build Host Architecture')
     choice (name: 'Board', choices: ['None','frdm_k64f','native_posix','all'], description: 'Target Board')
   }
