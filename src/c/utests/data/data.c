@@ -1124,6 +1124,32 @@ static void test_data_copy_map_base64_to_blob (void)
   iot_data_free (dest_map);
 }
 
+static void test_data_copy_array_map (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * key1 = iot_data_alloc_string ("Array", IOT_DATA_REF);
+
+  iot_data_t * array1 = iot_data_alloc_array (2);
+  iot_data_array_add (array1, 0, iot_data_alloc_ui8(10));
+  iot_data_array_add (array1, 1, iot_data_alloc_ui8(20));
+
+  iot_data_map_add (data_map1, key1, array1);
+
+  iot_data_t * key2 = iot_data_alloc_string ("String", IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (3);
+  iot_data_array_add (array2, 0, iot_data_alloc_ui8(30));
+  iot_data_array_add (array2, 1, iot_data_alloc_ui8(40));
+  iot_data_array_add (array2, 2, iot_data_alloc_ui8(50));
+
+  iot_data_map_add (data_map1, key2, array2);
+
+  iot_data_t * data_map2 = iot_data_copy (data_map1);
+  CU_ASSERT (iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+
 static void test_map_size (void)
 {
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
@@ -1187,16 +1213,17 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_check_equal_array_map", test_data_equal_array_map);
   CU_add_test (suite, "data_check_unequal_array_map", test_data_unequal_array_map);
 
-  CU_add_test (suite, "data_copy_ui8", test_data_copy_ui8);
   CU_add_test (suite, "data_copy_int8", test_data_copy_i8);
+  CU_add_test (suite, "data_copy_ui8", test_data_copy_ui8);
   CU_add_test (suite, "data_copy_uint16", test_data_copy_uint16);
   CU_add_test (suite, "data_copy_float64", test_data_copy_float64);
   CU_add_test (suite, "data_copy_string", test_data_copy_string);
   CU_add_test (suite, "data_copy_blob", test_data_copy_blob);
-  CU_add_test (suite, "data_copy_blob", test_data_copy_blob_chars);
+  CU_add_test (suite, "data_copy_blob_chars", test_data_copy_blob_chars);
   CU_add_test (suite, "data_copy_array_ui8", test_data_copy_array_ui8);
   CU_add_test (suite, "data_copy_array_strings", test_data_copy_array_strings);
   CU_add_test (suite, "data_copy_nested_array", test_data_copy_nested_array);
   CU_add_test (suite, "data_copy_map", test_data_copy_map);
+  CU_add_test (suite, "data_copy_array_map", test_data_copy_array_map);
   CU_add_test (suite, "data_copy_map_base64_to_blob", test_data_copy_map_base64_to_blob);
 }
