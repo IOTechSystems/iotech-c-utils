@@ -919,10 +919,13 @@ static void test_data_copy_i8 (void)
   iot_data_t * src = iot_data_alloc_i8 (-128);
   iot_data_t * dest = iot_data_copy (src);
 
-  iot_data_free (src);
+  CU_ASSERT (iot_data_i8 (dest) == -128);
 
-  int8_t get_src = iot_data_i8 (dest);
-  CU_ASSERT (get_src == -128);
+  iot_data_decrement (dest);
+  CU_ASSERT (iot_data_i8 (dest) == 127);
+  CU_ASSERT (iot_data_i8 (src) == -128);
+
+  iot_data_free (src);
   iot_data_free (dest);
 }
 
@@ -1013,8 +1016,12 @@ static void test_data_copy_array_ui8 (void)
   }
 
   iot_data_t *array2 = iot_data_copy (array1);
-
   CU_ASSERT (iot_data_equal (array1, array2));
+
+  //update array
+  iot_data_array_add (array2, 0, iot_data_alloc_ui8(10));
+  CU_ASSERT (!iot_data_equal (array1, array2));
+
   iot_data_free (array1);
   iot_data_free (array2);
 }
@@ -1031,20 +1038,26 @@ static void test_data_copy_array_strings (void)
   iot_data_array_add (array1, 1, str2);
 
   iot_data_t *array2 = iot_data_copy (array1);
-
   CU_ASSERT (iot_data_equal (array1, array2));
+
+  iot_data_array_add (array2, 0, iot_data_alloc_string ("change", IOT_DATA_REF));
+  CU_ASSERT (!iot_data_equal (array1, array2));
+
   iot_data_free (array1);
   iot_data_free (array2);
 
   iot_data_t * array3 = iot_data_alloc_array (2);
-  str1 = iot_data_alloc_string (strs[0], IOT_DATA_COPY);
-  str2 = iot_data_alloc_string (strs[1], IOT_DATA_COPY);
+  iot_data_t * str3 = iot_data_alloc_string (strs[0], IOT_DATA_COPY);
+  iot_data_t * str4 = iot_data_alloc_string (strs[1], IOT_DATA_COPY);
 
-  iot_data_array_add (array3, 0, str1);
-  iot_data_array_add (array3, 1, str2);
+  iot_data_array_add (array3, 0, str3);
+  iot_data_array_add (array3, 1, str4);
 
   iot_data_t *array4 = iot_data_copy (array3);
   CU_ASSERT (iot_data_equal (array3, array4));
+
+  iot_data_array_add (array3, 0, iot_data_alloc_string ("change2", IOT_DATA_REF));
+  CU_ASSERT (!iot_data_equal (array3, array4));
 
   iot_data_free (array3);
   iot_data_free (array4);
@@ -1072,6 +1085,64 @@ static void test_data_copy_map (void)
   iot_data_t * data_map2 = iot_data_copy (data_map1);
 
   CU_ASSERT (iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+
+static void test_data_copy_map_update (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_t * val1 = iot_data_alloc_ui32 (66u);
+  iot_data_t * key1 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key1, val1);
+
+  val1 = iot_data_alloc_ui32 (77u);
+  key1 = iot_data_alloc_string ("key2", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key1, val1);
+
+  iot_data_t * data_map2 = iot_data_copy (data_map1);
+  CU_ASSERT (iot_data_equal (data_map1, data_map2));
+
+  //update data_map2
+  val1 = iot_data_alloc_ui32 (88u);
+  key1 = iot_data_alloc_string ("key3", IOT_DATA_REF);
+  iot_data_map_add (data_map2, key1, val1);
+
+  CU_ASSERT (iot_data_map_size(data_map1) == 2);
+  CU_ASSERT (iot_data_map_size(data_map2) == 3);
+  CU_ASSERT (!iot_data_equal (data_map1, data_map2));
+
+  iot_data_free (data_map1);
+  iot_data_free (data_map2);
+}
+
+static void test_data_copy_map_update_value (void)
+{
+  iot_data_t * data_map1 = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_t * val1 = iot_data_alloc_ui32 (66u);
+  iot_data_t * key1 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+
+  iot_data_map_add (data_map1, key1, val1);
+
+  val1 = iot_data_alloc_ui32 (77u);
+  key1 = iot_data_alloc_string ("key2", IOT_DATA_COPY);
+
+  iot_data_map_add (data_map1, key1, val1);
+
+  iot_data_t * data_map2 = iot_data_copy (data_map1);
+  CU_ASSERT (iot_data_equal (data_map1, data_map2));
+
+  //update the value of the existing key
+  const iot_data_t * value = iot_data_map_get (data_map2, key1);
+  iot_data_increment ((iot_data_t *)value);
+  iot_data_map_add (data_map2, key1, (iot_data_t *)value);
+
+  CU_ASSERT (!iot_data_equal (data_map1, data_map2));
 
   iot_data_free (data_map1);
   iot_data_free (data_map2);
@@ -1224,6 +1295,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_copy_array_strings", test_data_copy_array_strings);
   CU_add_test (suite, "data_copy_nested_array", test_data_copy_nested_array);
   CU_add_test (suite, "data_copy_map", test_data_copy_map);
+  CU_add_test (suite, "data_copy_map_update", test_data_copy_map_update);
+  CU_add_test (suite, "data_copy_map_update_value", test_data_copy_map_update_value);
   CU_add_test (suite, "data_copy_array_map", test_data_copy_array_map);
   CU_add_test (suite, "data_copy_map_base64_to_blob", test_data_copy_map_base64_to_blob);
 }
