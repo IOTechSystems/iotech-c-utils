@@ -1136,7 +1136,8 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
 
   iot_data_t * data = (iot_data_t *)src;
 
-  if (data->release != true) //data created using IOT_DATA_REF ownership
+  //data created using IOT_DATA_REF ownership
+  if (data->release != true)
   {
     iot_data_add_ref (data);
     return data;
@@ -1150,15 +1151,8 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
     case IOT_DATA_BLOB:
     {
       iot_data_blob_t * b1 = (iot_data_blob_t*) data;
-      iot_data_t * dest = iot_data_alloc_blob (calloc (1, sizeof(b1->data)), b1->size, IOT_DATA_TAKE);
-
-      int index = 0;
-      iot_data_blob_t * blob = (iot_data_blob_t *)dest;
-      while (b1->size && index < b1->size)
-      {
-        blob->data[index] = b1->data[index];
-        index++;
-      }
+      iot_data_t * dest = iot_data_alloc_blob (malloc (sizeof(b1->data)), b1->size, IOT_DATA_TAKE);
+      memcpy (((iot_data_blob_t *)dest)->data, b1->data, b1->size);
       return dest;
     }
 
