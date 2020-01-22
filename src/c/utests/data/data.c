@@ -1131,16 +1131,16 @@ static void test_data_copy_map_update_value (void)
 
   val1 = iot_data_alloc_ui32 (77u);
   key1 = iot_data_alloc_string ("key2", IOT_DATA_COPY);
+  iot_data_add_ref (key1);
 
   iot_data_map_add (data_map1, key1, val1);
 
   iot_data_t * data_map2 = iot_data_copy (data_map1);
   CU_ASSERT (iot_data_equal (data_map1, data_map2));
 
-  //update the value of the existing key
-  const iot_data_t * value = iot_data_map_get (data_map2, key1);
-  iot_data_increment ((iot_data_t *)value);
-  iot_data_map_add (data_map2, key1, (iot_data_t *)value);
+  //update the value to the existing key
+  val1 = iot_data_alloc_ui32 (88u);
+  iot_data_map_add (data_map2, key1, val1);
 
   CU_ASSERT (!iot_data_equal (data_map1, data_map2));
 
