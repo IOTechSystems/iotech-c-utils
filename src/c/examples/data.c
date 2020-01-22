@@ -13,7 +13,7 @@ int main (void)
 
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_INT16);
   iot_data_t * map2 = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_t * array = iot_data_alloc_array (ARRAY_SIZE);
+  iot_data_t * array = iot_data_alloc_vector (ARRAY_SIZE);
   iot_data_t * key;
   iot_data_t * value;
   uint8_t blob[4] = { 6,7,8,9 };
@@ -27,7 +27,7 @@ int main (void)
   for (uint32_t i = 0; i < ARRAY_SIZE; i++)
   {
     value = iot_data_alloc_string ("Hello", IOT_DATA_REF);
-    iot_data_array_add (array, i, value);
+    iot_data_vector_add (array, i, value);
   }
   key = iot_data_alloc_i16 (22);
   iot_data_map_add (map, key, array);
