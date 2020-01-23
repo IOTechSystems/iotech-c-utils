@@ -71,22 +71,22 @@ static void cunit_json_parse_string (void)
   static const char * json_fail_unknown_symbol = "\"\\kMyString\"";
 
   count = iot_json_parse (&parser, json_fail_unknown_symbol, strlen (json_fail_unknown_symbol), tokens, 11);
-  CU_ASSERT (count == IOT_JSON_ERROR_INVAL);
+  CU_ASSERT (count == IOT_JSON_ERROR_INVAL)
 
   static const char * json_fail = "\"\\uMyString\"";
 
   count = iot_json_parse (&parser, json_fail, strlen (json_fail), tokens, 11);
-  CU_ASSERT (count == IOT_JSON_ERROR_INVAL);
+  CU_ASSERT (count == IOT_JSON_ERROR_INVAL)
 
   static const char * json_hex = "\"\\u4e784\"";
 
   count = iot_json_parse (&parser, json_hex, strlen (json_hex), tokens, 6);
-  CU_ASSERT (count != 0);
+  CU_ASSERT (count != 0)
 
   static const char * json = "\"MyString{another}\"";
 
   count = iot_json_parse (&parser, json, strlen (json), NULL, 10);
-  CU_ASSERT (count != 0);
+  CU_ASSERT (count != 0)
   printf (" # %d ", count);
   dump_parse (json_hex, tokens, count, 0);
 }
@@ -101,7 +101,7 @@ static void cunit_json_parse_number (void)
   static const char * json = "4321";
 
   count = iot_json_parse (&parser, json, strlen (json), tokens, 10);
-  CU_ASSERT (count != 0);
+  CU_ASSERT (count != 0)
   printf (" # %d ", count);
   dump_parse (json, tokens, count, 0);
   printf (" ");
@@ -117,7 +117,7 @@ static void cunit_json_parse_array (void)
   static const char * json = "[ \"MyString\", 1234, true, false, null, 11.22 ]";
 
   count = iot_json_parse (&parser, json, strlen (json), tokens, 10);
-  CU_ASSERT (count != 0);
+  CU_ASSERT (count != 0)
   printf (" # %d ", count);
   dump_parse (json, tokens, count, 0);
   printf (" ");
@@ -133,7 +133,7 @@ static void cunit_json_parse_object (void)
   static const char * json = "{ \"Key1\":\"AString\", \"Key2\": 12345 }";
 
   count = iot_json_parse (&parser, json, strlen (json), tokens, 10);
-  CU_ASSERT (count != 0);
+  CU_ASSERT (count != 0)
   printf (" # %d ", count);
   dump_parse (json, tokens, count, 0);
   printf (" ");
@@ -149,7 +149,7 @@ static void cunit_json_parse_nested (void)
   static const char * json = "{ \"Key1\":\"AString\", \"Key2\": 12345, \"Key3\": [ \"YourString\", 6789 ], \"Key4\": { \"SKey1\": false }}";
 
   count = iot_json_parse (&parser, json, strlen (json), tokens, 20);
-  CU_ASSERT (count != 0);
+  CU_ASSERT (count != 0)
   printf (" # %d ", count);
   dump_parse (json, tokens, count, 0);
   printf (" ");
@@ -170,7 +170,7 @@ static void cunit_json_parse_config (void)
   "}";
 
   count = iot_json_parse (&parser, json, strlen (json), tokens, 20);
-  CU_ASSERT (count != 0);
+  CU_ASSERT (count != 0)
   printf (" # %d ", count);
   dump_parse (json, tokens, count, 0);
   printf (" ");
