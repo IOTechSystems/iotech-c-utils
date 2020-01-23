@@ -934,10 +934,13 @@ static void test_data_copy_uint16 (void)
   iot_data_t * src = iot_data_alloc_ui16 (10);
   iot_data_t * dest = iot_data_copy (src);
 
-  iot_data_free (src);
+  CU_ASSERT (iot_data_ui16 (dest) == 10);
 
-  uint16_t get_src = iot_data_ui16 (dest);
-  CU_ASSERT (get_src == 10);
+  iot_data_increment (dest);
+  CU_ASSERT (iot_data_ui16 (dest) == 11);
+  CU_ASSERT (iot_data_ui16 (src) == 10);
+
+  iot_data_free (src);
   iot_data_free (dest);
 }
 
@@ -1018,7 +1021,7 @@ static void test_data_copy_array_ui8 (void)
   iot_data_t *array2 = iot_data_copy (array1);
   CU_ASSERT (iot_data_equal (array1, array2));
 
-  //update array
+  //update array2
   iot_data_array_add (array2, 0, iot_data_alloc_ui8(10));
   CU_ASSERT (!iot_data_equal (array1, array2));
 
@@ -1038,9 +1041,14 @@ static void test_data_copy_array_strings (void)
   iot_data_array_add (array1, 1, str2);
 
   iot_data_t *array2 = iot_data_copy (array1);
+
+  //array elements should point to same address
+  CU_ASSERT (iot_data_array_get (array1,0) == iot_data_array_get (array2,0));
+  CU_ASSERT (iot_data_array_get (array1,1) == iot_data_array_get (array2,1));
   CU_ASSERT (iot_data_equal (array1, array2));
 
   iot_data_array_add (array2, 0, iot_data_alloc_string ("change", IOT_DATA_REF));
+  CU_ASSERT (iot_data_array_get (array1,0) != iot_data_array_get (array2,0));
   CU_ASSERT (!iot_data_equal (array1, array2));
 
   iot_data_free (array1);
@@ -1054,10 +1062,22 @@ static void test_data_copy_array_strings (void)
   iot_data_array_add (array3, 1, str4);
 
   iot_data_t *array4 = iot_data_copy (array3);
+
+  //array elements should point to different addresses
+  CU_ASSERT (iot_data_array_get (array3,0) != iot_data_array_get (array4,0));
+  CU_ASSERT (iot_data_array_get (array3,1) != iot_data_array_get (array4,1));
+
   CU_ASSERT (iot_data_equal (array3, array4));
 
   iot_data_array_add (array3, 0, iot_data_alloc_string ("change2", IOT_DATA_REF));
   CU_ASSERT (!iot_data_equal (array3, array4));
+  iot_data_free (array4);
+
+  array4 = iot_data_copy (array3);
+
+  //array element allocated by reference should point to the same address
+  CU_ASSERT (iot_data_array_get (array3,0) == iot_data_array_get (array4,0));
+  CU_ASSERT (iot_data_array_get (array3,1) != iot_data_array_get (array4,1));
 
   iot_data_free (array3);
   iot_data_free (array4);
