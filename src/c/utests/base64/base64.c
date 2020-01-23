@@ -31,11 +31,11 @@ static void test_rtrip1 (void)
   {
     memset (encoded, 0, sizeof (encoded));
     memset (decoded, 0, sizeof (decoded));
-    CU_ASSERT (iot_b64_encode (input, size, encoded, sizeof (encoded)));
+    CU_ASSERT (iot_b64_encode (input, size, encoded, sizeof (encoded)))
     outlen = size;
-    CU_ASSERT (iot_b64_decode (encoded, decoded, &outlen));
-    CU_ASSERT (size == outlen);
-    CU_ASSERT (memcmp (input, decoded, size) == 0);
+    CU_ASSERT (iot_b64_decode (encoded, decoded, &outlen))
+    CU_ASSERT (size == outlen)
+    CU_ASSERT (memcmp (input, decoded, size) == 0)
   }
 }
 

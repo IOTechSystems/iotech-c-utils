@@ -447,6 +447,7 @@ extern const char * iot_data_string (const iot_data_t * data);
  * The function to get the value stored in data
  *
  * @param data  Data pointer to retrieve value
+ * @param size  Return blob size
  * @return      Value stored in the address pointed by data
  */
 extern const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size);
@@ -742,6 +743,16 @@ extern iot_data_t * iot_data_from_json (const char * json);
  * @return       'true' if data1 & data2 are equal, 'false' otherwise
  */
 extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
+
+/**
+ * @brief Copy data
+ *
+ * The function to copy data from src and return the pointer of the copied data
+ *
+ * @param src Data to copy
+ * @return    Pointer to the copied data. The caller should free memory after use
+ */
+extern iot_data_t * iot_data_copy (const iot_data_t * src);
 
 #ifdef __cplusplus
 }
