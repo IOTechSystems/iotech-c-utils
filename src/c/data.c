@@ -1186,7 +1186,7 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
 
       while (iot_data_array_iter_next (&iter))
       {
-        const iot_data_t * value = iot_data_array_iter_value(&iter);
+        const iot_data_t * value = iot_data_array_iter_value (&iter);
 
         iot_data_t *arr_val = iot_data_copy ((iot_data_t *)value);
         iot_data_array_add (dest_arr, iter.index-1, arr_val);
