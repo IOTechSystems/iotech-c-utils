@@ -1150,7 +1150,7 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
   iot_data_t * data = (iot_data_t *)src;
 
   //data created using IOT_DATA_REF ownership
-  if (((data->type == IOT_DATA_STRING) || (data->type == IOT_DATA_BLOB)) && (data->release != true))
+  if (((data->type == IOT_DATA_STRING) || (data->type == IOT_DATA_ARRAY)) && (data->release != true))
   {
     iot_data_add_ref (data);
     return data;
@@ -1161,11 +1161,11 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
     case IOT_DATA_STRING:
       return iot_data_alloc_string (((iot_data_value_t*) data)->value.str, IOT_DATA_COPY);
 
-    case IOT_DATA_BLOB:
+    case IOT_DATA_ARRAY:
     {
-      iot_data_blob_t * b1 = (iot_data_blob_t*) data;
+      iot_data_array_t * b1 = (iot_data_array_t*) data;
       iot_data_t * dest = iot_data_alloc_blob (malloc (sizeof(b1->data)), b1->size, IOT_DATA_TAKE);
-      memcpy (((iot_data_blob_t *)dest)->data, b1->data, b1->size);
+      memcpy (((iot_data_array_t *)dest)->data, b1->data, b1->size);
       return dest;
     }
 
@@ -1190,21 +1190,20 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
       return dest_map;
     }
 
-    case IOT_DATA_ARRAY:
+    case IOT_DATA_VECTOR:
     {
-      iot_data_t *dest_arr = iot_data_alloc_array (iot_data_array_size (src));
+      iot_data_vector_iter_t iter;
+      iot_data_t * vec = iot_data_alloc_vector (iot_data_vector_size (src));
+      iot_data_vector_iter (src, &iter);
 
-      iot_data_array_iter_t iter = {NULL};
-      iot_data_array_iter (src, &iter);
-
-      while (iot_data_array_iter_next (&iter))
+      while (iot_data_vector_iter_next (&iter))
       {
-        const iot_data_t * value = iot_data_array_iter_value (&iter);
+        const iot_data_t * value = iot_data_vector_iter_value (&iter);
 
-        iot_data_t *arr_val = iot_data_copy ((iot_data_t *)value);
-        iot_data_array_add (dest_arr, iter.index-1, arr_val);
+        iot_data_t * val = iot_data_copy (value);
+        iot_data_vector_add (vec, iter.index-1, val);
       }
-      return dest_arr;
+      return vec;
     }
 
     default: //basic types
