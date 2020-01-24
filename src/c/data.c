@@ -12,7 +12,7 @@
 #define IOT_JSON_BUFF_SIZE 512
 
 static const char * iot_data_type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","Array","Map","Vector"};
-static const size_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*) };
+static const uint8_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*) };
 
 typedef union iot_data_union_t
 {
@@ -496,7 +496,7 @@ iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data_owners
 
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)
 {
-  assert (data && size && (type < IOT_DATA_STRING));
+  assert (data && length && (type < IOT_DATA_STRING));
   iot_data_array_t * array = iot_data_factory_alloc ();
   array->base.type = IOT_DATA_ARRAY;
   array->type = type;
