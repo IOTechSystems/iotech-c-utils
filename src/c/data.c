@@ -1142,3 +1142,76 @@ iot_data_t * iot_data_from_json (const char * json)
   free (tokens);
   return data;
 }
+
+iot_data_t * iot_data_copy (const iot_data_t * src)
+{
+  assert (src);
+
+  iot_data_t * data = (iot_data_t *)src;
+
+  //data created using IOT_DATA_REF ownership
+  if (((data->type == IOT_DATA_STRING) || (data->type == IOT_DATA_BLOB)) && (data->release != true))
+  {
+    iot_data_add_ref (data);
+    return data;
+  }
+
+  switch (data->type)
+  {
+    case IOT_DATA_STRING:
+      return iot_data_alloc_string (((iot_data_value_t*) data)->value.str, IOT_DATA_COPY);
+
+    case IOT_DATA_BLOB:
+    {
+      iot_data_blob_t * b1 = (iot_data_blob_t*) data;
+      iot_data_t * dest = iot_data_alloc_blob (malloc (sizeof(b1->data)), b1->size, IOT_DATA_TAKE);
+      memcpy (((iot_data_blob_t *)dest)->data, b1->data, b1->size);
+      return dest;
+    }
+
+    case IOT_DATA_MAP:
+    {
+      iot_data_t *dest_map = iot_data_alloc_map (iot_data_map_key_type (src));
+
+      iot_data_map_iter_t iter;
+      iot_data_map_iter (src, &iter);
+
+      while (iot_data_map_iter_next (&iter))
+      {
+        const iot_data_t * key = iot_data_map_iter_key (&iter);
+        const iot_data_t * value = iot_data_map_iter_value (&iter);
+
+        iot_data_t *map_key = iot_data_copy ((iot_data_t *)key);
+        iot_data_t *map_value = iot_data_copy ((iot_data_t *)value);
+
+        iot_data_map_add (dest_map, map_key, map_value);
+      }
+
+      return dest_map;
+    }
+
+    case IOT_DATA_ARRAY:
+    {
+      iot_data_t *dest_arr = iot_data_alloc_array (iot_data_array_size (src));
+
+      iot_data_array_iter_t iter = {NULL};
+      iot_data_array_iter (src, &iter);
+
+      while (iot_data_array_iter_next (&iter))
+      {
+        const iot_data_t * value = iot_data_array_iter_value (&iter);
+
+        iot_data_t *arr_val = iot_data_copy ((iot_data_t *)value);
+        iot_data_array_add (dest_arr, iter.index-1, arr_val);
+      }
+      return dest_arr;
+    }
+
+    default: //basic types
+    {
+      iot_data_value_t *val = iot_data_value_alloc (data->type, 0);
+      val->value.ui64 = (((iot_data_value_t*) data)->value.ui64);
+      return (iot_data_t *)val;
+    }
+  }
+}
