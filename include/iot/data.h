@@ -240,7 +240,7 @@ extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_
 /**
  * @brief Allocate memory for a blob
  *
- * The function to allocate memory for a blob of size passed.
+ * The function to allocate memory for a blob of given size. A BLOB is just an alias for an array of type IOT_DATA_UINT8.
  *
  * @param data       Blob data
  * @param size       Size of the blob to allocate
@@ -253,16 +253,17 @@ extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data
 /**
  * @brief Allocate memory for an array
  *
- * The function to allocate memory for an array of given size ant type.
+ * The function to allocate memory for an array of given size and type. Note that only basic C integer, boolean and floating
+ * point types are supported (not string or composed types).
  *
  * @param data       Pointer to C array of data
- * @param size       Number of elements in the array
+ * @param length     Number of elements in the array
  * @param type       Type of array element
  * @param ownership  If the ownership is set to IOT_DATA_COPY, a new allocation is made and data is copied to the allocated
- *                   memory, else the address of the data passed is stored
+ *                   memory, else the ownership of the data is taken.
  * @return           Pointer to the allocated memory
  */
-extern iot_data_t * iot_data_alloc_array (void * data, uint32_t size, iot_data_type_t type, iot_data_ownership_t ownership);
+extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership);
 
 /**
  * @brief Find array contained type
