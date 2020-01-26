@@ -489,11 +489,6 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
   return (iot_data_t*) data;
 }
 
-iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data_ownership_t ownership)
-{
-  return iot_data_alloc_array (data, size, IOT_DATA_UINT8, ownership);
-}
-
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)
 {
   assert (data && length && (type < IOT_DATA_STRING));
@@ -518,7 +513,19 @@ extern iot_data_type_t iot_data_array_type (const iot_data_t * array)
   return ((iot_data_array_t*) array)->type;
 }
 
-iot_data_t * iot_data_alloc_blob_from_base64 (const char * value)
+extern uint32_t iot_data_array_size (const iot_data_t * array)
+{
+  assert (array && (array->type == IOT_DATA_ARRAY));
+  return ((iot_data_array_t*) array)->size;
+}
+
+extern uint32_t iot_data_array_length (const iot_data_t * array)
+{
+  assert (array && (array->type == IOT_DATA_ARRAY));
+  return ((iot_data_array_t*) array)->length;
+}
+
+iot_data_t * iot_data_alloc_array_from_base64 (const char * value)
 {
   size_t len;
   uint8_t * data;
@@ -530,7 +537,7 @@ iot_data_t * iot_data_alloc_blob_from_base64 (const char * value)
 
   if (iot_b64_decode (value, data, &len))
   {
-    result = iot_data_alloc_blob (data, len, IOT_DATA_TAKE);
+    result = iot_data_alloc_array (data, len, IOT_DATA_UINT8, IOT_DATA_TAKE);
   }
   else
   {
@@ -612,10 +619,9 @@ const char * iot_data_string (const iot_data_t * data)
   return ((iot_data_value_t*) data)->value.str;
 }
 
-const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size)
+extern void * iot_data_array_address (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_ARRAY));
-  if (size) *size = ((iot_data_array_t*) data)->size;
   return ((iot_data_array_t*) data)->data;
 }
 
@@ -671,7 +677,7 @@ uint32_t iot_data_map_size (const iot_data_t * map)
   return ((iot_data_map_t*) mp)->size;
 }
 
-bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * key)
+bool iot_data_map_base64_to_array (iot_data_t * map, const iot_data_t * key)
 {
   bool result = false;
   iot_data_map_t * mp = (iot_data_map_t*) map;
@@ -683,14 +689,14 @@ bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * key)
   if (pair && (pair->value->type == IOT_DATA_STRING))
   {
     const char * str = ((iot_data_value_t*) pair->value)->value.str;
-    iot_data_t * blob = iot_data_alloc_blob_from_base64 (str);
+    iot_data_t * array = iot_data_alloc_array_from_base64 (str);
 
-    result = (blob != NULL);
+    result = (array != NULL);
 
     if (result)
     {
       iot_data_free (pair->value);
-      pair->value = blob;
+      pair->value = array;
     }
   }
   return result;
@@ -910,10 +916,10 @@ static void iot_data_add_quote (iot_string_holder_t * holder)
   iot_data_strcat_escape (holder, "\"", false);
 }
 
-static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data_t * blob)
+static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data_t * array)
 {
-  uint32_t inLen;
-  const uint8_t * data = iot_data_blob (blob, &inLen);
+  uint32_t inLen = iot_data_array_size (array);
+  const uint8_t * data = iot_data_array_address (array);
   assert (strlen (holder->str) == (holder->size - holder->free - 1));
   char * out = holder->str + holder->size - holder->free - 1;
   size_t len = iot_b64_encodesize (inLen) - 1; /* Allow for string terminator */

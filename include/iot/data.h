@@ -238,19 +238,6 @@ extern iot_data_t * iot_data_alloc_bool (bool val);
 extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership);
 
 /**
- * @brief Allocate memory for a blob
- *
- * The function to allocate memory for a blob of given size. A BLOB is just an alias for an array of type IOT_DATA_UINT8.
- *
- * @param data       Blob data
- * @param size       Size of the blob to allocate
- * @param ownership  If the ownership is set to IOT_DATA_COPY, a new allocation is made and data is copied to the allocated
- *                   memory, else the address of the data passed is stored
- * @return           Pointer to the allocated memory
- */
-extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data_ownership_t ownership);
-
-/**
  * @brief Allocate memory for an array
  *
  * The function to allocate memory for an array of given size and type. Note that only basic C integer, boolean and floating
@@ -266,14 +253,34 @@ extern iot_data_t * iot_data_alloc_blob (uint8_t * data, uint32_t size, iot_data
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership);
 
 /**
- * @brief Find array contained type
+ * @brief Find array type
  *
- * The function to allocate memory for an array of given size ant type.
+ * Function to return the type of an Array.
  *
- * @param array      Array or BLOB
+ * @param array      Array
  * @return           Type of array data
  */
 extern iot_data_type_t iot_data_array_type (const iot_data_t * array);
+
+/**
+ * @brief Find the number of Array elements
+ *
+ * Function to return the number of elements in an Array
+ *
+ * @param array      Array
+ * @return           Type of array data
+ */
+extern uint32_t iot_data_array_length (const iot_data_t * array);
+
+/**
+ * @brief Find the array size
+ *
+ * Function to return the size (in bytes) of the contained array
+ *
+ * @param array      Array
+ * @return           Size of contained array
+ */
+extern uint32_t iot_data_array_size (const iot_data_t * array);
 
 /**
  * @brief  Allocate memory for a map
@@ -321,12 +328,12 @@ extern iot_data_t * iot_data_alloc_from_strings (const char * type, const char *
 /**
  * @brief Allocate memory for base64 decoded data
  *
- * The function to allocate memory of data_type blob for base64 decoded data
+ * The function allocates a byte array for base64 decoded data
  *
  * @param value  Data to decode from base64
- * @return       Pointer to the allocated memory of blob data_type with the base64 decoded value, NULL on error
+ * @return       Pointer to the allocated memory of byte array, NULL on error
  */
-extern iot_data_t * iot_data_alloc_blob_from_base64 (const char * value);
+extern iot_data_t * iot_data_alloc_array_from_base64 (const char * value);
 
 /**
  * @brief Increment data value by 1
@@ -467,17 +474,6 @@ extern bool iot_data_bool (const iot_data_t * data);
 extern const char * iot_data_string (const iot_data_t * data);
 
 /**
- * @brief Get value of type uint16 stored in data
- *
- * The function to get the value stored in data
- *
- * @param data  Data pointer to retrieve value
- * @param size  Return blob size
- * @return      Value stored in the address pointed by data
- */
-extern const uint8_t * iot_data_blob (const iot_data_t * data, uint32_t * size);
-
-/**
  * @brief Add key-value pair to a map
  *
  * The function to add a key-value pair to a map
@@ -579,15 +575,15 @@ extern bool iot_data_string_map_get_bool (const iot_data_t * map, const char * k
 extern iot_data_type_t iot_data_map_key_type (const iot_data_t * map);
 
 /**
- * @brief  Decode base64 value and store it as a blob in a map for a given key
+ * @brief  Decode base64 value and store it as a byte array in a map for a given key
  *
- * The function to decode base64 value in a map store it as a blob for an input key
+ * The function to decode base64 value in a map store it as a byte array for an input key
  *
  * @param map  Input map
  * @param key  Input key
  * @return     'true' on Success, 'false' on Failure
  */
-extern bool iot_data_map_base64_to_blob (iot_data_t * map, const iot_data_t * key);
+extern bool iot_data_map_base64_to_array (iot_data_t * map, const iot_data_t * key);
 
 /**
  * @brief Add an element to an vector at index
