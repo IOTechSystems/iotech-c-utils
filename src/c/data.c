@@ -619,12 +619,6 @@ const char * iot_data_string (const iot_data_t * data)
   return ((iot_data_value_t*) data)->value.str;
 }
 
-extern void * iot_data_array_address (const iot_data_t * data)
-{
-  assert (data && (data->type == IOT_DATA_ARRAY));
-  return ((iot_data_array_t*) data)->data;
-}
-
 static iot_data_pair_t * iot_data_map_find (iot_data_map_t * map, const iot_data_t * key)
 {
   iot_data_pair_t * pair =  map->head;
@@ -919,7 +913,7 @@ static void iot_data_add_quote (iot_string_holder_t * holder)
 static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data_t * array)
 {
   uint32_t inLen = iot_data_array_size (array);
-  const uint8_t * data = iot_data_array_address (array);
+  const uint8_t * data = iot_data_address (array);
   assert (strlen (holder->str) == (holder->size - holder->free - 1));
   char * out = holder->str + holder->size - holder->free - 1;
   size_t len = iot_b64_encodesize (inLen) - 1; /* Allow for string terminator */
