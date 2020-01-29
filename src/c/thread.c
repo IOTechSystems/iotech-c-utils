@@ -92,7 +92,7 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   {
     struct sched_param param;
 #ifdef __ZEPHYR__
-    param.sched_priority = priority ? *priority : CONFIG_NUM_COOP_PRIORITIES - 1;
+    param.sched_priority = priority ? (*priority) : (CONFIG_NUM_COOP_PRIORITIES - 1);
     pthread_attr_setstack (&attr, stack, IOT_ZEPHYR_STACK_SIZE);
 #else
     param.sched_priority = priority;
