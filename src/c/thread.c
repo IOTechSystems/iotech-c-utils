@@ -51,7 +51,9 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
 
   pthread_attr_init (&attr);
   pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
+#ifndef __ZEPHYR__
   pthread_attr_setinheritsched (&attr, PTHREAD_EXPLICIT_SCHED);
+#endif
 
 #if defined (_GNU_SOURCE) && ! defined (__LIBMUSL__)
   if (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN))
