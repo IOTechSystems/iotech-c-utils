@@ -39,7 +39,7 @@ iot_logger_t * iot_logger_default (void)
     logger = &iot_logger_dfl;
     memset (&iot_logger_dfl, 0, sizeof (iot_logger_dfl));
     iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
-    iot_logger_dfl.save = IOT_LOGLEVEL_DEFAULT;
+    iot_logger_dfl.level = iot_logger_dfl.save = IOT_LOGLEVEL_DEFAULT;
     iot_logger_dfl.impl = iot_log_console;
   }
   return logger;
