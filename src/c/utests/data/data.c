@@ -1301,7 +1301,7 @@ static void test_data_alloc_array_i8(void)
     array2 = iot_data_copy (array1);
 
     CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT8);
+    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT8)
     CU_ASSERT (iot_data_equal (array1, array2));
 
     iot_data_free (array1);
@@ -1347,8 +1347,8 @@ static void test_data_alloc_array_ui8(void)
 
 static void test_data_alloc_array_i16(void)
 {
-    int16_t data [4] = { 1, 2, 3, 4 };
-    int16_t data1 [4] = { 10, 20, 30, 40 };
+    static int16_t data [4] = { 1, 2, 3, 4 };
+    static int16_t data1 [4] = { 10, 20, 30, 40 };
 
     iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT16, IOT_DATA_REF);
 
@@ -1384,8 +1384,8 @@ static void test_data_alloc_array_i16(void)
 
 static void test_data_alloc_array_ui16(void)
 {
-    uint16_t data [4] = { 1, 2, 3, 4 };
-    uint16_t data1 [4] = { 10, 20, 30, 40 };
+    static uint16_t data [4] = { 1, 2, 3, 4 };
+    static uint16_t data1 [4] = { 10, 20, 30, 40 };
 
     iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT16, IOT_DATA_REF);
 
@@ -1421,8 +1421,8 @@ static void test_data_alloc_array_ui16(void)
 
 static void test_data_alloc_array_i32(void)
 {
-    int32_t data [4] = { 1, 2, 3, 4 };
-    int32_t data1 [4] = { 10, 20, 30, 40 };
+    static int32_t data [4] = { 1, 2, 3, 4 };
+    static int32_t data1 [4] = { 10, 20, 30, 40 };
 
     iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT32, IOT_DATA_REF);
 
@@ -1458,8 +1458,8 @@ static void test_data_alloc_array_i32(void)
 
 static void test_data_alloc_array_ui32(void)
 {
-    uint32_t data [4] = { 1, 2, 3, 4 };
-    uint32_t data1 [4] = { 10, 20, 30, 40 };
+    static uint32_t data [4] = { 1, 2, 3, 4 };
+    static uint32_t data1 [4] = { 10, 20, 30, 40 };
 
     iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT32, IOT_DATA_REF);
 
@@ -1495,8 +1495,8 @@ static void test_data_alloc_array_ui32(void)
 
 static void test_data_alloc_array_i64(void)
 {
-    int64_t data [4] = { 1, 2, 3, 4 };
-    int64_t data1 [4] = { 10, 20, 30, 40 };
+    static int64_t data [4] = { 1, 2, 3, 4 };
+    static int64_t data1 [4] = { 10, 20, 30, 40 };
 
     iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT64, IOT_DATA_REF);
 
@@ -1532,8 +1532,8 @@ static void test_data_alloc_array_i64(void)
 
 static void test_data_alloc_array_ui64(void)
 {
-    uint64_t data [4] = { 1, 2, 3, 4 };
-    uint64_t data1 [4] = { 10, 20, 30, 40 };
+    static uint64_t data [4] = { 1, 2, 3, 4 };
+    static uint64_t data1 [4] = { 10, 20, 30, 40 };
 
     iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT64, IOT_DATA_REF);
 
@@ -1569,8 +1569,8 @@ static void test_data_alloc_array_ui64(void)
 
 static void test_data_alloc_array_f32(void)
 {
-    float_t data [4] = { 1.0f, 2.0f, 3.0f, 4.0f };
-    float_t data1 [4] = { 10.0f, 20.0f, 30.0f, 40.0f};
+    static float_t data [4] = { 1.0f, 2.0f, 3.0f, 4.0f };
+    static float_t data1 [4] = { 10.0f, 20.0f, 30.0f, 40.0f};
 
     iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_FLOAT32, IOT_DATA_REF);
 
@@ -1606,8 +1606,8 @@ static void test_data_alloc_array_f32(void)
 
 static void test_data_alloc_array_f64(void)
 {
-    double_t data [4] = { 1.0, 2.0, 3.0, 4.0 };
-    double_t data1 [4] = { 10.0, 20.0, 30.0, 40.0};
+    static double_t data [4] = { 1.0, 2.0, 3.0, 4.0 };
+    static double_t data1 [4] = { 10.0, 20.0, 30.0, 40.0};
 
     iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_FLOAT64, IOT_DATA_REF);
 
