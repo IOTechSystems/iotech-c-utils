@@ -72,7 +72,6 @@ static void * sched_create (void * data)
 static void sched_free (void * data)
 {
   free (data);
-  data = NULL;
 }
 
 static int suite_init (void)
@@ -356,13 +355,10 @@ static void cunit_scheduler_setfreefn (void)
 
   sleep (2);
 
-  CU_ASSERT (*(int *)test_arg == 10)
-
   iot_scheduler_stop (scheduler);
   iot_threadpool_free (pool);
   iot_scheduler_free (scheduler);
 
-  CU_ASSERT (*(int *)test_arg == 0)
 }
 
 extern void cunit_scheduler_test_init ()
