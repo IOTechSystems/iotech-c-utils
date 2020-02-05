@@ -1271,411 +1271,411 @@ static void test_map_size (void)
   iot_data_free (map);
 }
 
-static void test_data_alloc_array_i8(void)
+static void test_data_alloc_array_i8 (void)
 {
-    int8_t data [4] = { 1, 2, 3, 4 };
-    int8_t data1 [4] = { 10, 20, 30, 40 };
+  int8_t data [4] = { -1, -2, 3, 4 };
+  int8_t data1 [4] = { 10, 20, -30, -40 };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT8, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_INT8, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT8);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT8)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT8, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_INT8, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT8);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT8)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_INT8, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_INT8, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT8);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT8)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT8)
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT8)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_ui8(void)
+static void test_data_alloc_array_ui8 (void)
 {
-    uint8_t data [4] = { 1, 2, 3, 4 };
-    uint8_t data1 [4] = { 10, 20, 30, 40 };
+  uint8_t data [4] = { 1, 2, 3, 4 };
+  uint8_t data1 [4] = { 10, 20, 30, 40 };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT8, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT8);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT8)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT8, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT8);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT8)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_UINT8, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_UINT8, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT8);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT8)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT8);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT8)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_i16(void)
+static void test_data_alloc_array_i16 (void)
 {
-    static int16_t data [4] = { 1, 2, 3, 4 };
-    static int16_t data1 [4] = { 10, 20, 30, 40 };
+  static int16_t data [4] = { -11111, -22222, 3333, 4444 };
+  static int16_t data1 [4] = { -4444, -3333, 22222, 11111 };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT16, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_INT16, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT16);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT16)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT16, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_INT16, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT16);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT16)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_INT16, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_INT16, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT16);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT16)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT16);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT16)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_ui16(void)
+static void test_data_alloc_array_ui16 (void)
 {
-    static uint16_t data [4] = { 1, 2, 3, 4 };
-    static uint16_t data1 [4] = { 10, 20, 30, 40 };
+  static uint16_t data [4] = { 11111, 22222, 44444, 55555 };
+  static uint16_t data1 [4] = { 55555, 11111, 22222, 44444  };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT16, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT16, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT16);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT16)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT16, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT16, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT16);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT16)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_UINT16, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_UINT16, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT16);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT16)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT16);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT16)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_i32(void)
+static void test_data_alloc_array_i32 (void)
 {
-    static int32_t data [4] = { 1, 2, 3, 4 };
-    static int32_t data1 [4] = { 10, 20, 30, 40 };
+  static int32_t data [4] = { -1111111, -2222222, 3333333, 4444444 };
+  static int32_t data1 [4] = { -4444444, -3333333, 2222222, 1111111 };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT32, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_INT32, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT32);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT32)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT32, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_INT32, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT32);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT32)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_INT32, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_INT32, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT32);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT32)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT32);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT32)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_ui32(void)
+static void test_data_alloc_array_ui32 (void)
 {
-    static uint32_t data [4] = { 1, 2, 3, 4 };
-    static uint32_t data1 [4] = { 10, 20, 30, 40 };
+  static uint32_t data [4] = { 1111111, 2222222, 3333333, 4444444 };
+  static uint32_t data1 [4] = { 2222222, 4444444, 1111111, 3333333 };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT32, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT32, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT32);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT32)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT32, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT32, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT32);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT32)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_UINT32, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_UINT32, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT32);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT32)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT32);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT32)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_i64(void)
+static void test_data_alloc_array_i64 (void)
 {
-    static int64_t data [4] = { 1, 2, 3, 4 };
-    static int64_t data1 [4] = { 10, 20, 30, 40 };
+  static int64_t data [4] = { -444444444444444 , 222222222222222, 333333333333333, -111111111111111 };
+  static int64_t data1 [4] = { -222222222222222, -333333333333333, 111111111111111, 444444444444444 };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT64, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_INT64, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT64);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT64)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT64, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_INT64, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT64);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT64)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_INT64, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_INT64, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT64);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_INT64)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT64);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_INT64)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_ui64(void)
+static void test_data_alloc_array_ui64 (void)
 {
-    static uint64_t data [4] = { 1, 2, 3, 4 };
-    static uint64_t data1 [4] = { 10, 20, 30, 40 };
+  static uint64_t data [4] = { 222222222222222, 333333333333333, 444444444444444, 111111111111111 };
+  static uint64_t data1 [4] = { 333333333333333, 222222222222222, 111111111111111, 444444444444444 };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT64, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT64, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT64);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT64)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_UINT64, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT64, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT64);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT64)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_UINT64, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_UINT64, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT64);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT64)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT64);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_UINT64)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_f32(void)
+static void test_data_alloc_array_f32 (void)
 {
-    static float_t data [4] = { 1.0f, 2.0f, 3.0f, 4.0f };
-    static float_t data1 [4] = { 10.0f, 20.0f, 30.0f, 40.0f};
+  static float_t data [4] = { 1.200001f, 2.300001f, 3.400001f, 4.500001f };
+  static float_t data1 [4] = { 4.599999f, 2.300001f, 3.400001f, 1.299999f};
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_FLOAT32, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_FLOAT32, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_FLOAT32);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_FLOAT32)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_FLOAT32, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_FLOAT32, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_FLOAT32);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_FLOAT32)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_FLOAT32, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_FLOAT32, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_FLOAT32);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_FLOAT32)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_FLOAT32);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_FLOAT32)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_f64(void)
+static void test_data_alloc_array_f64 (void)
 {
-    static double_t data [4] = { 1.0, 2.0, 3.0, 4.0 };
-    static double_t data1 [4] = { 10.0, 20.0, 30.0, 40.0};
+  static double_t data [4] = { 1.20000001f, 3.40000001f, 5.60000001f, 7.80000001f };
+  static double_t data1 [4] = { 5.69999999f, 7.89999999f, 1.29999999f, 3.49999999f };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_FLOAT64, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_FLOAT64, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_FLOAT64);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_FLOAT64)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_FLOAT64, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_FLOAT64, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_FLOAT64);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL);
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_FLOAT64);
+  CU_ASSERT (iot_data_equal (array1, array2));
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_FLOAT64, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_FLOAT64, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_FLOAT64);
+  CU_ASSERT (array1 != NULL);
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_FLOAT64);
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_FLOAT64);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_FLOAT64);
+  CU_ASSERT (iot_data_equal (array1, array2));
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
-static void test_data_alloc_array_bool(void)
+static void test_data_alloc_array_bool (void)
 {
-    bool data [4] = { true, false, true, false };
-    bool data1 [4] = { true, true, false, false };
+  bool data [4] = { true, false, true, false };
+  bool data1 [4] = { true, true, false, false };
 
-    iot_data_t * array1 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_BOOL, IOT_DATA_REF);
+  iot_data_t * array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_BOOL, IOT_DATA_REF);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_BOOL);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_BOOL)
 
-    iot_data_t * array2 = iot_data_alloc_array (data, sizeof(data), IOT_DATA_BOOL, IOT_DATA_REF);
+  iot_data_t * array2 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_BOOL, IOT_DATA_REF);
 
-    CU_ASSERT (array2 != NULL);
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_BOOL);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (array2 != NULL)
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_BOOL)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 
-    array1 = iot_data_alloc_array (data1, sizeof(data1), IOT_DATA_BOOL, IOT_DATA_COPY);
+  array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_BOOL, IOT_DATA_COPY);
 
-    CU_ASSERT (array1 != NULL);
-    CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_BOOL);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_BOOL)
 
-    array2 = iot_data_copy (array1);
+  array2 = iot_data_copy (array1);
 
-    CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY);
-    CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_BOOL);
-    CU_ASSERT (iot_data_equal (array1, array2));
+  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_BOOL)
+  CU_ASSERT (iot_data_equal (array1, array2))
 
-    iot_data_free (array1);
-    iot_data_free (array2);
+  iot_data_free (array1);
+  iot_data_free (array2);
 }
 
 void cunit_data_test_init (void)
