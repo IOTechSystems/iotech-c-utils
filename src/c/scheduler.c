@@ -23,6 +23,7 @@ struct iot_schedule_t
   iot_schedule_t * next;             /* The next schedule */
   iot_schedule_t * previous;         /* The previous schedule */
   void * (*function) (void * arg);   /* The function called by the schedule */
+  void (*freefn) (void *arg);        /* The function to clear the arguments when schedule is deleted */
   void * arg;                        /* Function input arg */
   iot_threadpool_t * threadpool;     /* Thread pool used to run scheduled function */
   int priority;                      /* Schedule priority (pool override) */
@@ -195,6 +196,7 @@ void iot_scheduler_add_ref (iot_scheduler_t * scheduler)
 /* Start the scheduler thread */
 bool iot_scheduler_start (iot_scheduler_t * scheduler)
 {
+  assert (scheduler);
   iot_log_trace (scheduler->logger, "iot_scheduler_start()");
   iot_component_set_running (&scheduler->component);
   return true;
@@ -203,16 +205,19 @@ bool iot_scheduler_start (iot_scheduler_t * scheduler)
 /* Stop the scheduler thread */
 void iot_scheduler_stop (iot_scheduler_t * scheduler)
 {
+  assert (scheduler);
   iot_log_trace (scheduler->logger, "iot_scheduler_stop()");
   iot_component_set_stopped (&scheduler->component);
 }
 
 /* Create a schedule and insert it into the queue */
-iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void * (*function) (void*), void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
+iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void * (*function) (void*), void (*freefn) (void *), void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
+  assert (scheduler && function);
   iot_log_trace (scheduler->logger, "iot_schedule_create()");
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));
   schedule->function = function;
+  schedule->freefn = freefn;
   schedule->arg = arg;
   schedule->period = period;
   schedule->start = start;
@@ -272,6 +277,7 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
   iot_schedule_dequeue (schedule->scheduled ? &scheduler->queue : &scheduler->idle_queue, schedule);
   iot_component_unlock (&scheduler->component);
   iot_threadpool_free (schedule->threadpool);
+  (schedule->freefn) ? schedule->freefn (schedule->arg) : 0;
   free (schedule);
 }
 

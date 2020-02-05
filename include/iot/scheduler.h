@@ -27,6 +27,7 @@ extern "C" {
 typedef struct iot_scheduler_t iot_scheduler_t;
 typedef struct iot_schedule_t iot_schedule_t;
 typedef void * (*iot_schedule_fn_t) (void * arg);
+typedef void (*iot_schedule_freefn_t) (void * arg);
 
 #define IOT_SCHEDULER_TYPE "IOT::Scheduler"
 
@@ -86,7 +87,8 @@ extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
  * @endcode
  *
  * @param  schd               Pointer to a scheduler
- * @param  function           The function that should be called when the schedule is triggered
+ * @param  func               The function that should be called when the schedule is triggered
+ * @param  free_func          The function to free the arg parameter when scheduler is deleted, could be NULL
  * @param  arg                The argument to be passed to the function
  * @param  period             The period of the schedule (in nanoseconds)
  * @param  start              The start time of the schedule (in nanoseconds)
@@ -96,7 +98,7 @@ extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
  * @return iot_schedule       Pointer to the created schedule, NULL on error
  */
 extern iot_schedule_t * iot_schedule_create
-  (iot_scheduler_t * schd, iot_schedule_fn_t func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority);
+  (iot_scheduler_t * schd, iot_schedule_fn_t func, iot_schedule_freefn_t free_func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority);
 
 /**
  * @brief  Add a schedule to the queue
