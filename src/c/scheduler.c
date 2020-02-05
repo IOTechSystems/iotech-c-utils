@@ -22,8 +22,8 @@ struct iot_schedule_t
 {
   iot_schedule_t * next;             /* The next schedule */
   iot_schedule_t * previous;         /* The previous schedule */
-  void * (*function) (void * arg);   /* The function called by the schedule */
-  void (*freefn) (void *arg);        /* The function to clear the arguments when schedule is deleted */
+  iot_schedule_fn_t function;        /* The function called by the schedule */
+  iot_schedule_free_fn_t freefn;      /* The function to clear the arguments when schedule is deleted */
   void * arg;                        /* Function input arg */
   iot_threadpool_t * threadpool;     /* Thread pool used to run scheduled function */
   int priority;                      /* Schedule priority (pool override) */
@@ -211,13 +211,13 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
 }
 
 /* Create a schedule and insert it into the queue */
-iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, void * (*function) (void*), void (*freefn) (void *), void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
+iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
-  assert (scheduler && function);
+  assert (scheduler && func);
   iot_log_trace (scheduler->logger, "iot_schedule_create()");
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));
-  schedule->function = function;
-  schedule->freefn = freefn;
+  schedule->function = func;
+  schedule->freefn = free_func;
   schedule->arg = arg;
   schedule->period = period;
   schedule->start = start;
