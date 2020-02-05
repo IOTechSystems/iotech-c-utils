@@ -5,7 +5,7 @@ ROOT=$(dirname $(dirname $(readlink -f $0)))
 BROOT=${ROOT}/x86_64
 TARGETS="frdm_k64f native_posix"
 
-if [ -z "${TARGET}" -o "${TARGET}" = "None" ]
+if [ -z "${TARGET}" ] || [ "${TARGET}" = "None" ]
 then
   echo "Zephyr Target BOARD not set"
   exit 1
@@ -20,10 +20,10 @@ fi
 build_board()
 {
   export BOARD=$1
-  export CONF_FILE=${ROOT}/src/etc/zephyr/prj-${BOARD}.conf
-  mkdir -p ${BROOT}/release
-  cd ${BROOT}/release
-  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${ROOT}/src/c/zephyr/lib
+  export CONF_FILE="${ROOT}/src/etc/zephyr/prj-${BOARD}.conf"
+  mkdir -p "${BROOT}/release"
+  cd "${BROOT}/release"
+  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "${ROOT}/src/c/zephyr/lib"
   make package 2>&1 | tee release.log
 }
 
@@ -31,5 +31,5 @@ build_board()
 
 for b in ${BRDS}
 do
-  build_board $b
+  build_board "$b"
 done
