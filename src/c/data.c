@@ -485,7 +485,7 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
 {
   assert (val);
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, ownership != IOT_DATA_REF);
-  data->value.str = (ownership == IOT_DATA_COPY) ? iot_strdup (val) : (char*) val;
+  data->value.str = (ownership == IOT_DATA_COPY) ? strdup (val) : (char*) val;
   return (iot_data_t*) data;
 }
 
@@ -900,12 +900,12 @@ static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * a
   holder->free -= adj_len;
 }
 
-static void iot_data_strcat (iot_string_holder_t * holder, const char * add)
+static inline void iot_data_strcat (iot_string_holder_t * holder, const char * add)
 {
   iot_data_strcat_escape (holder, add, true);
 }
 
-static void iot_data_add_quote (iot_string_holder_t * holder)
+static inline void iot_data_add_quote (iot_string_holder_t * holder)
 {
   iot_data_strcat_escape (holder, "\"", false);
 }

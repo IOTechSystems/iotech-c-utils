@@ -163,7 +163,7 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
         {
           iot_component_holder_t * ch = malloc (sizeof (*ch));
           ch->component = comp;
-          ch->name = iot_strdup (cname);
+          ch->name = strdup (cname);
           ch->factory = factory;
           if ((cont->ccount + 1) == cont->csize)
           {

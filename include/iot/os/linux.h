@@ -3,5 +3,4 @@
 
 #include <sched.h>
 #include <unistd.h>
-#define iot_strdup(s) strdup (s)
 #endif
