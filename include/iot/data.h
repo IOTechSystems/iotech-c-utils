@@ -55,7 +55,9 @@ typedef struct iot_data_vector_iter_t
 {
   struct iot_data_vector_t * vector;
   uint32_t index;
-} iot_data_vector_iter_t ;
+} iot_data_vector_iter_t;
+
+typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 
 /**
  * @brief Increment the data reference count
@@ -732,6 +734,21 @@ extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter
  * @return       Value of string type from the vector index pointed by iterator if valid, NULL otherwise
  */
 extern const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * iter);
+
+/**
+ * @brief Find matching element in a vector using compare function
+ *
+ * Applies a compare function to each element in a vector until the compare
+ * function returns true or the end of the vector is reached. Returns a
+ * pointer to the matching element or NULL.
+ *
+ * @param vector  Input vector
+ * @param cmp     A comparison function which takes an element and an arg and return true or false
+ * @param arg     Pointer to user supplied data that is passed to the comparison function.
+ * @return        Pointer to the first element for which the comparison function return true, NULL otherwise
+ */
+
+extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg);
 
 /**
  * @brief  Convert data to json string
