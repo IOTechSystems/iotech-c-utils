@@ -887,6 +887,27 @@ static void test_data_unequal_vector_map (void)
   iot_data_free (data_map2);
 }
 
+static bool string_match (const iot_data_t * data, const void * arg)
+{
+  const char * target = (const char *) arg;
+  const char * val = iot_data_string (data);
+  return strcmp (target, val) == 0;
+}
+
+static void test_data_vector_find (void)
+{
+  iot_data_t * vector = iot_data_alloc_vector (3);
+  iot_data_t * elem0 = iot_data_alloc_string ("test", IOT_DATA_REF);
+  iot_data_t * elem1 = iot_data_alloc_string ("test1", IOT_DATA_REF);
+  iot_data_t * elem2 = iot_data_alloc_string ("test2", IOT_DATA_REF);
+  iot_data_vector_add (vector, 0, elem0);
+  iot_data_vector_add (vector, 1, elem1);
+  iot_data_vector_add (vector, 2, elem2);
+  CU_ASSERT (iot_data_vector_find (vector, string_match, "test1") == elem1);
+  CU_ASSERT (iot_data_vector_find (vector, string_match, "foo") == NULL);
+  iot_data_free (vector);
+}
+
 static void test_data_copy_string (void)
 {
   iot_data_t * src = iot_data_alloc_string ("src", IOT_DATA_REF);
@@ -1732,6 +1753,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_copy_map_update", test_data_copy_map_update);
   CU_add_test (suite, "data_copy_map_update_value", test_data_copy_map_update_value);
   CU_add_test (suite, "data_copy_vector_map", test_data_copy_vector_map);
+  CU_add_test (suite, "data_vector_find", test_data_vector_find);
   CU_add_test (suite, "data_copy_map_base64_to_array", test_data_copy_map_base64_to_array);
   CU_add_test (suite, "data_check_equal_nested_vector", test_data_equal_nested_vector);
   CU_add_test (suite, "data_check_unequal_nested_vector", test_data_unequal_nested_vector);

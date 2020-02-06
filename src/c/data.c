@@ -825,6 +825,23 @@ const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * iter)
   return (iter->index <= iter->vector->size) ? iot_data_string (iter->vector->values[iter->index - 1]) : NULL;
 }
 
+const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg)
+{
+  const iot_data_t * result = NULL;
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (vector, &iter);
+  while (iot_data_vector_iter_next (&iter))
+  {
+    const iot_data_t * val = iot_data_vector_iter_value (&iter);
+    if (cmp (val, arg))
+    {
+      result = val;
+      break;
+    }
+  }
+  return result;
+}
+
 static size_t iot_data_repr_size (char c)
 {
   return (strchr ("\"\\\b\f\n\r\t", c)) ? 2 : ((c >= '\x00' && c <=  '\x1f') ? 6 : 1);
