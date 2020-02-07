@@ -305,7 +305,7 @@ extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
  *
  * The function to allocate memory for an vector type
  *
- * @param size  Length of the vector for allocation
+ * @param size  Length of the vector for allocation, could be zero to create zero length vector
  * @return      Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_vector (uint32_t size);

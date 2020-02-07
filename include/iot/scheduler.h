@@ -82,7 +82,7 @@ extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
  *
  * @code
  *
- *    iot_schedule_t * mySchedule = iot_schedule_create (sched, func, NULL,IOT_SEC_TO_NS(1),0,0);
+ *    iot_schedule_t * mySchedule = iot_schedule_create (sched, func, NULL, NULL, IOT_SEC_TO_NS(1),0,0);
  *
  * @endcode
  *

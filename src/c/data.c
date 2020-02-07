@@ -239,8 +239,8 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 
         while ((iot_data_vector_iter_next (&iter1)) && (iot_data_vector_iter_next (&iter2)))
         {
-          const iot_data_t * data1 = iot_data_vector_get (v1, (iter1.index-1));
-          const iot_data_t * data2 = iot_data_vector_get (v2, (iter2.index-1));
+          const iot_data_t * data1 = iot_data_vector_get (v1, (iter1.index - 1));
+          const iot_data_t * data2 = iot_data_vector_get (v2, (iter2.index - 1));
           if (!iot_data_equal (data1, data2)) return false;
         }
         return true;
@@ -283,7 +283,6 @@ iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)
 
 iot_data_t * iot_data_alloc_vector (uint32_t size)
 {
-  assert (size);
   iot_data_vector_t * vector = iot_data_factory_alloc ();
   vector->base.type = IOT_DATA_VECTOR;
   vector->size = size;
