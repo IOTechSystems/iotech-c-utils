@@ -114,8 +114,8 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
   assert (name && impl);
   iot_logger_t * logger = calloc (1, sizeof (*logger));
   logger->impl = impl;
-  logger->name = iot_strdup (name);
-  logger->to = to ? iot_strdup (to) : NULL;
+  logger->name = strdup (name);
+  logger->to = to ? strdup (to) : NULL;
   logger->save = level;
   logger->next = next;
   iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);

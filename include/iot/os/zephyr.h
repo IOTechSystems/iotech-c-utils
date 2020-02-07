@@ -6,6 +6,8 @@
 extern char * iot_strdup (const char * s);
 extern char * iot_ctok_r (char *str, const char delim, char **saveptr);
 
+#define strdup(s) iot_strdup (s)
+
 #ifndef CONFIG_NET_TCP
 #error Zephyr CONFIG_NET_TCP not set
 #endif
