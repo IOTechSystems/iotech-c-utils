@@ -57,6 +57,12 @@ typedef struct iot_data_vector_iter_t
   uint32_t index;
 } iot_data_vector_iter_t;
 
+typedef struct iot_data_array_iter_t
+{
+  struct iot_data_array_t * array;
+  uint32_t index;
+} iot_data_array_iter_t;
+
 typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 
 /**
@@ -115,7 +121,7 @@ extern const char * iot_data_type_name (const iot_data_t * data);
  * @param data  Pointer to data
  * @return      Pointer that holds the address of data
  */
-extern void * iot_data_address (const iot_data_t * data); /* Not for Maps or Arrays */
+extern void * iot_data_address (const iot_data_t * data); /* Not for Maps or Vectors */
 
 /**
  * @brief Allocate memory for data_type int8
@@ -621,6 +627,48 @@ extern const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32
 extern uint32_t iot_data_vector_size (const iot_data_t * vector);
 
 /**
+ * @brief Initialise iterator for an array
+ *
+ * The function initialises an iterator to point to the beginning of an array. Note that
+ * the iterator is unsafe in that the array cannot be modified when being iterated.
+ *
+ * @param array   Input array
+ * @param iter  Iterator to initialise
+ */
+extern void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter);
+
+/**
+ * @brief Update the iterator to point to the next element within an array
+ *
+ * The function to set the iterator to point to the next element of an array. On reaching end of the array,
+ * iterator is set to point to first element in the array.
+ *
+ * @param iter  Input iterator
+ * @return      'true' on Success, 'false' when the iterator reaches end of the array
+ */
+extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
+
+/**
+ * @brief Return the current array index of an array iterator
+ *
+ * The function returns the current array index of an array iterator.
+ *
+ * @param iter  Input iterator
+ * @return      The current array index
+ */
+extern uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter);
+
+/**
+ * @brief Get the value of the element associated with an array iterator
+ *
+ * The function returns the address of the array element currently referenced by the array iterator.
+ *
+ * @param iter  Input iterator
+ * @return      Pointer to the current array element
+ */
+extern const void * iot_data_array_iter_value (const iot_data_array_iter_t * iter);
+
+/**
  * @brief Initialise iterator for a map
  *
  * The function initialises an iterator to point to the beginning of a map. Note that
@@ -632,7 +680,7 @@ extern uint32_t iot_data_vector_size (const iot_data_t * vector);
 extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter);
 
 /**
- * @brief Update the iterator to point to a next element within a map
+ * @brief Update the iterator to point to the next element within a map
  *
  * The function to set the iterator to point to the next element within a map. On reaching end of the map,
  * iterator is set to point to first element in the map.
