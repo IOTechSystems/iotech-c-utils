@@ -1729,7 +1729,7 @@ static void test_data_zerolength_vectormap (void)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_VECTOR)
   CU_ASSERT (iot_data_vector_size (vector1) == 0)
   char * json = iot_data_to_json (data, false);
-  CU_ASSERT (!strcmp (json, "[]"))
+  CU_ASSERT (strcmp (json, "[]") == 0)
 
   free (json);
   iot_data_free (data_map1);
