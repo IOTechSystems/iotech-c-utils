@@ -903,8 +903,8 @@ static void test_data_vector_find (void)
   iot_data_vector_add (vector, 0, elem0);
   iot_data_vector_add (vector, 1, elem1);
   iot_data_vector_add (vector, 2, elem2);
-  CU_ASSERT (iot_data_vector_find (vector, string_match, "test1") == elem1);
-  CU_ASSERT (iot_data_vector_find (vector, string_match, "foo") == NULL);
+  CU_ASSERT (iot_data_vector_find (vector, string_match, "test1") == elem1)
+  CU_ASSERT (iot_data_vector_find (vector, string_match, "foo") == NULL)
   iot_data_free (vector);
 }
 
@@ -1701,16 +1701,18 @@ static void test_data_alloc_array_bool (void)
 
 static void test_data_zerolength_vector (void)
 {
-  iot_data_t * vector = iot_data_alloc_vector (0);
+  iot_data_t * vector1 = iot_data_alloc_vector (0);
 
-  CU_ASSERT (iot_data_vector_size (vector) == 0)
+  CU_ASSERT (iot_data_vector_size (vector1) == 0)
 
   iot_data_vector_iter_t iter;
-  iot_data_vector_iter (vector, &iter);
+  iot_data_vector_iter (vector1, &iter);
 
   CU_ASSERT (iot_data_vector_iter_next (&iter) == false)
   CU_ASSERT (iot_data_vector_iter_index (&iter) == 0)
   CU_ASSERT (iot_data_vector_iter_value (&iter) == NULL)
+
+  iot_data_free (vector1);
 }
 
 static void test_data_zerolength_vectormap (void)
@@ -1726,7 +1728,11 @@ static void test_data_zerolength_vectormap (void)
 
   CU_ASSERT (iot_data_type (data) == IOT_DATA_VECTOR)
   CU_ASSERT (iot_data_vector_size (vector1) == 0)
-  CU_ASSERT (!strcmp (iot_data_to_json (data, false), "[]"))
+  char * json = iot_data_to_json (data, false);
+  CU_ASSERT (!strcmp (json, "[]"))
+
+  free (json);
+  iot_data_free (data_map1);
 }
 
 void cunit_data_test_init (void)
