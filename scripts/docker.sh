@@ -3,8 +3,8 @@ set -x -e
 
 SYSTEM=$1
 ARCH=$2
-RAND=$3
-TARGET=$4
+TARGET=$3
+RAND=$$
 export VER=$(cat VERSION)
 
 build_dist()
