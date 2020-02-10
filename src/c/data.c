@@ -981,7 +981,6 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
 static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
 {
   char buff [128];
-  wrap = wrap || data->type == IOT_DATA_BOOL;
 
   switch (data->type)
   {

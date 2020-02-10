@@ -168,9 +168,12 @@ static void test_data_to_json (void)
   key = iot_data_alloc_string ("Escaped", IOT_DATA_REF);
   val = iot_data_alloc_string ("abc\t\n123\x0b\x1fxyz", IOT_DATA_REF);
   iot_data_map_add (map, key, val);
+  key = iot_data_alloc_string ("Boolean", IOT_DATA_REF);
+  val = iot_data_alloc_bool (true);
+  iot_data_map_add (map, key, val);
   char * json = iot_data_to_json (map, false);
   CU_ASSERT (json != NULL)
-  CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\"}") == 0)
+  CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"Boolean\":true}") == 0)
   free (json);
   iot_data_free (map);
 }
