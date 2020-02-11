@@ -33,6 +33,7 @@ typedef union iot_data_union_t
 struct iot_data_t
 {
   iot_data_t * next;
+  iot_data_t * metadata;
   atomic_uint_fast32_t refs;
   iot_data_type_t type;
   bool release;
@@ -213,6 +214,20 @@ const char * iot_data_type_name (const iot_data_t * data)
   return iot_data_type_names[data->type];
 }
 
+extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata)
+{
+  assert (data);
+  if (data->metadata) iot_data_free (data->metadata);
+  if (metadata) iot_data_add_ref (metadata);
+  data->metadata = metadata;
+}
+
+extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data)
+{
+  assert (data);
+  return data->metadata;
+}
+
 bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 {
   assert (v1 && v2);
@@ -305,6 +320,7 @@ void iot_data_free (iot_data_t * data)
 {
   if (data && (atomic_fetch_add (&data->refs, -1) <= 1))
   {
+    if (data->metadata) iot_data_free (data->metadata);
     switch (data->type)
     {
       case IOT_DATA_STRING:
@@ -981,7 +997,6 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
 static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
 {
   char buff [128];
-  wrap = wrap || data->type == IOT_DATA_BOOL;
 
   switch (data->type)
   {
@@ -1186,7 +1201,8 @@ iot_data_t * iot_data_from_json (const char * json)
 iot_data_t * iot_data_copy (const iot_data_t * src)
 {
   assert (src);
-  iot_data_t * data = (iot_data_t *)src;
+  iot_data_t * data = (iot_data_t*) src;
+  iot_data_t * ret;
 
   // data created using IOT_DATA_REF ownership
   if (((data->type == IOT_DATA_STRING) || (data->type == IOT_DATA_ARRAY)) && (data->release != true))
@@ -1198,44 +1214,48 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
   switch (data->type)
   {
     case IOT_DATA_STRING:
-      return iot_data_alloc_string (((iot_data_value_t*) data)->value.str, IOT_DATA_COPY);
+      ret = iot_data_alloc_string (((iot_data_value_t*) data)->value.str, IOT_DATA_COPY);
+      break;
     case IOT_DATA_ARRAY:
     {
       iot_data_array_t * array = (iot_data_array_t*) data;
-      return iot_data_alloc_array (array->data, array->length, array->type, IOT_DATA_COPY);
+      ret =  iot_data_alloc_array (array->data, array->length, array->type, IOT_DATA_COPY);
+      break;
     }
     case IOT_DATA_MAP:
     {
       iot_data_map_iter_t iter;
-      iot_data_t * map = iot_data_alloc_map (iot_data_map_key_type (src));
+      ret = iot_data_alloc_map (iot_data_map_key_type (src));
 
       iot_data_map_iter (src, &iter);
       while (iot_data_map_iter_next (&iter))
       {
         iot_data_t * key = iot_data_copy (iot_data_map_iter_key (&iter));
         iot_data_t * value = iot_data_copy (iot_data_map_iter_value (&iter));
-        iot_data_map_add (map, key, value);
+        iot_data_map_add (ret, key, value);
       }
-      return map;
+      break;
     }
     case IOT_DATA_VECTOR:
     {
       iot_data_vector_iter_t iter;
-      iot_data_t * vec = iot_data_alloc_vector (iot_data_vector_size (src));
+      ret = iot_data_alloc_vector (iot_data_vector_size (src));
 
       iot_data_vector_iter (src, &iter);
       while (iot_data_vector_iter_next (&iter))
       {
         iot_data_t * val = iot_data_copy (iot_data_vector_iter_value (&iter));
-        iot_data_vector_add (vec, iter.index-1, val);
+        iot_data_vector_add (ret, iter.index-1, val);
       }
-      return vec;
+      break;
     }
     default: //basic types
     {
       iot_data_value_t * val = iot_data_value_alloc (data->type, false);
       val->value.ui64 = (((iot_data_value_t*) data)->value.ui64);
-      return (iot_data_t*) val;
+      ret = (iot_data_t*) val;
     }
   }
+  iot_data_set_metadata (ret, data->metadata);
+  return ret;
 }
