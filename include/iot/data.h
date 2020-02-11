@@ -114,6 +114,26 @@ extern iot_data_type_t iot_data_name_type (const char * name);
 extern const char * iot_data_type_name (const iot_data_t * data);
 
 /**
+ * @brief Set metadata for data
+ *
+ * Set metadata on a data item. Meta data elements are reference counted by the associated data element.
+ *
+ * @param  data  Pointer to data
+ * @param  metadata  Pointer to metadata
+ */
+extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata);
+
+/**
+ * @brief Get metadata for data
+ *
+ * Gets the metadata associated with a data item.
+ *
+ * @param  data  Pointer to data
+ * @return       Pointer to metadata (NULL if not set)
+ */
+extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data);
+
+/**
  * @brief Return address allocated for data
  *
  * The function to return the address allocated for data
