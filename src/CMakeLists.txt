@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.1)
-project (IOT LANGUAGES C)
+project (IOT LANGUAGES C CXX)
 set (CMAKE_C_STANDARD 11)
+set (CMAKE_CXX_STANDARD 11)
 
 # Package support
 
@@ -93,6 +94,7 @@ endif ()
 # Build modules
 
 add_subdirectory (c)
+add_subdirectory (cpp)
 
 # Documentation
 add_subdirectory (docs)
