@@ -24,6 +24,13 @@
 #include <errno.h>
 #include <time.h>
 #include <ctype.h>
-#include <stdatomic.h>
+
+#ifdef __cplusplus
+  #include <atomic>
+  #define _Atomic(T) atomic<T>
+  using namespace std;
+#else
+  #include <stdatomic.h>
+#endif
 
 #endif
