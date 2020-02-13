@@ -660,8 +660,7 @@ extern void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t
 /**
  * @brief Update the iterator to point to the next element within an array
  *
- * The function to set the iterator to point to the next element of an array. On reaching end of the array,
- * iterator is set to point to first element in the array.
+ * The function to set the iterator to point to the next element of an array.
  *
  * @param iter  Input iterator
  * @return      'true' on Success, 'false' when the iterator reaches end of the array
