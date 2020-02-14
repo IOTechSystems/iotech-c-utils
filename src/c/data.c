@@ -825,7 +825,15 @@ void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter
 bool iot_data_array_iter_next (iot_data_array_iter_t * iter)
 {
   assert (iter);
-  iter->index++;
+
+  if (iter->index <= iter->array->length == false)
+  {
+    iter->index = 1;
+  }
+  else
+  {
+    iter->index++;
+  }
   return (iter->index <= iter->array->length);
 }
 
