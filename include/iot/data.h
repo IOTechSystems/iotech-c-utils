@@ -764,7 +764,8 @@ extern void iot_data_vector_iter (const iot_data_t * vector, iot_data_vector_ite
 /**
  * @brief Iterate to next vector element
  *
- * The function to set the iterator to point to the next element in an vector
+ * The function to set the iterator to point to the next element in an vector. On reaching end of the vector,
+ * iterator is set to point to first element in the vector.
  *
  * @param  iter  Input iterator
  * @return       'true' if the iterator index is <= vector length, 'false' otherwise
