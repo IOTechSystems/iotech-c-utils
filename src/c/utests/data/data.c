@@ -116,6 +116,35 @@ static void test_data_array_key (void)
   iot_data_free (map);
 }
 
+static void test_data_array_iter_next (void)
+{
+  uint8_t index = 0;
+  uint8_t data [4] = { 0, 1, 2, 3 };
+  iot_data_array_iter_t array_iter;
+
+  iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint8_t), IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_array_iter (array, &array_iter);
+
+  for (int i = 0; i<4; i++)
+  {
+    while (iot_data_array_iter_next (&array_iter))
+    {
+      CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
+      CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
+      CU_ASSERT (*((uint8_t *) iot_data_array_iter_value (&array_iter)) == data[index])
+      index++;
+    }
+    index = 0;
+
+    CU_ASSERT (iot_data_array_iter_next (&array_iter) == true)
+    CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
+    CU_ASSERT (*((uint8_t *)iot_data_array_iter_value (&array_iter)) == data[index])
+    index++;
+  }
+
+  iot_data_free (array);
+}
+
 static void test_data_array_iter_uint8 (void)
 {
   uint8_t index = 0;
@@ -1965,6 +1994,7 @@ void cunit_data_test_init (void)
 
   CU_add_test (suite, "data_types", test_data_types);
   CU_add_test (suite, "data_array_key", test_data_array_key);
+  CU_add_test (suite, "data_array_iter_next", test_data_array_iter_next);
   CU_add_test (suite, "data_array_iter_uint8", test_data_array_iter_uint8);
   CU_add_test (suite, "data_array_iter_int8", test_data_array_iter_int8);
   CU_add_test (suite, "data_array_iter_uint16", test_data_array_iter_uint16);
