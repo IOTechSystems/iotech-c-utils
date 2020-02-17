@@ -1140,6 +1140,57 @@ static void test_data_unequal_vector_map (void)
   iot_data_free (data_map2);
 }
 
+static void test_data_metadata (void)
+{
+  iot_data_t * data1 = iot_data_alloc_i8 (-128);
+  CU_ASSERT (data1 != NULL)
+
+  iot_data_t * data2 = iot_data_alloc_string ("Hello", IOT_DATA_REF);
+  CU_ASSERT (data2 != NULL)
+
+  iot_data_set_metadata (data1, data2);
+  const iot_data_t * metadata = iot_data_get_metadata (data1);
+
+  CU_ASSERT (metadata != NULL)
+  CU_ASSERT (iot_data_type (metadata) == IOT_DATA_STRING)
+  CU_ASSERT (iot_data_equal (data2, metadata))
+
+  iot_data_free (data1);
+  iot_data_free (data2);
+
+  data1 = iot_data_alloc_ui64 (9999999999);
+  CU_ASSERT (data1 != NULL)
+
+  data2 = iot_data_alloc_i32 (2111111);
+  CU_ASSERT (data2 != NULL)
+
+  iot_data_set_metadata (data1, data2);
+  metadata = iot_data_get_metadata (data1);
+
+  CU_ASSERT (metadata != NULL)
+  CU_ASSERT (iot_data_type (metadata) == IOT_DATA_INT32)
+  CU_ASSERT (iot_data_equal (data2, metadata))
+
+  iot_data_free (data1);
+  iot_data_free (data2);
+
+  data1 = iot_data_alloc_f32 (1.299999f);
+  CU_ASSERT (data1 != NULL)
+
+  data2 = iot_data_alloc_string ("qwertyQWERTY", IOT_DATA_REF);
+  CU_ASSERT (data2 != NULL)
+
+  iot_data_set_metadata (data1, data2);
+  metadata = iot_data_get_metadata (data1);
+
+  CU_ASSERT (metadata != NULL)
+  CU_ASSERT (iot_data_type (metadata) == IOT_DATA_STRING)
+  CU_ASSERT (iot_data_equal (data2, metadata))
+
+  iot_data_free (data1);
+  iot_data_free (data2);
+}
+
 static bool string_match (const iot_data_t * data, const void * arg)
 {
   const char * target = (const char *) arg;
@@ -2096,6 +2147,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_check_unequal_nested_vector", test_data_unequal_nested_vector);
   CU_add_test (suite, "data_check_equal_vector_map", test_data_equal_vector_map);
   CU_add_test (suite, "data_check_unequal_vector_map", test_data_unequal_vector_map);
+  CU_add_test (suite, "data_metadata", test_data_metadata);
   CU_add_test (suite, "data_alloc_array_int8", test_data_alloc_array_i8);
   CU_add_test (suite, "data_alloc_array_uint8", test_data_alloc_array_ui8);
   CU_add_test (suite, "data_alloc_array_int16", test_data_alloc_array_i16);
