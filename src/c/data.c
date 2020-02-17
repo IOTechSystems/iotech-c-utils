@@ -825,7 +825,7 @@ void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter
 bool iot_data_array_iter_next (iot_data_array_iter_t * iter)
 {
   assert (iter);
-  iter->index++;
+  iter->index = (iter->index <= iter->array->length) ? iter->index + 1 : 1;
   return (iter->index <= iter->array->length);
 }
 
@@ -851,7 +851,7 @@ void iot_data_vector_iter (const iot_data_t * vector, iot_data_vector_iter_t * i
 bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter)
 {
   assert (iter);
-  iter->index++;
+  iter->index = (iter->index <= iter->vector->size) ? iter->index + 1 : 1;
   return (iter->index <= iter->vector->size);
 }
 
