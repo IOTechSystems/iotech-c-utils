@@ -9,5 +9,6 @@ COPY include /iotech-iot/include/
 COPY scripts /iotech-iot/scripts/
 RUN /opt/rh/devtoolset-7/enable
 ENV CC /opt/rh/devtoolset-7/root/bin/gcc
+ENV CXX /opt/rh/devtoolset-7/root/bin/g++
 WORKDIR /iotech-iot
 ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/linux.sh", "-utest", "-examples"]
