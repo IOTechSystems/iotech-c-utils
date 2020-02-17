@@ -1,6 +1,6 @@
 FROM fedora:30
 MAINTAINER IOTech <support@iotechsys.com>
-RUN yum -y update && yum -y install --setopt=tsflags=nodocs wget git gcc glibc-static cmake3 make rpm-build doxygen graphviz
+RUN yum -y update && yum -y install --setopt=tsflags=nodocs wget git gcc glibc-static gcc-c++ cmake3 make rpm-build doxygen graphviz
 COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
