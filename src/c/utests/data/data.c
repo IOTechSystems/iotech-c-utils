@@ -1149,11 +1149,11 @@ static void test_data_metadata (void)
   CU_ASSERT (data2 != NULL)
 
   iot_data_set_metadata (data1, data2);
-  const iot_data_t * metadata = iot_data_get_metadata (data1);
+  const iot_data_t * metadata1 = iot_data_get_metadata (data1);
 
-  CU_ASSERT (metadata != NULL)
-  CU_ASSERT (iot_data_type (metadata) == IOT_DATA_STRING)
-  CU_ASSERT (iot_data_equal (data2, metadata))
+  CU_ASSERT (metadata1 != NULL)
+  CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_STRING)
+  CU_ASSERT (iot_data_equal (data2, metadata1))
 
   iot_data_free (data1);
   iot_data_free (data2);
@@ -1165,11 +1165,11 @@ static void test_data_metadata (void)
   CU_ASSERT (data2 != NULL)
 
   iot_data_set_metadata (data1, data2);
-  metadata = iot_data_get_metadata (data1);
+  metadata1 = iot_data_get_metadata (data1);
 
-  CU_ASSERT (metadata != NULL)
-  CU_ASSERT (iot_data_type (metadata) == IOT_DATA_INT32)
-  CU_ASSERT (iot_data_equal (data2, metadata))
+  CU_ASSERT (metadata1 != NULL)
+  CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_INT32)
+  CU_ASSERT (iot_data_equal (data2, metadata1))
 
   iot_data_free (data1);
   iot_data_free (data2);
@@ -1181,14 +1181,22 @@ static void test_data_metadata (void)
   CU_ASSERT (data2 != NULL)
 
   iot_data_set_metadata (data1, data2);
-  metadata = iot_data_get_metadata (data1);
+  metadata1 = iot_data_get_metadata (data1);
 
-  CU_ASSERT (metadata != NULL)
-  CU_ASSERT (iot_data_type (metadata) == IOT_DATA_STRING)
-  CU_ASSERT (iot_data_equal (data2, metadata))
+  CU_ASSERT (metadata1 != NULL)
+  CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_STRING)
+  CU_ASSERT (iot_data_equal (data2, metadata1))
+
+  // When data copied, metadata should also be copied.
+  iot_data_t * data3 = iot_data_copy (data1);
+  const iot_data_t * metadata2 = iot_data_get_metadata (data3);
+
+  CU_ASSERT (metadata2 != NULL)
+  CU_ASSERT (iot_data_equal (metadata2, metadata1))
 
   iot_data_free (data1);
   iot_data_free (data2);
+  iot_data_free (data3);
 }
 
 static bool string_match (const iot_data_t * data, const void * arg)
