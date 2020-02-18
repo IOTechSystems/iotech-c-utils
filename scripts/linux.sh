@@ -50,7 +50,7 @@ done
 
 # Release build
 
-mkdir ${BROOT}/release
+mkdir -p ${BROOT}/release
 cd ${BROOT}/release
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
 make 2>&1 | tee release.log
@@ -58,7 +58,7 @@ make package
 
 # Debug build
 
-mkdir ${BROOT}/debug
+mkdir -p ${BROOT}/debug
 cd ${BROOT}/debug
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
 make 2>&1 | tee debug.log
@@ -94,7 +94,7 @@ then
 
   # Build with profiling enabled
 
-  mkdir ${BROOT}/lcov
+  mkdir -p ${BROOT}/lcov
   cd ${BROOT}/lcov
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON ${ROOT}/src
   make
