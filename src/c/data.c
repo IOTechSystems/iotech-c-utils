@@ -1204,7 +1204,7 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
   iot_data_t * data = (iot_data_t*) src;
   iot_data_t * ret;
 
-  // data created using IOT_DATA_REF ownership
+  // For data created using IOT_DATA_REF ownership just increment ref count
   if (((data->type == IOT_DATA_STRING) || (data->type == IOT_DATA_ARRAY)) && (data->release != true))
   {
     iot_data_add_ref (data);

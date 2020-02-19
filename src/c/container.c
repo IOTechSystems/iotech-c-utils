@@ -68,10 +68,10 @@ static void iot_container_add_handle (iot_container_t * cont,  void * handle)
   assert (cont && handle);
   iot_dlhandle_holder_t * holder = malloc (sizeof (*holder));
   holder->load_handle = handle;
-  pthread_rwlock_wrlock(&cont->lock);
+  pthread_rwlock_wrlock (&cont->lock);
   holder->next = cont->handles;
   cont->handles = holder;
-  pthread_rwlock_unlock(&cont->lock);
+  pthread_rwlock_unlock (&cont->lock);
 }
 #endif
 
