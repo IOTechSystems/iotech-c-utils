@@ -421,7 +421,7 @@ static void test_data_to_json (void)
   key = iot_data_alloc_string ("Boolean", IOT_DATA_REF);
   val = iot_data_alloc_bool (true);
   iot_data_map_add (map, key, val);
-  char * json = iot_data_to_json (map, false);
+  char * json = iot_data_to_json (map);
   CU_ASSERT (json != NULL)
   CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"Boolean\":true}") == 0)
   free (json);
@@ -2075,7 +2075,7 @@ static void test_data_zerolength_vectormap (void)
 
   CU_ASSERT (iot_data_type (data) == IOT_DATA_VECTOR)
   CU_ASSERT (iot_data_vector_size (vector1) == 0)
-  char * json = iot_data_to_json (data, false);
+  char * json = iot_data_to_json (data);
   CU_ASSERT (strcmp (json, "[]") == 0)
 
   free (json);

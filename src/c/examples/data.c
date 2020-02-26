@@ -57,7 +57,7 @@ int main (void)
   value = iot_data_alloc_ui64 (4444);
   iot_data_map_add (map2, key, value);
   key = iot_data_alloc_string ("F32", IOT_DATA_REF);
-  value = iot_data_alloc_f32 (55555.5);
+  value = iot_data_alloc_f32 (55555.5f);
   iot_data_map_add (map2, key, value);
   key = iot_data_alloc_string ("F64", IOT_DATA_REF);
   value = iot_data_alloc_f64 (666666.6);
@@ -75,7 +75,7 @@ int main (void)
   key = iot_data_alloc_i16 (23);
   iot_data_map_add (map, key, map2);
 
-  char * json = iot_data_to_json (map, false);
+  char * json = iot_data_to_json (map);
   printf ("%s\n", json);
   free (json);
   iot_data_free (map);

@@ -825,10 +825,9 @@ extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_d
  * The function to convert data to a json string
  *
  * @param  data  Input data
- * @param  wrap  wrap data for basic types if set
  * @return       json string
  */
-extern char * iot_data_to_json (const iot_data_t * data, bool wrap);
+extern char * iot_data_to_json (const iot_data_t * data);
 
 /**
  * @brief Convert json to iot_data_t type

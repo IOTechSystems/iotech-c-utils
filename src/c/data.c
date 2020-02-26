@@ -994,7 +994,7 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
   holder->free -= len;
 }
 
-static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
+static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * data)
 {
   char buff [128];
 
@@ -1012,15 +1012,10 @@ static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * 
     case IOT_DATA_FLOAT64: sprintf (buff, "%lf", iot_data_f64 (data)); break;
     default: strcpy (buff, iot_data_bool (data) ? "true" : "false"); break;
   }
-  if (wrap)
-  {
-    iot_data_add_quote (holder);
-    strcat (buff, "\"");
-  }
   iot_data_strcat_escape (holder, buff, false);
 }
 
-static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data, bool wrap)
+static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data)
 {
   switch (data->type)
   {
@@ -1047,9 +1042,9 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
       {
         const iot_data_t * key = iot_data_map_iter_key (&iter);
         const iot_data_t * value = iot_data_map_iter_value (&iter);
-        iot_data_dump (holder, key, true);
+        iot_data_dump (holder, key);
         iot_data_strcat (holder, ":");
-        iot_data_dump (holder, value, wrap);
+        iot_data_dump (holder, value);
         if (iter.pair->base.next)
         {
           iot_data_strcat (holder, ",");
@@ -1066,7 +1061,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
       while (iot_data_vector_iter_next (&iter))
       {
         const iot_data_t * value = iot_data_vector_iter_value (&iter);
-        iot_data_dump (holder, value, wrap);
+        iot_data_dump (holder, value);
         if (iter.index < iter.vector->size)
         {
           iot_data_strcat (holder, ",");
@@ -1075,18 +1070,18 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
       iot_data_strcat (holder, "]");
       break;
     }
-    default: iot_data_dump_raw (holder, data, wrap);
+    default: iot_data_dump_raw (holder, data);
   }
 }
 
-char * iot_data_to_json (const iot_data_t * data, bool wrap)
+char * iot_data_to_json (const iot_data_t * data)
 {
   iot_string_holder_t holder;
   assert (data);
   holder.str = calloc (1, IOT_JSON_BUFF_SIZE);
   holder.size = IOT_JSON_BUFF_SIZE;
   holder.free = IOT_JSON_BUFF_SIZE - 1; // Allowing for string terminator
-  iot_data_dump (&holder, data, wrap);
+  iot_data_dump (&holder, data);
   return holder.str;
 }
 
