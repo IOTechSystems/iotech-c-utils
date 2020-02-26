@@ -7,7 +7,7 @@
 
 #define ARRAY_SIZE 6
 
-int main (void)
+int main (int argc, char ** argv)
 {
   iot_init ();
 
@@ -75,7 +75,7 @@ int main (void)
   key = iot_data_alloc_i16 (23);
   iot_data_map_add (map, key, map2);
 
-  char * json = iot_data_to_json (map, false);
+  char * json = iot_data_to_json (map);
   printf ("%s\n", json);
   free (json);
   iot_data_free (map);
