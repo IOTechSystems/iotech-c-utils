@@ -404,6 +404,7 @@ static void test_data_string_vector (void)
 
 static void test_data_to_json (void)
 {
+  char * json;
   uint8_t data [4] = { 0, 1, 2, 3 };
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * val = iot_data_alloc_ui32 (1u);
@@ -421,9 +422,23 @@ static void test_data_to_json (void)
   key = iot_data_alloc_string ("Boolean", IOT_DATA_REF);
   val = iot_data_alloc_bool (true);
   iot_data_map_add (map, key, val);
-  char * json = iot_data_to_json (map);
+  json = iot_data_to_json (map);
   CU_ASSERT (json != NULL)
   CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"Boolean\":true}") == 0)
+  free (json);
+  iot_data_free (map);
+
+  /* Test with non string key type */
+  map = iot_data_alloc_map (IOT_DATA_UINT32);
+  val = iot_data_alloc_string ("Cthulhu", IOT_DATA_REF);
+  key = iot_data_alloc_ui32 (1u);
+  iot_data_map_add (map, key, val);
+  val = iot_data_alloc_string ("Rules", IOT_DATA_REF);
+  key = iot_data_alloc_ui32 (2u);
+  iot_data_map_add (map, key, val);
+  json = iot_data_to_json (map);
+  CU_ASSERT (json != NULL)
+  CU_ASSERT (strcmp (json, "{\"1\":\"Cthulhu\",\"2\":\"Rules\"}") == 0)
   free (json);
   iot_data_free (map);
 }

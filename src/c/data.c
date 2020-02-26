@@ -300,6 +300,7 @@ iot_data_t * iot_data_alloc_vector (uint32_t size)
 {
   iot_data_vector_t * vector = iot_data_factory_alloc ();
   vector->base.type = IOT_DATA_VECTOR;
+
   vector->size = size;
   vector->values = calloc (size, sizeof (iot_data_t*));
   return (iot_data_t*) vector;
@@ -1042,7 +1043,9 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
       {
         const iot_data_t * key = iot_data_map_iter_key (&iter);
         const iot_data_t * value = iot_data_map_iter_value (&iter);
+        if (iot_data_type (key) != IOT_DATA_STRING) iot_data_add_quote (holder);
         iot_data_dump (holder, key);
+        if (iot_data_type (key) != IOT_DATA_STRING) iot_data_add_quote (holder);
         iot_data_strcat (holder, ":");
         iot_data_dump (holder, value);
         if (iter.pair->base.next)
