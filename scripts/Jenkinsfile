@@ -9,17 +9,9 @@ releaseType = ['None':'dev', 'Release':'release', 'Development':'dev']
 
 def checkoutStage (arch)
 {
-  def ref = getGitRefParam ()
   currentBuild.displayName = "IOT ${env.BUILD_ID}"
   cleanWs (cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true)
-  if ("${ref}" == '')
-  {
-    checkout scm
-  }
-  else
-  {
-    checkout ([$class: 'GitSCM', branches: [[name: "${ref}"]], userRemoteConfigs: [[credentialsId: 'aedfcad4-f62d-44ce-83a1-71f226a1284b', url: 'https://github.com/IOTechSystems/iotech-c-utils']]])
-  }
+  checkout scm
 }
 
 def buildStage (systems, arch)
@@ -253,17 +245,6 @@ def String getBoardParam ()
   return ret
 }
 
-def String getGitRefParam ()
-{
-  def tag = "${params.GitTag}"
-  def ref = ''
-  if ("${tag}" != 'null' && "${tag}" != 'None')
-  {
-    ref = "refs/tags/${tag}"
-  }
-  return ref
-}
-
 buildMap = [:]
 for (t in targets)
 {
@@ -293,7 +274,6 @@ pipeline
   }
   parameters
   {
-    string (name: 'GitTag', defaultValue: "None", description: 'Git Tag to build')
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
     choice (name: 'System', choices: ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','debian-8','centos-8', 'centos-7','fedora-31','fedora-30','opensuse-15','photon-30','zephyr-1.14','clearlinux','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','arm64','arm32', 'all'], description: 'Build Host Architecture')
