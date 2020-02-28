@@ -17,6 +17,23 @@ else
   BRDS=${TARGET}
 fi
 
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -v1.14)
+      export ZEPHYR_114=ON
+      shift 1
+    ;;
+    -v2.1)
+      export ZEPHYR_21=ON
+      shift 1
+    ;;
+    *)
+      shift 1
+    ;;
+  esac
+done
+
 build_board()
 {
   export BOARD=$1
@@ -31,5 +48,5 @@ build_board()
 
 for b in ${BRDS}
 do
-  build_board "$b"
+  build_board "${b}"
 done
