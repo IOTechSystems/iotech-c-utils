@@ -370,13 +370,13 @@ iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * valu
   switch (type)
   {
     case IOT_DATA_INT8: return iot_data_alloc_i8 ((int8_t) atoi (value));
-    case IOT_DATA_UINT8:return iot_data_alloc_ui8 ((uint8_t) atoi (value));
+    case IOT_DATA_UINT8: return iot_data_alloc_ui8 ((uint8_t) atoi (value));
     case IOT_DATA_INT16: return iot_data_alloc_i16 ((int16_t) atoi (value));
-    case IOT_DATA_UINT16:return iot_data_alloc_ui16 ((uint16_t) atoi (value));
+    case IOT_DATA_UINT16: return iot_data_alloc_ui16 ((uint16_t) atoi (value));
     case IOT_DATA_INT32: return iot_data_alloc_i32 ((int32_t) atol (value));
-    case IOT_DATA_UINT32:return iot_data_alloc_ui32 ((uint32_t) atol (value));
+    case IOT_DATA_UINT32: return iot_data_alloc_ui32 ((uint32_t) atol (value));
     case IOT_DATA_INT64: return iot_data_alloc_i64 ((int64_t) atoll (value));
-    case IOT_DATA_UINT64:return iot_data_alloc_ui64 ((uint64_t) atoll (value));
+    case IOT_DATA_UINT64: return iot_data_alloc_ui64 ((uint64_t) atoll (value));
     case IOT_DATA_FLOAT32: return iot_data_alloc_f32 ((float) atof (value));
     case IOT_DATA_FLOAT64: return iot_data_alloc_f64 (atof (value));
     case IOT_DATA_BOOL: return iot_data_alloc_bool (value[0] == 't' || value[0] == 'T');
