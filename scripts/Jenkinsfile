@@ -31,6 +31,7 @@ def buildStage (systems, arch)
 def metricsStage (systems, arch)
 {
   def sys = getSystemParam ()
+  def archive = getArchiveParam ()
   publishCoreMetrics (systems, arch)
   if ("${sys}" == 'ubuntu-19.10' || "${sys}" == 'all')
   {
