@@ -239,14 +239,13 @@ def publishTars (arch)
 
 def buildStages (target, systems)
 {
-  def sys = getSystemParam ()
   def nat = getNativeParam ()
-  def host = "docker-${target}"
+  def sys = 'docker'
   if ("${nat}" == 'true')
   {
-    def sys = getSystemParam ()
-    host = "${sys}-${target}"
+    sys = getSystemParam ()
   }
+  def host = "${sys}-${target}"
 
   node (host)
   {
