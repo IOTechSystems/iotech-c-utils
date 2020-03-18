@@ -31,10 +31,15 @@ def buildStage (systems, arch)
 def metricsStage (systems, arch)
 {
   def sys = getSystemParam ()
+  def archive = getArchiveParam ()
   publishCoreMetrics (systems, arch)
   if ("${sys}" == 'ubuntu-19.10' || "${sys}" == 'all')
   {
     publishAdvancedMetrics ('ubuntu-19.10', arch)
+  }
+  if ("${archive}" == 'Release')
+  {
+    publishQuality (systems, arch);
   }
 }
 
@@ -47,6 +52,34 @@ def archiveStage (arch)
     publishApks (arch)
     publishRpms (arch)
     publishTars (arch)
+  }
+}
+
+def publishToArtifactory (system, arch, ver, pat)
+{
+  def uploadSpec = """{"files":[
+  {
+    "pattern": "${arch}/${system}/${pat}",
+    "target": "quality/iot/${ver}/${system}/",
+    "props": "distribution=${system};architecture=${arch}"
+  }]}"""
+  rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+}
+
+def publishQuality (systems, arch)
+{
+  def sys = getSystemParam ()
+  def vers = sh (script: "cat ./VERSION", returnStdout: true)
+  def ver = vers.trim ()
+  for (int i = 0; i < systems.size(); ++i)
+  {
+    if ("${sys}" == "${systems[i]}" || "${sys}" == 'all')
+    {
+      def system = systems[i]
+      publishToArtifactory (system, arch, ver, 'release/release.log')
+      publishToArtifactory (system, arch, ver, 'debug/debug.log')
+      publishToArtifactory (system, arch, ver, 'release/junit-Results.xml')
+    }
   }
 }
 
