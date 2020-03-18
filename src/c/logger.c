@@ -164,7 +164,7 @@ iot_logger_t * iot_logger_next (iot_logger_t * logger)
 static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_loglevel_t level, time_t timestamp, const char *message)
 {
   char tname[IOT_PRCTL_NAME_MAX] = { 0 };
-#if defined (__linux__)
+#ifdef IOT_HAS_PR_GET_NAME
   prctl (PR_GET_NAME, tname);
 #endif
   iot_component_lock (&logger->component);

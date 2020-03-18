@@ -55,7 +55,7 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   pthread_attr_setinheritsched (&attr, PTHREAD_EXPLICIT_SCHED);
 #endif
 
-#if defined (_GNU_SOURCE) && ! defined (__LIBMUSL__)
+#ifdef IOT_HAS_CPU_AFFINITY
   if (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN))
   {
     cpu_set_t cpus;
@@ -155,10 +155,8 @@ void iot_mutex_init (pthread_mutex_t * mutex)
   pthread_mutexattr_t attr;
   pthread_mutexattr_init (&attr);
   pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_ERRORCHECK);
-#ifndef __ZEPHYR__
-#ifndef __LIBMUSL__
+#ifdef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
   pthread_mutexattr_setprotocol (&attr, PTHREAD_PRIO_INHERIT);
-#endif
 #endif
   pthread_mutex_init (mutex, &attr);
   pthread_mutexattr_destroy (&attr);

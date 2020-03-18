@@ -72,7 +72,7 @@ static void * iot_threadpool_thread (void * arg)
   iot_component_state_t state;
 
   snprintf (name, IOT_PRCTL_NAME_MAX, "iot-%" PRIu16 "-%" PRIu16, th->pool->id, th->id);
-#if defined (__linux__)
+#ifdef IOT_HAS_PR_GET_NAME
   prctl (PR_SET_NAME, name);
 #endif
   iot_log_debug (pool->logger, "Thread %s starting", name);
