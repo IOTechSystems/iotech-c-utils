@@ -24,8 +24,8 @@ do
       export ZEPHYR_114=ON
       shift 1
     ;;
-    -v2.1)
-      export ZEPHYR_21=ON
+    -v2.2)
+      export ZEPHYR_22=ON
       shift 1
     ;;
     *)
