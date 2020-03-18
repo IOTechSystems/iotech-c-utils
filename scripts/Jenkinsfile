@@ -239,7 +239,16 @@ def publishTars (arch)
 
 def buildStages (target, systems)
 {
-  node ("docker-${target}")
+  def sys = getSystemParam ()
+  def nat = getNativeParam ()
+  def host = "docker-${target}"
+  if ("${nat}" == 'true')
+  {
+    def sys = getSystemParam ()
+    host = "${sys}-${target}"
+  }
+
+  node (host)
   {
     stage ("Checkout ${target}") { checkoutStage (target)}
     stage ("Build ${target}") { buildStage (systems, target) }
