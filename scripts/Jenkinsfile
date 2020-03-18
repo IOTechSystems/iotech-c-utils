@@ -26,7 +26,7 @@ def buildStage (systems, arch)
     {
       if ("${nat}" == 'true')
       {
-        sh (script: "./scripts/wrapper.sh /iotech-iot/scripts/linux.sh -utest")
+        sh (script: "./scripts/wrapper.sh ./scripts/linux.sh -utest")
       }
       else
       {
