@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2020
+ * IoTech Ltd
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "iot/iot.h"
 #include "../json/json.h"
 #include "../logger/logger.h"

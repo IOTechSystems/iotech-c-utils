@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2020
+ * IoTech Ltd
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef _IOT_THREADPOOL_H_
 #define _IOT_THREADPOOL_H_
 
