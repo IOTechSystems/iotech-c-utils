@@ -3,8 +3,9 @@
 systems_x86_64 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','debian-8','centos-8','centos-7','fedora-31','fedora-30','opensuse-15','photon-30','zephyr-2.2','zephyr-1.14','clearlinux'] as String[]
 systems_arm64 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','centos-8','centos-7','fedora-31','fedora-30','opensuse-15','photon-30'] as String[]
 systems_arm32 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','debian-8', 'opensuse-15'] as String[]
-targets = ['x86_64', 'arm64', 'arm32'] as String[]
-systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32]
+systems_i586 = ['seawolf']
+targets = ['x86_64', 'arm64', 'arm32', 'i586'] as String[]
+systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32, i586: systems_i586]
 releaseType = ['None':'dev', 'Release':'release', 'Development':'dev']
 
 def checkoutStage (arch)
@@ -133,7 +134,8 @@ def publishDebs (arch)
   def debs_x86_64 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9','debian-8']
   def debs_arm64 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9']
   def debs_arm32 = ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9','debian-8']
-  def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32]
+  def debs_i586 = []
+  def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32, i586: debs_i586]
   def deb_archs = [x86_64: 'amd64', arm64: 'arm64', arm32: 'armhf']
   def deb_name = ['ubuntu-19.10':'eoan','ubuntu-19.04':'disco','ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-10':'buster','debian-9':'stretch','debian-8':'jessie']
   def debs = deb_lists[arch]
@@ -188,7 +190,8 @@ def publishRpms (arch)
   def rpms_x86_64 = ['fedora-31','fedora-30','opensuse-15','photon-30','centos-8', 'centos-7']
   def rpms_arm64 = ['fedora-31','fedora-30','opensuse-15','photon-30','centos-8', 'centos-7']
   def rpms_arm32 = ['opensuse-15']
-  def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32]
+  def rpms_i586 = []
+  def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32, i586: rpms_i586]
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def rpms = rpm_lists[arch]
   def sys = getSystemParam ()
@@ -213,8 +216,9 @@ def publishTars (arch)
   def tars_x86_64 = ['alpine-3.11', 'alpine-3.10','alpine-3.9','zephyr-2.2','zephyr-1.14','clearlinux']
   def tars_arm64 = ['alpine-3.11','alpine-3.10','alpine-3.9']
   def tars_arm32 = ['alpine-3.11','alpine-3.10','alpine-3.9']
-  def tar_lists = [x86_64: tars_x86_64, arm64: tars_arm64, arm32: tars_arm32]
-  def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7']
+  def tars_i586 = ['seawolf']
+  def tar_lists = [x86_64: tars_x86_64, arm64: tars_arm64, arm32: tars_arm32, i586: tars_i586]
+  def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', i586: 'i586']
   def tars = tar_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
