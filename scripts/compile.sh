@@ -12,7 +12,7 @@ mkinstall()
     cp libiot* $LIB_DIR
     cp -r $ROOT/include $INSTALL_DIR
     rm $INSTALL_DIR/include/iot/os/zephyr.h
-    tar -c -z -C install -f iot-iot-${VERSION}_i586.tar.gz .
+    tar -c -z -C install -f iotech-iot-${VERSION}_i586.tar.gz .
 }
 
 mkdir -p ${BROOT}/debug ${BROOT}/release
