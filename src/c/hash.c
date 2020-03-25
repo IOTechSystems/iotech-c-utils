@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2020
+ * IoTech Ltd
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "iot/hash.h"
 
 /* Version 2 of the Bernstein djb2 hash function. */
