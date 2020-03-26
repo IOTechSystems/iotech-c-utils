@@ -300,7 +300,6 @@ iot_data_t * iot_data_alloc_vector (uint32_t size)
 {
   iot_data_vector_t * vector = iot_data_factory_alloc ();
   vector->base.type = IOT_DATA_VECTOR;
-
   vector->size = size;
   vector->values = calloc (size, sizeof (iot_data_t*));
   return (iot_data_t*) vector;
@@ -756,8 +755,7 @@ iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val)
 {
   iot_data_vector_t * arr = (iot_data_vector_t*) vector;
-  assert (vector && (vector->type == IOT_DATA_VECTOR));
-  assert (val);
+  assert (val && vector && (vector->type == IOT_DATA_VECTOR));
   assert (index < arr->size);
   iot_data_t * element = arr->values[index];
   iot_data_free (element);

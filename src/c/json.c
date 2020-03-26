@@ -191,10 +191,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
           break;
         }
         token = iot_json_alloc_token (parser, tokens, num_tokens);
-        if (token == NULL)
-        {
-          return IOT_JSON_ERROR_NOMEM;
-        }
+        if (token == NULL) return IOT_JSON_ERROR_NOMEM;
         if (parser->toksuper != -1)
         {
           tokens[parser->toksuper].size++;
@@ -215,18 +212,14 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
           token = &tokens[i];
           if (token->start != -1 && token->end == -1)
           {
-            if (token->type != type)
-            {
-              return IOT_JSON_ERROR_INVAL;
-            }
+            if (token->type != type) return IOT_JSON_ERROR_INVAL;
             parser->toksuper = -1;
             token->end = parser->pos + 1;
             break;
           }
         }
         /* Error if unmatched closing bracket */
-        if (i == -1)
-        { return IOT_JSON_ERROR_INVAL; }
+        if (i == -1) return IOT_JSON_ERROR_INVAL;
         for (; i >= 0; i--)
         {
           token = &tokens[i];

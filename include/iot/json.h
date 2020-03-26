@@ -64,7 +64,7 @@ typedef struct
 } iot_json_parser;
 
 /**
- * Create JSON parser over an array of tokens
+ * Create a JSON parser
  */
 void iot_json_init (iot_json_parser * parser);
 
