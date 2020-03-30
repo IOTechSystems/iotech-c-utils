@@ -85,6 +85,8 @@ extern void iot_container_free (iot_container_t * cont);
  */
 extern void iot_container_add_factory (iot_container_t * cont, const iot_component_factory_t * factory);
 
+extern void iot_container_add_comp (iot_container_t * cont, const char * ctype, const char *cname, const char * config);
+
 /**
  * @brief Find a component factory within the container
  *
