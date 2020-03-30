@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2020
+ * IoTech Ltd
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef _IOT_JSON_H_
 #define _IOT_JSON_H_
 
@@ -57,7 +64,7 @@ typedef struct
 } iot_json_parser;
 
 /**
- * Create JSON parser over an array of tokens
+ * Create a JSON parser
  */
 void iot_json_init (iot_json_parser * parser);
 

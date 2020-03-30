@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2020
+ * IoTech Ltd
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "base64.h"
 #include "CUnit.h"
 
