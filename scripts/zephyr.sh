@@ -3,7 +3,7 @@ set -e -x
 
 ROOT=$(dirname $(dirname $(readlink -f $0)))
 BROOT=${ROOT}/x86_64
-TARGETS="frdm_k64f native_posix"
+TARGETS="frdm_k64f native_posix acrn"
 
 if [ -z "${TARGET}" ] || [ "${TARGET}" = "None" ]
 then
