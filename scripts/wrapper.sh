@@ -1,9 +1,6 @@
 #!/bin/sh
 set -x
 
-ARCH=$(uname -m)
-ROOT=$(dirname $(dirname $(resolvelink $0)))
-
 resolvelink ()
 {
   if [ ! -L "$1" ]
@@ -16,6 +13,9 @@ resolvelink ()
     resolvelink "${_link}"
   fi
 }
+
+ARCH=$(uname -m)
+ROOT=$(dirname $(dirname $(resolvelink $0)))
 
 case ${ARCH} in
   armv6l)
