@@ -1,19 +1,21 @@
 #!/bin/sh
-resolvelink() { 
-    if [ ! -L "$1" ]; then
-        echo "$1"
-    else 
-        _ls="`ls -ld -- "$1"`"
-        _link="`expr "${_ls}" : '.*-> \(.*\)$'`"
-        cd "`dirname "$1"`"
-        resolvelink "${_link}"
-    fi
-}
-
 set -x
 
-ARCH=`uname -m`
+ARCH=$(uname -m)
 ROOT=$(dirname $(dirname $(resolvelink $0)))
+
+resolvelink ()
+{
+  if [ ! -L "$1" ]
+  then
+    echo "$1"
+  else
+    _ls="`ls -ld -- "$1"`"
+    _link="`expr "${_ls}" : '.*-> \(.*\)$'`"
+    cd "`dirname "$1"`"
+    resolvelink "${_link}"
+  fi
+}
 
 case ${ARCH} in
   armv6l)
@@ -26,12 +28,12 @@ case ${ARCH} in
     BROOT=${ROOT}/arm64
   ;;
   x86_64)
-      if [ -f /etc/redhat-release -a `grep -c Seawolf /etc/redhat-release` = 1 ]
-      then
-        BROOT=${ROOT}/i586
-      else
-        BROOT=${ROOT}/x86_64
-      fi
+    if [ -f /etc/redhat-release -a `grep -c Seawolf /etc/redhat-release` = 1 ]
+    then
+      BROOT=${ROOT}/i586
+    else
+      BROOT=${ROOT}/x86_64
+    fi
   ;;
   *)
     echo "Unsupported: ${ARCH}"
