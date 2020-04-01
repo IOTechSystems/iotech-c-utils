@@ -23,7 +23,7 @@ struct iot_schedule_t
   iot_schedule_t * next;             /* The next schedule */
   iot_schedule_t * previous;         /* The previous schedule */
   iot_schedule_fn_t function;        /* The function called by the schedule */
-  iot_schedule_free_fn_t freefn;      /* The function to clear the arguments when schedule is deleted */
+  iot_schedule_free_fn_t freefn;     /* The function to clear the arguments when schedule is deleted */
   void * arg;                        /* Function input arg */
   iot_threadpool_t * threadpool;     /* Thread pool used to run scheduled function */
   int priority;                      /* Schedule priority (pool override) */
@@ -92,7 +92,7 @@ static void * iot_scheduler_thread (void * arg)
 
   while (true)
   {
-    state = iot_component_wait_and_lock (&scheduler->component, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+    state = iot_component_wait_and_lock (&scheduler->component, (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING);
 
     if (state == IOT_COMPONENT_DELETED)
     {

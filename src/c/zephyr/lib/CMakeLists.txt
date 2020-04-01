@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 3.13.1)
+set (NO_BUILD_TYPE_WARNING ON)
 include ($ENV{ZEPHYR_BASE}/cmake/app/boilerplate.cmake NO_POLICY_SCOPE)
 include_directories (../../../../include $ENV{ZEPHYR_BASE}/include/posix)
 project (zephyr)
