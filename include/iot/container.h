@@ -76,16 +76,6 @@ extern void iot_container_stop (iot_container_t * cont);
 extern void iot_container_free (iot_container_t * cont);
 
 /**
- * @brief Add component factories to the container
- *
- * The function to add component factories to the container
- *
- * @param cont     Pointer to the container to hold component factories
- * @param factory  Pointer to the component factory to add
- */
-extern void iot_container_add_factory (iot_container_t * cont, const iot_component_factory_t * factory);
-
-/**
  * @brief Find a component factory within the container
  *
  * The function to find a component factory within the container

@@ -19,10 +19,10 @@ int main (void)
 
   /* Add factories for supported component types */
 
-  iot_container_add_factory (container, iot_logger_factory ());
-  iot_container_add_factory (container, iot_threadpool_factory ());
-  iot_container_add_factory (container, iot_scheduler_factory ());
-  iot_container_add_factory (container, my_component_factory ());
+  iot_component_factory_add (iot_logger_factory ());
+  iot_component_factory_add (iot_threadpool_factory ());
+  iot_component_factory_add (iot_scheduler_factory ());
+  iot_component_factory_add (my_component_factory ());
 
   /* Create components from configuration files */
 

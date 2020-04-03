@@ -62,6 +62,6 @@ static iot_component_t * my_component_config (iot_container_t * cont, const iot_
 
 extern const iot_component_factory_t * my_component_factory (void)
 {
-  static iot_component_factory_t factory = { MY_COMPONENT_TYPE, my_component_config, (iot_component_free_fn_t) my_component_free, NULL };
+  static iot_component_factory_t factory = { MY_COMPONENT_TYPE, my_component_config, (iot_component_free_fn_t) my_component_free, NULL , NULL};
   return &factory;
 }

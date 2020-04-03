@@ -403,7 +403,7 @@ static iot_component_t * iot_scheduler_config (iot_container_t * cont, const iot
 
 const iot_component_factory_t * iot_scheduler_factory (void)
 {
-  static iot_component_factory_t factory = { IOT_SCHEDULER_TYPE, iot_scheduler_config, (iot_component_free_fn_t) iot_scheduler_free };
+  static iot_component_factory_t factory = { IOT_SCHEDULER_TYPE, iot_scheduler_config, (iot_component_free_fn_t) iot_scheduler_free, NULL };
   return &factory;
 }
 
