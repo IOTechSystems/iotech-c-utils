@@ -212,7 +212,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
 {
   iot_logger_t * next;
   iot_logger_t * logger;
-  bool self_start = false;
+  bool self_start;
   iot_log_function_t impl = iot_log_console; /* log to stderr or stdout */
   iot_loglevel_t level = iot_logger_config_level (map);
   const char * to = iot_data_string_map_get_string (map, "To");
@@ -230,13 +230,14 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
 
 static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map)
 {
+  (void) cont;
   ((iot_logger_t*) comp)->level = iot_logger_config_level (map);
   return true;
 }
 
 const iot_component_factory_t * iot_logger_factory (void)
 {
-  static iot_component_factory_t factory = { IOT_LOGGER_TYPE, iot_logger_config, (iot_component_free_fn_t) iot_logger_free,  iot_logger_reconfig };
+  static iot_component_factory_t factory = { IOT_LOGGER_TYPE, iot_logger_config, (iot_component_free_fn_t) iot_logger_free,  iot_logger_reconfig, NULL };
   return &factory;
 }
 

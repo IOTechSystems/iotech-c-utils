@@ -341,7 +341,7 @@ pipeline
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
     choice (name: 'System', choices: ['ubuntu-19.10','ubuntu-19.04','ubuntu-18.04','ubuntu-16.04','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','debian-8','centos-8', 'centos-7','fedora-31','fedora-30','opensuse-15','photon-30','zephyr-2.2','zephyr-1.14','clearlinux','seawolf','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','arm64','arm32', 'i586', 'all'], description: 'Build Host Architecture')
-    choice (name: 'Board', choices: ['None','frdm_k64f','native_posix','all'], description: 'Target Board')
+    choice (name: 'Board', choices: ['None','frdm_k64f','native_posix','acrn','all'], description: 'Target Board')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
   }
   stages { stage ('All') { steps { script { parallel buildMap }}}}

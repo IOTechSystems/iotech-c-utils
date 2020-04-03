@@ -15,7 +15,7 @@ int main (void)
   iot_container_t * container = iot_container_alloc ();
 
   iot_init ();
-  iot_container_add_factory (container, iot_logger_factory ());
+  iot_component_factory_add (iot_logger_factory ());
   iot_container_init (container, "main", &config);
 
   /* Start everything */

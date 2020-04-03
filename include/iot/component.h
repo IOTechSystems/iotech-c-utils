@@ -42,6 +42,7 @@ struct iot_component_factory_t
   iot_component_config_fn_t config_fn;
   iot_component_free_fn_t free_fn;
   iot_component_reconfig_fn_t reconfig_fn;
+  const iot_component_factory_t * next;
 };
 
 struct iot_component_t
@@ -192,6 +193,27 @@ extern iot_component_state_t iot_component_unlock (iot_component_t * component);
  * @return      JSON string loaded from the file
  */
 extern char * iot_component_file_config_loader (const char * name, void * from);
+
+/**
+ * @brief Add a component factory
+ *
+ * The function adds a component factory allowing containers to manage instances of the associated type.
+ * Factory type names must be unique. Attempts to add a factory with an existing type name are ignored.
+ *
+ * @param factory  Pointer to the component factory to add
+ */
+extern void iot_component_factory_add (const iot_component_factory_t * factory);
+
+/**
+ * @brief Find a component factory for a type
+ *
+ * The function finds a component factory by type name. NULL is returned if the factory
+ * cannot be found.
+ *
+ * @param name  Type name of the component factory to find
+ * @return      Pointer to the component factory if found, NULL otherwise
+ */
+extern const iot_component_factory_t * iot_component_factory_find (const char * type);
 
 #ifdef __cplusplus
 }
