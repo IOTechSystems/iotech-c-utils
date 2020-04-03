@@ -53,7 +53,6 @@ typedef struct iot_threadpool_t
   iot_job_t * front;                 // Front of job queue
   iot_job_t * rear;                  // Rear of job queue
   iot_job_t * cache;                 // Free job cache
-  int default_prio;                  // Default thread priority
   int affinity;                      // Pool threads processor affinity
   pthread_cond_t work_cond;          // Work control condition
   pthread_cond_t job_cond;           // Job control condition
@@ -80,7 +79,7 @@ static void * iot_threadpool_thread (void * arg)
   atomic_fetch_add (&pool->created, 1u);
   while (true)
   {
-    state = iot_component_wait_and_lock (comp, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+    state = iot_component_wait_and_lock (comp, (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING);
 
     if (state == IOT_COMPONENT_DELETED) // Exit thread on deletion
     {
@@ -147,7 +146,6 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max_jobs: %u default_priority: %d affinity: %d)", threads, max_jobs, default_prio, affinity);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
   *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
-  pool->default_prio = default_prio;
   pool->delay = IOT_TP_SHUTDOWN_MIN;
   atomic_store (&pool->created, 0u);
   pthread_cond_init (&pool->work_cond, NULL);
@@ -344,7 +342,7 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
 
 const iot_component_factory_t * iot_threadpool_factory (void)
 {
-  static iot_component_factory_t factory = { IOT_THREADPOOL_TYPE, iot_threadpool_config, (iot_component_free_fn_t) iot_threadpool_free };
+  static iot_component_factory_t factory = { IOT_THREADPOOL_TYPE, iot_threadpool_config, (iot_component_free_fn_t) iot_threadpool_free, NULL};
   return &factory;
 }
 #endif
