@@ -35,7 +35,11 @@ struct iot_container_t
 };
 
 static const iot_component_factory_t * iot_component_factories = NULL;
-static pthread_mutex_t iot_component_factories_mutex = PTHREAD_MUTEX_INITIALIZER;
+#ifdef __ZEPHYR__
+  static PTHREAD_MUTEX_DEFINE (iot_component_factories_mutex);
+#else
+  static pthread_mutex_t iot_component_factories_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 iot_container_t * iot_container_alloc (void)
 {
