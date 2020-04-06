@@ -31,23 +31,47 @@ struct iot_container_t
   iot_component_holder_t ** components;
   uint32_t ccount;
   uint32_t csize;
+  char * name;
   pthread_rwlock_t lock;
+  iot_container_t * next;
+  iot_container_t * prev;
 };
 
 static const iot_component_factory_t * iot_component_factories = NULL;
+static iot_container_t * iot_containers = NULL;
 #ifdef __ZEPHYR__
-  static PTHREAD_MUTEX_DEFINE (iot_component_factories_mutex);
+  static PTHREAD_MUTEX_DEFINE (iot_container_mutex);
 #else
-  static pthread_mutex_t iot_component_factories_mutex = PTHREAD_MUTEX_INITIALIZER;
+  static pthread_mutex_t iot_container_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-iot_container_t * iot_container_alloc (void)
+static iot_container_t * iot_container_find_locked (const char * name)
 {
-  iot_container_t * cont = calloc (1, sizeof (*cont));
-  cont->components = calloc (IOT_COMPONENT_DELTA, sizeof (iot_component_holder_t));
-  cont->ccount = 0;
-  cont->csize = IOT_COMPONENT_DELTA;
-  pthread_rwlock_init (&cont->lock, NULL);
+  assert (name);
+  iot_container_t * cont = iot_containers;
+  while (cont)
+  {
+    if (strcmp (cont->name, name) == 0) break;
+    cont = cont->next;
+  }
+  return cont;
+}
+iot_container_t * iot_container_alloc (const char * name)
+{
+  iot_container_t * cont = NULL;
+  pthread_mutex_lock (&iot_container_mutex);
+  if (iot_container_find_locked (name) == NULL)
+  {
+    cont = calloc (1, sizeof (*cont));
+    cont->components = calloc (IOT_COMPONENT_DELTA, sizeof (iot_component_holder_t));
+    cont->csize = IOT_COMPONENT_DELTA;
+    cont->name = strdup (name);
+    pthread_rwlock_init (&cont->lock, NULL);
+    cont->next = iot_containers;
+    if (iot_containers) iot_containers->prev = cont;
+    iot_containers = cont;
+  }
+  pthread_mutex_unlock (&iot_container_mutex);
   return cont;
 }
 
@@ -64,11 +88,11 @@ static void iot_container_add_handle (iot_container_t * cont,  void * handle)
 }
 #endif
 
-bool iot_container_init (iot_container_t * cont, const char * name, iot_container_config_t * conf)
+bool iot_container_init (iot_container_t * cont, iot_container_config_t * conf)
 {
   assert (conf);
   bool ret = true;
-  char * config = (conf->load) (name, conf->from);
+  char * config = (conf->load) (cont->name, conf->from);
   assert (config);
   iot_data_t * map = iot_data_from_json (config);
   iot_data_map_iter_t iter;
@@ -165,32 +189,46 @@ bool iot_container_init (iot_container_t * cont, const char * name, iot_containe
       }
     }
   }
-
   iot_data_free (map);
   return ret;
 }
 
 void iot_container_free (iot_container_t * cont)
 {
-  while (cont->ccount)
+  if (cont)
   {
-    iot_component_holder_t * ch = cont->components[--cont->ccount]; // Free in reverse of declaration order (dependents last)
-    (ch->factory->free_fn) (ch->component);
-    free (ch->name);
-    free (ch);
-  }
-  free (cont->components);
+    pthread_mutex_lock (&iot_container_mutex);
+    if (cont->next) cont->next->prev = cont->prev;
+    if (cont->prev)
+    {
+      cont->prev->next = cont->next;
+    }
+    else
+    {
+      iot_containers = cont->next;
+    }
+    pthread_mutex_unlock (&iot_container_mutex);
+    while (cont->ccount)
+    {
+      iot_component_holder_t *ch = cont->components[--cont->ccount]; // Free in reverse of declaration order (dependents last)
+      (ch->factory->free_fn) (ch->component);
+      free (ch->name);
+      free (ch);
+    }
+    free (cont->components);
 #ifdef IOT_BUILD_DYNAMIC_LOAD
-  while (cont->handles)
-  {
-    iot_dlhandle_holder_t *dl_handles = cont->handles;
-    cont->handles = dl_handles->next;
-    dlclose (dl_handles->load_handle);
-    free (dl_handles);
-  }
+    while (cont->handles)
+    {
+      iot_dlhandle_holder_t *dl_handles = cont->handles;
+      cont->handles = dl_handles->next;
+      dlclose (dl_handles->load_handle);
+      free (dl_handles);
+    }
 #endif
-  pthread_rwlock_destroy (&cont->lock);
-  free (cont);
+    pthread_rwlock_destroy (&cont->lock);
+    free (cont->name);
+    free (cont);
+  }
 }
 
 bool iot_container_start (iot_container_t * cont)
@@ -232,38 +270,44 @@ static const iot_component_factory_t * iot_component_factory_find_locked (const 
 void iot_component_factory_add (const iot_component_factory_t * factory)
 {
   assert (factory);
-  pthread_mutex_lock (&iot_component_factories_mutex);
+  pthread_mutex_lock (&iot_container_mutex);
   if (iot_component_factory_find_locked (factory->type) == NULL)
   {
     ((iot_component_factory_t*) factory)->next = iot_component_factories;
     iot_component_factories = factory;
   }
-  pthread_mutex_unlock (&iot_component_factories_mutex);
+  pthread_mutex_unlock (&iot_container_mutex);
 }
 
 extern const iot_component_factory_t * iot_component_factory_find (const char * type)
 {
-  pthread_mutex_lock (&iot_component_factories_mutex);
+  pthread_mutex_lock (&iot_container_mutex);
   const iot_component_factory_t * factory = iot_component_factory_find_locked (type);
-  pthread_mutex_unlock (&iot_component_factories_mutex);
+  pthread_mutex_unlock (&iot_container_mutex);
   return factory;
 }
 
-iot_component_t * iot_container_find (iot_container_t * cont, const char * name)
+extern iot_container_t * iot_container_find (const char * name)
 {
+  pthread_mutex_lock (&iot_container_mutex);
+  iot_container_t * cont = iot_container_find_locked (name);
+  pthread_mutex_unlock (&iot_container_mutex);
+  return cont;
+}
+
+iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name)
+{
+  assert (cont && name);
   iot_component_t * comp = NULL;
-  if (name && (name[0] != '\0'))
+  pthread_rwlock_rdlock (&cont->lock);
+  for (uint32_t i = 0; i < cont->ccount; i++)
   {
-    pthread_rwlock_rdlock (&cont->lock);
-    for (uint32_t i = 0; i < cont->ccount; i++)
+    if (strcmp (cont->components[i]->name, name) == 0)
     {
-      if (strcmp (cont->components[i]->name, name) == 0)
-      {
-        comp = cont->components[i]->component;
-        break;
-      }
+      comp = cont->components[i]->component;
+      break;
     }
-    pthread_rwlock_unlock (&cont->lock);
   }
+  pthread_rwlock_unlock (&cont->lock);
   return comp;
 }

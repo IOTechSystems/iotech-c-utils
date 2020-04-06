@@ -12,7 +12,7 @@ static char * config_loader (const char * name, void * from);
 int main (void)
 {
   iot_container_config_t config = { config_loader, NULL };
-  iot_container_t * container = iot_container_alloc ();
+  iot_container_t * container = iot_container_alloc ("main");
   iot_component_t * logger;
   iot_data_t * reconfig;
   iot_init ();
@@ -26,7 +26,7 @@ int main (void)
 
   /* Create components from configuration files */
 
-  iot_container_init (container, "main", &config);
+  iot_container_init (container, &config);
 
   /* Start everything */
 
@@ -36,7 +36,7 @@ int main (void)
 
   /* Find instantiated component - the logger */
 
-  logger = iot_container_find (container, "logger");
+  logger = iot_container_find_component (container, "logger");
 
   /* Update logger configuration (what can be reconfigured depends on component) */
 
