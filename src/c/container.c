@@ -297,17 +297,20 @@ extern iot_container_t * iot_container_find (const char * name)
 
 iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name)
 {
-  assert (cont && name);
+  assert (cont);
   iot_component_t * comp = NULL;
-  pthread_rwlock_rdlock (&cont->lock);
-  for (uint32_t i = 0; i < cont->ccount; i++)
+  if (name)
   {
-    if (strcmp (cont->components[i]->name, name) == 0)
+    pthread_rwlock_rdlock (&cont->lock);
+    for (uint32_t i = 0; i < cont->ccount; i++)
     {
-      comp = cont->components[i]->component;
-      break;
+      if (strcmp (cont->components[i]->name, name) == 0)
+      {
+        comp = cont->components[i]->component;
+        break;
+      }
     }
+    pthread_rwlock_unlock (&cont->lock);
   }
-  pthread_rwlock_unlock (&cont->lock);
   return comp;
 }
