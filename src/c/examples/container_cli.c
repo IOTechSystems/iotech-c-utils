@@ -11,21 +11,21 @@ static const char * my_config =
         "}";
 
 /* Configuration loader function */
-
-static char * config_loader (const char * name, void * from);
+static char * config_loader (const char * name, const char * uri);
 
 int main (void)
 {
   iot_container_config_t config = { config_loader, NULL };
-  iot_container_t * container = iot_container_alloc ();
+  iot_component_t * logger;
+  iot_data_t * reconfig;
+
+  iot_container_t * container = iot_container_alloc ("main");
   iot_init ();
 
-  /* Add factories for supported component types */
-  /* 2 ways of adding components :
-     - static: add factory before init as shown below, call to add_comp creates a component holder
-     - dynamic: Update config to provide library and factory path. call to add_comp will add_factory and create a component holder
-       within a container
-   */
+
+
+  /* Set configuration mechanism */
+  iot_container_config (&config);
 
   iot_component_factory_add (iot_logger_factory ());
   iot_component_factory_add (iot_threadpool_factory ());
@@ -33,14 +33,13 @@ int main (void)
   iot_component_factory_add (my_component_factory ());
 
   /* Create components from configuration files */
-  iot_container_init (container, "main", &config);
+  iot_container_init (container);
 
-  iot_container_add_comp (container, MY_COMPONENT_TYPE, "mycomp", my_config);
+  iot_container_add_component (container, MY_COMPONENT_TYPE, "mycomp", my_config);
 
-  iot_container_start_comp (container, "mycomp");
   iot_container_start (container);
 
-  iot_data_t * comp = iot_container_ls_comp (container);
+  iot_data_t * comp = iot_container_ls_component (container);
   uint32_t map_length = iot_data_map_size (comp);
 
   iot_data_map_iter_t iter;
@@ -72,14 +71,28 @@ int main (void)
   }
   iot_data_free (comp);
 
+  iot_data_t * containers = iot_container_ls_containers ();
+  uint32_t containers_length = iot_data_map_size (containers);
+  iot_data_map_iter (containers, &iter);
+
+  while (iot_data_map_iter_next (&iter) && (containers_length--))
+  {
+    const iot_data_t * key = iot_data_map_iter_key (&iter);
+    const iot_data_t * value = iot_data_map_iter_value (&iter);
+
+    printf ("key: %s\t  value: %s\n", (char *)iot_data_string (key), (char *)iot_data_string (value));
+  }
+  iot_data_free (containers);
+
   sleep (5);
 
-  const char *reconfig = "{\"Level\":\"Trace\"}";
-  iot_container_configure_comp (container, "logger", reconfig);
+  logger = iot_container_find_component (container, "logger");
+  reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
+  iot_component_reconfig (logger, container, reconfig);
+  iot_data_free (reconfig);
 
   /* Stop everything and clean up */
-  iot_container_stop_comp (container, "mycomp");
-  iot_container_rm_comp (container, "mycomp");
+  iot_container_rm_component (container, "mycomp");
 
   iot_container_stop (container);
   iot_container_free (container);
@@ -127,13 +140,12 @@ static const char * sched_config =
 
 /* Configuration loader function */
 
-static char * config_loader (const char * name, void * from)
+static char * config_loader (const char * name, const char * uri)
 {
   if (strcmp (name, "main") == 0) return strdup (main_config);
   if (strcmp (name, "file_logger") == 0) return strdup (file_logger_config);
   if (strcmp (name, "logger") == 0) return strdup (logger_config);
   if (strcmp (name, "pool") == 0) return strdup (pool_config);
   if (strcmp (name, "scheduler") == 0) return strdup (sched_config);
-//  if (strcmp (name, "mycomp") == 0) return strdup (my_config);
   return NULL;
 }

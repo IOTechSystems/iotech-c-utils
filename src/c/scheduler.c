@@ -395,7 +395,7 @@ static void iot_schedule_dequeue (iot_schd_queue_t * queue, iot_schedule_t * sch
 
 static iot_component_t * iot_scheduler_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_logger_t * logger = (iot_logger_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "Logger"));
+  iot_logger_t * logger = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Logger"));
   int affinity = (int) iot_data_string_map_get_i64 (map, "Affinity", IOT_THREAD_NO_AFFINITY);
   int prio = (int) iot_data_string_map_get_i64 (map, "Priority", IOT_THREAD_NO_PRIORITY);
   return (iot_component_t*) iot_scheduler_alloc (prio, affinity, logger);

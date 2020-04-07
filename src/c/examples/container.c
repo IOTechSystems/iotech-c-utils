@@ -7,15 +7,18 @@
 
 /* Configuration loader function */
 
-static char * config_loader (const char * name, void * from);
+static char * config_loader (const char * name, const char * uri);
 
 int main (void)
 {
   iot_container_config_t config = { config_loader, NULL };
-  iot_container_t * container = iot_container_alloc ();
+  iot_container_t * container = iot_container_alloc ("main");
   iot_component_t * logger;
   iot_data_t * reconfig;
   iot_init ();
+
+  /* Set configuration mechanism */
+  iot_container_config (&config);
 
   /* Add factories for supported component types */
 
@@ -25,7 +28,7 @@ int main (void)
   iot_component_factory_add (my_component_factory ());
 
   /* Create components from configuration files */
-  iot_container_init (container, "main", &config);
+  iot_container_init (container);
 
   /* Start everything */
 
@@ -33,7 +36,7 @@ int main (void)
   sleep (5);
 
   /* Find instantiated component - the logger */
-  logger = iot_container_find (container, "logger");
+  logger = iot_container_find_component (container, "logger");
 
   /* Update logger configuration (what can be reconfigured depends on component) */
   reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
@@ -94,7 +97,7 @@ static const char * my_config =
 
 /* Configuration loader function */
 
-static char * config_loader (const char * name, void * from)
+static char * config_loader (const char * name, const char * uri)
 {
   if (strcmp (name, "main") == 0) return strdup (main_config);
   if (strcmp (name, "file_logger") == 0) return strdup (file_logger_config);

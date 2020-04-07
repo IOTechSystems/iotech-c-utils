@@ -329,7 +329,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
 
 static iot_component_t * iot_threadpool_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_logger_t * logger = (iot_logger_t*) iot_container_find (cont, iot_data_string_map_get_string (map, "Logger"));
+  iot_logger_t * logger = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Logger"));
   uint16_t threads = (uint16_t) iot_data_string_map_get_i64 (map, "Threads", IOT_TP_THREADS_DEFAULT);
   uint32_t jobs = (uint32_t) iot_data_string_map_get_i64 (map, "MaxJobs", IOT_TP_JOBS_DEFAULT);
   int prio = (int) iot_data_string_map_get_i64 (map, "Priority", IOT_THREAD_NO_PRIORITY);

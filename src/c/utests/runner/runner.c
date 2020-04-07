@@ -7,6 +7,7 @@
 
 #include "iot/iot.h"
 #include "../json/json.h"
+#include "../container/cont.h"
 #include "../logger/logger.h"
 #include "../data/data.h"
 #include "../threadpool/threadpool.h"
@@ -70,6 +71,7 @@ int main (int argc, char* argv[])
     return -1;
   }
   iot_init ();
+  cunit_cont_test_init ();
   cunit_logger_test_init ();
   cunit_json_test_init ();
   cunit_data_test_init ();

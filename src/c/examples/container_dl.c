@@ -7,16 +7,17 @@
 
 /* Configuration loader function */
 
-static char * config_loader (const char * name, void * from);
+static char * config_loader (const char * name, const char * uri);
 
 int main (void)
 {
   iot_container_config_t config = { config_loader, NULL };
-  iot_container_t * container = iot_container_alloc ();
+  iot_container_t * container = iot_container_alloc ("main");
 
   iot_init ();
+  iot_container_config (&config);
   iot_component_factory_add (iot_logger_factory ());
-  iot_container_init (container, "main", &config);
+  iot_container_init (container);
 
   /* Start everything */
 
@@ -55,7 +56,7 @@ static const char * my_config =
 
 /* Configuration loader function */
 
-static char * config_loader (const char * name, void * from)
+static char * config_loader (const char * name, const char * uri)
 {
   if (strcmp (name, "main") == 0) return strdup (main_config);
   if (strcmp (name, "logger") == 0) return strdup (logger_config);

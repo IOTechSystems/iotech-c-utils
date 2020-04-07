@@ -17,23 +17,42 @@
 extern "C" {
 #endif
 
-typedef char * (*iot_container_config_load_fn_t) (const char * name, void * from);
+typedef char * (*iot_container_config_load_fn_t) (const char * name, const char * uri);
 
 typedef struct iot_container_config_t
 {
   iot_container_config_load_fn_t load;
-  void * from;
+  const char * uri;
 } iot_container_config_t;
 
+/**
+ * @brief Initialise the configuration resolver for containers and components
+ *
+ * The function sets the global configuration resolver data for containers and components
+ *
+ * @param conf  Pointer to the config structure to load JSON configurations from a specified location
+ */
+extern void iot_container_config (iot_container_config_t * conf);
 
 /**
- * @brief Allocate memory for a container
+ * @brief Allocate a named container
  *
- * The function to allocate memory for a container
+ * The function to allocate memory for a container and set it's name
  *
+ * @param name  Name of the container, must be unique
  * @return  Pointer to the created container
  */
-extern iot_container_t * iot_container_alloc (void);
+extern iot_container_t * iot_container_alloc (const char * name);
+
+/**
+ * @brief Find a named container
+ *
+ * The function to find a named container
+ *
+ * @param name  Name of the container
+ * @return  Pointer container if found, NULL otherwise
+ */
+extern iot_container_t * iot_container_find (const char * name);
 
 /**
  * @brief Initialise the container for a given configuration
@@ -41,11 +60,9 @@ extern iot_container_t * iot_container_alloc (void);
  * The function to initialise the container with a configuration provided
  *
  * @param cont  Pointer to the container to initialise
- * @param name  Name of the root configuration, that defines configuration of all the components
- * @param conf  Pointer to the config structure to load the JSON file from a specified location
  * @return      'true' if the container initialisation is successful
  */
-extern bool iot_container_init (iot_container_t * cont, const char * name, iot_container_config_t * conf);
+extern bool iot_container_init (iot_container_t * cont);
 
 /**
  *  @brief Start the components within the container
@@ -91,23 +108,23 @@ extern void iot_container_add_factory (iot_container_t * cont, const iot_compone
  * The function to add a component to the container. If a component factory is not available, config should contain
  * the component library and factory to load them dynamically.
  *
- * @param cont       Pointer to the container
- * @param ctype      Component type
- * @param cname      Component name
- * @param config     Configuration of the component to add
+ * @param cont      Pointer to the container
+ * @param ctype     Component type
+ * @param name      Component name
+ * @param config    Configuration of the component to add
  */
-extern void iot_container_add_comp (iot_container_t * cont, const char * ctype, const char *cname, const char * config);
+extern void iot_container_add_component (iot_container_t * cont, const char * ctype, const char * name, const char * config);
 
 /**
- * @brief Find a component factory within the container
+ * @brief Find a named component in a container
  *
  * The function to find a component factory within the container
  *
  * @param cont  Pointer to the container
- * @param name  Name of the component factory to find
- * @return      Pointer to the component factory if found within the container, NULL otherwise
+ * @param name  Name of the component to find
+ * @return      Pointer to the component if found within the container, NULL otherwise
  */
-extern iot_component_t * iot_container_find (iot_container_t * cont, const char * name);
+extern iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name);
 
 /**
  * @brief Free a component from the container
@@ -115,39 +132,10 @@ extern iot_component_t * iot_container_find (iot_container_t * cont, const char 
  * Release the resources used by a component and delete from the container.
  * Attempts to remove a component not in a container is ignored.
  *
- * @param cont   Pointer to the container
- * @param cname  Component name
- */
-extern void iot_container_rm_comp (iot_container_t * cont, const char * cname);
-
-/**
- * @brief Start a component
- *
  * @param cont  Pointer to the container
- * @param name  Name of the component to start
+ * @param name  Component name
  */
-
-extern void iot_container_start_comp (iot_container_t * cont, const char * cname);
-
-/**
- * @brief Stop a component
- *
- * @param cont  Pointer to the container
- * @param name  Name of the component to stop
- */
-
-extern void iot_container_stop_comp (iot_container_t * cont, const char * name);
-
-/**
- * @brief Reconfigure a component
- *
- * Reconfigure the existing component.
- *
- * @param cont    Pointer to a container
- * @param name    Name of the component to reconfigure
- * @param config
- */
-extern void iot_container_configure_comp (iot_container_t * cont, const char * name, const char * config);
+extern void iot_container_rm_component (iot_container_t * cont, const char * name);
 
 /**
  * @brief List the components within a container
@@ -155,7 +143,13 @@ extern void iot_container_configure_comp (iot_container_t * cont, const char * n
  * @param cont  Pointer to a container
  * @return      Map containing the component names with their component type and state
  */
-extern iot_data_t * iot_container_ls_comp (iot_container_t * cont);
+extern iot_data_t * iot_container_ls_component (iot_container_t * cont);
+
+/**
+ * @brief List the names of the containers
+ * @return  Map containing the names of the containers
+ */
+extern iot_data_t * iot_container_ls_containers (void);
 
 #ifdef __cplusplus
 }
