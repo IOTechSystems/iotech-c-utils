@@ -1,8 +1,9 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2020 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
 #ifndef _IOT_COMPONENT_H_
 #define _IOT_COMPONENT_H_
 
@@ -17,43 +18,59 @@
 extern "C" {
 #endif
 
+/** Alias for component structure */
 typedef struct iot_component_t iot_component_t;
+/** Alias for container structure */
 typedef struct iot_container_t iot_container_t;
+/** Alias for component factory structure */
 typedef struct iot_component_factory_t iot_component_factory_t;
 
+/**
+ * Alias for component state enumeration
+ */
 typedef enum
 {
-  IOT_COMPONENT_INITIAL = 0U,
-  IOT_COMPONENT_STOPPED = 1U,
-  IOT_COMPONENT_RUNNING = 2U,
-  IOT_COMPONENT_DELETED = 4U
-}
-iot_component_state_t;
+  IOT_COMPONENT_INITIAL = 0U, /**< Initial component state */
+  IOT_COMPONENT_STOPPED = 1U, /**< Stopped comonent state */
+  IOT_COMPONENT_RUNNING = 2U, /**< Running component state */
+  IOT_COMPONENT_DELETED = 4U  /**< Deleted component state */
+} iot_component_state_t;
 
+/** Alias for component configuration function pointer */
 typedef iot_component_t * (*iot_component_config_fn_t) (iot_container_t * cont, const iot_data_t * map);
+/** Alias for component reconfiguration function pointer */
 typedef bool (*iot_component_reconfig_fn_t) (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map);
+/** Alias for component start function pointer */
 typedef bool (*iot_component_start_fn_t) (iot_component_t * comp);
+/** Alias for component stop function pointer */
 typedef void (*iot_component_stop_fn_t) (iot_component_t * comp);
+/** Alias for component free function pointer */
 typedef void (*iot_component_free_fn_t) (iot_component_t * comp);
 
+/**
+ * Component factory structure
+ */
 struct iot_component_factory_t
 {
-  const char * const type;
-  iot_component_config_fn_t config_fn;
-  iot_component_free_fn_t free_fn;
-  iot_component_reconfig_fn_t reconfig_fn;
-  const iot_component_factory_t * next;
+  const char * const type;                 /**< Indicates the type of a component */
+  iot_component_config_fn_t config_fn;     /**< Pointer to function that handles component configuration */
+  iot_component_free_fn_t free_fn;         /**< Pointer to function that handles the freeing of a component */
+  iot_component_reconfig_fn_t reconfig_fn; /**< Pointer to function that handles component reconfiguration */
+  const iot_component_factory_t * next;    /**< Pointer to next component factory structure */
 };
 
+/**
+ * Component structure
+ */
 struct iot_component_t
 {
-  volatile iot_component_state_t state;
-  pthread_mutex_t mutex;
-  pthread_cond_t cond;
-  iot_component_start_fn_t start_fn;
-  iot_component_stop_fn_t stop_fn;
-  atomic_uint_fast32_t refs;
-  const iot_component_factory_t * factory;
+  volatile iot_component_state_t state;     /**< Current state of component */
+  pthread_mutex_t mutex;                    /**< Thread mutex settings of component */
+  pthread_cond_t cond;                      /**< Thread condition settings of component */
+  iot_component_start_fn_t start_fn;        /**< Pointer to function that handles starting a component */
+  iot_component_stop_fn_t stop_fn;          /**< Pointer to function that handles stopping a component */
+  atomic_uint_fast32_t refs;                /**< Current reference count of a given component */
+  const iot_component_factory_t * factory;  /**< Pointer to component factory structure */
 };
 
 /**
@@ -199,7 +216,7 @@ extern void iot_component_factory_add (const iot_component_factory_t * factory);
  * The function finds a component factory by type name. NULL is returned if the factory
  * cannot be found.
  *
- * @param name  Type name of the component factory to find
+ * @param type  Type name of the component factory to find
  * @return      Pointer to the component factory if found, NULL otherwise
  */
 extern const iot_component_factory_t * iot_component_factory_find (const char * type);

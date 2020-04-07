@@ -1,9 +1,8 @@
-/*
- * Copyright (c) 2020
- * IoTech Ltd
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//
+// Copyright (c) 2020 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 
 #ifndef _IOT_THREADPOOL_H_
 #define _IOT_THREADPOOL_H_
@@ -19,8 +18,10 @@
 extern "C" {
 #endif
 
+/** Threadpool component name */
 #define IOT_THREADPOOL_TYPE "IOT::ThreadPool"
 
+/** Alias for threadpool structure */
 typedef struct iot_threadpool_t iot_threadpool_t;
 
 /**
@@ -34,7 +35,7 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  * @param default_prio       Default priority for created threads (not set if -1)
  * @param affinity           Processor affinity for pool threads (not set if less than zero)
  * @param logger             Logger, can be NULL
- * @return iot_threadpool_t  Created thread pool on success, NULL on error
+ * @returns iot_threadpool_t Created thread pool on success, NULL on error
  */
 extern iot_threadpool_t * iot_threadpool_alloc (uint16_t num_threads, uint32_t max_jobs, int default_prio, int affinity, iot_logger_t * logger);
 
@@ -60,7 +61,7 @@ extern void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*function)
  * @param  function      Function to add as work
  * @param  arg           Function argument
  * @param  priority      Priority to run thread at (not set if -1)
- * @returns              whether the work was added. 'true' if the work is successfully added to the pool, 'false' otherwise
+ * @return               whether the work was added. 'true' if the work is successfully added to the pool, 'false' otherwise
  */
 extern bool iot_threadpool_try_work (iot_threadpool_t * pool, void * (*function) (void*), void * arg, int priority);
 
@@ -69,7 +70,7 @@ extern bool iot_threadpool_try_work (iot_threadpool_t * pool, void * (*function)
  *
  * The function that will wait for all jobs - both queued and currently running to finish.
  *
- * @param iot_threadpool the thread pool to wait for
+ * @param pool the thread pool to wait for
  */
 extern void iot_threadpool_wait (iot_threadpool_t * pool);
 

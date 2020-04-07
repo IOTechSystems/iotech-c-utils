@@ -1,12 +1,16 @@
-/*
- * Copyright (c) 2020
- * IoTech Ltd
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//
+// Copyright (c) 2020 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 
 #ifndef _IOT_JSON_H_
 #define _IOT_JSON_H_
+
+/**
+ * @file
+ * @brief IOTech JSON API
+ */
 
 #include "iot/os.h"
 
@@ -15,63 +19,67 @@ extern "C" {
 #endif
 
 /**
- * JSON type identifier. Basic types are:
- * 	o Object
- * 	o Array
- * 	o String
- * 	o Other primitive: number, boolean (true/false) or null
+ * Alias for JSON type enumeration
  */
 typedef enum
 {
-  IOT_JSON_UNDEFINED = 0,
-  IOT_JSON_OBJECT = 1,
-  IOT_JSON_ARRAY = 2,
-  IOT_JSON_STRING = 3,
-  IOT_JSON_PRIMITIVE = 4
+  IOT_JSON_UNDEFINED = 0,   /**< Undefined */
+  IOT_JSON_OBJECT = 1,      /**< Object */
+  IOT_JSON_ARRAY = 2,       /**< Array */
+  IOT_JSON_STRING = 3,      /**< String */
+  IOT_JSON_PRIMITIVE = 4    /**< Other primitive: number, boolean, or null */
 } iot_json_type_t;
 
-/* Not enough tokens were provided */
+/** Not enough tokens were provided */
 #define IOT_JSON_ERROR_NOMEM -1
-/* Invalid character inside JSON string */
+/** Invalid character inside JSON string */
 #define IOT_JSON_ERROR_INVAL -2
-/* The string is not a full JSON packet, more bytes expected */
+/** The string is not a full JSON packet, more bytes expected */
 #define IOT_JSON_ERROR_PART -3
 
 /**
- * JSONtoken description.
- * type    type (object, array, string etc.)
- * start   start position in JSON data string
- * end     end position in JSON data string
- * size    size of array/object
+ * Alias for JSON token structure
  */
 typedef struct 
 {
-  iot_json_type_t type;
-  int32_t start;
-  int32_t end;
-  uint32_t size;
+  iot_json_type_t type;   /**< type (object, array string etc) */
+  int32_t start;          /**< start position in JSON data string */
+  int32_t end;            /**< End position in JSON data string */
+  uint32_t size;          /**< Size of array / object */
 } iot_json_tok_t;
 
 /**
- * JSON parser. Contains an array of token blocks available. Also stores
+ * Alias for JSON parser structure
+ *
+ * Contains an array of token blocks available. Also stores
  * the string being parsed now and current position in that string
  */
 typedef struct
 {
-  uint32_t pos;     /* offset in the JSON string */
-  int32_t toknext;  /* next token to allocate */
-  int32_t toksuper; /* superior token node, e.g parent object or array */
+  uint32_t pos;     /**< Offset in the JSON string */
+  int32_t toknext;  /**< Next token to allocate */
+  int32_t toksuper; /**< Superior token node, e.g parent object or array */
 } iot_json_parser;
 
 /**
- * Create a JSON parser
+ * @brief Create and initialise a JSON parser
+ *
+ * @param parser Pointer to JSON parser
  */
 void iot_json_init (iot_json_parser * parser);
 
-/**
- * Run JSON parser. It parses a JSON data string into and array of tokens,
- * each describing a single JSON object.
- */
+ /**
+  * @brief Run JSON parser
+  *
+  * A JSON data string is parsed into an array of tokens each describing a single JSON object.
+  *
+  * @param parser     Pointer to JSON parser
+  * @param json       Input JSON string
+  * @param len        Length of JSON string
+  * @param tokens     Pointer to array of tokens
+  * @param num_tokens Number of tokens
+  * @return           Number of strings parsed
+  */
 int iot_json_parse (iot_json_parser * parser, const char * json, size_t len, iot_json_tok_t * tokens, uint32_t num_tokens);
 
 #ifdef __cplusplus

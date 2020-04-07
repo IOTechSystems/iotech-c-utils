@@ -1,10 +1,16 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2020 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
 #ifndef _IOT_HASH_H_
 #define _IOT_HASH_H_
+
+/**
+ * @file
+ * @brief IOTech Hash API
+ */
 
 #include "iot/os.h"
 
@@ -12,6 +18,12 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Bernstein djb2 hash function (Version 2)
+ *
+ * @param str Pointer to string - Key to hash
+ * @return    Hash value
+ */
 extern uint32_t iot_hash (const char * str);
 
 #ifdef __cplusplus
