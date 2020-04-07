@@ -1,14 +1,15 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2020 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
 #ifndef _IOT_DATA_H_
 #define _IOT_DATA_H_
 
 /**
  * @file
- * @brief IOTech Data representation API
+ * @brief IOTech Data Representation API
  */
 
 #include "iot/os.h"
@@ -17,52 +18,69 @@
 extern "C" {
 #endif
 
+/**
+ * Alias for data type enumeration
+ */
 typedef enum iot_data_type_t
 {
-  IOT_DATA_INT8 = 0,
-  IOT_DATA_UINT8 = 1,
-  IOT_DATA_INT16 = 2,
-  IOT_DATA_UINT16 = 3,
-  IOT_DATA_INT32 = 4,
-  IOT_DATA_UINT32 = 5,
-  IOT_DATA_INT64 = 6,
-  IOT_DATA_UINT64 = 7,
-  IOT_DATA_FLOAT32 = 8,
-  IOT_DATA_FLOAT64 = 9,
-  IOT_DATA_BOOL = 10,
-  IOT_DATA_STRING = 11,
-  IOT_DATA_ARRAY = 12,
-  IOT_DATA_MAP = 13,
-  IOT_DATA_VECTOR = 14
+  IOT_DATA_INT8 = 0,    /**< Signed 8bit integer */
+  IOT_DATA_UINT8 = 1,   /**< Unsigned 8bit integer */
+  IOT_DATA_INT16 = 2,   /**< Signed 16bit integer */
+  IOT_DATA_UINT16 = 3,  /**< Unsigned 16bit integer */
+  IOT_DATA_INT32 = 4,   /**< Signed 32bit integer */
+  IOT_DATA_UINT32 = 5,  /**< Unsigned 32bit integer */
+  IOT_DATA_INT64 = 6,   /**< Signed 64bit integer */
+  IOT_DATA_UINT64 = 7,  /**< Unsigned 64bit integer */
+  IOT_DATA_FLOAT32 = 8, /**< 32bit float */
+  IOT_DATA_FLOAT64 = 9, /**< 64bit float */
+  IOT_DATA_BOOL = 10,   /**< Boolean */
+  IOT_DATA_STRING = 11, /**< String */
+  IOT_DATA_ARRAY = 12,  /**< Array */
+  IOT_DATA_MAP = 13,    /**< Map */
+  IOT_DATA_VECTOR = 14  /**< Vector */
 } iot_data_type_t;
 
+/**
+ * Alias for data ownership enumeration
+ */
 typedef enum iot_data_ownership_t
 {
-  IOT_DATA_COPY,  /* Data is copied and copy freed when no longer used */
-  IOT_DATA_TAKE,  /* Data is taken and freed when no longer used */
-  IOT_DATA_REF    /* Data is referenced and never freed */
+  IOT_DATA_COPY,  /**< Data is copied and copy freed when no longer used */
+  IOT_DATA_TAKE,  /**< Data is taken and freed when no longer used */
+  IOT_DATA_REF    /**< Data is referenced and never freed */
 } iot_data_ownership_t;
 
+/** Alias for iot data structure */
 typedef struct iot_data_t iot_data_t;
 
+/**
+ * Alias for data map iterator structure
+ */
 typedef struct iot_data_map_iter_t
 {
-  struct iot_data_map_t * map;
-  struct iot_data_pair_t * pair;
+  struct iot_data_map_t * map;   /**< Pointer to data map structure */
+  struct iot_data_pair_t * pair; /**< Pointer to data pair structure */
 } iot_data_map_iter_t;
 
+/**
+ * Alias for data vector iterator structure
+ */
 typedef struct iot_data_vector_iter_t
 {
-  struct iot_data_vector_t * vector;
-  uint32_t index;
+  struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
+  uint32_t index;                     /**< Index of the given vector */
 } iot_data_vector_iter_t;
 
+/**
+ * Alias for data array iterator structure
+ */
 typedef struct iot_data_array_iter_t
 {
-  struct iot_data_array_t * array;
-  uint32_t index;
+  struct iot_data_array_t * array;  /**< Pointer to data array structure */
+  uint32_t index;                   /**< Index of the given data array */
 } iot_data_array_iter_t;
 
+/** Alias for data comparison function pointer */
 typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 
 /**

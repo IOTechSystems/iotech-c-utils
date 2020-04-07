@@ -1,8 +1,9 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2020 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
 #ifndef _IOT_CONTAINER_H_
 #define _IOT_CONTAINER_H_
 
@@ -17,12 +18,16 @@
 extern "C" {
 #endif
 
+/** Alias for container configuration load function pointer */
 typedef char * (*iot_container_config_load_fn_t) (const char * name, const char * uri);
 
+/**
+ * Alias for container configuration structure
+ */
 typedef struct iot_container_config_t
 {
-  iot_container_config_load_fn_t load;
-  const char * uri;
+  iot_container_config_load_fn_t load;  /**< Pointer to function that handles container configuration load functionality */
+  const char * uri;                     /**< Pointer to a string which identifies the source of configuration */
 } iot_container_config_t;
 
 /**

@@ -1,8 +1,9 @@
 //
-// Copyright (c) 2018 IOTech
+// Copyright (c) 2018-2020 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
 #ifndef _IOT_LOGGER_H_
 #define _IOT_LOGGER_H_
 
@@ -17,11 +18,28 @@
 extern "C" {
 #endif
 
+/** Logger component name */
 #define IOT_LOGGER_TYPE "IOT::Logger"
+/** Default log level warning */
 #define IOT_LOGLEVEL_DEFAULT IOT_LOG_WARN
 
+/** Logger structure */
 struct iot_logger_t;
-typedef enum iot_loglevel_t { IOT_LOG_NONE = 0, IOT_LOG_ERROR, IOT_LOG_WARN, IOT_LOG_INFO, IOT_LOG_DEBUG, IOT_LOG_TRACE } iot_loglevel_t;
+
+/**
+ * Alias for log level enumeration
+ */
+typedef enum iot_loglevel_t
+{
+  IOT_LOG_NONE = 0,   /**< No logger */
+  IOT_LOG_ERROR,      /**< Log level 1 */
+  IOT_LOG_WARN,       /**< Log level 2 */
+  IOT_LOG_INFO,       /**< Log level 3 */
+  IOT_LOG_DEBUG,      /**< Log level 4 */
+  IOT_LOG_TRACE       /**< Log level 5 - max IOT debug level */
+} iot_loglevel_t;
+
+/** Alias for IOT logger function pointer */
 typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
 
 /* Default set of supported logger implementation functions */
@@ -46,15 +64,18 @@ extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, ti
  */
 extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
 
+/**
+ * Alias for logger structure
+ */
 typedef struct iot_logger_t
 {
-  iot_component_t component;
-  volatile iot_loglevel_t level;
-  volatile iot_loglevel_t save;
-  char * name;
-  char * to;
-  iot_log_function_t impl;
-  struct iot_logger_t * next;
+  iot_component_t component;      /**< Details of a given logger component */
+  volatile iot_loglevel_t level;  /**< Log level */
+  volatile iot_loglevel_t save;   /**< Last saved log level */
+  char * name;                    /**< Name of logger */
+  char * to;                      /**< Log 'to' a certain file */
+  iot_log_function_t impl;        /**< Pointer to function that handles logging functionality */
+  struct iot_logger_t * next;     /**< Pointer to next logger structure */
 } iot_logger_t;
 
 /* Logger lifecycle functions */
@@ -171,12 +192,15 @@ extern void iot_log__warn (iot_logger_t * logger, ...);
  */
 extern void iot_log__error (iot_logger_t * logger, ...);
 
-/* Logging macros */
-
+/** Log trace macro */
 #define iot_log_trace(l,...) if ((l) && (l)->level >= IOT_LOG_TRACE) iot_log__trace ((l), __VA_ARGS__)
+/** Log info macro */
 #define iot_log_info(l,...) if ((l) && (l)->level >= IOT_LOG_INFO) iot_log__info ((l), __VA_ARGS__)
+/** Log debug macro */
 #define iot_log_debug(l,...) if ((l) && (l)->level >= IOT_LOG_DEBUG) iot_log__debug ((l), __VA_ARGS__)
+/** Log warn macro */
 #define iot_log_warn(l,...) if ((l) && (l)->level >= IOT_LOG_WARN) iot_log__warn ((l), __VA_ARGS__)
+/** Log error macro */
 #define iot_log_error(l,...) if ((l) && (l)->level >= IOT_LOG_ERROR) iot_log__error ((l), __VA_ARGS__)
 
 /**

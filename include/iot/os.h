@@ -1,10 +1,16 @@
 //
-// Copyright (c) 2018 IOTech
+// Copyright (c) 2018-2020 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
 #ifndef _IOT_OS_H_
 #define _IOT_OS_H_
+
+/**
+ * @file
+ * @brief IOTech OS API
+ */
 
 #ifdef __ZEPHYR__
 #include "iot/os/zephyr.h"

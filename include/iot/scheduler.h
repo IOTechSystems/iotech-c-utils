@@ -1,8 +1,9 @@
 //
-// Copyright (c) 2018 IOTech
+// Copyright (c) 2018-2020 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
 #ifndef _IOT_SCHEDULER_H_
 #define _IOT_SCHEDULER_H_
 
@@ -19,16 +20,25 @@
 extern "C" {
 #endif
 
+/** Object-like macro - Defines 1,000,000,000 */
 #define IOT_BILLION 1000000000ULL
+/** Function-like macro - Conversion from milliseconds to nanoseconds */
 #define IOT_MS_TO_NS(MILLISECONDS) (MILLISECONDS * 1000000)
+/** Function-like macro - Conversion from seconds to nanoseconds */
 #define IOT_SEC_TO_NS(SECONDS) (SECONDS * IOT_BILLION)
+/** Function-like macro - Conversion from mins to nanoseconds */
 #define IOT_MIN_TO_NS(MINUTES) (MINUTES * IOT_BILLION * 60)
 
+/** Alias for scheduler structure */
 typedef struct iot_scheduler_t iot_scheduler_t;
+/** Alias for schedule structure */
 typedef struct iot_schedule_t iot_schedule_t;
+/** Alias for schedule function pointer */
 typedef void * (*iot_schedule_fn_t) (void * arg);
+/** Alias for schedule free function pointer */
 typedef void (*iot_schedule_free_fn_t) (void * arg);
 
+/** Scheduler component name */
 #define IOT_SCHEDULER_TYPE "IOT::Scheduler"
 
 /**
