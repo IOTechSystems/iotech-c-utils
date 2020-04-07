@@ -23,6 +23,17 @@ extern "C" {
 extern void iot_init (void);
 extern void iot_fini (void);
 
+/**
+ * @brief Load JSON configuration from file
+ *
+ * The function to load JSON configuration from a file
+ *
+ * @param name  Name of the configuration file
+ * @param uri   Directory URI for configuration files
+ * @return      JSON string loaded from the file
+ */
+extern char * iot_file_config_loader (const char * name, const char * uri);
+
 #ifdef __cplusplus
 }
 #endif

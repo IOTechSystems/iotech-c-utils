@@ -17,14 +17,22 @@
 extern "C" {
 #endif
 
-typedef char * (*iot_container_config_load_fn_t) (const char * name, void * from);
+typedef char * (*iot_container_config_load_fn_t) (const char * name, const char * uri);
 
 typedef struct iot_container_config_t
 {
   iot_container_config_load_fn_t load;
-  void * from;
+  const char * uri;
 } iot_container_config_t;
 
+/**
+ * @brief Initialise the configuration resolver for containers and components
+ *
+ * The function sets the global configuration resolver data for containers and components
+ *
+ * @param conf  Pointer to the config structure to load JSON configurations from a specified location
+ */
+extern void iot_container_config (iot_container_config_t * conf);
 
 /**
  * @brief Allocate a named container
@@ -52,10 +60,9 @@ extern iot_container_t * iot_container_find (const char * name);
  * The function to initialise the container with a configuration provided
  *
  * @param cont  Pointer to the container to initialise
- * @param conf  Pointer to the config structure to load the JSON file from a specified location
  * @return      'true' if the container initialisation is successful
  */
-extern bool iot_container_init (iot_container_t * cont, iot_container_config_t * conf);
+extern bool iot_container_init (iot_container_t * cont);
 
 /**
  *  @brief Start the components within the container
