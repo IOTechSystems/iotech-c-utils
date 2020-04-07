@@ -25,30 +25,27 @@ int main (void)
   iot_component_factory_add (my_component_factory ());
 
   /* Create components from configuration files */
-
   iot_container_init (container, "main", &config);
 
   /* Start everything */
 
   iot_container_start (container);
-
   sleep (5);
 
   /* Find instantiated component - the logger */
-
   logger = iot_container_find (container, "logger");
 
   /* Update logger configuration (what can be reconfigured depends on component) */
-
   reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
   iot_component_reconfig (logger, container, reconfig);
+
   iot_data_free (reconfig);
 
   /* Stop everything and clean up */
-
   iot_container_stop (container);
   iot_container_free (container);
   iot_fini ();
+
   return 0;
 }
 

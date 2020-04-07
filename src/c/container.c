@@ -57,6 +57,42 @@ static void iot_component_create_ch (iot_container_t * cont, const char *cname, 
   }
 }
 
+static const iot_component_factory_t * iot_component_factory_find_locked (const char * type)
+{
+  assert (type);
+  const iot_component_factory_t * iter = iot_component_factories;
+  while (iter)
+  {
+    if (strcmp (iter->type, type) == 0) break;
+    iter = iter->next;
+  }
+  return iter;
+}
+
+static iot_component_holder_t * iot_get_component_holder (iot_container_t * cont, const char * comp_name, uint32_t * index)
+{
+  assert (cont && comp_name);
+  iot_component_holder_t * ch = NULL;
+  iot_component_t * comp = iot_container_find (cont, comp_name);
+  if (comp)
+  {
+    int i = 0;
+    while (cont->ccount)
+    {
+      ch = cont->components[i++];
+      if (strcmp (ch->name, comp_name) == 0)
+      {
+        if (index)
+        {
+          *index = i; //return index
+        }
+        break;
+      }
+    }
+  }
+  return ch;
+}
+
 iot_container_t * iot_container_alloc (void)
 {
   iot_container_t * cont = calloc (1, sizeof (*cont));
@@ -216,18 +252,6 @@ void iot_container_stop (iot_container_t * cont)
   pthread_rwlock_unlock (&cont->lock);
 }
 
-static const iot_component_factory_t * iot_component_factory_find_locked (const char * type)
-{
-  assert (type);
-  const iot_component_factory_t * iter = iot_component_factories;
-  while (iter)
-  {
-    if (strcmp (iter->type, type) == 0) break;
-    iter = iter->next;
-  }
-  return iter;
-}
-
 void iot_component_factory_add (const iot_component_factory_t * factory)
 {
   assert (factory);
@@ -317,4 +341,68 @@ iot_component_t * iot_container_find (iot_container_t * cont, const char * name)
     pthread_rwlock_unlock (&cont->lock);
   }
   return comp;
+}
+
+void iot_container_rm_comp (iot_container_t *cont, const char * cname)
+{
+  uint32_t index = 0;
+  iot_component_holder_t * ch = iot_get_component_holder (cont, cname, &index);
+  assert (ch);
+  if (ch->component->state != IOT_COMPONENT_STOPPED)
+  {
+    ch->component->stop_fn (ch->component);
+  }
+  ch->factory->free_fn (ch->component);
+
+  /* reindex */
+  if (index != cont->ccount) // not a last added component
+  {
+    for (int i = index - 1; i < cont->ccount; i++)
+    {
+      cont->components[i] = cont->components[i+1];
+    }
+  }
+  cont->ccount--;
+
+  free (ch->name);
+  free (ch);
+}
+
+void iot_container_start_comp (iot_container_t * cont, const char * cname)
+{
+  iot_component_holder_t * ch = iot_get_component_holder (cont, cname, NULL);
+  assert (ch);
+
+  ch->component->start_fn (ch->component);
+}
+
+void iot_container_stop_comp (iot_container_t * cont, const char * cname)
+{
+  iot_component_holder_t * ch = iot_get_component_holder (cont, cname, NULL);
+  assert (ch);
+
+  ch->component->stop_fn (ch->component);
+}
+
+void iot_container_configure_comp (iot_container_t * cont, const char * cname, const char * config_file)
+{
+  iot_component_holder_t * ch = iot_get_component_holder (cont, cname, NULL);
+  assert (ch);
+
+  iot_data_t * iot_data = iot_data_from_json (config_file);
+  ch->factory->reconfig_fn (ch->component, cont, iot_data);
+  iot_data_free (iot_data);
+}
+
+iot_data_t * iot_container_ls_comp (iot_container_t *cont)
+{
+  assert (cont);
+  iot_data_t * comp_map = iot_data_alloc_map (IOT_DATA_STRING);
+  for (uint32_t i = 0; i < cont->ccount; i++)
+  {
+    iot_data_string_map_add (comp_map, "name", iot_data_alloc_string (cont->components[i]->name, IOT_DATA_REF));
+    iot_data_string_map_add (comp_map, "type", iot_data_alloc_string (cont->components[i]->factory->type, IOT_DATA_REF));
+    iot_data_string_map_add (comp_map, "state", iot_data_alloc_ui8 (cont->components[i]->component->state));
+  }
+  return comp_map;
 }
