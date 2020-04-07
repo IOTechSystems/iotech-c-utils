@@ -114,6 +114,64 @@ static iot_component_holder_t * iot_get_component_holder (iot_container_t * cont
   return ch;
 }
 
+#ifdef IOT_BUILD_DYNAMIC_LOAD
+static void iot_container_add_handle (iot_container_t * cont,  void * handle)
+{
+  assert (cont && handle);
+  iot_dlhandle_holder_t * holder = malloc (sizeof (*holder));
+  holder->load_handle = handle;
+  pthread_rwlock_wrlock (&cont->lock);
+  holder->next = cont->handles;
+  cont->handles = holder;
+  pthread_rwlock_unlock (&cont->lock);
+}
+
+static void iot_container_load_component (iot_container_t * cont, const char * config)
+{
+  void *handle = NULL;
+  const iot_component_factory_t *factory = NULL;
+
+  iot_data_t * cmap = iot_data_from_json (config);
+  const iot_data_t * value = iot_data_string_map_get (cmap, "Library");
+  if (value)
+  {
+    const char *library_name = (const char *) (iot_data_string (value));
+    handle = dlopen (library_name, RTLD_LAZY);
+    if (handle)
+    {
+      // find the symbol and call config_fn
+      value = iot_data_string_map_get (cmap, "Factory");
+      if (value)
+      {
+        const char * factory_name = (const char *) (iot_data_string (value));
+        const iot_component_factory_t *(*factory_fn) (void);
+        factory_fn = dlsym (handle, factory_name);
+        if (factory_fn)
+        {
+          factory = factory_fn ();
+          iot_component_factory_add (factory);
+          iot_container_add_handle (cont, handle);
+        }
+        else
+        {
+          fprintf (stderr, "ERROR: Invalid configuration, Incorrect Factory name\n");
+        }
+      }
+      else
+      {
+        fprintf (stderr, "ERROR: Incomplete configuration, Factory name not available\n");
+        dlclose (handle);
+      }
+    }
+    else
+    {
+      fprintf (stderr, "ERROR: Incomplete configuration, Library name not available\n");
+    }
+  }
+  iot_data_free (cmap);
+}
+#endif
+
 void iot_container_config (iot_container_config_t * conf)
 {
   assert (conf);
@@ -139,19 +197,6 @@ iot_container_t * iot_container_alloc (const char * name)
   return cont;
 }
 
-#ifdef IOT_BUILD_DYNAMIC_LOAD
-static void iot_container_add_handle (iot_container_t * cont,  void * handle)
-{
-  assert (cont && handle);
-  iot_dlhandle_holder_t * holder = malloc (sizeof (*holder));
-  holder->load_handle = handle;
-  pthread_rwlock_wrlock (&cont->lock);
-  holder->next = cont->handles;
-  cont->handles = holder;
-  pthread_rwlock_unlock (&cont->lock);
-}
-#endif
-
 bool iot_container_init (iot_container_t * cont)
 {
   assert (iot_config && cont);
@@ -170,56 +215,16 @@ bool iot_container_init (iot_container_t * cont)
   {
     const char *cname = iot_data_map_iter_string_key(&iter);
     const iot_component_factory_t *factory = NULL;
-    void *handle = NULL;
 
     const char * ctype = iot_data_map_iter_string_value (&iter);
+    config = (iot_config->load) (cname, iot_config->uri);
     factory = iot_component_factory_find (ctype);
-    if (!factory)
+
+    if ((!factory) && (config))
     {
-      config = (iot_config->load) (cname, iot_config->uri);
-      if (config)
-      {
-        iot_data_t * cmap = iot_data_from_json (config);
-        const iot_data_t * value = iot_data_string_map_get (cmap, "Library");
-        if (value)
-        {
-          const char *library_name = (const char *) (iot_data_string (value));
-          handle = dlopen (library_name, RTLD_LAZY);
-          if (handle)
-          {
-            // find the symbol and call config_fn
-            value = iot_data_string_map_get (cmap, "Factory");
-            if (value)
-            {
-              const char * factory_name = (const char *) (iot_data_string (value));
-              const iot_component_factory_t *(*factory_fn) (void);
-              factory_fn = dlsym (handle, factory_name);
-              if (factory_fn)
-              {
-                factory = factory_fn ();
-                iot_component_factory_add (factory);
-                iot_container_add_handle (cont, handle);
-              }
-              else
-              {
-                fprintf (stderr, "ERROR: Invalid configuration, Incorrect Factory name\n");
-              }
-            }
-            else
-            {
-              fprintf (stderr, "ERROR: Incomplete configuration, Factory name not available\n");
-              dlclose (handle);
-            }
-          }
-          else
-          {
-            fprintf (stderr, "ERROR: Incomplete configuration, Library name not available\n");
-          }
-        }
-        iot_data_free (cmap);
-      }
-      free (config);
+      iot_container_load_component (cont, config);
     }
+    free (config);
   }
 #endif
 
@@ -328,49 +333,15 @@ void iot_container_add_component (iot_container_t * cont, const char * ctype, co
   assert (cont && config);
 
   const iot_component_factory_t *factory = NULL;
-  void *handle = NULL;
-  iot_data_t *cmap = NULL;
-
-  /* For dynamically loaded components */
   factory = iot_component_factory_find (ctype);
+  
+  /* For dynamically loaded components */
+#ifdef IOT_BUILD_DYNAMIC_LOAD
   if (!factory)
   {
-    cmap = iot_data_from_json(config);
-    /* check for dynamic loading of library */
-    const iot_data_t *value = iot_data_string_map_get(cmap, "Library");
-    if (value)
-    {
-      const char *library_name = (const char *) (iot_data_string(value));
-      handle = dlopen(library_name, RTLD_LAZY);
-      if (handle)
-      {
-        //find the symbol and call config_fn
-        value = iot_data_string_map_get(cmap, "Factory");
-        if (value)
-        {
-          const char *factory_name = (const char *) (iot_data_string(value));
-          const iot_component_factory_t *(*factory_fn)(void);
-          factory_fn = dlsym(handle, factory_name);
-          if (factory_fn)
-          {
-            factory = factory_fn();
-            iot_component_factory_add(factory);
-            iot_container_add_handle(cont, handle);
-          }
-          else
-          {
-            fprintf(stderr, "ERROR: Invalid configuration, Incorrect Factory name\n");
-          }
-        }
-        else // if !handle
-        {
-          fprintf(stderr, "ERROR: Incomplete configuration, Factory name not available\n");
-          dlclose(handle);
-        }
-      }
-    }
-    iot_data_free (cmap);
+    iot_container_load_component (cont, config);
   }
+#endif
   /* instantiate the component */
   factory != NULL  ? iot_component_create_ch (cont, cname, factory, config, false) : fprintf (stderr, "ERROR: factory not available, cannot add a component\n");
 }
