@@ -1,18 +1,38 @@
-/*
- * Copyright (c) 2020
- * IoTech Ltd
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//
+// Copyright (c) 2020 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 
 #ifndef _IOT_OS_ZEPHYR_H_
 #define _IOT_OS_ZEPHYR_H_
 
+/**
+ * @file
+ * @brief IOTech Zephyr API
+ */
+
 #include <zephyr.h>
 
+/**
+ * @brief Duplicate the specified string
+ *
+ * @param s  String to duplicate
+ * @return   Pointer to the duplicated string
+ */
 extern char * iot_strdup (const char * s);
+
+/**
+ * @brief Used to extract token from a specified string
+ *
+ * @param str     String containing token
+ * @param delim   Deliminator
+ * @param saveptr Points to character after the specified deliminator (if present in string), else points to NULL
+ * @return        Pointer to string containing extracted token
+ */
 extern char * iot_ctok_r (char *str, const char delim, char **saveptr);
 
+/** Function-like macro - Replace any occurrence of strdup() with iot_strdup() */
 #define strdup(s) iot_strdup (s)
 
 #ifndef CONFIG_NET_TCP
@@ -31,7 +51,9 @@ extern char * iot_ctok_r (char *str, const char delim, char **saveptr);
 #error Zephyr CONFIG_PTHREAD_IPC not set
 #endif
 
+/** Object-like macro - Stack size set to 4096 bytes */
 #define IOT_ZEPHYR_STACK_SIZE 4096
+/** Objet-like macro - Maximum number of threads set as 4 */
 #define IOT_ZEPHYR_MAX_THREADS 4
 
 #endif

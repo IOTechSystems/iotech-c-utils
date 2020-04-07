@@ -1,10 +1,16 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2020 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
 #ifndef _IOT_IOT_H_
 #define _IOT_IOT_H_
+
+/**
+ * @file
+ * @brief IOTech IOT API
+ */
 
 #include "iot/data.h"
 #include "iot/time.h"
@@ -20,7 +26,14 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Start IOT / Initialise IOT data
+ */
 extern void iot_init (void);
+
+/**
+ * @brief Stop IOT / Cleanup IOT data
+ */
 extern void iot_fini (void);
 
 /**
