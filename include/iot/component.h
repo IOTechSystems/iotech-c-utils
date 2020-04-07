@@ -184,17 +184,6 @@ extern iot_component_state_t iot_component_lock (iot_component_t * component);
 extern iot_component_state_t iot_component_unlock (iot_component_t * component);
 
 /**
- * @brief Load JSON configuration from file
- *
- * The function to load JSON configuration from a file
- *
- * @param name  Name of the root configuration file
- * @param from  Location at which the configuration file is available
- * @return      JSON string loaded from the file
- */
-extern char * iot_component_file_config_loader (const char * name, void * from);
-
-/**
  * @brief Add a component factory
  *
  * The function adds a component factory allowing containers to manage instances of the associated type.

@@ -39,6 +39,7 @@ struct iot_container_t
 
 static const iot_component_factory_t * iot_component_factories = NULL;
 static iot_container_t * iot_containers = NULL;
+static const iot_container_config_t * iot_config = NULL;
 #ifdef __ZEPHYR__
   static PTHREAD_MUTEX_DEFINE (iot_container_mutex);
 #else
@@ -56,6 +57,13 @@ static iot_container_t * iot_container_find_locked (const char * name)
   }
   return cont;
 }
+
+void iot_container_config (iot_container_config_t * conf)
+{
+  assert (conf);
+  iot_config = conf;
+}
+
 iot_container_t * iot_container_alloc (const char * name)
 {
   iot_container_t * cont = NULL;
@@ -88,11 +96,11 @@ static void iot_container_add_handle (iot_container_t * cont,  void * handle)
 }
 #endif
 
-bool iot_container_init (iot_container_t * cont, iot_container_config_t * conf)
+bool iot_container_init (iot_container_t * cont)
 {
-  assert (conf);
+  assert (iot_config && cont);
   bool ret = true;
-  char * config = (conf->load) (cont->name, conf->from);
+  char * config = (iot_config->load) (cont->name, iot_config->uri);
   assert (config);
   iot_data_t * map = iot_data_from_json (config);
   iot_data_map_iter_t iter;
@@ -112,7 +120,7 @@ bool iot_container_init (iot_container_t * cont, iot_container_config_t * conf)
     factory = iot_component_factory_find (ctype);
     if (!factory)
     {
-      config = (conf->load) (cname, conf->from);
+      config = (iot_config->load) (cname, iot_config->uri);
       if (config)
       {
         iot_data_t * cmap = iot_data_from_json (config);
@@ -166,7 +174,7 @@ bool iot_container_init (iot_container_t * cont, iot_container_config_t * conf)
     const iot_component_factory_t * factory = iot_component_factory_find (ctype);
     if (factory)
     {
-      config = (conf->load) (cname, conf->from);
+      config = (iot_config->load) (cname, iot_config->uri);
       if (config)
       {
         iot_data_t * cmap = iot_data_from_json (config);
