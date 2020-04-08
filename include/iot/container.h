@@ -146,9 +146,9 @@ extern void iot_container_rm_component (iot_container_t * cont, const char * nam
  * @brief List the components within a container
  *
  * @param cont  Pointer to a container
- * @return      Map containing the component names with their component type and state
+ * @return      Pointer to an array of structure that contain component name, type and state
  */
-extern iot_data_t * iot_container_ls_component (iot_container_t * cont);
+extern iot_component_info_t * iot_container_ls_component (iot_container_t * cont);
 
 /**
  * @brief List the names of the containers

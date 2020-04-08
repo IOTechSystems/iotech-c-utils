@@ -18,11 +18,10 @@ int main (void)
   iot_container_config_t config = { config_loader, NULL };
   iot_component_t * logger;
   iot_data_t * reconfig;
+  iot_data_map_iter_t iter;
 
   iot_container_t * container = iot_container_alloc ("main");
   iot_init ();
-
-
 
   /* Set configuration mechanism */
   iot_container_config (&config);
@@ -39,37 +38,18 @@ int main (void)
 
   iot_container_start (container);
 
-  iot_data_t * comp = iot_container_ls_component (container);
-  uint32_t map_length = iot_data_map_size (comp);
-
-  iot_data_map_iter_t iter;
-  iot_data_map_iter (comp, &iter);
-
-  while (iot_data_map_iter_next (&iter) && (map_length--))
+  iot_component_info_t * components = iot_container_ls_component (container);
+  for (int index = 0; index < components->count; index++)
   {
-    const iot_data_t * key = iot_data_map_iter_key (&iter);
-    const iot_data_t * value = iot_data_map_iter_value (&iter);
-
-    printf ("key: %s\t", (char *)iot_data_string (key));
-    switch (iot_data_type (value))
-    {
-      case IOT_DATA_STRING:
-      {
-        printf ("value: %s\n", (char *)iot_data_string (value));
-        break;
-      }
-
-      case IOT_DATA_UINT8:
-      {
-        printf ("value: %d\n", iot_data_ui8 (value));
-        break;
-      }
-
-      default: printf ("unsupported\n");
-      break;
-    }
+    printf ("name: %s\n", components->componentInfo[index]->name);
+    printf ("type: %s\n", components->componentInfo[index]->type);
+    printf ("state: %d\n", components->componentInfo[index]->state);
+    free (components->componentInfo[index]->name);
+    free (components->componentInfo[index]->type);
+    free (components->componentInfo[index]);
   }
-  iot_data_free (comp);
+  free (components->componentInfo);
+  free (components);
 
   iot_data_t * containers = iot_container_ls_containers ();
   uint32_t containers_length = iot_data_map_size (containers);

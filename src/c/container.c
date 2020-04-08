@@ -398,20 +398,25 @@ void iot_container_rm_component (iot_container_t *cont, const char * name)
 
   free (ch->name);
   free (ch);
-
 }
 
-iot_data_t * iot_container_ls_component (iot_container_t * cont)
+iot_component_info_t * iot_container_ls_component (iot_container_t * cont)
 {
   assert (cont);
-  iot_data_t * comp_map = iot_data_alloc_map (IOT_DATA_STRING);
-  for (uint32_t i = 0; i < cont->ccount; i++)
+  iot_component_info_t * components = calloc (1, sizeof (*components));
+
+  components->count = cont->ccount;
+  components->componentInfo = calloc (cont->ccount, sizeof (iot_component_data_t));
+
+  for (int index = 0; index < cont->ccount; index++)
   {
-    iot_data_string_map_add (comp_map, "name", iot_data_alloc_string (cont->components[i]->name, IOT_DATA_REF));
-    iot_data_string_map_add (comp_map, "type", iot_data_alloc_string (cont->components[i]->factory->type, IOT_DATA_REF));
-    iot_data_string_map_add (comp_map, "state", iot_data_alloc_ui8 (cont->components[i]->component->state));
+    iot_component_data_t * component_data = malloc (sizeof (*component_data));
+    component_data->name = strdup (cont->components[index]->name);
+    component_data->type = strdup (cont->components[index]->factory->type);
+    component_data->state = cont->components[index]->component->state;
+    components->componentInfo[index] = component_data;
   }
-  return comp_map;
+  return components;
 }
 
 iot_data_t * iot_container_ls_containers ()
