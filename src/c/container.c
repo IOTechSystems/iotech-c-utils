@@ -240,6 +240,7 @@ bool iot_container_init (iot_container_t * cont)
       {
         iot_component_create_ch (cont, cname, factory, config, true);
       }
+      free (config);
     }
   }
   iot_data_free (map);
