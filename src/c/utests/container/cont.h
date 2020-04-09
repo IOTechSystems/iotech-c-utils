@@ -6,6 +6,7 @@
  */
 
 #include "iot/container.h"
+#include "iot/logger.h"
 
 #ifndef _CUTIL_UTEST_CONT_H_
 #define _CUTIL_UTEST_CONT_H_

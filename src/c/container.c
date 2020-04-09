@@ -375,7 +375,7 @@ iot_component_t * iot_container_find_component (iot_container_t * cont, const ch
   return comp;
 }
 
-void iot_container_rm_component (iot_container_t *cont, const char * name)
+void iot_container_delete_component (iot_container_t *cont, const char * name)
 {
   uint32_t index = 0;
   iot_component_holder_t * ch = iot_get_component_holder (cont, name, &index);
@@ -400,7 +400,7 @@ void iot_container_rm_component (iot_container_t *cont, const char * name)
   free (ch);
 }
 
-iot_component_info_t * iot_container_ls_component (iot_container_t * cont)
+iot_component_info_t * iot_container_list_components (iot_container_t * cont)
 {
   assert (cont);
   iot_component_info_t * components = calloc (1, sizeof (*components));
@@ -419,7 +419,7 @@ iot_component_info_t * iot_container_ls_component (iot_container_t * cont)
   return components;
 }
 
-iot_data_t * iot_container_ls_containers ()
+iot_data_t * iot_container_list_containers ()
 {
   iot_container_t * cont = iot_containers;
   iot_data_t * cont_map = iot_data_alloc_map (IOT_DATA_STRING);

@@ -31,8 +31,22 @@ int main (void)
   iot_container_init (container);
 
   /* Start everything */
-
   iot_container_start (container);
+
+  /* list components state */
+  iot_component_info_t * components = iot_container_list_components (container);
+  for (int index = 0; index < components->count; index++)
+  {
+    printf ("name: %s\n", components->componentInfo[index]->name);
+    printf ("type: %s\n", components->componentInfo[index]->type);
+    printf ("state: %d\n", components->componentInfo[index]->state);
+    free (components->componentInfo[index]->name);
+    free (components->componentInfo[index]->type);
+    free (components->componentInfo[index]);
+  }
+  free (components->componentInfo);
+  free (components);
+
   sleep (5);
 
   /* Find instantiated component - the logger */

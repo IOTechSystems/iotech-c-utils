@@ -140,7 +140,7 @@ extern iot_component_t * iot_container_find_component (iot_container_t * cont, c
  * @param cont  Pointer to the container
  * @param name  Component name
  */
-extern void iot_container_rm_component (iot_container_t * cont, const char * name);
+extern void iot_container_delete_component (iot_container_t * cont, const char * name);
 
 /**
  * @brief List the components within a container
@@ -148,13 +148,14 @@ extern void iot_container_rm_component (iot_container_t * cont, const char * nam
  * @param cont  Pointer to a container
  * @return      Pointer to an array of structure that contain component name, type and state
  */
-extern iot_component_info_t * iot_container_ls_component (iot_container_t * cont);
+extern iot_component_info_t * iot_container_list_components (iot_container_t * cont);
 
 /**
- * @brief List the names of the containers
+ * @brief List names of the containers
+ *
  * @return  Map containing the names of the containers
  */
-extern iot_data_t * iot_container_ls_containers (void);
+extern iot_data_t * iot_container_list_containers (void);
 
 #ifdef __cplusplus
 }
