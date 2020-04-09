@@ -979,8 +979,8 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
   uint32_t inLen = iot_data_array_size (array);
   const uint8_t * data = iot_data_address (array);
   assert (strlen (holder->str) == (holder->size - holder->free - 1));
-  char * out = holder->str + holder->size - holder->free - 1;
   size_t len = iot_b64_encodesize (inLen) - 1; /* Allow for string terminator */
+  char * out;
 
   if (holder->free < len)
   {
@@ -989,6 +989,7 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
     holder->str = realloc (holder->str, holder->size);
   }
 
+  out = holder->str + holder->size - holder->free - 1;
   iot_b64_encode (data, inLen, out, holder->free);
   holder->free -= len;
 }
