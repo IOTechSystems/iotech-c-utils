@@ -99,7 +99,7 @@ static void test_list_containers (void)
 
   iot_data_t *cont_map = iot_container_list_containers ();
 
-  CU_ASSERT (iot_data_map_size (cont_map) != 1);
+  CU_ASSERT (iot_data_map_size (cont_map) == 1);
   CU_ASSERT (strcmp (iot_data_string (iot_data_string_map_get (cont_map, "name")), "test") == 0)
 
   iot_data_free (cont_map);
