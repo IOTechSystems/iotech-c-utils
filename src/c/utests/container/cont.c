@@ -95,15 +95,24 @@ static void test_delete_component (void)
 
 static void test_list_containers (void)
 {
-  iot_container_t * cont = iot_container_alloc ("test");
+  iot_container_t * cont1 = iot_container_alloc ("test1");
+  iot_container_t * cont2 = iot_container_alloc ("test2");
 
-  iot_data_t *cont_map = iot_container_list_containers ();
+  iot_data_t * cont_map = iot_container_list_containers ();
 
-  CU_ASSERT (iot_data_map_size (cont_map) == 1);
-  CU_ASSERT (strcmp (iot_data_string (iot_data_string_map_get (cont_map, "name")), "test") == 0)
+  CU_ASSERT (iot_data_map_size (cont_map) == 2)
 
+  iot_data_t * key1 = iot_data_alloc_ui32 (0); //get value at index 0
+  iot_data_t * key2 = iot_data_alloc_ui32 (1); //get value at index 1
+
+  CU_ASSERT (strcmp (iot_data_string (iot_data_map_get (cont_map, key1)), "test2") == 0)
+  CU_ASSERT (strcmp (iot_data_string (iot_data_map_get (cont_map, key2)), "test1") == 0)
+
+  iot_data_free (key1);
+  iot_data_free (key2);
   iot_data_free (cont_map);
-  iot_container_free (cont);
+  iot_container_free (cont1);
+  iot_container_free (cont2);
 }
 
 void cunit_cont_test_init (void)

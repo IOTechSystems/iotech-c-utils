@@ -422,11 +422,14 @@ iot_component_info_t * iot_container_list_components (iot_container_t * cont)
 iot_data_t * iot_container_list_containers ()
 {
   iot_container_t * cont = iot_containers;
-  iot_data_t * cont_map = iot_data_alloc_map (IOT_DATA_STRING);
-
+  uint32_t index = 0;
+  iot_data_t * cont_map = iot_data_alloc_map (IOT_DATA_UINT32); // key - index
   while (cont)
   {
-    iot_data_string_map_add (cont_map, "name", iot_data_alloc_string (cont->name, IOT_DATA_REF));
+    iot_data_t * val = iot_data_alloc_string (cont->name, IOT_DATA_REF);
+    iot_data_t * key = iot_data_alloc_ui32 (index++);
+
+    iot_data_map_add (cont_map, key, val);
     cont = cont->next;
   }
   return cont_map;
