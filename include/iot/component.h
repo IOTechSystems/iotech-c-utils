@@ -36,6 +36,19 @@ typedef enum
   IOT_COMPONENT_DELETED = 4U  /**< Deleted component state */
 } iot_component_state_t;
 
+typedef struct iot_component_data_t
+{
+  char * name;
+  char * type;
+  iot_component_state_t state;
+}iot_component_data_t;
+
+typedef struct iot_component_info_t
+{
+  uint32_t count;
+  iot_component_data_t ** componentInfo;
+}iot_component_info_t;
+
 /** Alias for component configuration function pointer */
 typedef iot_component_t * (*iot_component_config_fn_t) (iot_container_t * cont, const iot_data_t * map);
 /** Alias for component reconfiguration function pointer */
