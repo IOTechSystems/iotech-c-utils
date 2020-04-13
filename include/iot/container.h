@@ -98,6 +98,29 @@ extern void iot_container_stop (iot_container_t * cont);
 extern void iot_container_free (iot_container_t * cont);
 
 /**
+ * @brief Add component factories to the container
+ *
+ * The function to add component factories to the container
+ *
+ * @param cont     Pointer to the container to hold component factories
+ * @param factory  Pointer to the component factory to add
+ */
+extern void iot_container_add_factory (iot_container_t * cont, const iot_component_factory_t * factory);
+
+/**
+ * @brief Add component to the container
+ *
+ * The function to add a component to the container. If a component factory is not available, config should contain
+ * the component library and factory to load them dynamically.
+ *
+ * @param cont      Pointer to the container
+ * @param ctype     Component type
+ * @param name      Component name
+ * @param config    Configuration of the component to add
+ */
+extern void iot_container_add_component (iot_container_t * cont, const char * ctype, const char * name, const char * config);
+
+/**
  * @brief Find a named component in a container
  *
  * The function to find a component factory within the container
@@ -107,6 +130,32 @@ extern void iot_container_free (iot_container_t * cont);
  * @return      Pointer to the component if found within the container, NULL otherwise
  */
 extern iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name);
+
+/**
+ * @brief Free a component from the container
+ *
+ * Release the resources used by a component and delete from the container.
+ * Attempts to remove a component not in a container is ignored.
+ *
+ * @param cont  Pointer to the container
+ * @param name  Component name
+ */
+extern void iot_container_delete_component (iot_container_t * cont, const char * name);
+
+/**
+ * @brief List the components within a container
+ *
+ * @param cont  Pointer to a container
+ * @return      Pointer to an array of structure that contain component name, type and state
+ */
+extern iot_component_info_t * iot_container_list_components (iot_container_t * cont);
+
+/**
+ * @brief List names of the containers
+ *
+ * @return  Map containing the names of the containers
+ */
+extern iot_data_t * iot_container_list_containers (void);
 
 #ifdef __cplusplus
 }

@@ -8,6 +8,12 @@
 #include "cont.h"
 #include "CUnit.h"
 
+static const char * logger_config =
+"{"
+  "\"Name\":\"console\","
+  "\"Level\":\"Info\""
+"}";
+
 static int suite_init (void)
 {
   return 0;
@@ -58,9 +64,64 @@ static void test_find (void)
   iot_container_free (cont3);
 }
 
+static void test_add_component (void)
+{
+  iot_component_t * comp = NULL;
+
+  iot_container_t * cont = iot_container_alloc ("test");
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
+
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
+
+  iot_container_free (cont);
+}
+
+static void test_delete_component (void)
+{
+  iot_component_t * comp = NULL;
+
+  iot_container_t * cont = iot_container_alloc ("test");
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
+
+  iot_container_delete_component (cont, "logger");
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL);
+
+  iot_container_free (cont);
+}
+
+static void test_list_containers (void)
+{
+  iot_container_t * cont1 = iot_container_alloc ("test1");
+  iot_container_t * cont2 = iot_container_alloc ("test2");
+
+  iot_data_t * cont_map = iot_container_list_containers ();
+
+  CU_ASSERT (iot_data_map_size (cont_map) == 2)
+
+  iot_data_t * key1 = iot_data_alloc_ui32 (0); //get value at index 0
+  iot_data_t * key2 = iot_data_alloc_ui32 (1); //get value at index 1
+
+  CU_ASSERT (strcmp (iot_data_string (iot_data_map_get (cont_map, key1)), "test2") == 0)
+  CU_ASSERT (strcmp (iot_data_string (iot_data_map_get (cont_map, key2)), "test1") == 0)
+
+  iot_data_free (key1);
+  iot_data_free (key2);
+  iot_data_free (cont_map);
+  iot_container_free (cont1);
+  iot_container_free (cont2);
+}
+
 void cunit_cont_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("container", suite_init, suite_clean);
   CU_add_test (suite, "container_alloc", test_alloc);
   CU_add_test (suite, "container_find", test_find);
+
+  CU_add_test (suite,  "container_add_component", test_add_component);
+  CU_add_test (suite, "container_delete_component", test_delete_component);
+  CU_add_test (suite, "container_list_containers", test_list_containers);
 }
