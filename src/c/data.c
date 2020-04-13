@@ -3,8 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-#include "iot/os.h"
-#include "iot/data.h"
+#include "iot/typecode.h"
 #include "iot/json.h"
 #include "iot/base64.h"
 
@@ -37,6 +36,13 @@ struct iot_data_t
   atomic_uint_fast32_t refs;
   iot_data_type_t type;
   bool release;
+};
+
+struct iot_typecode_t
+{
+  iot_data_type_t type;
+  iot_data_type_t key_type;
+  iot_typecode_t * element_type;
 };
 
 typedef struct iot_data_value_t
@@ -165,6 +171,7 @@ void iot_data_init (void)
   _Static_assert (sizeof (iot_data_vector_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_array_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_pair_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_typecode_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
 #ifdef NDEBUG
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
@@ -1255,4 +1262,150 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
   }
   iot_data_set_metadata (ret, data->metadata);
   return ret;
+}
+
+extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)
+{
+  static iot_typecode_t iot_typecodes [12] =
+  {
+    { IOT_DATA_INT8, 0, NULL }, { IOT_DATA_UINT8, 0, NULL },
+    { IOT_DATA_INT16, 0, NULL }, { IOT_DATA_UINT16, 0, NULL },
+    { IOT_DATA_INT32, 0, NULL }, { IOT_DATA_UINT32, 0, NULL },
+    { IOT_DATA_INT64, 0, NULL }, { IOT_DATA_UINT64, 0, NULL },
+    { IOT_DATA_FLOAT32, 0, NULL }, { IOT_DATA_FLOAT64, 0, NULL },
+    { IOT_DATA_BOOL, 0, NULL }, { IOT_DATA_STRING, 0, NULL }
+  };
+  assert (type < IOT_DATA_ARRAY);
+  return &iot_typecodes[type];
+}
+
+extern iot_typecode_t * iot_typecode_alloc_map (iot_data_type_t key_type, iot_typecode_t * element_type)
+{
+  iot_typecode_t * tc = iot_data_factory_alloc ();
+  tc->type = IOT_DATA_MAP;
+  tc->key_type = key_type;
+  tc->element_type = element_type;
+  return tc;
+}
+
+extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
+{
+  assert (element_type < IOT_DATA_STRING);
+  iot_typecode_t * tc = iot_data_factory_alloc ();
+  tc->type = IOT_DATA_ARRAY;
+  tc->element_type = iot_typecode_alloc_basic (element_type);
+  return tc;
+}
+
+extern iot_typecode_t * iot_typecode_alloc_vector (iot_typecode_t * element_type)
+{
+  iot_typecode_t * tc = iot_data_factory_alloc ();
+  tc->type = IOT_DATA_VECTOR;
+  tc->element_type = element_type;
+  return tc;
+}
+
+extern void iot_typecode_free (iot_typecode_t * typecode)
+{
+  if (typecode && (typecode->type >= IOT_DATA_ARRAY))
+  {
+    if (typecode->type != IOT_DATA_ARRAY) iot_typecode_free (typecode->element_type);
+    iot_data_factory_free ((iot_data_t*) typecode);
+  }
+}
+
+extern iot_data_type_t iot_typecode_type (const iot_typecode_t * typecode)
+{
+  assert (typecode);
+  return typecode->type;
+}
+
+extern iot_data_type_t iot_typecode_key_type (const iot_typecode_t * typecode)
+{
+  assert (typecode && (typecode->type == IOT_DATA_MAP));
+  return typecode->key_type;
+}
+
+extern const iot_typecode_t * iot_typecode_element_type (const iot_typecode_t * typecode)
+{
+  assert (typecode && (typecode->type >= IOT_DATA_ARRAY));
+  return typecode->element_type;
+}
+
+extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t * tc2)
+{
+  if (tc1 == tc2) return true;
+  if (tc1 == NULL || tc2 == NULL) return false;
+  if ((tc1->type != tc2->type) || (tc1->key_type != tc2->key_type)) return false;
+  return iot_typecode_equal (tc1->element_type, tc2->element_type);
+}
+
+extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * typecode)
+{
+  iot_typecode_t * tc = iot_data_typecode (data);
+  bool match = iot_typecode_equal (tc, typecode);
+  iot_typecode_free (tc);
+  return match;
+}
+
+extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
+{
+  assert (data);
+  iot_typecode_t * tc;
+  iot_data_type_t type = data->type;
+
+  if (type < IOT_DATA_ARRAY)
+  {
+    tc = iot_typecode_alloc_basic (type);
+  }
+  else
+  {
+    tc = iot_data_factory_alloc ();
+    tc->type = type;
+  }
+  switch (type)
+  {
+    case IOT_DATA_ARRAY:
+    {
+      tc->element_type = iot_typecode_alloc_basic (((iot_data_array_t *) data)->type);
+      break;
+    }
+    case IOT_DATA_MAP:
+    {
+      iot_data_map_iter_t iter;
+      iot_typecode_t * etype;
+      iot_data_map_iter (data, &iter);
+      tc->key_type = ((iot_data_map_t*) data)->key_type;
+      while (iot_data_map_iter_next (&iter))
+      {
+        etype = iot_data_typecode (iot_data_map_iter_value (&iter));
+        if (tc->element_type && ! iot_typecode_equal (etype, tc->element_type))
+        {
+          tc->element_type = NULL;
+          break;
+        }
+        tc->element_type = etype;
+      }
+      break;
+    }
+    case IOT_DATA_VECTOR:
+    {
+      iot_data_vector_iter_t iter;
+      iot_typecode_t * etype;
+      iot_data_vector_iter (data, &iter);
+      while (iot_data_vector_iter_next (&iter))
+      {
+        etype = iot_data_typecode (iot_data_vector_iter_value (&iter));
+        if (tc->element_type && ! iot_typecode_equal (etype, tc->element_type))
+        {
+          tc->element_type = NULL;
+          break;
+        }
+        tc->element_type = etype;
+      }
+      break;
+    }
+    default: break;
+  }
+  return tc;
 }

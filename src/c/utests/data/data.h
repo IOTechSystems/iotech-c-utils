@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "iot/data.h"
+#include "iot/typecode.h"
 
 #ifndef _CUTIL_UTEST_DATA_H_
 #define _CUTIL_UTEST_DATA_H_

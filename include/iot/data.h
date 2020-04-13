@@ -53,6 +53,9 @@ typedef enum iot_data_ownership_t
 /** Alias for iot data structure */
 typedef struct iot_data_t iot_data_t;
 
+/** Alias for iot typecode structure */
+typedef struct iot_typecode_t iot_typecode_t;
+
 /**
  * Alias for data map iterator structure
  */
@@ -102,14 +105,24 @@ extern void iot_data_add_ref (iot_data_t * data);
 extern void iot_data_free (iot_data_t * data);
 
 /**
- * @brief Get data_type
+ * @brief Get core data type
  *
- * The function to return data_type for the data
+ * The function to return the basic data type for the data
  *
  * @param data  Pointer to data
  * @return      Datatype from the enum defined in iot_data_type_t
  */
 extern iot_data_type_t iot_data_type (const iot_data_t * data);
+
+/**
+ * @brief Get data type code
+ *
+ * The function to return the type code for the data
+ *
+ * @param data  Pointer to data
+ * @return      Creates and returns a type code representing the data type
+ */
+extern iot_typecode_t * iot_data_typecode (const iot_data_t * data);
 
 /**
  * @brief Return data_type for the type name
@@ -877,6 +890,18 @@ extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
  * @return    Pointer to the copied data. The caller should free memory after use
  */
 extern iot_data_t * iot_data_copy (const iot_data_t * src);
+
+/**
+ * @brief Check data type matches typecode
+ *
+ * The function returns where a data instance matches a given typecode. Not that this will
+ * return false for polymorphic data types i.e. maps or vectors of differing type.
+ *
+ * @param data     Data to compare
+ * @param typecode Typecode to compare dat against
+ * @return         Whether the data matches the typecode
+ */
+extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * typecode);
 
 #ifdef __cplusplus
 }
