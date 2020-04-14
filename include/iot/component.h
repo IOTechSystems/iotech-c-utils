@@ -26,7 +26,7 @@ typedef struct iot_container_t iot_container_t;
 typedef struct iot_component_factory_t iot_component_factory_t;
 
 /**
- * Alias for component state enumeration
+ * Component state enumeration
  */
 typedef enum
 {
@@ -36,17 +36,23 @@ typedef enum
   IOT_COMPONENT_DELETED = 4U  /**< Deleted component state */
 } iot_component_state_t;
 
+/**
+ * Component data struct
+ */
 typedef struct iot_component_data_t
 {
-  char * name;
-  char * type;
-  iot_component_state_t state;
+  char * name;                      /**< The component name */
+  char * type;                      /**< The component type name */
+  iot_component_state_t state;      /**< The component state */
 }iot_component_data_t;
 
+/**
+ * Component info struct
+ */
 typedef struct iot_component_info_t
 {
-  uint32_t count;
-  iot_component_data_t ** componentInfo;
+  uint32_t count;                  /**< The number of conponents */
+  iot_component_data_t ** info;    /**< Array of component data */
 }iot_component_info_t;
 
 /** Alias for component configuration function pointer */

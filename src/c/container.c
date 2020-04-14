@@ -406,7 +406,7 @@ iot_component_info_t * iot_container_list_components (iot_container_t * cont)
   iot_component_info_t * components = calloc (1, sizeof (*components));
 
   components->count = cont->ccount;
-  components->componentInfo = calloc (cont->ccount, sizeof (iot_component_data_t));
+  components->info = calloc (cont->ccount, sizeof (iot_component_data_t));
 
   for (int index = 0; index < cont->ccount; index++)
   {
@@ -414,7 +414,7 @@ iot_component_info_t * iot_container_list_components (iot_container_t * cont)
     component_data->name = strdup (cont->components[index]->name);
     component_data->type = strdup (cont->components[index]->factory->type);
     component_data->state = cont->components[index]->component->state;
-    components->componentInfo[index] = component_data;
+    components->info[index] = component_data;
   }
   return components;
 }
