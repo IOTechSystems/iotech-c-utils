@@ -37,14 +37,13 @@ int main (void)
   iot_component_info_t * components = iot_container_list_components (container);
   for (int index = 0; index < components->count; index++)
   {
-    printf ("name: %s\n", components->componentInfo[index]->name);
-    printf ("type: %s\n", components->componentInfo[index]->type);
-    printf ("state: %d\n", components->componentInfo[index]->state);
-    free (components->componentInfo[index]->name);
-    free (components->componentInfo[index]->type);
-    free (components->componentInfo[index]);
+    iot_component_data_t * data = components->info[index];
+    printf ("Component: %s type: %s state: %d\n", data->name, data->type, data->state);
+    free (components->info[index]->name);
+    free (components->info[index]->type);
+    free (components->info[index]);
   }
-  free (components->componentInfo);
+  free (components->info);
   free (components);
 
   sleep (5);
@@ -113,6 +112,7 @@ static const char * my_config =
 
 static char * config_loader (const char * name, const char * uri)
 {
+  (void) uri;
   if (strcmp (name, "main") == 0) return strdup (main_config);
   if (strcmp (name, "file_logger") == 0) return strdup (file_logger_config);
   if (strcmp (name, "logger") == 0) return strdup (logger_config);

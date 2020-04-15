@@ -110,7 +110,7 @@ static pthread_mutex_t iot_data_mutex;
 
 static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
 
-static void * iot_data_factory_alloc (void)
+static void * iot_data_block_alloc (void)
 {
   iot_data_t * data;
 #ifdef NDEBUG
@@ -132,6 +132,12 @@ static void * iot_data_factory_alloc (void)
 #else
   data = calloc (1, IOT_DATA_BLOCK_SIZE);
 #endif
+  return data;
+}
+
+static void * iot_data_factory_alloc (void)
+{
+  iot_data_t * data = iot_data_block_alloc ();
   atomic_store (&data->refs, 1);
   return data;
 }
@@ -1281,7 +1287,7 @@ extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)
 
 extern iot_typecode_t * iot_typecode_alloc_map (iot_data_type_t key_type, iot_typecode_t * element_type)
 {
-  iot_typecode_t * tc = iot_data_factory_alloc ();
+  iot_typecode_t * tc = iot_data_block_alloc ();
   tc->type = IOT_DATA_MAP;
   tc->key_type = key_type;
   tc->element_type = element_type;
@@ -1291,7 +1297,7 @@ extern iot_typecode_t * iot_typecode_alloc_map (iot_data_type_t key_type, iot_ty
 extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
 {
   assert (element_type < IOT_DATA_STRING);
-  iot_typecode_t * tc = iot_data_factory_alloc ();
+  iot_typecode_t * tc = iot_data_block_alloc ();
   tc->type = IOT_DATA_ARRAY;
   tc->element_type = iot_typecode_alloc_basic (element_type);
   return tc;
@@ -1299,7 +1305,7 @@ extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
 
 extern iot_typecode_t * iot_typecode_alloc_vector (iot_typecode_t * element_type)
 {
-  iot_typecode_t * tc = iot_data_factory_alloc ();
+  iot_typecode_t * tc = iot_data_block_alloc ();
   tc->type = IOT_DATA_VECTOR;
   tc->element_type = element_type;
   return tc;
@@ -1360,7 +1366,7 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
   }
   else
   {
-    tc = iot_data_factory_alloc ();
+    tc = iot_data_block_alloc ();
     tc->type = type;
   }
   switch (type)

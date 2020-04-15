@@ -102,7 +102,9 @@ add_subdirectory (c)
 add_subdirectory (cpp)
 
 # Documentation
-add_subdirectory (docs)
+if (CMAKE_BUILD_TYPE MATCHES Release)
+  add_subdirectory (docs)
+endif ()
 
 # Configure generic installer options
 
