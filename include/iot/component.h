@@ -41,7 +41,7 @@ typedef enum
  */
 typedef struct iot_component_data_t
 {
-  struct iot_component_data_t * next; /**< Pointer to next data component in list */
+  struct iot_component_data_t * next; /**< Pointer to next component data struct in list */
   char * name;                        /**< The component name */
   char * type;                        /**< The component type name */
   iot_component_state_t state;        /**< The component state */
@@ -52,7 +52,7 @@ typedef struct iot_component_data_t
  */
 typedef struct iot_component_info_t
 {
-  uint32_t count;                 /**< The number of components */
+  uint32_t count;                 /**< The number of component data elements */
   iot_component_data_t * data;    /**< List of component data */
 } iot_component_info_t;
 
