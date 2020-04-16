@@ -34,17 +34,14 @@ int main (void)
   iot_container_start (container);
 
   /* list components state */
-  iot_component_info_t * components = iot_container_list_components (container);
-  for (int index = 0; index < components->count; index++)
+  iot_component_info_t * info = iot_container_list_components (container);
+  iot_component_data_t * data = info->data;
+  while (data)
   {
-    iot_component_data_t * data = components->info[index];
-    printf ("Component: %s type: %s state: %d\n", data->name, data->type, data->state);
-    free (components->info[index]->name);
-    free (components->info[index]->type);
-    free (components->info[index]);
+    printf ("Component: %s type: %s state: %s\n", data->name, data->type, iot_component_state_name (data->state));
+    data = data->next;
   }
-  free (components->info);
-  free (components);
+  iot_component_info_free (info);
 
   sleep (5);
 

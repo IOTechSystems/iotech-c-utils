@@ -115,3 +115,32 @@ bool iot_component_set_deleted (iot_component_t * component)
 {
   return iot_component_set_state (component, IOT_COMPONENT_DELETED);
 }
+
+extern const char * iot_component_state_name (iot_component_state_t state)
+{
+  switch (state)
+  {
+    case IOT_COMPONENT_INITIAL: return "Initial";
+    case IOT_COMPONENT_STOPPED: return "Stopped";
+    case IOT_COMPONENT_RUNNING: return "Running";
+    case IOT_COMPONENT_DELETED: return "Deleted";
+  }
+  return "Unknown";
+}
+
+extern void iot_component_info_free (iot_component_info_t * info)
+{
+  if (info)
+  {
+    iot_component_data_t * data;
+    while (info->data)
+    {
+      data = info->data;
+      info->data = data->next;
+      free (data->name);
+      free (data->type);
+      free (data);
+    }
+    free (info);
+  }
+}

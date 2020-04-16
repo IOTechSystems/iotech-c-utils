@@ -326,7 +326,7 @@ iot_data_type_t iot_data_type (const iot_data_t * data)
 
 void * iot_data_address (const iot_data_t * data)
 {
-  return (data && data->type <= IOT_DATA_ARRAY) ? ((data->type == IOT_DATA_ARRAY) ? (void*)((iot_data_array_t*) data)->data : (void*)&(((iot_data_value_t*) data)->value)) : NULL;
+  return (data && data->type <= IOT_DATA_ARRAY) ? ((data->type == IOT_DATA_ARRAY) ? ((iot_data_array_t*) data)->data : (void*)&(((iot_data_value_t*) data)->value)) : NULL;
 }
 
 void iot_data_free (iot_data_t * data)
@@ -696,7 +696,7 @@ uint32_t iot_data_map_size (const iot_data_t * map)
 {
   iot_data_map_t * mp = (iot_data_map_t*) map;
   assert (mp && (mp->base.type == IOT_DATA_MAP));
-  return ((iot_data_map_t*) mp)->size;
+  return mp->size;
 }
 
 bool iot_data_map_base64_to_array (iot_data_t * map, const iot_data_t * key)

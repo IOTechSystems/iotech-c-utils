@@ -30,12 +30,12 @@ char * iot_file_config_loader (const char * name, const char * uri)
 
   assert (name);
   size = strlen (name) + 6;
-  if (uri) size += strlen ((const char*) uri) + 1;
+  if (uri) size += strlen (uri) + 1;
   path = malloc (size);
 
   if (uri)
   {
-    strcpy (path, (const char*) uri);
+    strcpy (path, uri);
     strcat (path, "/");
     strcat (path, name);
   }

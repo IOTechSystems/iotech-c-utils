@@ -792,7 +792,7 @@ static void test_data_equal_string (void)
 
 static void test_data_equal_vector_ui8 (void)
 {
-  int vector_index = 0;
+  uint32_t vector_index = 0;
   iot_data_t *vector1 = iot_data_alloc_vector (5);
   iot_data_t *vector2 = iot_data_alloc_vector (5);
 
@@ -810,7 +810,7 @@ static void test_data_equal_vector_ui8 (void)
 
 static void test_data_equal_vector_ui8_refcount (void)
 {
-  int vector_index = 0;
+  uint32_t vector_index = 0;
   iot_data_t *vector1 = iot_data_alloc_vector (5);
   iot_data_t *vector2 = iot_data_alloc_vector (5);
 
@@ -832,7 +832,7 @@ static void test_data_equal_vector_ui8_refcount (void)
 
 static void test_data_unequal_vector_ui8 (void)
 {
-  int vector_index = 0;
+  uint32_t vector_index = 0;
   iot_data_t *vector1 = iot_data_alloc_vector (5);
   iot_data_t *vector2 = iot_data_alloc_vector (5);
 
@@ -1404,7 +1404,7 @@ static void test_data_copy_array_chars (void)
 
 static void test_data_copy_vector_ui8 (void)
 {
-  int index = 0;
+  uint32_t index = 0;
   iot_data_t * vector1 = iot_data_alloc_vector (5);
 
   while (index < 5)

@@ -88,7 +88,7 @@ static void test_delete_component (void)
 
   iot_container_delete_component (cont, "logger");
   comp = iot_container_find_component (cont, "logger");
-  CU_ASSERT (comp == NULL);
+  CU_ASSERT (comp == NULL)
 
   iot_container_free (cont);
 }

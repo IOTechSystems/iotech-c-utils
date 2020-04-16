@@ -97,7 +97,7 @@ static iot_component_holder_t * iot_get_component_holder (iot_container_t * cont
   iot_component_t * comp = iot_container_find_component (cont, comp_name);
   if (comp)
   {
-    int i = 0;
+    uint32_t i = 0;
     while (cont->ccount)
     {
       ch = cont->components[i++];
@@ -135,7 +135,7 @@ static void iot_container_load_component (iot_container_t * cont, const char * c
   const iot_data_t * value = iot_data_string_map_get (cmap, "Library");
   if (value)
   {
-    const char *library_name = (const char *) (iot_data_string (value));
+    const char *library_name = iot_data_string (value);
     handle = dlopen (library_name, RTLD_LAZY);
     if (handle)
     {
@@ -143,7 +143,7 @@ static void iot_container_load_component (iot_container_t * cont, const char * c
       value = iot_data_string_map_get (cmap, "Factory");
       if (value)
       {
-        const char * factory_name = (const char *) (iot_data_string (value));
+        const char * factory_name = iot_data_string (value);
         const iot_component_factory_t *(*factory_fn) (void);
         factory_fn = dlsym (handle, factory_name);
         if (factory_fn)
@@ -403,20 +403,19 @@ void iot_container_delete_component (iot_container_t *cont, const char * name)
 iot_component_info_t * iot_container_list_components (iot_container_t * cont)
 {
   assert (cont);
-  iot_component_info_t * components = calloc (1, sizeof (*components));
-
-  components->count = cont->ccount;
-  components->info = calloc (cont->ccount, sizeof (iot_component_data_t));
+  iot_component_info_t * info = calloc (1, sizeof (*info));
+  info->count = cont->ccount;
 
   for (int index = 0; index < cont->ccount; index++)
   {
-    iot_component_data_t * component_data = malloc (sizeof (*component_data));
-    component_data->name = strdup (cont->components[index]->name);
-    component_data->type = strdup (cont->components[index]->factory->type);
-    component_data->state = cont->components[index]->component->state;
-    components->info[index] = component_data;
+    iot_component_data_t * data = malloc (sizeof (*data));
+    data->name = strdup (cont->components[index]->name);
+    data->type = strdup (cont->components[index]->factory->type);
+    data->state = cont->components[index]->component->state;
+    data->next = info->data;
+    info->data = data;
   }
-  return components;
+  return info;
 }
 
 iot_data_t * iot_container_list_containers ()

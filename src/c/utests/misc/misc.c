@@ -29,7 +29,7 @@ static void test_time_secs (void)
   {
     secs_time = iot_time_secs ();
     usleep (1000000);
-    CU_ASSERT (iot_time_secs ()  > secs_time);
+    CU_ASSERT (iot_time_secs ()  > secs_time)
   }
 }
 
@@ -40,7 +40,7 @@ static void test_time_msecs (void)
   {
     msecs_time = iot_time_msecs ();
     usleep (1000);
-    CU_ASSERT (iot_time_msecs ()  > msecs_time);
+    CU_ASSERT (iot_time_msecs ()  > msecs_time)
   }
 }
 
@@ -54,14 +54,14 @@ static void test_time_nsecs (void)
   }
   for (counter = 0; counter < (MAX_COUNTER - 1); counter++)
   {
-    CU_ASSERT (times[counter] < times[counter + 1]);
+    CU_ASSERT (times[counter] < times[counter + 1])
   }
 }
 
 static void test_hash (void)
 {
   uint32_t hash = iot_hash ("Dummy");
-  CU_ASSERT (hash == 3802084562);
+  CU_ASSERT (hash == 3802084562)
 }
 
 void cunit_misc_test_init (void)
