@@ -1270,19 +1270,32 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
   return ret;
 }
 
+static iot_typecode_t iot_basic_tcs [12] =
+{
+  { .type = IOT_DATA_INT8 }, { .type = IOT_DATA_UINT8 }, { .type = IOT_DATA_INT16 }, { .type = IOT_DATA_UINT16 },
+  { .type = IOT_DATA_INT32 }, { .type = IOT_DATA_UINT32 }, { .type = IOT_DATA_INT64 }, { .type = IOT_DATA_UINT64 },
+  { .type = IOT_DATA_FLOAT32 }, { .type = IOT_DATA_FLOAT64, }, { .type = IOT_DATA_BOOL }, { .type = IOT_DATA_STRING }
+};
+
 extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)
 {
-  static iot_typecode_t iot_typecodes [12] =
-  {
-    { IOT_DATA_INT8, 0, NULL }, { IOT_DATA_UINT8, 0, NULL },
-    { IOT_DATA_INT16, 0, NULL }, { IOT_DATA_UINT16, 0, NULL },
-    { IOT_DATA_INT32, 0, NULL }, { IOT_DATA_UINT32, 0, NULL },
-    { IOT_DATA_INT64, 0, NULL }, { IOT_DATA_UINT64, 0, NULL },
-    { IOT_DATA_FLOAT32, 0, NULL }, { IOT_DATA_FLOAT64, 0, NULL },
-    { IOT_DATA_BOOL, 0, NULL }, { IOT_DATA_STRING, 0, NULL }
-  };
   assert (type < IOT_DATA_ARRAY);
-  return &iot_typecodes[type];
+  return &iot_basic_tcs[type];
+}
+
+extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
+{
+  static iot_typecode_t iot_array_tcs [11] =
+  {
+    { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[0] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[1] },
+    { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[2] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[3] },
+    { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[4] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[5] },
+    { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[6] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[7] },
+    { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[8] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[9] },
+    { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[10] }
+  };
+  assert (element_type < IOT_DATA_STRING);
+  return &iot_array_tcs[element_type];
 }
 
 extern iot_typecode_t * iot_typecode_alloc_map (iot_data_type_t key_type, iot_typecode_t * element_type)
@@ -1291,15 +1304,6 @@ extern iot_typecode_t * iot_typecode_alloc_map (iot_data_type_t key_type, iot_ty
   tc->type = IOT_DATA_MAP;
   tc->key_type = key_type;
   tc->element_type = element_type;
-  return tc;
-}
-
-extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
-{
-  assert (element_type < IOT_DATA_STRING);
-  iot_typecode_t * tc = iot_data_block_alloc ();
-  tc->type = IOT_DATA_ARRAY;
-  tc->element_type = iot_typecode_alloc_basic (element_type);
   return tc;
 }
 
@@ -1313,9 +1317,8 @@ extern iot_typecode_t * iot_typecode_alloc_vector (iot_typecode_t * element_type
 
 extern void iot_typecode_free (iot_typecode_t * typecode)
 {
-  if (typecode && (typecode->type >= IOT_DATA_ARRAY))
+  if (typecode && (typecode->type > IOT_DATA_ARRAY))
   {
-    if (typecode->type != IOT_DATA_ARRAY) iot_typecode_free (typecode->element_type);
     iot_data_factory_free ((iot_data_t*) typecode);
   }
 }
@@ -1364,19 +1367,15 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
   {
     tc = iot_typecode_alloc_basic (type);
   }
+  else if (type == IOT_DATA_ARRAY)
+  {
+    tc = iot_typecode_alloc_array (((iot_data_array_t *) data)->type);
+  }
   else
   {
     tc = iot_data_block_alloc ();
     tc->type = type;
-  }
-  switch (type)
-  {
-    case IOT_DATA_ARRAY:
-    {
-      tc->element_type = iot_typecode_alloc_basic (((iot_data_array_t *) data)->type);
-      break;
-    }
-    case IOT_DATA_MAP:
+    if (type == IOT_DATA_MAP)
     {
       iot_data_map_iter_t iter;
       iot_typecode_t * etype;
@@ -1392,9 +1391,8 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
         }
         tc->element_type = etype;
       }
-      break;
     }
-    case IOT_DATA_VECTOR:
+    else
     {
       iot_data_vector_iter_t iter;
       iot_typecode_t * etype;
@@ -1409,9 +1407,7 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
         }
         tc->element_type = etype;
       }
-      break;
     }
-    default: break;
   }
   return tc;
 }
