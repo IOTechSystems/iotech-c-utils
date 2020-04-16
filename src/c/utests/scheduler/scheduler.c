@@ -250,6 +250,7 @@ static void cunit_scheduler_delete (void)
 
   iot_schedule_delete (scheduler, sched5);
   iot_scheduler_stop (scheduler);
+  iot_threadpool_wait (pool);
 
   CU_ASSERT (atomic_load (&sum_test) == 1u)
   CU_ASSERT (atomic_load (&sum_work5) > 20u)
