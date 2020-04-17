@@ -1,12 +1,11 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2020 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
 #include "mycomponent.h"
 
 /* Configuration loader function */
-
 static char * config_loader (const char * name, const char * uri);
 
 int main (void)
@@ -21,7 +20,6 @@ int main (void)
   iot_container_config (&config);
 
   /* Add factories for supported component types */
-
   iot_component_factory_add (iot_logger_factory ());
   iot_component_factory_add (iot_threadpool_factory ());
   iot_component_factory_add (iot_scheduler_factory ());
