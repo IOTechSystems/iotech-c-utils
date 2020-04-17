@@ -66,10 +66,10 @@ make package
 
 run_examples ()
 {
-  ./scheduler
-  ./data
-  ./container
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./container_dl
+  ./scheduler/scheduler
+  ./data/data
+  ./container/container
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./container/container_dl
 }
 
 # Unit tests
