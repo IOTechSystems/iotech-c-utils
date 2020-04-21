@@ -292,6 +292,7 @@ static void cunit_scheduler_nrepeat (void)
 
   iot_scheduler_stop (scheduler);
   CU_ASSERT (atomic_load (&counter) == 5u)
+  CU_ASSERT (iot_schedule_dropped (sched1) == 0)
 
   iot_threadpool_free (pool);
   iot_scheduler_free (scheduler);
