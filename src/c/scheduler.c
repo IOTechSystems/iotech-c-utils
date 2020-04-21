@@ -29,6 +29,7 @@ struct iot_schedule_t
   uint64_t period;                   /* The period of the schedule, in ns */
   uint64_t start;                    /* The start time of the schedule, in ns, */
   uint64_t repeat;                   /* The number of repetitions, 0 = infinite */
+  atomic_uint_fast64_t dropped;      /* Number of events dropped */
   bool scheduled;                    /* A flag to indicate schedule status */
 };
 
@@ -82,7 +83,6 @@ static void * iot_scheduler_thread (void * arg)
 {
   iot_component_state_t state;
   uint64_t ns;
-  int ret;
   iot_scheduler_t * scheduler = (iot_scheduler_t*) arg;
   iot_schd_queue_t * queue = &scheduler->queue;
   iot_schd_queue_t * idle_queue = &scheduler->idle_queue;
@@ -98,7 +98,7 @@ static void * iot_scheduler_thread (void * arg)
       iot_log_debug (scheduler->logger, "Scheduler thread terminating");
       break; // Exit thread on deletion
     }
-    ret = pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time);
+    int ret = pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time);
     state = scheduler->component.state;
     if (state == IOT_COMPONENT_DELETED)
     {
@@ -127,7 +127,13 @@ static void * iot_scheduler_thread (void * arg)
         if (current->threadpool)
         {
           iot_log_debug (scheduler->logger, "Running schedule from threadpool");
-          iot_threadpool_add_work (current->threadpool, current->function, current->arg, current->priority);
+          if (! iot_threadpool_try_work (current->threadpool, current->function, current->arg, current->priority))
+          {
+            if (atomic_fetch_add (&current->dropped, 1u) == 0)
+            {
+              iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule @ %p", current);
+            }
+          }
         }
         else
         {
@@ -273,6 +279,12 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
   iot_component_unlock (&scheduler->component);
   iot_threadpool_free (schedule->threadpool);
   free (schedule);
+}
+
+extern uint64_t iot_schedule_dropped (iot_schedule_t * schedule)
+{
+  assert (schedule);
+  return atomic_load (&schedule->dropped);
 }
 
 /* Delete all remaining scheduler resources */
