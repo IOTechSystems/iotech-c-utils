@@ -27,4 +27,6 @@ package() {
   chmod 755 ${dest}/lib/*
   mkdir -p ${dest}/include/iot/
   cp -r ${base}/include/* ${dest}/include/
+  mkdir -p ${dest}/examples
+  cp -r ${base}/examples/* ${dest}/examples/
 }
