@@ -72,6 +72,13 @@ run_examples ()
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/container_dl ./container_dl/container_dl
 }
 
+build_examples_with_makefile ()
+{
+  export IOT_INCLUDE_DIR=${ROOT}/include
+  export IOT_LIB_DIR=${BROOT}/release/c
+  make
+}
+
 # Unit tests
 
 if [ "$UTEST" = "true" ]
@@ -84,6 +91,9 @@ fi
 if [ "$EXAMPLES" = "true" ]
 then
   cd ${BROOT}/release/c/examples
+  run_examples
+  cd ${ROOT}/src/c/examples
+  build_examples_with_makefile
   run_examples
 fi
 
