@@ -46,6 +46,7 @@ target_include_directories (iot-static PRIVATE ../../include)
 
 add_subdirectory (cunit)
 add_subdirectory (examples)
+add_subdirectory (tests)
 add_subdirectory (utests)
  
 # Configure installer

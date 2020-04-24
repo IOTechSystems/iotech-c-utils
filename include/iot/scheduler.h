@@ -86,7 +86,6 @@ extern iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler
  */
 extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
 
-
 /**
  * @brief  Create a new schedule
  *
@@ -154,7 +153,6 @@ extern bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * s
  */
 extern void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
-
 /**
  * @brief  Stops execution of the scheduler and set the scheduler state to IOT_COMPONENT_STOPPED
  *
@@ -167,7 +165,6 @@ extern void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * s
  * @param  scheduler  Pointer to a scheduler
  */
 extern void iot_scheduler_stop (iot_scheduler_t * scheduler);
-
 
 /**
  * @brief  Free resources used by the scheduler, only if it is the last reference i.e reference count <= 1
