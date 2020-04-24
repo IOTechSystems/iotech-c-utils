@@ -14,5 +14,5 @@ clean :
 mycomponent.o : ../mycomponent/mycomponent.c
 	gcc ${FLAGS} -c ../mycomponent/mycomponent.c
 
-container : mycomponent.o
+container : container.c mycomponent.o
 	gcc ${FLAGS} container.c -liot mycomponent.o -o container

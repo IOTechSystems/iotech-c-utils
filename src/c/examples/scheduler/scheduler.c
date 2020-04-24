@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018 IOTech
+// Copyright (c) 2018-2020 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -29,31 +29,9 @@ static void * testFunc4 (void *in)
   return NULL;
 }
 
-static void * testFunc5 (void *in)
-{
-  printf ("FN-5 ");
-  return NULL;
-}
-
-static void * testFunc6 (void *in)
-{
-  printf ("FN-6 ");
-  return NULL;
-}
-
 static void testFree4 (void *in)
 {
   printf ("testFree4\n");
-}
-
-static void testFree5 (void *in)
-{
-  printf ("testFree5\n");
-}
-
-static void testFree6 (void *in)
-{
-  printf ("testFree6\n");
 }
 
 int main (void)
@@ -75,7 +53,7 @@ int main (void)
 
   /* Create two schedules */
   iot_log_info (mlogger, "Create two schedules");
-  iot_schedule_t * sched1 = iot_schedule_create (scheduler, testFunc1, NULL, NULL, IOT_MS_TO_NS (500), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_t * sched1 = iot_schedule_create (scheduler, testFunc1, NULL, NULL, IOT_MS_TO_NS (700), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   iot_schedule_t * sched2 = iot_schedule_create (scheduler, testFunc2, NULL, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
 
   /* Add two schedules to the scheduler */
@@ -86,7 +64,7 @@ int main (void)
   /* Start the scheduler */
   iot_log_info (mlogger, "Start the scheduler");
   iot_scheduler_start (scheduler);
-  sleep (5);
+  sleep (4);
 
   /* Create and add a third schedule */
   printf ("\n");
@@ -98,36 +76,20 @@ int main (void)
   iot_log_info (mlogger, "Create and add schedule 4");
   iot_schedule_t * sched4 = iot_schedule_create (scheduler, testFunc4, testFree4, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   iot_schedule_add (scheduler, sched4);
-
-  iot_log_info (mlogger, "Create and add schedule 5");
-  iot_schedule_t * sched5 = iot_schedule_create (scheduler, testFunc5, testFree5, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
-  iot_schedule_add (scheduler, sched5);
-
-  iot_log_info (mlogger, "Create and add schedule 6");
-  iot_schedule_t * sched6 = iot_schedule_create (scheduler, testFunc6, testFree6, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
-  iot_schedule_add (scheduler, sched6);
-
   sleep (5);
 
   /* Remove a schedule */
   printf ("\n");
   iot_log_info (mlogger, "Remove schedule 1");
   iot_schedule_remove (scheduler, sched1);
-
   iot_log_info (mlogger, "Remove schedule 4");
   iot_schedule_remove (scheduler, sched4);
-  sleep (2);
+  sleep (3);
 
   /* Delete a schedule */
   printf ("\n");
   iot_log_info (mlogger, "Delete schedule 2");
   iot_schedule_delete (scheduler, sched2);
-
-  sleep (2);
-
-  printf ("\n");
-  iot_log_info (mlogger, "Delete schedule 5");
-  iot_schedule_delete (scheduler, sched5);
 
   sleep (2);
 
