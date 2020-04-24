@@ -69,7 +69,7 @@ run_examples ()
   ./scheduler/scheduler
   ./data/data
   ./container/container
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/dynamic ./dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:./dynamic ./dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
 }
 
 # Unit tests
