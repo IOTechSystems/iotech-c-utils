@@ -19,6 +19,3 @@ libmycomponent.so : mycomponent.o
 
 dynamic : dynamic.c libmycomponent.so
 	gcc ${FLAGS} dynamic.c -liot -o dynamic
-
-
-
