@@ -133,6 +133,6 @@ then
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler/scheduler
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data/data
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container/container
-  valgrind $VG_FLAGS $VG_SUPP --xml-file=dynamic_vg.xml c/examples/dynamic/dynamic
+  valgrind $VG_FLAGS $VG_SUPP --xml-file=dynamic_vg.xml c/examples/dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi
