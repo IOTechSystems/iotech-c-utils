@@ -74,8 +74,8 @@ static const char * main_config =
 static const char * file_logger_config =
 "{"
   "\"Name\":\"file\","
-  "\"To\":\"file:./log.log\","
-  "\"Level\":\"Warn\""
+  "\"To\":\"file:./container.log\","
+  "\"Level\":\"Trace\""
 "}";
 
 static const char * logger_config =

@@ -69,7 +69,7 @@ run_examples ()
   ./scheduler/scheduler
   ./data/data
   ./container/container
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/container_dl ./container_dl/container_dl
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/dynamic ./dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
 }
 
 # Unit tests
@@ -129,10 +129,10 @@ then
   cd ${BROOT}/debug
   VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
   VG_SUPP="--suppressions=${ROOT}/scripts/valgrind.supp"
-  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${BROOT}/debug/c/examples/container_dl
+  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${BROOT}/debug/c/examples/dynamic
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler/scheduler
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data/data
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container/container
-  valgrind $VG_FLAGS $VG_SUPP --xml-file=container_dl_vg.xml c/examples/container_dl/container_dl
+  valgrind $VG_FLAGS $VG_SUPP --xml-file=dynamic_vg.xml c/examples/dynamic/dynamic
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi
