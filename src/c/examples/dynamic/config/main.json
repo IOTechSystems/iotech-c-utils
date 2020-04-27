@@ -1,0 +1,4 @@
+{
+  "logger":"IOT::Logger",
+  "mycomp":"IOT::MyComponent"
+}

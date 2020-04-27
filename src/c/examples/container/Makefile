@@ -17,5 +17,5 @@ clean :
 mycomponent.o : ../mycomponent/mycomponent.c
 	${CC} ${FLAGS} -c ../mycomponent/mycomponent.c
 
-container : mycomponent.o
+container : container.c mycomponent.o
 	${CC} ${FLAGS} container.c -liot mycomponent.o -o container

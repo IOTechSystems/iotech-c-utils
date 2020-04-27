@@ -86,7 +86,6 @@ extern iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler
  */
 extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
 
-
 /**
  * @brief  Create a new schedule
  *
@@ -154,13 +153,12 @@ extern bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * s
  */
 extern void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
-
 /**
  * @brief  Stops execution of the scheduler and set the scheduler state to IOT_COMPONENT_STOPPED
  *
  * @code
  *
- *    iot_scheduler_t_stop (myScheduler);
+ *    iot_scheduler_stop (myScheduler);
  *
  * @endcode
  *
@@ -168,13 +166,12 @@ extern void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * s
  */
 extern void iot_scheduler_stop (iot_scheduler_t * scheduler);
 
-
 /**
  * @brief  Free resources used by the scheduler, only if it is the last reference i.e reference count <= 1
  *
  * @code
  *
- *    iot_scheduler_t_free (myScheduler);
+ *    iot_scheduler_free (myScheduler);
  *
  * @endcode
  *
@@ -182,12 +179,24 @@ extern void iot_scheduler_stop (iot_scheduler_t * scheduler);
  */
 extern void iot_scheduler_free (iot_scheduler_t * scheduler);
 
+/**
+ * @brief  Return the number of scheduled events dropped
+ *
+ * @code
+ *
+ *    iot_schedule_dropped (schedule);
+ *
+ * @endcode
+ *
+ * @param  schedule  Pointer to a schedule.
+ * @return Number of events dropped
+ */
+ extern uint64_t iot_schedule_dropped (iot_schedule_t * schedule);
 
 /**
  * @brief  Create Scheduler component factory
  *
  * @return  Pointer to Scheduler component factory
- *
  */
 extern const iot_component_factory_t * iot_scheduler_factory (void);
 

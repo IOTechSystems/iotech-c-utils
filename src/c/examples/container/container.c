@@ -49,7 +49,6 @@ int main (void)
   /* Update logger configuration (what can be reconfigured depends on component) */
   reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
   iot_component_reconfig (logger, container, reconfig);
-
   iot_data_free (reconfig);
 
   /* Stop everything and clean up */
@@ -74,8 +73,8 @@ static const char * main_config =
 static const char * file_logger_config =
 "{"
   "\"Name\":\"file\","
-  "\"To\":\"file:./log.log\","
-  "\"Level\":\"Warn\""
+  "\"To\":\"file:./container.log\","
+  "\"Level\":\"Trace\""
 "}";
 
 static const char * logger_config =

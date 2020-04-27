@@ -1,11 +1,11 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2020 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
 #include "iot/iot.h"
 
-#define ARRAY_SIZE 6
+#define ARRAY_SIZE 3
 
 int main (void)
 {
@@ -18,7 +18,7 @@ int main (void)
   iot_data_t * value;
   uint8_t array[4] = { 6,7,8,9 };
 
-  for (uint16_t k = 0; k < 10; k++)
+  for (uint16_t k = 0; k < 5; k++)
   {
     key = iot_data_alloc_i16 (k);
     value = iot_data_alloc_i32 (k * 2);

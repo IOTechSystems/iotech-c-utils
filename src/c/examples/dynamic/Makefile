@@ -8,11 +8,11 @@ CC := gcc
 FLAGS := -std=c11 -pthread -D_GNU_SOURCE ${FLAGS} -I ${IOT_INCLUDE_DIR} -I ../mycomponent/ -L ${IOT_LIB_DIR} -Wl,-rpath=${IOT_LIB_DIR}
 
 .PHONY : all
-all : container_dl
+all : dynamic
 
 .PHONY : clean
 clean :
-	rm -f container_dl *.o libmycomponent.so
+	rm -f dynamic *.o libmycomponent.so
 
 mycomponent.o : ../mycomponent/mycomponent.c
 	${CC} ${FLAGS} -c -fpic ../mycomponent/mycomponent.c
@@ -20,8 +20,5 @@ mycomponent.o : ../mycomponent/mycomponent.c
 libmycomponent.so : mycomponent.o
 	${CC} -shared -o libmycomponent.so mycomponent.o
 
-container_dl : libmycomponent.so
-	${CC} ${FLAGS} container_dl.c -liot -o container_dl
-
-
-
+dynamic : dynamic.c libmycomponent.so
+	${CC} ${FLAGS} dynamic.c -liot -o dynamic
