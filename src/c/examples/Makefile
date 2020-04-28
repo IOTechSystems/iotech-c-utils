@@ -1,4 +1,4 @@
-SUBDIRS = container dynamic data mycomponent scheduler
+SUBDIRS = container dynamic data scheduler
 
 .PHONY : all
 all :

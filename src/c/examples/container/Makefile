@@ -1,8 +1,11 @@
 ifeq ($(IOT_INSTALL_DIR),)
   IOT_INSTALL_DIR=/opt/iotech/iot
 endif
+IOT_INCLUDE_DIR=${IOT_INSTALL_DIR}/include
+IOT_LIB_DIR=${IOT_INSTALL_DIR}/lib
 
-FLAGS := -std=c11 -pthread -D_GNU_SOURCE ${FLAGS} -I ${IOT_INSTALL_DIR}/include -I ../mycomponent/ -L ${IOT_INSTALL_DIR}/lib -Wl,-rpath=${IOT_INSTALL_DIR}/lib
+CC := gcc
+FLAGS := -std=c11 -pthread -D_GNU_SOURCE ${FLAGS} -I ${IOT_INCLUDE_DIR} -I ../mycomponent/ -L ${IOT_LIB_DIR} -Wl,-rpath=${IOT_LIB_DIR}
 
 .PHONY : all
 all : container
@@ -12,7 +15,7 @@ clean :
 	rm -f container *.o
 
 mycomponent.o : ../mycomponent/mycomponent.c
-	gcc ${FLAGS} -c ../mycomponent/mycomponent.c
+	${CC} ${FLAGS} -c ../mycomponent/mycomponent.c
 
 container : container.c mycomponent.o
-	gcc ${FLAGS} container.c -liot mycomponent.o -o container
+	${CC} ${FLAGS} container.c -liot mycomponent.o -o container

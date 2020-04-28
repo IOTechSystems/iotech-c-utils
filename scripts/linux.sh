@@ -64,6 +64,11 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_D
 make 2>&1 | tee debug.log
 make package
 
+# Build examples with makefiles
+
+cd ${ROOT}/src/c/examples
+make -e IOT_INCLUDE_DIR=${ROOT}/include -e IOT_LIB_DIR=${BROOT}/release/c
+
 run_examples ()
 {
   ./scheduler/scheduler
@@ -80,10 +85,14 @@ then
   c/utests/runner/runner -a -j
 fi
 
-# examples
+# Run examples
 if [ "$EXAMPLES" = "true" ]
 then
   cd ${BROOT}/release/c/examples
+  run_examples
+
+  # Run examples made with makefiles.
+  cd ${ROOT}/src/c/examples
   run_examples
 fi
 
