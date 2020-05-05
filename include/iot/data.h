@@ -861,6 +861,19 @@ extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_d
 extern char * iot_data_to_json (const iot_data_t * data);
 
 /**
+ * @brief  Convert data to json string with initial string size
+ *
+ * The function to convert data to a json string. An initial string size
+ * is provided to eliminate memory reallocation as the required string
+ * size increases.
+ *
+ * @param  data  Input data
+ * @param  size  Initial size of output string
+ * @return       json string
+ */
+extern char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size);
+
+/**
  * @brief Convert json to iot_data_t type
  *
  * The function to convert input json string to iot_data

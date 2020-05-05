@@ -9,6 +9,8 @@
 
 #define IOT_DATA_BLOCK_SIZE 64
 #define IOT_JSON_BUFF_SIZE 512
+#define IOT_JSON_BUFF_DOUBLING_LIMIT 4096
+#define IOT_JSON_BUFF_INCREMENT 1024
 
 static const char * iot_data_type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","Array","Map","Vector"};
 static const uint8_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*) };
@@ -907,6 +909,15 @@ static size_t iot_data_repr_size (char c)
   return (strchr ("\"\\\b\f\n\r\t", c)) ? 2 : ((c >= '\x00' && c <=  '\x1f') ? 6 : 1);
 }
 
+static void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required)
+{
+  size_t inc = holder->size > IOT_JSON_BUFF_DOUBLING_LIMIT ? IOT_JSON_BUFF_INCREMENT : holder->size;
+  if (inc < required) inc = required;
+  holder->size += inc;
+  holder->free += inc;
+  holder->str = realloc (holder->str, holder->size);
+}
+
 static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape)
 {
   size_t len = strlen (add);
@@ -922,9 +933,7 @@ static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * a
   }
   if (holder->free < adj_len)
   {
-    holder->size += adj_len;
-    holder->free += adj_len;
-    holder->str = realloc (holder->str, holder->size);
+    iot_data_holder_realloc (holder, adj_len);
   }
   if (len == adj_len)
   {
@@ -997,14 +1006,13 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
 
   if (holder->free < len)
   {
-    holder->size += len;
-    holder->free += len;
-    holder->str = realloc (holder->str, holder->size);
+    iot_data_holder_realloc (holder, len);
   }
 
   out = holder->str + holder->size - holder->free - 1;
-  iot_b64_encode (data, inLen, out, holder->free);
+  iot_b64_encode (data, inLen, out, holder->free + 1);
   holder->free -= len;
+  assert (strlen (holder->str) == (holder->size - holder->free - 1));
 }
 
 static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * data)
@@ -1091,11 +1099,16 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
 
 char * iot_data_to_json (const iot_data_t * data)
 {
+  return iot_data_to_json_with_size (data, IOT_JSON_BUFF_SIZE);
+}
+
+char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size)
+{
   iot_string_holder_t holder;
-  assert (data);
-  holder.str = calloc (1, IOT_JSON_BUFF_SIZE);
-  holder.size = IOT_JSON_BUFF_SIZE;
-  holder.free = IOT_JSON_BUFF_SIZE - 1; // Allowing for string terminator
+  assert (data && size > 0);
+  holder.str = calloc (1, size);
+  holder.size = size;
+  holder.free = size - 1; // Allowing for string terminator
   iot_data_dump (&holder, data);
   return holder.str;
 }
