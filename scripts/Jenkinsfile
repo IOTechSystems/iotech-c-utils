@@ -72,7 +72,7 @@ def publishToArtifactory (system, arch, ver, pat)
     "target": "quality/iot/${ver}/${system}/",
     "props": "distribution=${system};architecture=${arch}"
   }]}"""
-  rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+  rtUpload (serverId: 'iotech', spec: "${uploadSpec}")
 }
 
 def publishQuality (systems, arch)
@@ -152,7 +152,7 @@ def publishDebs (arch)
         "target": "debian-${releaseType[archive]}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }]}"""
-      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+      rtUpload (serverId: 'iotech', spec: "${uploadSpec}")
     }
   }
 }
@@ -181,7 +181,7 @@ def publishApks (arch)
         "props": "distribution=${apks[i]};architecture=${apk_arch}"
       }
       ]}"""
-      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+      rtUpload (serverId: 'iotech', spec: "${uploadSpec}")
     }
   }
 }
@@ -207,7 +207,7 @@ def publishRpms (arch)
         "target": "rpm-${rpms[i]}-${releaseType[archive]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }]}"""
-      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+      rtUpload (serverId: 'iotech', spec: "${uploadSpec}")
     }
   }
 }
