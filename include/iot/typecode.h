@@ -95,6 +95,17 @@ extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t
 extern iot_data_type_t iot_typecode_type (const iot_typecode_t * typecode);
 
 /**
+ * @brief Returns the string type name of a typecode
+ *
+ * The function returns the type name of a typecode. For example a typecode may represent an array of strings,
+ * but it's type name is "Array".
+ *
+ * @param typecode Pointer to the typecode
+ * @return         The string type of the tyecode
+ */
+const char * iot_typecode_type_name (const iot_typecode_t * typecode);
+
+/**
  * @brief Returns the key type of a map typecode
  *
  * The function returns the key type of a map typecode. For example a typecode may represent a map of boolean

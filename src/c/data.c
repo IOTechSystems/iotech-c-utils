@@ -1342,6 +1342,12 @@ extern iot_data_type_t iot_typecode_type (const iot_typecode_t * typecode)
   return typecode->type;
 }
 
+const char * iot_typecode_type_name (const iot_typecode_t * typecode)
+{
+  assert (typecode && (typecode->type <= IOT_DATA_VECTOR));
+  return iot_data_type_names[typecode->type];
+}
+
 extern iot_data_type_t iot_typecode_key_type (const iot_typecode_t * typecode)
 {
   assert (typecode && (typecode->type == IOT_DATA_MAP));
