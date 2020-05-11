@@ -7,6 +7,7 @@
 
 #include "data.h"
 #include "CUnit.h"
+#include <float.h>
 
 static int suite_init (void)
 {
@@ -448,6 +449,14 @@ static void test_data_to_json (void)
   CU_ASSERT (strcmp (json, "{\"1\":\"Cthulhu\",\"2\":\"Rules\"}") == 0)
   free (json);
   iot_data_free (map);
+
+  /* Test with maximum float size */
+
+  val = iot_data_alloc_f64 (DBL_MAX);
+  json = iot_data_to_json (val);
+  CU_ASSERT (json != NULL)
+  iot_data_free (val);
+  free (json);
 }
 
 static void test_data_from_json (void)
