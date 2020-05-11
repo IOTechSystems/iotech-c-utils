@@ -9,6 +9,7 @@
 
 #define IOT_DATA_BLOCK_SIZE 64
 #define IOT_JSON_BUFF_SIZE 512
+#define IOT_VAL_BUFF_SIZE 128
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096
 #define IOT_JSON_BUFF_INCREMENT 1024
 
@@ -1017,7 +1018,7 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
 
 static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * data)
 {
-  char buff [128];
+  char buff [IOT_VAL_BUFF_SIZE];
 
   switch (data->type)
   {
@@ -1029,8 +1030,8 @@ static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * 
     case IOT_DATA_UINT32: sprintf (buff, "%" PRIu32, iot_data_ui32 (data)); break;
     case IOT_DATA_INT64: sprintf (buff, "%" PRId64, iot_data_i64 (data)); break;
     case IOT_DATA_UINT64: sprintf (buff, "%" PRIu64, iot_data_ui64 (data)); break;
-    case IOT_DATA_FLOAT32: sprintf (buff, "%f", iot_data_f32 (data)); break;
-    case IOT_DATA_FLOAT64: sprintf (buff, "%lf", iot_data_f64 (data)); break;
+    case IOT_DATA_FLOAT32: snprintf (buff, IOT_VAL_BUFF_SIZE, "%.8e", iot_data_f32 (data)); break;
+    case IOT_DATA_FLOAT64: snprintf (buff, IOT_VAL_BUFF_SIZE, "%.16e", iot_data_f64 (data)); break;
     default: strcpy (buff, iot_data_bool (data) ? "true" : "false"); break;
   }
   iot_data_strcat_escape (holder, buff, false);
