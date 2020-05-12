@@ -61,7 +61,11 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
     cpu_set_t cpus;
     CPU_ZERO (&cpus);
     CPU_SET (affinity, &cpus);
-    pthread_attr_setaffinity_np (&attr, sizeof (cpu_set_t), &cpus);
+    ret = pthread_attr_setaffinity_np (&attr, sizeof (cpu_set_t), &cpus);
+    if (ret != 0)
+    {
+      iot_log_warn (logger, "pthread_attr_setaffinity_np failed ret: %d", ret);
+    }
   }
 #endif
 
