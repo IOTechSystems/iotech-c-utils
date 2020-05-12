@@ -147,11 +147,18 @@ def publishDebs (arch)
     if ("${sys}" == "${debs[i]}" || "${sys}" == 'all')
     {
       def name = deb_name[debs[i]]
-      def uploadSpec = """{"files":[{
+      def uploadSpec = """{"files":[
+      {
         "pattern": "${arch}/${debs[i]}/release/iotech-iot*.deb",
         "target": "debian-${releaseType[archive]}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
-      }]}"""
+      },
+      {
+        "pattern": "${arch}/${debs[i]}/debug/iotech-iot-dev*.deb",
+        "target": "debian-${releaseType[archive]}/pool/${name}/",
+        "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
+      }
+      ]}"""
       rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
     }
   }
