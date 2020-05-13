@@ -106,7 +106,7 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
   add_subdirectory (docs)
 endif ()
 
-# Configure generic installer options
+# Configure packaging options
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
   set (CPACK_PACKAGE_NAME "iotech-iot")
@@ -115,11 +115,11 @@ else ()
   set (CPACK_PACKAGE_NAME "iotech-iot-dev")
   set (CPACK_STRIP_FILES "FALSE")
 endif ()
+set (CPACK_PACKAGE_VERSION "${IOT_DOT_VERSION}")
 set (CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}_${OS_ARCH}")
 set (CPACK_PACKAGE_VENDOR "IOTech")
 set (CPACK_PACKAGE_CONTACT "support@iotechsys.com")
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "IOT C Framework")
-set (CPACK_PACKAGE_VERSION "${IOT_DOT_VERSION}")
 set (CPACK_VERSION_MAJOR "${VERSION_MAJOR}")
 set (CPACK_VERSION_MINOR "${VERSION_MINOR}")
 set (CPACK_VERSION_PATCH "${VERSION_PATCH}")
