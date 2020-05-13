@@ -22,12 +22,16 @@ extern "C" {
 
 /** Object-like macro - Defines 1,000,000,000 */
 #define IOT_BILLION 1000000000ULL
+/** Object-like macro - Defines 1,000,000 */
+#define IOT_MILLION 1000000ULL
 /** Function-like macro - Conversion from milliseconds to nanoseconds */
-#define IOT_MS_TO_NS(MILLISECONDS) (MILLISECONDS * 1000000)
+#define IOT_MS_TO_NS(m) ((m) * IOT_MILLION)
 /** Function-like macro - Conversion from seconds to nanoseconds */
-#define IOT_SEC_TO_NS(SECONDS) (SECONDS * IOT_BILLION)
-/** Function-like macro - Conversion from mins to nanoseconds */
-#define IOT_MIN_TO_NS(MINUTES) (MINUTES * IOT_BILLION * 60)
+#define IOT_SEC_TO_NS(s) ((s) * IOT_BILLION)
+/** Function-like macro - Conversion from minutes to nanoseconds */
+#define IOT_MIN_TO_NS(m) (IOT_SEC_TO_NS ((m) * 60))
+/** Function-like macro - Conversion from hours to nanoseconds */
+#define IOT_HOUR_TO_NS(h) (IOT_MIN_TO_NS ((h) * 60))
 
 /** Alias for scheduler structure */
 typedef struct iot_scheduler_t iot_scheduler_t;

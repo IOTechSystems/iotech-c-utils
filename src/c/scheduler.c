@@ -10,7 +10,7 @@
 
 #define IOT_NS_TO_SEC(s) ((s) / IOT_BILLION)
 #define IOT_NS_REMAINING(s) ((s) % IOT_BILLION)
-#define IOT_SCHEDULER_DEFAULT_WAKE (IOT_SEC_TO_NS (1))
+#define IOT_SCHEDULER_DEFAULT_WAKE (IOT_HOUR_TO_NS (24))
 
 #ifdef IOT_BUILD_COMPONENTS
 #define IOT_SCHEDULER_FACTORY iot_scheduler_factory ()
