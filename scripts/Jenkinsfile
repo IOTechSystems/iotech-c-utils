@@ -197,7 +197,7 @@ def publishRpms (arch)
 {
   def rpms_x86_64 = ['fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30','centos-8', 'centos-7']
   def rpms_arm64 = ['fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30','centos-8', 'centos-7']
-  def rpms_arm32 = ['opensuse-15.1']
+  def rpms_arm32 = ['opensuse-15.2','opensuse-15.1']
   def rpms_i586 = []
   def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32, i586: rpms_i586]
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
@@ -209,11 +209,18 @@ def publishRpms (arch)
   {
     if ("${sys}" == "${rpms[i]}" || "${sys}" == 'all')
     {
-      def uploadSpec = """{"files":[{
+      def uploadSpec = """{"files":[
+      {
         "pattern": "${arch}/${rpms[i]}/release/iotech-iot*.rpm",
         "target": "rpm-${rpms[i]}-${releaseType[archive]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
-      }]}"""
+      },
+      {
+        "pattern": "${arch}/${rpms[i]}/debug/iotech-iot-dev*.rpm",
+        "target": "rpm-${rpms[i]}-${releaseType[archive]}",
+        "props": "rpm.metadata.release=${env.BUILD_ID}"
+      }
+      ]}"""
       rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
     }
   }
@@ -238,6 +245,11 @@ def publishTars (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${tars[i]}/release/iotech-iot*.tar.gz",
+        "target": "generic-${releaseType[archive]}/${tars[i]}/",
+        "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
+      },
+      {
+        "pattern": "${arch}/${tars[i]}/debug/iotech-iot-dev*.tar.gz",
         "target": "generic-${releaseType[archive]}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
