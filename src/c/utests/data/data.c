@@ -432,7 +432,10 @@ static void test_data_to_json (void)
   iot_data_map_add (map, key, val);
   json = iot_data_to_json (map);
   CU_ASSERT (json != NULL)
-  CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"Boolean\":true}") == 0)
+  if (json)
+  {
+    CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"Boolean\":true}") == 0)
+  }
   free (json);
   iot_data_free (map);
 
@@ -446,7 +449,10 @@ static void test_data_to_json (void)
   iot_data_map_add (map, key, val);
   json = iot_data_to_json (map);
   CU_ASSERT (json != NULL)
-  CU_ASSERT (strcmp (json, "{\"1\":\"Cthulhu\",\"2\":\"Rules\"}") == 0)
+  if (json)
+  {
+    CU_ASSERT (strcmp (json, "{\"1\":\"Cthulhu\",\"2\":\"Rules\"}") == 0)
+  }
   free (json);
   iot_data_free (map);
 
