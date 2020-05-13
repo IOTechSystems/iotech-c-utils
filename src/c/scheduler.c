@@ -10,6 +10,7 @@
 
 #define IOT_NS_TO_SEC(s) ((s) / IOT_BILLION)
 #define IOT_NS_REMAINING(s) ((s) % IOT_BILLION)
+#define IOT_SCHEDULER_DEFAULT_WAKE (IOT_SEC_TO_NS (1))
 
 #ifdef IOT_BUILD_COMPONENTS
 #define IOT_SCHEDULER_FACTORY iot_scheduler_factory ()
@@ -114,7 +115,7 @@ static void * iot_scheduler_thread (void * arg)
     }
     if (ret == 0)
     {
-      ns = queue->front->start;
+      ns = (queue->length > 0) ? queue->front->start : (getTimeAsUInt64 () + IOT_SCHEDULER_DEFAULT_WAKE);
     }
     else
     {
@@ -166,12 +167,12 @@ static void * iot_scheduler_thread (void * arg)
           iot_log_debug (scheduler->logger, "Re-schedule schedule");
           iot_schedule_requeue (queue, queue, current);
         }
-        ns = (queue->length > 0) ? queue->front->start : (getTimeAsUInt64 () + IOT_SEC_TO_NS (1));
+        ns = (queue->length > 0) ? queue->front->start : (getTimeAsUInt64 () + IOT_SCHEDULER_DEFAULT_WAKE);
       }
       else
       {
         /* Set the wait time to 1 second if the queue is not populated */
-        ns = getTimeAsUInt64 () + IOT_SEC_TO_NS (1);
+        ns = getTimeAsUInt64 () + IOT_SCHEDULER_DEFAULT_WAKE;
       }
     }
     nsToTimespec (ns, &scheduler->schd_time); /* Calculate next execution time */
