@@ -242,6 +242,7 @@ iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_
 /* Add a schedule to the queue */
 bool iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 {
+  assert (scheduler && schedule);
   bool ret;
   iot_log_trace (scheduler->logger, "iot_schedule_add()");
   iot_component_lock (&scheduler->component);
@@ -263,8 +264,8 @@ bool iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 /* Remove a schedule from the queue */
 bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 {
+  assert (scheduler && schedule);
   bool ret;
-
   iot_log_trace (scheduler->logger, "iot_schedule_remove()");
   iot_component_lock (&scheduler->component);
   if ((ret = schedule->scheduled))
@@ -279,6 +280,7 @@ bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule
 /* Delete a schedule */
 void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 {
+  assert (scheduler && schedule);
   iot_log_trace (scheduler->logger, "iot_schedule_delete()");
   iot_component_lock (&scheduler->component);
   iot_schedule_dequeue (schedule->scheduled ? &scheduler->queue : &scheduler->idle_queue, schedule);
