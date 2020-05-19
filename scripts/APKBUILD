@@ -15,8 +15,8 @@ builddir="${srcdir}/"
 options="!check !strip !tracedeps !fhs"
 
 package() {
-  cd "${builddir}"
-  dest=./opt/iotech/iot
+  cd ${builddir}
+  dest=${pkgdir}/opt/iotech/iot
   mkdir -p ${dest}/lib
   cp ${base}/lib/lib*.* ${dest}/lib
   chmod 755 ${dest}/lib/*
