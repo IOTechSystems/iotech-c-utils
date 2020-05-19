@@ -14,7 +14,6 @@ string (REGEX REPLACE "....$" "" VERSION_MAJOR ${IOT_DOT_VERSION})
 string (REGEX REPLACE "..$" "" VERSION_MINOR ${IOT_DOT_VERSION})
 string (REGEX REPLACE "^.." "" VERSION_MINOR ${VERSION_MINOR})
 string (REGEX REPLACE "^...." "" VERSION_PATCH ${IOT_DOT_VERSION})
-message (STATUS "IOT ${IOT_DOT_VERSION} for ${CMAKE_SYSTEM_NAME}")
 
 # Configuration variables
 set (IOT_BUILD_COMPONENTS ON CACHE BOOL "Build component support")
@@ -95,6 +94,7 @@ else ()
     endif ()
   endif ()
 endif ()
+message (STATUS "IOT ${IOT_DOT_VERSION} for ${CMAKE_SYSTEM_NAME} ${OS_ARCH} ${LINUX_SYS}")
 
 # Build modules
 
