@@ -58,11 +58,17 @@ static iot_container_t * iot_container_find_locked (const char * name)
   return cont;
 }
 
-static void iot_component_create_ch (iot_container_t * cont, const char *cname, const iot_component_factory_t * factory, const char * config, bool init)
+/*
+ * Create a component instance from it's factory with a json configuration.
+ *
+ * TODO: Add support for environment variable substitution in configuration json
+ */
+
+static void iot_component_create (iot_container_t * cont, const char *cname, const iot_component_factory_t * factory, const char * config, bool init)
 {
-  iot_data_t * cmap = iot_data_from_json (config);
-  iot_component_t * comp = (factory->config_fn) (cont, cmap);
-  iot_data_free (cmap);
+  iot_data_t * map = iot_data_from_json (config);
+  iot_component_t * comp = (factory->config_fn) (cont, map);
+  iot_data_free (map);
   if (comp)
   {
     iot_component_holder_t * ch = malloc (sizeof (*ch));
@@ -71,7 +77,7 @@ static void iot_component_create_ch (iot_container_t * cont, const char *cname, 
     ch->factory = factory;
     if ((cont->ccount + 1) == cont->csize)
     {
-      init == true ? cont->csize += IOT_COMPONENT_DELTA : cont->csize++;
+      init ? cont->csize += IOT_COMPONENT_DELTA : cont->csize++;
       cont->components = realloc (cont->components, cont->csize * sizeof (iot_component_holder_t));
     }
     cont->components[cont->ccount++] = ch;
@@ -126,49 +132,34 @@ static void iot_container_add_handle (iot_container_t * cont,  void * handle)
   pthread_rwlock_unlock (&cont->lock);
 }
 
-static void iot_container_load_component (iot_container_t * cont, const char * config)
+static void iot_container_try_load_component (iot_container_t * cont, const char * config)
 {
-  void *handle = NULL;
-  const iot_component_factory_t *factory = NULL;
-
   iot_data_t * cmap = iot_data_from_json (config);
-  const iot_data_t * value = iot_data_string_map_get (cmap, "Library");
-  if (value)
+  const char * library = iot_data_string_map_get_string (cmap, "Library");
+  const char * factory = iot_data_string_map_get_string (cmap, "Factory");
+  iot_data_free (cmap);
+  if (library && factory)
   {
-    const char *library_name = iot_data_string (value);
-    handle = dlopen (library_name, RTLD_LAZY);
+    void * handle = dlopen (library, RTLD_LAZY);
     if (handle)
     {
-      // find the symbol and call config_fn
-      value = iot_data_string_map_get (cmap, "Factory");
-      if (value)
+      const iot_component_factory_t *(*factory_fn) (void) = dlsym (handle, factory);
+      if (factory_fn)
       {
-        const char * factory_name = iot_data_string (value);
-        const iot_component_factory_t *(*factory_fn) (void);
-        factory_fn = dlsym (handle, factory_name);
-        if (factory_fn)
-        {
-          factory = factory_fn ();
-          iot_component_factory_add (factory);
-          iot_container_add_handle (cont, handle);
-        }
-        else
-        {
-          fprintf (stderr, "ERROR: Invalid configuration, Incorrect Factory name\n");
-        }
+        iot_component_factory_add (factory_fn ());
+        iot_container_add_handle (cont, handle);
       }
       else
       {
-        fprintf (stderr, "ERROR: Incomplete configuration, Factory name not available\n");
+        iot_log_error (cont->logger, "Invalid configuration, Could not find Factory: %s in Library: %s", factory, library);
         dlclose (handle);
       }
     }
     else
     {
-      fprintf (stderr, "ERROR: Incomplete configuration, Library name not available\n");
+      iot_log_error (cont->logger, "Invalid configuration, Could not dynamically load Library: %s", library);
     }
   }
-  iot_data_free (cmap);
 }
 #endif
 
@@ -188,6 +179,7 @@ iot_container_t * iot_container_alloc (const char * name)
     cont->components = calloc (IOT_COMPONENT_DELTA, sizeof (iot_component_holder_t));
     cont->csize = IOT_COMPONENT_DELTA;
     cont->name = strdup (name);
+    cont->logger = iot_logger_default ();
     pthread_rwlock_init (&cont->lock, NULL);
     cont->next = iot_containers;
     if (iot_containers) iot_containers->prev = cont;
@@ -222,7 +214,7 @@ bool iot_container_init (iot_container_t * cont)
 
     if ((!factory) && (config))
     {
-      iot_container_load_component (cont, config);
+      iot_container_try_load_component (cont, config);
     }
     free (config);
   }
@@ -238,7 +230,7 @@ bool iot_container_init (iot_container_t * cont)
       config = (iot_config->load) (cname, iot_config->uri);
       if (config)
       {
-        iot_component_create_ch (cont, cname, factory, config, true);
+        iot_component_create (cont, cname, factory, config, true);
       }
       free (config);
     }
@@ -333,18 +325,22 @@ void iot_container_add_component (iot_container_t * cont, const char * ctype, co
 {
   assert (cont && config);
 
-  const iot_component_factory_t *factory = NULL;
-  factory = iot_component_factory_find (ctype);
-  
-  /* For dynamically loaded components */
+  const iot_component_factory_t * factory = iot_component_factory_find (ctype);
+
 #ifdef IOT_BUILD_DYNAMIC_LOAD
   if (!factory)
   {
-    iot_container_load_component (cont, config);
+    iot_container_try_load_component (cont, config);
   }
 #endif
-  /* instantiate the component */
-  factory != NULL  ? iot_component_create_ch (cont, cname, factory, config, false) : fprintf (stderr, "ERROR: factory not available, cannot add a component\n");
+  if (factory)
+  {
+    iot_component_create (cont, cname, factory, config, false);
+  }
+  else
+  {
+    iot_log_error (cont->logger, "Could not find or load Factory: %s", ctype);
+  }
 }
 
 extern iot_container_t * iot_container_find (const char * name)
@@ -389,7 +385,7 @@ void iot_container_delete_component (iot_container_t *cont, const char * name)
   /* reindex */
   if (index != cont->ccount) // not a last added component
   {
-    for (int i = index - 1; i < cont->ccount; i++)
+    for (uint32_t i = index - 1; i < cont->ccount; i++)
     {
       cont->components[i] = cont->components[i+1];
     }
@@ -427,7 +423,6 @@ iot_data_t * iot_container_list_containers ()
   {
     iot_data_t * val = iot_data_alloc_string (cont->name, IOT_DATA_REF);
     iot_data_t * key = iot_data_alloc_ui32 (index++);
-
     iot_data_map_add (cont_map, key, val);
     cont = cont->next;
   }
