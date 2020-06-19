@@ -11,6 +11,7 @@
 
 static int suite_init (void)
 {
+  iot_logger_start (iot_logger_default ());
   return 0;
 }
 
@@ -162,7 +163,7 @@ static void test_data_array_iter_uint8 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint8_t), IOT_DATA_UINT8, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -182,7 +183,7 @@ static void test_data_array_iter_int8 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (int8_t), IOT_DATA_INT8, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -202,7 +203,7 @@ static void test_data_array_iter_uint16 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint16_t), IOT_DATA_UINT16, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -222,7 +223,7 @@ static void test_data_array_iter_int16 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (int16_t), IOT_DATA_INT16, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -242,7 +243,7 @@ static void test_data_array_iter_int32 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (int32_t), IOT_DATA_INT32, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -262,7 +263,7 @@ static void test_data_array_iter_uint32 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint32_t), IOT_DATA_UINT32, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -283,7 +284,7 @@ static void test_data_array_iter_int64 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (int64_t), IOT_DATA_INT64, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -303,7 +304,7 @@ static void test_data_array_iter_uint64 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint64_t), IOT_DATA_UINT64, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -323,7 +324,7 @@ static void test_data_array_iter_float32 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (float), IOT_DATA_FLOAT32, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -343,7 +344,7 @@ static void test_data_array_iter_float64 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (double), IOT_DATA_FLOAT64, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -363,7 +364,7 @@ static void test_data_array_iter_bool (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (bool), IOT_DATA_BOOL, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
-  while(iot_data_array_iter_next (&array_iter))
+  while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
@@ -473,11 +474,44 @@ static void test_data_from_json (void)
     "\"Scheduler\":\"scheduler\","
     "\"ThreadPool\":\"pool\","
     "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10,\"Retain\":true}],"
-    "\"Dummy\": null"
+    "\"Dummy\": null,"
+    "\"Boolean\":true,"
+    "\"DB\":0.5"
   "}";
+  bool bval = false;
+  const char * sval = NULL;
+  double dval = 1.0;
+  int64_t ival = 0;
+  bool found;
 
   iot_data_t * map = iot_data_from_json (bus_config);
   CU_ASSERT (map != NULL)
+
+  found = iot_config_bool (map, "Boolean", &bval, NULL);
+  CU_ASSERT (found)
+  CU_ASSERT (bval)
+  found = iot_config_bool (map, "Bolean", &bval, NULL);
+  CU_ASSERT (! found)
+
+  found = iot_config_string (map, "Scheduler", &sval, false,NULL);
+  CU_ASSERT (found)
+  CU_ASSERT (sval != NULL)
+  CU_ASSERT (strcmp (sval, "scheduler") == 0)
+  found = iot_config_bool (map, "Sched", &bval, NULL);
+  CU_ASSERT (! found)
+
+  found = iot_config_f64 (map, "DB", &dval, NULL);
+  CU_ASSERT (found)
+  CU_ASSERT (dval < 1.0)
+  found = iot_config_f64 (map, "B", &dval, NULL);
+  CU_ASSERT (! found)
+
+  found = iot_config_i64 (map, "Interval", &ival, NULL);
+  CU_ASSERT (found)
+  CU_ASSERT (ival == 100000)
+  found = iot_config_i64 (map, "Int", &ival, NULL);
+  CU_ASSERT (! found)
+
   iot_data_free (map);
 }
 

@@ -31,7 +31,7 @@ typedef struct iot_component_factory_t iot_component_factory_t;
 typedef enum
 {
   IOT_COMPONENT_INITIAL = 0U, /**< Initial component state */
-  IOT_COMPONENT_STOPPED = 1U, /**< Stopped comonent state */
+  IOT_COMPONENT_STOPPED = 1U, /**< Stopped component state */
   IOT_COMPONENT_RUNNING = 2U, /**< Running component state */
   IOT_COMPONENT_DELETED = 4U  /**< Deleted component state */
 } iot_component_state_t;
@@ -169,10 +169,9 @@ extern bool iot_component_set_stopped (iot_component_t * component);
 extern bool iot_component_set_deleted (iot_component_t * component);
 
 /**
- * @brief Block until the component state is changed to states
+ * @brief Block until the component is in a given state
  *
- * The function that acquires a lock and blocks the calling thread for the component until the state does not change to state(s) provided.
- * This function releases the lock before returning
+ * The function blocks until the component is in one of a given set of states.
  *
  * @code
  *
@@ -181,8 +180,8 @@ extern bool iot_component_set_deleted (iot_component_t * component);
  * @endcode
  *
  * @param component  Pointer to the component
- * @param states     Component state(s) to check for unblocking
- * @return           State of the component that resulted in unblocking
+ * @param states     Logical OR of states on which to wait
+ * @return           State of the component that resulted in unblocking (one of states)
  */
 extern iot_component_state_t iot_component_wait  (iot_component_t * component, uint32_t states);
 
