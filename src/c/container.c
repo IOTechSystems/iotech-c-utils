@@ -132,7 +132,6 @@ static void iot_container_try_load_component (iot_container_t * cont, const char
   iot_data_t * cmap = iot_data_from_json (config);
   const char * library = iot_data_string_map_get_string (cmap, "Library");
   const char * factory = iot_data_string_map_get_string (cmap, "Factory");
-  iot_data_free (cmap);
   if (library && factory)
   {
     void * handle = dlopen (library, RTLD_LAZY);
@@ -155,6 +154,7 @@ static void iot_container_try_load_component (iot_container_t * cont, const char
       iot_log_error (cont->logger, "Invalid configuration, Could not dynamically load Library: %s", library);
     }
   }
+  iot_data_free (cmap);
 }
 #endif
 
