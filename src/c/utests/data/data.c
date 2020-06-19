@@ -512,6 +512,10 @@ static void test_data_from_json (void)
   found = iot_config_i64 (map, "Int", &ival, NULL);
   CU_ASSERT (! found)
 
+  dval = 7.7;
+  dval = iot_data_string_map_get_f64 (map, "DB", 1.0);
+  CU_ASSERT (dval < 1.0);
+
   iot_data_free (map);
 }
 
