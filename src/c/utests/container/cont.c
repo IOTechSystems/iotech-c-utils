@@ -115,13 +115,22 @@ static void test_list_containers (void)
   iot_container_free (cont2);
 }
 
+static void test_state_name (void)
+{
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_INITIAL), "Initial") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_STOPPED), "Stopped") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_RUNNING), "Running") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_DELETED), "Deleted") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name ((iot_component_state_t) -1), "Unknown") == 0)
+}
+
 void cunit_cont_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("container", suite_init, suite_clean);
   CU_add_test (suite, "container_alloc", test_alloc);
   CU_add_test (suite, "container_find", test_find);
-
-  CU_add_test (suite,  "container_add_component", test_add_component);
+  CU_add_test (suite, "container_state_name", test_state_name);
+  CU_add_test (suite, "container_add_component", test_add_component);
   CU_add_test (suite, "container_delete_component", test_delete_component);
   CU_add_test (suite, "container_list_containers", test_list_containers);
 }
