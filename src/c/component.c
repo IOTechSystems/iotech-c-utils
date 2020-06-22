@@ -50,7 +50,7 @@ bool iot_component_dec_ref (iot_component_t * component)
 static bool iot_component_set_state (iot_component_t * component, uint32_t state)
 {
   assert (component);
-  bool valid;
+  bool valid = false;
   bool changed = false;
   IOT_RET_CHECK (pthread_mutex_lock (&component->mutex));
   switch (state)
@@ -58,7 +58,7 @@ static bool iot_component_set_state (iot_component_t * component, uint32_t state
     case IOT_COMPONENT_STOPPED:
     case IOT_COMPONENT_RUNNING: valid = (component->state != IOT_COMPONENT_DELETED); break;
     case IOT_COMPONENT_DELETED: valid = (component->state != IOT_COMPONENT_RUNNING); break;
-    default: assert (0);
+    default: break;
   }
   if (valid)
   {
