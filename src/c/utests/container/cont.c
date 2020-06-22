@@ -66,13 +66,11 @@ static void test_find (void)
 
 static void test_add_component (void)
 {
-  iot_component_t * comp = NULL;
-
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
-  comp = iot_container_find_component (cont, "logger");
+  iot_component_t * comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
 
   iot_container_free (cont);
