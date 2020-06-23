@@ -81,7 +81,7 @@ extern void iot_threadpool_wait (iot_threadpool_t * pool);
  *
  * @param pool Pool to start
  */
-extern bool iot_threadpool_start (iot_threadpool_t * pool);
+extern void iot_threadpool_start (iot_threadpool_t * pool);
 
 /**
  * @brief Stop the thread pool

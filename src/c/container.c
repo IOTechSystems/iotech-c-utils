@@ -9,12 +9,6 @@
 #include <dlfcn.h>
 #endif
 
-typedef struct iot_dlhandle_holder_t
-{
-  struct iot_dlhandle_holder_t * next;
-  void * load_handle;
-} iot_dlhandle_holder_t;
-
 typedef struct iot_component_holder_t
 {
   iot_component_t * component;
@@ -27,13 +21,12 @@ typedef struct iot_component_holder_t
 struct iot_container_t
 {
   iot_logger_t * logger;
-  iot_dlhandle_holder_t * handles;
   iot_component_holder_t * head;
   iot_component_holder_t * tail;
-  char * name;
-  pthread_rwlock_t lock;
   iot_container_t * next;
   iot_container_t * prev;
+  char * name;
+  pthread_rwlock_t lock;
 };
 
 static const iot_component_factory_t * iot_component_factories = NULL;
@@ -116,16 +109,6 @@ static iot_component_holder_t * iot_container_find_holder_locked (iot_container_
 }
 
 #ifdef IOT_BUILD_DYNAMIC_LOAD
-static void iot_container_add_handle (iot_container_t * cont,  void * handle)
-{
-  assert (cont && handle);
-  iot_dlhandle_holder_t * holder = malloc (sizeof (*holder));
-  holder->load_handle = handle;
-  pthread_rwlock_wrlock (&cont->lock);
-  holder->next = cont->handles;
-  cont->handles = holder;
-  pthread_rwlock_unlock (&cont->lock);
-}
 
 static void iot_container_try_load_component (iot_container_t * cont, const char * config)
 {
@@ -141,7 +124,6 @@ static void iot_container_try_load_component (iot_container_t * cont, const char
       if (factory_fn)
       {
         iot_component_factory_add (factory_fn ());
-        iot_container_add_handle (cont, handle);
       }
       else
       {
@@ -237,7 +219,6 @@ void iot_container_free (iot_container_t * cont)
 {
   if (cont)
   {
-    iot_component_holder_t * holder;
     pthread_mutex_lock (&iot_container_mutex);
     if (cont->next) cont->next->prev = cont->prev;
     if (cont->prev)
@@ -251,39 +232,28 @@ void iot_container_free (iot_container_t * cont)
     pthread_mutex_unlock (&iot_container_mutex);
     while (cont->head)
     {
-      holder = cont->head;
+      iot_component_holder_t * holder = cont->head;
       (holder->factory->free_fn) (holder->component);
       free (holder->name);
       cont->head = holder->next;
       free (holder);
     }
-#ifdef IOT_BUILD_DYNAMIC_LOAD
-    while (cont->handles)
-    {
-      iot_dlhandle_holder_t *dl_handles = cont->handles;
-      cont->handles = dl_handles->next;
-      dlclose (dl_handles->load_handle);
-      free (dl_handles);
-    }
-#endif
     pthread_rwlock_destroy (&cont->lock);
     free (cont->name);
     free (cont);
   }
 }
 
-bool iot_container_start (iot_container_t * cont)
+void iot_container_start (iot_container_t * cont)
 {
-  bool ret = true;
   pthread_rwlock_rdlock (&cont->lock);
   iot_component_holder_t * holder = cont->head;
   while (holder) // Start in declaration order (dependents first)
   {
-    ret = ret && (holder->component->start_fn) (holder->component);
+    (holder->component->start_fn) (holder->component);
     holder = holder->next;
   }
   pthread_rwlock_unlock (&cont->lock);
-  return ret;
 }
 
 void iot_container_stop (iot_container_t * cont)

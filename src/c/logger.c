@@ -139,12 +139,11 @@ void iot_logger_add_ref (iot_logger_t * logger)
   if (logger) iot_component_add_ref (&logger->component);
 }
 
-bool iot_logger_start (iot_logger_t * logger)
+void iot_logger_start (iot_logger_t * logger)
 {
   assert (logger);
   iot_component_set_running (&logger->component);
   logger->level = logger->save;
-  return true;
 }
 
 void iot_logger_stop (iot_logger_t * logger)
