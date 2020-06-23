@@ -62,7 +62,7 @@ typedef iot_component_t * (*iot_component_config_fn_t) (iot_container_t * cont, 
 /** Alias for component reconfiguration function pointer */
 typedef bool (*iot_component_reconfig_fn_t) (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map);
 /** Alias for component start function pointer */
-typedef bool (*iot_component_start_fn_t) (iot_component_t * comp);
+typedef void (*iot_component_start_fn_t) (iot_component_t * comp);
 /** Alias for component stop function pointer */
 typedef void (*iot_component_stop_fn_t) (iot_component_t * comp);
 /** Alias for component free function pointer */

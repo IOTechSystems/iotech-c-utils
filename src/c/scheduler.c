@@ -201,12 +201,11 @@ void iot_scheduler_add_ref (iot_scheduler_t * scheduler)
 }
 
 /* Start the scheduler thread */
-bool iot_scheduler_start (iot_scheduler_t * scheduler)
+void iot_scheduler_start (iot_scheduler_t * scheduler)
 {
   assert (scheduler);
   iot_log_trace (scheduler->logger, "iot_scheduler_start()");
   iot_component_set_running (&scheduler->component);
-  return true;
 }
 
 /* Stop the scheduler thread */
