@@ -379,17 +379,20 @@ static void iot_schedule_enqueue (iot_schd_queue_t * queue, iot_schedule_t * sch
 /* Remove a schedule from the queue */
 static void iot_schedule_dequeue (iot_schd_queue_t * queue, iot_schedule_t * schedule)
 {
-  if (schedule->next == NULL && schedule->previous == NULL)
+  if (schedule->next == NULL)
   {
-    /* If only one schedule exists in the queue */
-    queue->front = NULL;
+    if (schedule->previous == NULL)
+    {
+      /* If only one schedule exists in the queue */
+      queue->front = NULL;
+    }
+    else
+    {
+      /* If the schedule to remove is at the back of the queue */
+      schedule->previous->next = NULL;
+    }
   }
-  else if (schedule->next == NULL && schedule->previous != NULL)
-  {
-    /* If the schedule to remove is at the back of the queue */
-    schedule->previous->next = NULL;
-  }
-  else if (schedule->previous == NULL && schedule->next != NULL)
+  else if (schedule->previous == NULL)
   {
     /* If the schedule to remove is at the front of the queue */
     schedule->next->previous = NULL;
