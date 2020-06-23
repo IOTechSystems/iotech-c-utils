@@ -14,15 +14,10 @@
 
 #ifdef __ZEPHYR__
 #include "iot/os/zephyr.h"
+#elif __APPLE__
+#include "iot/os/macos.h"
 #else
 #include "iot/os/linux.h"
-#ifndef _REDHAT_SEAWOLF_
-#ifndef __LIBMUSL__
-#define IOT_HAS_CPU_AFFINITY
-#define IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
-#endif
-#define IOT_HAS_PR_GET_NAME
-#endif
 #endif
 
 #include <pthread.h>
