@@ -285,7 +285,7 @@ void iot_threadpool_stop (iot_threadpool_t * pool)
   iot_component_unlock (&pool->component);
 }
 
-bool iot_threadpool_start (iot_threadpool_t * pool)
+void iot_threadpool_start (iot_threadpool_t * pool)
 {
   assert (pool);
   iot_log_trace (pool->logger, "iot_threadpool_start()");
@@ -293,7 +293,6 @@ bool iot_threadpool_start (iot_threadpool_t * pool)
   iot_component_lock (&pool->component);
   pthread_cond_broadcast (&pool->job_cond);
   iot_component_unlock (&pool->component);
-  return true;
 }
 
 void iot_threadpool_free (iot_threadpool_t * pool)

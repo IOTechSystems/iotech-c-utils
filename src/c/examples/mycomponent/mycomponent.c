@@ -46,11 +46,10 @@ extern void my_component_free (my_component_t * comp)
 }
 
 /* Start component and update state */
-extern bool my_component_start (my_component_t * comp)
+extern void my_component_start (my_component_t * comp)
 {
   iot_log_trace (comp->logger, "my_component_start()");
   iot_component_set_running (&comp->component);
-  return true;
 }
 
 /* Start component and update state */

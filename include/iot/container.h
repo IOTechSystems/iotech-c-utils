@@ -72,17 +72,16 @@ extern bool iot_container_init (iot_container_t * cont);
 /**
  *  @brief Start the components within the container
  *
- * The function that invokes start function of the components defined within the container
+ * The function that invokes the start function of the components defined within the container
  *
  * @param cont  Pointer to the container
- * @return      'true' if all the components within the container is started successfully, 'false' otherwise
  */
-extern bool iot_container_start (iot_container_t * cont);
+extern void iot_container_start (iot_container_t * cont);
 
 /**
  * @brief Stop the components within the container
  *
- * The function that invokes stop function of the components defined within the container
+ * The function that invokes the stop function of the components defined within the container
  *
  * @param cont  Pointer to the container
  */
@@ -91,7 +90,7 @@ extern void iot_container_stop (iot_container_t * cont);
 /**
  * @brief Destroy the container and the associated components
  *
- * The function that invokes free function of the components defined within the container to release the resources
+ * The function that invokes the free function of the components defined within the container to release the resources
  *
  * @param cont  Pointer to the container
  */

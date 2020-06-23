@@ -124,9 +124,8 @@ extern void iot_logger_free (iot_logger_t * logger);
  * @brief Start logger and set the component state to IOT_COMPONENT_RUNNING
  *
  * @param logger  Pointer to the logger component
- * @return        'true', if the state transition occurred, 'false' otherwise
  */
-extern bool iot_logger_start (iot_logger_t * logger);
+extern void iot_logger_start (iot_logger_t * logger);
 
 /**
  * @brief Stop logger and set the component state to IOT_COMPONENT_STOPPED

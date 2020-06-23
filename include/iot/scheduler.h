@@ -86,9 +86,8 @@ extern iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler
  * @endcode
  *
  * @param  scheduler  Pointer to a scheduler
- * @return            'true' on successfully starting the scheduler, 'false' otherwise
  */
-extern bool iot_scheduler_start (iot_scheduler_t * scheduler);
+extern void iot_scheduler_start (iot_scheduler_t * scheduler);
 
 /**
  * @brief  Create a new schedule

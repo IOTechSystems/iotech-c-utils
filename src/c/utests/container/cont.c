@@ -66,13 +66,11 @@ static void test_find (void)
 
 static void test_add_component (void)
 {
-  iot_component_t * comp = NULL;
-
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
-  comp = iot_container_find_component (cont, "logger");
+  iot_component_t * comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
 
   iot_container_free (cont);
@@ -115,13 +113,23 @@ static void test_list_containers (void)
   iot_container_free (cont2);
 }
 
+static void test_state_name (void)
+{
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_INITIAL), "Initial") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_STOPPED), "Stopped") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_RUNNING), "Running") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_DELETED), "Deleted") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_STARTING), "Starting") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name ((iot_component_state_t) -1), "Unknown") == 0)
+}
+
 void cunit_cont_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("container", suite_init, suite_clean);
   CU_add_test (suite, "container_alloc", test_alloc);
   CU_add_test (suite, "container_find", test_find);
-
-  CU_add_test (suite,  "container_add_component", test_add_component);
+  CU_add_test (suite, "container_state_name", test_state_name);
+  CU_add_test (suite, "container_add_component", test_add_component);
   CU_add_test (suite, "container_delete_component", test_delete_component);
   CU_add_test (suite, "container_list_containers", test_list_containers);
 }
