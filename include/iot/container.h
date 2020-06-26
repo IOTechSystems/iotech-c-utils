@@ -112,7 +112,7 @@ extern void iot_container_add_component (iot_container_t * cont, const char * ct
 /**
  * @brief Find a named component in a container
  *
- * The function to find a component factory within the container
+ * The function finds a named component within the container
  *
  * @param cont  Pointer to the container
  * @param name  Name of the component to find

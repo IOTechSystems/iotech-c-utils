@@ -7,6 +7,7 @@
 
 #include "cont.h"
 #include "CUnit.h"
+#include "iot/config.h"
 
 static const char * logger_config =
 "{"
@@ -78,11 +79,19 @@ static void test_add_component (void)
 
 static void test_delete_component (void)
 {
+
   iot_component_t * comp = NULL;
 
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
+
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp != NULL)
+  comp = iot_config_component (cont, "logger", NULL);
+  CU_ASSERT (comp != NULL)
+  comp = iot_config_component (cont, "slogger", NULL);
+  CU_ASSERT (comp == NULL)
 
   iot_container_delete_component (cont, "logger");
   comp = iot_container_find_component (cont, "logger");

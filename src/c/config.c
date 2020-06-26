@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "iot/config.h"
+#include "iot/container.h"
 
 static void iot_config_error (iot_logger_t * logger, const char * type, const char * key)
 {
@@ -54,17 +55,25 @@ bool iot_config_f64 (const iot_data_t * map, const char * key, double * val, iot
   return false;
 }
 
-bool iot_config_string (const iot_data_t * map, const char * key, const char ** val, bool alloc, iot_logger_t * logger)
+const char * iot_config_string (const iot_data_t * map, const char * key, bool alloc, iot_logger_t * logger)
 {
-  assert (map && key && val);
+  assert (map && key);
   const iot_data_t * data = iot_data_string_map_get (map, key);
+  const char * val = NULL;
 
   if (data && (iot_data_type (data) == IOT_DATA_STRING))
   {
-    *val = iot_data_string (data);
-    if (alloc) *val = strdup (*val);
-    return true;
+    val = iot_data_string (data);
+    if (alloc) val = strdup (val);
   }
-  iot_config_error (logger, "string", key);
-  return false;
+  if (! val) iot_config_error (logger, "string", key);
+  return val;
+}
+
+iot_component_t * iot_config_component (iot_container_t * container, const char * name, iot_logger_t * logger)
+{
+  assert (container && name);
+  iot_component_t * comp = iot_container_find_component (container, name);
+  if (! comp) iot_config_error (logger, "container", name);
+  return comp;
 }
