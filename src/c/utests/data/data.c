@@ -493,12 +493,11 @@ static void test_data_from_json (void)
   found = iot_config_bool (map, "Bolean", &bval, NULL);
   CU_ASSERT (! found)
 
-  found = iot_config_string (map, "Scheduler", &sval, false,NULL);
-  CU_ASSERT (found)
+  sval = iot_config_string (map, "Scheduler", false,NULL);
   CU_ASSERT (sval != NULL)
   CU_ASSERT (strcmp (sval, "scheduler") == 0)
-  found = iot_config_string (map, "Sched", &sval, false, NULL);
-  CU_ASSERT (! found)
+  sval = iot_config_string (map, "Sched", false, NULL);
+  CU_ASSERT (sval == NULL)
 
   found = iot_config_f64 (map, "DB", &dval, NULL);
   CU_ASSERT (found)
