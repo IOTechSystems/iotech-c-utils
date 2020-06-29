@@ -183,7 +183,6 @@ bool iot_container_init (iot_container_t * cont)
   {
     iot_data_map_iter_t iter;
     iot_data_map_iter (map, &iter);
-    free (config);
 
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 
