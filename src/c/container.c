@@ -172,55 +172,59 @@ iot_container_t * iot_container_alloc (const char * name)
 bool iot_container_init (iot_container_t * cont)
 {
   assert (iot_config && cont);
-  bool ret = true;
+  const iot_component_factory_t * factory;
+  const char * cname;
+  const char * ctype;
   char * config = (iot_config->load) (cont->name, iot_config->uri);
-  assert (config);
-  iot_data_t * map = iot_data_from_json (config);
-  iot_data_map_iter_t iter;
-  iot_data_map_iter (map, &iter);
+  iot_data_t * map = config ? iot_data_from_json (config) : NULL;
+
   free (config);
+  if (map)
+  {
+    iot_data_map_iter_t iter;
+    iot_data_map_iter (map, &iter);
+    free (config);
 
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 
-  // pre-pass to find the factory to be added to support dynamic loading of libraries
-  while (iot_data_map_iter_next (&iter))
-  {
-    const char *cname = iot_data_map_iter_string_key(&iter);
-    const iot_component_factory_t *factory = NULL;
-
-    const char * ctype = iot_data_map_iter_string_value (&iter);
-    config = (iot_config->load) (cname, iot_config->uri);
-    factory = iot_component_factory_find (ctype);
-
-    if ((!factory) && (config))
+    // pre-pass to find the factory to be added to support dynamic loading of libraries
+    while (iot_data_map_iter_next (&iter))
     {
-      iot_container_try_load_component (cont, config);
+      cname = iot_data_map_iter_string_key (&iter);
+      ctype = iot_data_map_iter_string_value (&iter);
+      config = (iot_config->load) (cname, iot_config->uri);
+      factory = iot_component_factory_find (ctype);
+
+      if ((!factory) && (config))
+      {
+        iot_container_try_load_component (cont, config);
+      }
+      free (config);
     }
-    free (config);
-  }
 #endif
 
-  while (iot_data_map_iter_next (&iter))
-  {
-    const char * cname = iot_data_map_iter_string_key (&iter);
-    const char * ctype = iot_data_map_iter_string_value (&iter);
-    const iot_component_factory_t * factory = iot_component_factory_find (ctype);
-    if (factory)
+    while (iot_data_map_iter_next (&iter))
     {
-      config = (iot_config->load) (cname, iot_config->uri);
-      if (config)
+      cname = iot_data_map_iter_string_key (&iter);
+      ctype = iot_data_map_iter_string_value (&iter);
+      factory = iot_component_factory_find (ctype);
+      if (factory)
       {
-        iot_component_create (cont, cname, factory, config);
-        free (config);
+        config = (iot_config->load) (cname, iot_config->uri);
+        if (config)
+        {
+          iot_component_create (cont, cname, factory, config);
+          free (config);
+        }
+      }
+      else
+      {
+        iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
       }
     }
-    else
-    {
-      iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
-    }
+    iot_data_free (map);
   }
-  iot_data_free (map);
-  return ret;
+  return (map != NULL);
 }
 
 void iot_container_free (iot_container_t * cont)
