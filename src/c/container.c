@@ -81,7 +81,7 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
   }
   else
   {
-    iot_log_warn (cont->logger, "Failed to create component: %s", cname);
+    iot_log_warn (cont->logger, "Container: %s Failed to create component: %s", cont->name, cname);
   }
 }
 
