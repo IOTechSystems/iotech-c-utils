@@ -72,8 +72,17 @@ const char * iot_config_string (const iot_data_t * map, const char * key, bool a
 
 iot_component_t * iot_config_component (const iot_data_t * map, const char * key, iot_container_t * container, iot_logger_t * logger)
 {
+  assert (map && key && container);
+  iot_component_t * comp = NULL;
   const char * name = iot_config_string (map, key, false, logger);
-  iot_component_t * comp = name ? iot_container_find_component (container, name) : NULL;
-  if (! comp) iot_config_error (logger, "container", name);
+  if (name)
+  {
+    comp = iot_container_find_component (container, name);
+    if (! comp)
+    {
+      if (logger == NULL) logger = iot_logger_default ();
+      iot_log_error (logger, "Failed to resolve component: %s in container", name);
+    }
+  }
   return comp;
 }
