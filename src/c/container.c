@@ -79,6 +79,10 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
       cont->tail = ch;
     }
   }
+  else
+  {
+    iot_log_warn (cont->logger, "Failed to create component: %s", cname);
+  }
 }
 
 static const iot_component_factory_t * iot_component_factory_find_locked (const char * type)
@@ -207,8 +211,12 @@ bool iot_container_init (iot_container_t * cont)
       if (config)
       {
         iot_component_create (cont, cname, factory, config);
+        free (config);
       }
-      free (config);
+    }
+    else
+    {
+      iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
     }
   }
   iot_data_free (map);
