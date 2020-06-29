@@ -70,10 +70,10 @@ const char * iot_config_string (const iot_data_t * map, const char * key, bool a
   return val;
 }
 
-iot_component_t * iot_config_component (iot_container_t * container, const char * name, iot_logger_t * logger)
+iot_component_t * iot_config_component (const iot_data_t * map, const char * key, iot_container_t * container, iot_logger_t * logger)
 {
-  assert (container && name);
-  iot_component_t * comp = iot_container_find_component (container, name);
+  const char * name = iot_config_string (map, key, false, logger);
+  iot_component_t * comp = name ? iot_container_find_component (container, name) : NULL;
   if (! comp) iot_config_error (logger, "container", name);
   return comp;
 }

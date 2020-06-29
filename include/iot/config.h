@@ -64,14 +64,15 @@ extern bool iot_config_f64 (const iot_data_t * map, const char * key, double * v
 extern bool iot_config_bool (const iot_data_t * map, const char * key, bool * val, iot_logger_t * logger);
 
 /**
- * @brief Get a mandatory named container from a component
+ * @brief Get a mandatory component configuration and log error if cannot be resolved.
  *
- * @param container Pointer to the container
- * @param name name of the component in the container
+ * @param map Configuration map
+ * @param key Configuration key
+ * @param container Pointer to the container from which to find the component
  * @param logger Logger used to log if component not found. If not set, default logger is used.
- * @return Returned component or NULL if name was not resolved
+ * @return Returned component or NULL if component name or component could not be resolved
  */
-extern iot_component_t * iot_config_component (iot_container_t * container, const char * name, iot_logger_t * logger);
+extern iot_component_t * iot_config_component (const iot_data_t * map, const char * key, iot_container_t * container, iot_logger_t * logger);
 
 #ifdef __cplusplus
 }
