@@ -196,8 +196,7 @@ iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t 
 
 void iot_scheduler_add_ref (iot_scheduler_t * scheduler)
 {
-  assert (scheduler);
-  iot_component_add_ref (&scheduler->component);
+  if (scheduler) iot_component_add_ref (&scheduler->component);
 }
 
 /* Start the scheduler thread */
