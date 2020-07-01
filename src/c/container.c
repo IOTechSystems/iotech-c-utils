@@ -29,6 +29,13 @@ struct iot_container_t
   pthread_rwlock_t lock;
 };
 
+typedef struct iot_parsed_holder_t
+{
+  char * parsed;
+  size_t size;
+  size_t len;
+} iot_parsed_holder_t;
+
 static const iot_component_factory_t * iot_component_factories = NULL;
 static iot_container_t * iot_containers = NULL;
 static const iot_container_config_t * iot_config = NULL;
@@ -50,6 +57,71 @@ static iot_container_t * iot_container_find_locked (const char * name)
   return cont;
 }
 
+#define IOT_MAX_ENV_LEN 64
+
+static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, size_t len)
+{
+  holder->len += len;
+  if (holder->len > holder->size)
+  {
+    holder->size = holder->len;
+    holder->parsed = realloc (holder->parsed, holder->size);
+  }
+  memcpy (holder->parsed + holder->len - len, str, len);
+}
+
+/* Replace ${VALUE} in configuration string with corresponding environment variable */
+
+static iot_data_t * iot_component_config_to_map (const char * config, iot_logger_t * logger)
+{
+  iot_data_t * map = NULL;
+  iot_parsed_holder_t holder = { .parsed = NULL, .size = 0, .len = 0 };
+
+  if (config)
+  {
+    const char * start = config;
+    const char * end;
+    char key [IOT_MAX_ENV_LEN];
+
+    holder.size = strlen (config);
+    holder.parsed = malloc (holder.size);
+
+    while (*start)
+    {
+      if (start[0] == '$' && start[1] == '{') // Look for "${"
+      {
+        if ((end = strchr (start, '}'))) // Look for "}"
+        {
+          size_t len = (end - start) - 2;
+          strncpy (key, start + 2, len);
+          key[len] = '\0';
+          const char * env = getenv (key);
+          if (env)
+          {
+            iot_update_parsed (&holder, env, strlen (env));
+          }
+          else
+          {
+            iot_log_error (logger, "Unable to resolve environment variable: %s from configuration", key);
+            goto fail;
+          }
+          start = end + 1;
+          continue;
+        }
+      }
+      iot_update_parsed (&holder, start, 1u);
+      start++;
+    }
+    iot_update_parsed (&holder, start, 1u);
+    map = iot_data_from_json (holder.parsed);
+  }
+
+fail:
+
+  free (holder.parsed);
+  return map;
+}
+
 /*
  * Create a component instance from it's factory with a json configuration.
  *
@@ -58,7 +130,7 @@ static iot_container_t * iot_container_find_locked (const char * name)
 
 static void iot_component_create (iot_container_t * cont, const char *cname, const iot_component_factory_t * factory, const char * config)
 {
-  iot_data_t * map = iot_data_from_json (config);
+  iot_data_t * map = iot_component_config_to_map (config, cont->logger);
   iot_component_t * comp = (factory->config_fn) (cont, map);
   iot_data_free (map);
   if (comp)
@@ -116,7 +188,7 @@ static iot_component_holder_t * iot_container_find_holder_locked (iot_container_
 
 static void iot_container_try_load_component (iot_container_t * cont, const char * config)
 {
-  iot_data_t * cmap = iot_data_from_json (config);
+  iot_data_t * cmap = iot_component_config_to_map (config, cont->logger);
   const char * library = iot_data_string_map_get_string (cmap, "Library");
   const char * factory = iot_data_string_map_get_string (cmap, "Factory");
   if (library && factory)
@@ -172,15 +244,16 @@ iot_container_t * iot_container_alloc (const char * name)
 bool iot_container_init (iot_container_t * cont)
 {
   assert (iot_config && cont);
-  const iot_component_factory_t * factory;
-  const char * cname;
-  const char * ctype;
-  char * config = (iot_config->load) (cont->name, iot_config->uri);
-  iot_data_t * map = config ? iot_data_from_json (config) : NULL;
 
+  char * config = (iot_config->load) (cont->name, iot_config->uri);
+  iot_data_t * map = iot_component_config_to_map (config, cont->logger);
   free (config);
+
   if (map)
   {
+    const iot_component_factory_t * factory;
+    const char * cname;
+    const char * ctype;
     iot_data_map_iter_t iter;
     iot_data_map_iter (map, &iter);
 
