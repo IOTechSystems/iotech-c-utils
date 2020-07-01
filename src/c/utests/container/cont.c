@@ -11,7 +11,7 @@
 
 static const char * logger_config =
 "{"
-  "\"Name\":\"${USER}\","
+  "\"Name\":\"${SHELL}\","
   "\"Level\":\"Info\""
 "}";
 

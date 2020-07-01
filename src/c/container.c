@@ -131,30 +131,30 @@ fail:
 static void iot_component_create (iot_container_t * cont, const char *cname, const iot_component_factory_t * factory, const char * config)
 {
   iot_data_t * map = iot_component_config_to_map (config, cont->logger);
+  if (map == NULL) goto error;
   iot_component_t * comp = (factory->config_fn) (cont, map);
   iot_data_free (map);
-  if (comp)
+  if (comp == NULL) goto error;
+
+  iot_component_holder_t * ch = calloc (1, sizeof (*ch));
+  ch->component = comp;
+  ch->name = strdup (cname);
+  ch->factory = factory;
+  if (cont->head == NULL) // First list element
   {
-    iot_component_holder_t * ch = calloc (1, sizeof (*ch));
-    ch->component = comp;
-    ch->name = strdup (cname);
-    ch->factory = factory;
-    if (cont->head == NULL) // First list element
-    {
-      cont->head = ch;
-      cont->tail = ch;
-    }
-    else // Add to tail of list
-    {
-      cont->tail->next = ch;
-      ch->prev = cont->tail;
-      cont->tail = ch;
-    }
+    cont->head = ch;
+    cont->tail = ch;
   }
-  else
+  else // Add to tail of list
   {
-    iot_log_warn (cont->logger, "Container: %s Failed to create component: %s", cont->name, cname);
+    cont->tail->next = ch;
+    ch->prev = cont->tail;
+    cont->tail = ch;
   }
+
+error:
+
+  if (comp == NULL) iot_log_warn (cont->logger, "Container: %s Failed to create component: %s", cont->name, cname);
 }
 
 static const iot_component_factory_t * iot_component_factory_find_locked (const char * type)
@@ -189,30 +189,33 @@ static iot_component_holder_t * iot_container_find_holder_locked (iot_container_
 static void iot_container_try_load_component (iot_container_t * cont, const char * config)
 {
   iot_data_t * cmap = iot_component_config_to_map (config, cont->logger);
-  const char * library = iot_data_string_map_get_string (cmap, "Library");
-  const char * factory = iot_data_string_map_get_string (cmap, "Factory");
-  if (library && factory)
+  if (cmap)
   {
-    void * handle = dlopen (library, RTLD_LAZY);
-    if (handle)
+    const char * library = iot_data_string_map_get_string (cmap, "Library");
+    const char * factory = iot_data_string_map_get_string (cmap, "Factory");
+    if (library && factory)
     {
-      const iot_component_factory_t *(*factory_fn) (void) = dlsym (handle, factory);
-      if (factory_fn)
+      void *handle = dlopen (library, RTLD_LAZY);
+      if (handle)
       {
-        iot_component_factory_add (factory_fn ());
+        const iot_component_factory_t *(*factory_fn) (void) = dlsym (handle, factory);
+        if (factory_fn)
+        {
+          iot_component_factory_add (factory_fn ());
+        }
+        else
+        {
+          iot_log_error (cont->logger, "Invalid configuration, Could not find Factory: %s in Library: %s", factory, library);
+          dlclose (handle);
+        }
       }
       else
       {
-        iot_log_error (cont->logger, "Invalid configuration, Could not find Factory: %s in Library: %s", factory, library);
-        dlclose (handle);
+        iot_log_error (cont->logger, "Invalid configuration, Could not dynamically load Library: %s", library);
       }
     }
-    else
-    {
-      iot_log_error (cont->logger, "Invalid configuration, Could not dynamically load Library: %s", library);
-    }
+    iot_data_free (cmap);
   }
-  iot_data_free (cmap);
 }
 #endif
 
