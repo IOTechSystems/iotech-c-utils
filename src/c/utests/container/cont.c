@@ -7,10 +7,11 @@
 
 #include "cont.h"
 #include "CUnit.h"
+#include "iot/config.h"
 
 static const char * logger_config =
 "{"
-  "\"Name\":\"console\","
+  "\"Name\":\"${USER}\","
   "\"Level\":\"Info\""
 "}";
 
@@ -78,12 +79,13 @@ static void test_add_component (void)
 
 static void test_delete_component (void)
 {
-  iot_component_t * comp = NULL;
-
+  iot_component_t * comp;
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp != NULL)
   iot_container_delete_component (cont, "logger");
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp == NULL)
@@ -119,6 +121,7 @@ static void test_state_name (void)
   CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_STOPPED), "Stopped") == 0)
   CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_RUNNING), "Running") == 0)
   CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_DELETED), "Deleted") == 0)
+  CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_STARTING), "Starting") == 0)
   CU_ASSERT (strcmp (iot_component_state_name ((iot_component_state_t) -1), "Unknown") == 0)
 }
 

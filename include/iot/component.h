@@ -30,10 +30,11 @@ typedef struct iot_component_factory_t iot_component_factory_t;
  */
 typedef enum
 {
-  IOT_COMPONENT_INITIAL = 0U, /**< Initial component state */
-  IOT_COMPONENT_STOPPED = 1U, /**< Stopped component state */
-  IOT_COMPONENT_RUNNING = 2U, /**< Running component state */
-  IOT_COMPONENT_DELETED = 4U  /**< Deleted component state */
+  IOT_COMPONENT_INITIAL = 0U,  /**< Initial component state */
+  IOT_COMPONENT_STOPPED = 1U,  /**< Stopped component state */
+  IOT_COMPONENT_RUNNING = 2U,  /**< Running component state */
+  IOT_COMPONENT_DELETED = 4U,  /**< Deleted component state */
+  IOT_COMPONENT_STARTING = 8U  /**< Starting transient component state */
 } iot_component_state_t;
 
 /**
@@ -61,7 +62,7 @@ typedef iot_component_t * (*iot_component_config_fn_t) (iot_container_t * cont, 
 /** Alias for component reconfiguration function pointer */
 typedef bool (*iot_component_reconfig_fn_t) (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map);
 /** Alias for component start function pointer */
-typedef bool (*iot_component_start_fn_t) (iot_component_t * comp);
+typedef void (*iot_component_start_fn_t) (iot_component_t * comp);
 /** Alias for component stop function pointer */
 typedef void (*iot_component_stop_fn_t) (iot_component_t * comp);
 /** Alias for component free function pointer */
@@ -167,6 +168,14 @@ extern bool iot_component_set_stopped (iot_component_t * component);
  * @return           'true', if the state transition occurred, 'false' otherwise
  */
 extern bool iot_component_set_deleted (iot_component_t * component);
+
+/**
+ * @brief Set the component state to IOT_COMPONENT_STARTING
+ *
+ * @param component  Pointer to the component
+ * @return           'true', if the state transition occurred, 'false' otherwise
+ */
+extern bool iot_component_set_starting (iot_component_t * component);
 
 /**
  * @brief Block until the component is in a given state

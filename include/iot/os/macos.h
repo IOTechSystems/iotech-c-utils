@@ -4,23 +4,17 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#ifndef _IOT_OS_LINUX_H_
-#define _IOT_OS_LINUX_H_
+#ifndef _IOT_OS_MACOS_H_
+#define _IOT_OS_MACOS_H_
 
 /**
  * @file
- * @brief IOTech Linux API
+ * @brief IOTech MacOS includes
  */
 
 #include <sched.h>
 #include <unistd.h>
 
-#ifndef _REDHAT_SEAWOLF_
-#ifndef __LIBMUSL__
-#define IOT_HAS_CPU_AFFINITY
 #define IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
-#endif
-#define IOT_HAS_PR_GET_NAME
-#endif
 
 #endif
