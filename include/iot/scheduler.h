@@ -143,6 +143,20 @@ extern bool iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * sche
 extern bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 /**
+ * @brief  Reset a schedule to start from the current time
+ *
+ * @code
+ *
+ *    iot_schedule_reset (myScheduler, mySchedule);
+ *
+ * @endcode
+ *
+ * @param  scheduler  Pointer to a scheduler
+ * @param  schedule   Pointer to the schedule to be reset
+ */
+extern void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
+
+/**
  * @brief  Delete a schedule
  *
  * @code

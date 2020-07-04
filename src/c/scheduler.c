@@ -275,6 +275,27 @@ bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule
   return ret;
 }
 
+/* Reset schedule timeout */
+void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
+{
+  assert (scheduler && schedule);
+  iot_log_trace (scheduler->logger, "iot_schedule_reset()");
+  iot_component_lock (&scheduler->component);
+
+  /* Recalculate the next start time for the schedule */
+  schedule->start = getTimeAsUInt64 () + schedule->period;
+
+  if (schedule->scheduled)
+  {
+    iot_schedule_requeue (&scheduler->queue, &scheduler->queue, schedule);
+    if (scheduler->queue.front == schedule && (scheduler->component.state == IOT_COMPONENT_RUNNING))
+    {
+      pthread_cond_signal (&scheduler->component.cond);
+    }
+  }
+  iot_component_unlock (&scheduler->component);
+}
+
 /* Delete a schedule */
 void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 {

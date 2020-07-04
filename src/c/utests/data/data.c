@@ -1315,6 +1315,29 @@ static void test_data_vector_iter_next (void)
   iot_data_free (vector);
 }
 
+static void test_data_vector_resize (void)
+{
+  iot_data_t * vector = iot_data_alloc_vector (3);
+  iot_data_t * elem0 = iot_data_alloc_string ("test", IOT_DATA_REF);
+  iot_data_t * elem1 = iot_data_alloc_string ("test1", IOT_DATA_REF);
+  iot_data_t * elem2 = iot_data_alloc_string ("test2", IOT_DATA_REF);
+  iot_data_vector_add (vector, 0, elem0);
+  iot_data_vector_add (vector, 1, elem1);
+  iot_data_vector_add (vector, 2, elem2);
+  iot_data_vector_resize (vector, 5);
+  CU_ASSERT (iot_data_vector_size (vector) == 5);
+  CU_ASSERT (iot_data_vector_get (vector, 0) == elem0);
+  CU_ASSERT (iot_data_vector_get (vector, 1) == elem1);
+  CU_ASSERT (iot_data_vector_get (vector, 2) == elem2);
+  CU_ASSERT (iot_data_vector_get (vector, 3) == NULL);
+  CU_ASSERT (iot_data_vector_get (vector, 4) == NULL);
+  iot_data_vector_resize (vector, 2);
+  CU_ASSERT (iot_data_vector_size (vector) == 2);
+  CU_ASSERT (iot_data_vector_get (vector, 0) == elem0);
+  CU_ASSERT (iot_data_vector_get (vector, 1) == elem1);
+  iot_data_free (vector);
+}
+
 static void test_data_vector_find (void)
 {
   iot_data_t * vector = iot_data_alloc_vector (3);
@@ -2426,6 +2449,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_copy_map_update_value", test_data_copy_map_update_value);
   CU_add_test (suite, "data_copy_vector_map", test_data_copy_vector_map);
   CU_add_test (suite, "data_vector_iter_next", test_data_vector_iter_next);
+  CU_add_test (suite, "data_vector_resize", test_data_vector_resize);
   CU_add_test (suite, "data_vector_find", test_data_vector_find);
   CU_add_test (suite, "data_copy_map_base64_to_array", test_data_copy_map_base64_to_array);
   CU_add_test (suite, "data_check_equal_nested_vector", test_data_equal_nested_vector);
