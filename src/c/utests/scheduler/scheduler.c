@@ -318,6 +318,29 @@ static void cunit_scheduler_starttime (void)
   iot_scheduler_free (scheduler);
 }
 
+static void cunit_scheduler_reset (void)
+{
+  iot_threadpool_t *pool = iot_threadpool_alloc (2u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  CU_ASSERT (scheduler != NULL)
+
+  reset_counters ();
+  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work4, NULL,NULL, IOT_MS_TO_NS (1000), IOT_MS_TO_NS (100), 10, pool, IOT_THREAD_NO_PRIORITY);
+  CU_ASSERT (iot_schedule_add (scheduler, sched1))
+  iot_threadpool_start (pool);
+  iot_scheduler_start (scheduler);
+
+  sleep (2);
+  iot_schedule_reset (scheduler, sched1);
+  sleep (1);
+
+  iot_scheduler_stop (scheduler);
+  CU_ASSERT (atomic_load (&sum_test) == 2)
+
+  iot_threadpool_free (pool);
+  iot_scheduler_free (scheduler);
+}
+
 static void cunit_scheduler_setpriority (void)
 {
   int prio_max = sched_get_priority_max (SCHED_FIFO);
@@ -381,6 +404,7 @@ extern void cunit_scheduler_test_init ()
   CU_add_test (suite, "scheduler_refcount", cunit_scheduler_refcount);
   CU_add_test (suite, "scheduler_nrepeat", cunit_scheduler_nrepeat);
   CU_add_test (suite, "scheduler_starttime", cunit_scheduler_starttime);
+  CU_add_test (suite, "scheduler_reset", cunit_scheduler_reset);
   CU_add_test (suite, "scheduler_setpriority", cunit_scheduler_setpriority);
   CU_add_test (suite, "scheduler_freefn", cunit_scheduler_setfreefn);
 }

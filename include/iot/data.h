@@ -680,6 +680,17 @@ extern void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t
 extern const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32_t index);
 
 /**
+ * @brief Resize a vector
+ *
+ * Resize a vector. If the vector is reduced in size elements no longer
+ * included in the vector are freed.
+ *
+ * @param vector  Input vector
+ * @param size    new vector size
+ */
+extern void iot_data_vector_resize (iot_data_t * vector, uint32_t size);
+
+/**
  * @brief Get the vector size
  *
  * The function to get the length of the input vector
