@@ -1736,6 +1736,60 @@ static void test_map_size (void)
   iot_data_free (map);
 }
 
+static void test_data_map_iter_replace (void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_map_add (map, iot_data_alloc_string ("1", IOT_DATA_REF), iot_data_alloc_string ("One", IOT_DATA_REF));
+  iot_data_map_add (map, iot_data_alloc_string ("2", IOT_DATA_REF), iot_data_alloc_string ("Two", IOT_DATA_REF));
+  iot_data_map_add (map, iot_data_alloc_string ("3", IOT_DATA_REF), iot_data_alloc_string ("Three", IOT_DATA_REF));
+
+  CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "1"), "One") == 0)
+  CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "3"), "Three") == 0)
+
+  iot_data_map_iter_t it;
+  iot_data_map_iter (map, &it);
+  while (iot_data_map_iter_next (&it))
+  {
+    if (strcmp (iot_data_map_iter_string_key (&it), "1") == 0)
+    {
+      iot_data_free (iot_data_map_iter_replace_value (&it, iot_data_alloc_string ("Ace", IOT_DATA_REF)));
+    } else if (strcmp (iot_data_map_iter_string_key (&it), "3") == 0)
+    {
+      iot_data_free (iot_data_map_iter_replace_value (&it, iot_data_alloc_string ("Trey", IOT_DATA_REF)));
+    }
+  }
+
+  CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "1"), "Ace") == 0)
+  CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "3"), "Trey") == 0)
+
+  iot_data_free (map);
+}
+
+static void test_data_vector_iter_replace (void)
+{
+  iot_data_t * vector = iot_data_alloc_vector (3u);
+  iot_data_vector_add (vector, 0, iot_data_alloc_i32 (0));
+  iot_data_vector_add (vector, 1, iot_data_alloc_i32 (1));
+  iot_data_vector_add (vector, 2, iot_data_alloc_i32 (2));
+
+  CU_ASSERT (iot_data_i32 (iot_data_vector_get (vector, 0)) == 0)
+  CU_ASSERT (iot_data_i32 (iot_data_vector_get (vector, 1)) == 1)
+  CU_ASSERT (iot_data_i32 (iot_data_vector_get (vector, 2)) == 2)
+
+  iot_data_vector_iter_t it;
+  iot_data_vector_iter (vector, &it);
+  while (iot_data_vector_iter_next (&it))
+  {
+    iot_data_free (iot_data_vector_iter_replace_value (&it, iot_data_alloc_i32 (iot_data_vector_iter_index (&it) * 6)));
+  }
+
+  CU_ASSERT (iot_data_i32 (iot_data_vector_get (vector, 0)) == 0)
+  CU_ASSERT (iot_data_i32 (iot_data_vector_get (vector, 1)) == 6)
+  CU_ASSERT (iot_data_i32 (iot_data_vector_get (vector, 2)) == 12)
+
+  iot_data_free (vector);
+}
+
 static void test_data_alloc_array_i8 (void)
 {
   int8_t data [4] = { -1, -2, 3, 4 };
@@ -2412,6 +2466,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_increment", test_data_increment);
   CU_add_test (suite, "data_decrement", test_data_decrement);
   CU_add_test (suite, "data_map_size", test_map_size);
+  CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);
+  CU_add_test (suite, "data_vector_iter_replace", test_data_vector_iter_replace);
   CU_add_test (suite, "data_check_equal_int8", test_data_equal_int8);
   CU_add_test (suite, "data_check_equal_uint16", test_data_equal_uint16);
   CU_add_test (suite, "data_check_equal_float32", test_data_equal_float32);
