@@ -792,6 +792,25 @@ const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32_t inde
   return arr->values[index];
 }
 
+void iot_data_vector_resize (iot_data_t * vector, uint32_t size)
+{
+  iot_data_vector_t * vec = (iot_data_vector_t*) vector;
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  if (size < vec->size)
+  {
+    for (uint32_t i = size; i < vec->size; i++)
+    {
+      iot_data_free (vec->values[i]);
+    }
+  }
+  else if (size > vec->size)
+  {
+    vec->values = realloc (vec->values, size * sizeof (iot_data_t*));
+    memset (&vec->values[vec->size], 0, (size - vec->size) * sizeof (iot_data_t*));
+  }
+  vec->size = size;
+}
+
 uint32_t iot_data_vector_size (const iot_data_t * vector)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR));
