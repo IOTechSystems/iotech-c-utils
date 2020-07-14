@@ -140,9 +140,19 @@ extern iot_data_type_t iot_data_name_type (const char * name);
  * The function to return the typename corresponding to data
  *
  * @param  data  Pointer to data
- * @return       String that indicates the data_type
+ * @return       Data type string
  */
 extern const char * iot_data_type_name (const iot_data_t * data);
+
+/**
+ * @brief Return string name for a data type
+ *
+ * The function to return the name of a data type
+ *
+ * @param  type  Data type
+ * @return       Data type string
+ */
+extern const char * iot_data_type_string (iot_data_type_t type);
 
 /**
  * @brief Set metadata for data

@@ -224,6 +224,12 @@ iot_data_type_t iot_data_name_type (const char * name)
   return type;
 }
 
+const char * iot_data_type_string (iot_data_type_t type)
+{
+  assert (type <= IOT_DATA_VECTOR);
+  return iot_data_type_names[type];
+}
+
 const char * iot_data_type_name (const iot_data_t * data)
 {
   assert (data && (data->type <= IOT_DATA_VECTOR));
