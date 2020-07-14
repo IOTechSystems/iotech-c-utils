@@ -224,6 +224,12 @@ iot_data_type_t iot_data_name_type (const char * name)
   return type;
 }
 
+const char * iot_data_type_string (iot_data_type_t type)
+{
+  assert (type <= IOT_DATA_VECTOR);
+  return iot_data_type_names[type];
+}
+
 const char * iot_data_type_name (const iot_data_t * data)
 {
   assert (data && (data->type <= IOT_DATA_VECTOR));
@@ -843,6 +849,17 @@ const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter)
   return (iter->pair) ? iter->pair->value : NULL;
 }
 
+iot_data_t * iot_data_map_iter_replace_value (iot_data_map_iter_t * iter, iot_data_t *value)
+{
+  assert (iter);
+  iot_data_t *res = (iter->pair) ? iter->pair->value : NULL;
+  if (res)
+  {
+    iter->pair->value = value;
+  }
+  return res;
+}
+
 const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * iter)
 {
   assert (iter);
@@ -905,6 +922,18 @@ const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter_t * it
 {
   assert (iter);
   return (iter->index <= iter->vector->size) ? iter->vector->values[iter->index - 1] : NULL;
+}
+
+iot_data_t * iot_data_vector_iter_replace_value (iot_data_vector_iter_t * iter, iot_data_t *value)
+{
+  assert (iter);
+  iot_data_t *res = NULL;
+  if (iter->index <= iter->vector->size)
+  {
+    res = iter->vector->values[iter->index - 1];
+    iter->vector->values[iter->index - 1] = value;
+  }
+  return res;
 }
 
 const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * iter)

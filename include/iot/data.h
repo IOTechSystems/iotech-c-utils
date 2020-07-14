@@ -140,9 +140,19 @@ extern iot_data_type_t iot_data_name_type (const char * name);
  * The function to return the typename corresponding to data
  *
  * @param  data  Pointer to data
- * @return       String that indicates the data_type
+ * @return       Data type string
  */
 extern const char * iot_data_type_name (const iot_data_t * data);
+
+/**
+ * @brief Return string name for a data type
+ *
+ * The function to return the name of a data type
+ *
+ * @param  type  Data type
+ * @return       Data type string
+ */
+extern const char * iot_data_type_string (iot_data_type_t type);
 
 /**
  * @brief Set metadata for data
@@ -746,7 +756,8 @@ extern const void * iot_data_array_iter_value (const iot_data_array_iter_t * ite
  * @brief Initialise iterator for a map
  *
  * The function initialises an iterator to point to the beginning of a map. Note that
- * the iterator is unsafe in that the map cannot be modified when being iterated.
+ * the iterator is unsafe in that the map cannot be modified when being iterated other
+ * than by using the iot_data_map_iter_replace_value() function.
  *
  * @param map   Input map
  * @param iter  Iterator to initialise
@@ -785,6 +796,18 @@ extern const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * ite
 extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter);
 
 /**
+ * @brief Replace Value from the map referenced by an input iterator
+ *
+ * The function to replace the value from the map referenced by the iterator
+ *
+ * @param iter  Input iterator
+ * @param value New value to store in the map
+ * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
+ */
+
+extern iot_data_t * iot_data_map_iter_replace_value (iot_data_map_iter_t * iter, iot_data_t *value);
+
+/**
  * @brief Get Key from the map referenced by an input iterator
  *
  * The function to get string type key from the map referenced by an input iterator
@@ -808,7 +831,8 @@ extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * 
  * @brief Initialise iterator to an vector
  *
  * The function initialises an iterator to to point to an vector. Note that
- * the iterator is unsafe in that the vector cannot be modified when being iterated.
+ * the iterator is unsafe in that the vector cannot be modified when being iterated, other
+ * than by using the iot_data_vector_iter_replace_value() function.
  *
  * @param vector  Input vector
  * @param iter   Input iterator
@@ -846,6 +870,19 @@ extern uint32_t iot_data_vector_iter_index (const iot_data_vector_iter_t * iter)
  * @return       Pointer to a data value from the vector index pointed by iterator if valid, NULL otherwise
  */
 extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter_t * iter);
+
+/**
+ * @brief Replace Value from the vector at the index referenced by iterator
+ *
+ * The function to replace the value in the the vector at an index referenced by iterator. If iterator index exceeds
+ * the size of an vector, no replacement is made and NULL is returned.
+ *
+ * @param iter  Input iterator
+ * @param value New value to store in the vector
+ * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
+ */
+
+extern iot_data_t * iot_data_vector_iter_replace_value (iot_data_vector_iter_t * iter, iot_data_t *value);
 
 /**
  * @brief Get the value as string type from the vector at an index referenced by iterator

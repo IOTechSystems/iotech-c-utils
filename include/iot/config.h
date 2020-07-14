@@ -64,6 +64,26 @@ extern bool iot_config_f64 (const iot_data_t * map, const char * key, double * v
 extern bool iot_config_bool (const iot_data_t * map, const char * key, bool * val, iot_logger_t * logger);
 
 /**
+ * @brief Get mandatory map configuration value and log error if cannot be resolved.
+ *
+ * @param map Configuration map
+ * @param key Configuration key
+ * @param logger Logger used to log if configuration not found. If not set, default logger is used.
+ * @return Returned map or NULL if name could not be found in map or named map entry not a map.
+ */
+extern const iot_data_t * iot_config_map (const iot_data_t * map, const char * key, iot_logger_t * logger);
+
+/**
+ * @brief Get mandatory vector configuration value and log error if cannot be resolved.
+ *
+ * @param map Configuration map
+ * @param key Configuration key
+ * @param logger Logger used to log if configuration not found. If not set, default logger is used.
+ * @return Returned vector or NULL if name could not be found in map or named map entry not a vector.
+ */
+extern const iot_data_t * iot_config_vector (const iot_data_t * map, const char * key, iot_logger_t * logger);
+
+/**
  * @brief Get a mandatory component configuration and log error if cannot be resolved.
  *
  * @param map Configuration map
