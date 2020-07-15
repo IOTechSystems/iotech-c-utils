@@ -46,7 +46,7 @@ extern const char * iot_config_string (const iot_data_t * map, const char * key,
  *
  * @param map Configuration map
  * @param key Configuration key
- * @param def Default string returned if key could not be resolved
+ * @param def Default string returned if key could not be resolved (can be NULL)
  * @param alloc If true then allocate the returned string
  * @return Returned string value or the default if the key was not resolved
  */

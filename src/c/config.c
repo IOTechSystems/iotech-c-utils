@@ -62,7 +62,7 @@ extern const char * iot_config_string_default (const iot_data_t * map, const cha
   assert (map && key && def);
   const char * val = iot_data_string_map_get_string (map, key);
   if (val == NULL) val = def;
-  if (alloc) val = strdup (val);
+  if (alloc && val) val = strdup (val);
   return val;
 }
 

@@ -507,6 +507,8 @@ static void test_data_from_json (void)
   CU_ASSERT (sval != NULL)
   CU_ASSERT (strcmp (sval, "Hello") == 0)
   free ((void*) sval);
+  sval = iot_config_string_default (map, "Nope", NULL, true);
+  CU_ASSERT (sval == NULL)
 
   found = iot_config_f64 (map, "DB", &dval, NULL);
   CU_ASSERT (found)
