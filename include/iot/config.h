@@ -42,6 +42,17 @@ extern bool iot_config_i64 (const iot_data_t * map, const char * key, int64_t * 
 extern const char * iot_config_string (const iot_data_t * map, const char * key, bool alloc, iot_logger_t * logger);
 
 /**
+ * @brief Get mandatory configuration or default value if cannot be resolved.
+ *
+ * @param map Configuration map
+ * @param key Configuration key
+ * @param def Default string returned if key could not be resolved
+ * @param alloc If true then allocate the returned string
+ * @return Returned string value or the default if the key was not resolved
+ */
+extern const char * iot_config_string_default (const iot_data_t * map, const char * key, const char * def, bool alloc);
+
+/**
  * @brief Get mandatory double configuration value and log error if cannot be resolved.
  *
  * @param map Configuration map

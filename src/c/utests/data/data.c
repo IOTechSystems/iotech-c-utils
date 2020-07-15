@@ -500,6 +500,14 @@ static void test_data_from_json (void)
   sval = iot_config_string (map, "Sched", false, NULL);
   CU_ASSERT (sval == NULL)
 
+  sval = iot_config_string_default (map, "Scheduler", "Hello", false);
+  CU_ASSERT (sval != NULL)
+  CU_ASSERT (strcmp (sval, "scheduler") == 0)
+  sval = iot_config_string_default (map, "Nope", "Hello", true);
+  CU_ASSERT (sval != NULL)
+  CU_ASSERT (strcmp (sval, "Hello") == 0)
+  free ((void*) sval);
+
   found = iot_config_f64 (map, "DB", &dval, NULL);
   CU_ASSERT (found)
   CU_ASSERT (dval < 1.0)
