@@ -325,17 +325,21 @@ static void cunit_scheduler_reset (void)
   CU_ASSERT (scheduler != NULL)
 
   reset_counters ();
-  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work4, NULL,NULL, IOT_MS_TO_NS (1000), IOT_MS_TO_NS (100), 10, pool, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work4, NULL,NULL, IOT_MS_TO_NS (2000), IOT_MS_TO_NS (100), 10, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
 
-  sleep (2);
+  sleep (1);
+  iot_schedule_reset (scheduler, sched1);
+  sleep (1);
+  iot_schedule_reset (scheduler, sched1);
+  sleep (1);
   iot_schedule_reset (scheduler, sched1);
   sleep (1);
 
   iot_scheduler_stop (scheduler);
-  CU_ASSERT (atomic_load (&sum_test) == 2)
+  CU_ASSERT (atomic_load (&sum_test) == 1)
 
   iot_threadpool_free (pool);
   iot_scheduler_free (scheduler);
