@@ -5,6 +5,10 @@
 //
 #include "iot/thread.h"
 
+#ifdef _AZURESPHERE_
+#define geteuid() (0)
+#endif
+
 #ifdef __ZEPHYR__
 
 typedef struct zephyr_thread_wrap

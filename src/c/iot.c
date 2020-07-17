@@ -20,6 +20,8 @@ void iot_fini (void)
   iot_data_fini ();
 }
 
+#ifdef IOT_HAS_FILE
+
 char * iot_file_config_loader (const char * name, const char * uri)
 {
   char * ret = NULL;
@@ -60,3 +62,5 @@ char * iot_file_config_loader (const char * name, const char * uri)
   free (path);
   return ret;
 }
+
+#endif
