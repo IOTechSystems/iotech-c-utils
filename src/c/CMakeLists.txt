@@ -55,7 +55,7 @@ endif ()
 
 # Build modules
 
-if (IOT_BUULD_EXES)
+if (IOT_BUILD_EXES)
   add_subdirectory (examples)
   add_subdirectory (tests)
   add_subdirectory (cunit)
