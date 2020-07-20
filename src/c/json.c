@@ -27,11 +27,11 @@ static iot_json_tok_t * iot_json_alloc_token (iot_json_parser *parser, iot_json_
 /**
  * Fills token type and boundaries.
  */
-static inline void iot_json_fill_token (iot_json_tok_t * token, iot_json_type_t type, int32_t start, int32_t end)
+static inline void iot_json_fill_token (iot_json_tok_t * token, iot_json_type_t type, uint32_t start, uint32_t end)
 {
   token->type = type;
-  token->start = start;
-  token->end = end;
+  token->start = (int32_t) start;
+  token->end = (int32_t) end;
   token->size = 0;
 }
 
@@ -197,7 +197,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
           tokens[parser->toksuper].size++;
         }
         token->type = (c == '{' ? IOT_JSON_OBJECT : IOT_JSON_ARRAY);
-        token->start = parser->pos;
+        token->start = (int32_t) parser->pos;
         parser->toksuper = parser->toknext - 1;
         break;
       case '}': case ']':
@@ -214,7 +214,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
           {
             if (token->type != type) return IOT_JSON_ERROR_INVAL;
             parser->toksuper = -1;
-            token->end = parser->pos + 1;
+            token->end = (int32_t) (parser->pos + 1);
             break;
           }
         }
