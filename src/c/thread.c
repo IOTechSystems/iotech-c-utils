@@ -162,7 +162,9 @@ void iot_mutex_init (pthread_mutex_t * mutex)
   assert (mutex);
   pthread_mutexattr_t attr;
   pthread_mutexattr_init (&attr);
+#ifndef NDEBUG
   pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_ERRORCHECK);
+#endif
 #ifdef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
   pthread_mutexattr_setprotocol (&attr, PTHREAD_PRIO_INHERIT);
 #endif
