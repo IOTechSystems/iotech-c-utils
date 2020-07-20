@@ -18,7 +18,7 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DLINUX_SYS=AzureSphere \
   "${ROOT}/src"
 ninja | tee release.log
-ninja release
+ninja package
 
 mkdir -p "${BROOT}/debug"
 cd "${BROOT}/debug"
@@ -30,4 +30,4 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DLINUX_SYS=AzureSphere \
   "${ROOT}/src"
 ninja | tee debug.log
-ninja release
+ninja package
