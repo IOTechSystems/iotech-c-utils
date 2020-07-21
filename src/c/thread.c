@@ -120,7 +120,7 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   }
   pthread_attr_destroy (&attr);
 
-#ifdef _ALPINE_NOT_SET_
+#ifdef _ALPINE_
   if ((ret == 0) && (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN)))
   {
     cpu_set_t cpus;
@@ -167,7 +167,7 @@ void iot_mutex_init (pthread_mutex_t * mutex)
   pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_ERRORCHECK);
 #endif
 #ifdef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
-  pthread_mutexattr_setprotocol (&attr, PTHREAD_PRIO_INHERIT);
+  pthread_mutexattr_setprotocol (&attr, PTHREAD_PRIO_INHERIT); // Note: Supported on Alpine but broken
 #endif
   pthread_mutex_init (mutex, &attr);
   pthread_mutexattr_destroy (&attr);
