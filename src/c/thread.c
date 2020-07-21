@@ -120,13 +120,14 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   }
   pthread_attr_destroy (&attr);
 
-#if defined (_GNU_SOURCE) && defined (_ALPINE_)
+#ifdef _ALPINE_
   if ((ret == 0) && (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN)))
   {
     cpu_set_t cpus;
     CPU_ZERO (&cpus);
     CPU_SET (affinity, &cpus);
-    pthread_setaffinity_np (*tid, sizeof (cpu_set_t), &cpus);
+    ret = pthread_setaffinity_np (*tid, sizeof (cpu_set_t), &cpus);
+    if (ret != 0) iot_log_error (logger, "pthread_setaffinity_np failed ret: %d", ret);
   }
 #endif
 
