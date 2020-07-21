@@ -96,7 +96,7 @@ typedef struct iot_string_holder_t
 extern void iot_data_init (void);
 extern void iot_data_fini (void);
 
-#if defined (_GNU_SOURCE) || defined (__LIBMUSL__)
+#if defined (_GNU_SOURCE) || defined (_ALPINE_)
 #define IOT_HAS_SPINLOCK
 #endif
 

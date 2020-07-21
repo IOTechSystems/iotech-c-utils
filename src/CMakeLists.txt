@@ -1,7 +1,14 @@
-cmake_minimum_required (VERSION 3.1)
-project (IOT LANGUAGES C CXX)
+cmake_minimum_required (VERSION 3.10)
 set (CMAKE_C_STANDARD 11)
-set (CMAKE_CXX_STANDARD 11)
+
+if ("${LINUX_SYS}" STREQUAL "AzureSphere")
+  project (IOT LANGUAGES C)
+  azsphere_configure_tools (TOOLS_REVISION "20.04")
+  azsphere_configure_api (TARGET_API_SET "5")
+else ()
+  project (IOT LANGUAGES C CXX)
+  set (CMAKE_CXX_STANDARD 11)
+endif ()
 
 # Package support
 
@@ -19,6 +26,9 @@ string (REGEX REPLACE "^...." "" VERSION_PATCH ${IOT_DOT_VERSION})
 set (IOT_BUILD_COMPONENTS ON CACHE BOOL "Build component support")
 set (IOT_BUILD_DYNAMIC_LOAD ON CACHE BOOL "Build dynamic library load support")
 set (IOT_BUILD_LCOV OFF CACHE BOOL "Build LCov")
+set (IOT_BUILD_STATIC ON CACHE BOOL "Build static libraries")
+set (IOT_BUILD_SHARED ON CACHE BOOL "Build shared libraries")
+set (IOT_BUILD_EXES ON CACHE BOOL "Build executables")
 
 # Configure for different target systems
 
@@ -28,6 +38,13 @@ set (CPACK_GENERATOR TGZ)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set (CPACK_GENERATOR ZIP)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+  set (CPACK_GENERATOR TGZ)
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Generic")
+  if ("${LINUX_SYS}" STREQUAL "AzureSphere")
+    set (IOT_BUILD_SHARED OFF)
+    set (IOT_BUILD_DYNAMIC_LOAD OFF)
+    set (IOT_BUILD_EXES OFF)
+  endif ()
   set (CPACK_GENERATOR TGZ)
 else ()
   if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -99,7 +116,9 @@ message (STATUS "IOT ${IOT_DOT_VERSION} for ${CMAKE_SYSTEM_NAME} ${OS_ARCH} ${LI
 # Build modules
 
 add_subdirectory (c)
-add_subdirectory (cpp)
+if (NOT "${LINUX_SYS}" STREQUAL "AzureSphere")
+  add_subdirectory (cpp)
+endif ()
 
 # Documentation
 if (CMAKE_BUILD_TYPE MATCHES Release)
