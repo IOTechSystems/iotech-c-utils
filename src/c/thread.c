@@ -127,7 +127,7 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
     if (ret != 0)
     {
       iot_log_warn (logger, "pthread_setaffinity_np failed ret: %d", ret);
-      ret == 0; // As thread created do not return false, just warn
+      ret = 0; // As thread created do not return false, just warn
     }
   }
 #endif
