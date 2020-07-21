@@ -120,7 +120,7 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   }
   pthread_attr_destroy (&attr);
 
-#if defined (_GNU_SOURCE) && defined (__LIBMUSL__)
+#if defined (_GNU_SOURCE) && defined (_ALPINE_)
   if ((ret == 0) && (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN)))
   {
     cpu_set_t cpus;

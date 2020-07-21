@@ -16,7 +16,7 @@ if (DEFINED CMAKE_C_COMPILER_ID)
 endif ()
 
 if ("${LINUX_SYS}" STREQUAL "Alpine")
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_ALPINE_ -D__LIBMUSL__")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_ALPINE_")
 endif ()
 if ("${LINUX_SYS}" STREQUAL "AzureSphere")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_AZURESPHERE_")

@@ -31,10 +31,9 @@
 #endif
 
 #ifdef _AZURESPHERE_
-#undef IOT_HAS_PRCTL
-#undef IOT_HAS_PR_GET_NAME
-#undef IOT_HAS_FILE
 #undef IOT_HAS_CPU_AFFINITY
+#undef IOT_HAS_PRCTL
+#undef IOT_HAS_FILE
 #endif
 
 #endif
