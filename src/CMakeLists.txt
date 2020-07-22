@@ -1,14 +1,14 @@
-cmake_minimum_required (VERSION 3.10)
-set (CMAKE_C_STANDARD 11)
-
 if ("${LINUX_SYS}" STREQUAL "AzureSphere")
+  cmake_minimum_required (VERSION 3.10)
   project (IOT LANGUAGES C)
   azsphere_configure_tools (TOOLS_REVISION "20.04")
   azsphere_configure_api (TARGET_API_SET "5")
 else ()
+  cmake_minimum_required (VERSION 3.1)
   project (IOT LANGUAGES C CXX)
   set (CMAKE_CXX_STANDARD 11)
 endif ()
+set (CMAKE_C_STANDARD 11)
 
 # Package support
 
