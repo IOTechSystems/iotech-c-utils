@@ -128,7 +128,7 @@ static void * iot_scheduler_thread (void * arg)
         /* Post the work to the thread pool or run as thread */
         if (current->threadpool)
         {
-          iot_log_debug (scheduler->logger, "Running schedule from threadpool");
+          iot_log_trace (scheduler->logger, "Running schedule from threadpool");
           if (! iot_threadpool_try_work (current->threadpool, current->function, current->arg, current->priority))
           {
             if (atomic_fetch_add (&current->dropped, 1u) == 0)
@@ -139,7 +139,7 @@ static void * iot_scheduler_thread (void * arg)
         }
         else
         {
-          iot_log_debug (scheduler->logger, "Running schedule as thread");
+          iot_log_trace (scheduler->logger, "Running schedule as thread");
           iot_thread_create (NULL, current->function, current->arg, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger);
         }
 
@@ -152,19 +152,19 @@ static void * iot_scheduler_thread (void * arg)
           /* If the number of repetitions has just become 0 */
           if (current->repeat == 0)
           {
-            iot_log_debug (scheduler->logger, "Move Schedule to idle queue");
+            iot_log_trace (scheduler->logger, "Move Schedule to idle queue");
             iot_schedule_requeue (queue, idle_queue, current);
             current->scheduled = false;
           }
           else
           {
-            iot_log_debug (scheduler->logger, "Re-queue schedule");
+            iot_log_trace (scheduler->logger, "Re-queue schedule");
             iot_schedule_requeue (queue, queue, current);
           }
         }
         else
         {
-          iot_log_debug (scheduler->logger, "Re-schedule schedule");
+          iot_log_trace (scheduler->logger, "Re-schedule schedule");
           iot_schedule_requeue (queue, queue, current);
         }
         ns = (queue->length > 0) ? queue->front->start : (getTimeAsUInt64 () + IOT_SCHEDULER_DEFAULT_WAKE);
