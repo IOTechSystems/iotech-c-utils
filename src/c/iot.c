@@ -24,33 +24,35 @@ void iot_fini (void)
   iot_data_fini ();
 }
 
-#ifdef IOT_HAS_FILE
-
 char * iot_file_config_loader (const char * name, const char * uri)
 {
-  char * ret = NULL;
-  char * path;
-  size_t size;
-  size_t items;
-  FILE * fd;
-
   assert (name);
-  size = strlen (name) + 6;
-  if (uri) size += strlen (uri) + 1;
-  path = malloc (size);
+
+  char * ret;
+  char *  path = malloc (strlen (name) + ((uri) ? (strlen (uri) + 7) : 6));
+  path[0] = '\0';
 
   if (uri)
   {
     strcpy (path, uri);
     strcat (path, "/");
-    strcat (path, name);
   }
-  else
-  {
-    strcpy (path, name);
-  }
+  strcat (path, name);
   strcat (path, ".json");
-  fd = fopen (path, "r");
+  ret = iot_file_read (path);
+  free (path);
+  return ret;
+}
+
+#ifdef IOT_HAS_FILE
+
+char * iot_file_read (const char * path)
+{
+  char * ret = NULL;
+  size_t size;
+  size_t items;
+
+  FILE * fd = fopen (path, "r");
   if (fd)
   {
     fseek (fd, 0, SEEK_END);
@@ -63,41 +65,40 @@ char * iot_file_config_loader (const char * name, const char * uri)
     ret[size] = 0;
     fclose (fd);
   }
-  free (path);
   return ret;
 }
 #else
 #ifdef _AZURESPHERE_
-char * iot_file_config_loader (const char * name, const char * uri)
+
+#define IOT_MALLOC_BLOCK_SIZE 512
+
+char * iot_file_read (const char * path)
 {
-  assert (name);
-
-  char * ret = NULL;
-  size_t size = strlen (name) + ((uri) ? (strlen (uri) + 7) : 6);
-  char *  path = calloc (1, size);
-
-  if (uri)
-  {
-    strcpy (path, uri);
-    strcat (path, "/");
-  }
-  strcat (path, name);
-  strcat (path, ".json");
+  char * str = NULL;
   int fd = Storage_OpenFileInImagePackage (path);
   if (fd != -1)
   {
-    ret = calloc (1, 1024);
-    ssize_t no = read (fd, ret, 1024);
-    Log_Debug ("Config: %s %d : %s\n", path, no, ret);
+    ssize_t ret;
+    char * ptr;
+    size_t size = 0;
+    do
+    {
+      str = realloc (str, size + IOT_MALLOC_BLOCK_SIZE);
+      ptr = str + size;
+      memset (ptr, 0, IOT_MALLOC_BLOCK_SIZE);
+      ret = read (fd, ptr, IOT_MALLOC_BLOCK_SIZE);
+      size += IOT_MALLOC_BLOCK_SIZE;
+    }
+    while (ret == IOT_MALLOC_BLOCK_SIZE);
     close (fd);
   }
   else
   {
-    Log_Debug ("Error opening config: %s %s (%d)\n", path, strerror (errno), errno);
+    Log_Debug ("Error opening file: %s %s (%d)\n", path, strerror (errno), errno);
   }
-
-  free (path);
-  return ret;
+  Log_Debug ("READ: %s\n", str);
+  return str;
 }
+
 #endif
 #endif
