@@ -96,7 +96,6 @@ char * iot_file_read (const char * path)
   {
     Log_Debug ("Error opening file: %s %s (%d)\n", path, strerror (errno), errno);
   }
-  Log_Debug ("READ: %s\n", str);
   return str;
 }
 
