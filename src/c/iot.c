@@ -44,13 +44,17 @@ char * iot_file_config_loader (const char * name, const char * uri)
   return ret;
 }
 
-#ifdef IOT_HAS_FILE
-
 char * iot_file_read (const char * path)
 {
-  char * ret = NULL;
-  size_t size;
-  size_t items;
+  return (char*) iot_file_read_binary (path, NULL);
+}
+
+#ifdef IOT_HAS_FILE
+
+uint8_t * iot_file_read_binary (const char * path, size_t * len)
+{
+  uint8_t * ret = NULL;
+  size_t size = 0;
 
   FILE * fd = fopen (path, "r");
   if (fd)
@@ -58,13 +62,14 @@ char * iot_file_read (const char * path)
     fseek (fd, 0, SEEK_END);
     size = ftell (fd);
     rewind (fd);
-    ret = malloc (size + 1);
-    items = fread (ret, size, 1, fd);
+    ret = malloc (size + 1); // Allocate extra byte so can be NULL terminated if a string
+    size_t items = fread (ret, size, 1, fd);
     assert (items == 1);
     (void) items;
-    ret[size] = 0;
+    ret[size] = 0; // String NULL terminator
     fclose (fd);
   }
+  if (len) *len = size;
   return ret;
 }
 #else
@@ -72,31 +77,36 @@ char * iot_file_read (const char * path)
 
 #define IOT_MALLOC_BLOCK_SIZE 512
 
-char * iot_file_read (const char * path)
+uint8_t * iot_file_read_binary (const char * path, size_t * len)
 {
-  char * str = NULL;
+  uint8_t * buff = NULL;
   int fd = Storage_OpenFileInImagePackage (path);
   if (fd != -1)
   {
     ssize_t ret;
-    char * ptr;
+    uint8_t * ptr;
     size_t size = 0;
-    do
+    while (true)
     {
-      str = realloc (str, size + IOT_MALLOC_BLOCK_SIZE);
-      ptr = str + size;
+      buff = realloc (buff, size + IOT_MALLOC_BLOCK_SIZE);
+      ptr = buff + size;
       memset (ptr, 0, IOT_MALLOC_BLOCK_SIZE);
       ret = read (fd, ptr, IOT_MALLOC_BLOCK_SIZE);
+      if (ret < IOT_MALLOC_BLOCK_SIZE)
+      {
+        if (len) *len = size;
+        break;
+      }
       size += IOT_MALLOC_BLOCK_SIZE;
     }
-    while (ret == IOT_MALLOC_BLOCK_SIZE);
     close (fd);
   }
   else
   {
+    if (len) *len = 0;
     Log_Debug ("Error opening file: %s %s (%d)\n", path, strerror (errno), errno);
   }
-  return str;
+  return buff;
 }
 
 #endif

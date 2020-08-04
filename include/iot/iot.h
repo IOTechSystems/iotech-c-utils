@@ -52,12 +52,23 @@ extern char * iot_file_config_loader (const char * name, const char * uri);
 /**
  * @brief Load string from a file
  *
- * The function to load a file contents into a string
+ * Function to return file contents as a NULL terminated string
  *
  * @param path  File path
  * @return      String loaded from the file (client needs to free)
  */
 extern char * iot_file_read (const char * path);
+
+/**
+ * @brief Load binary data from a file
+ *
+ * Function to load return a binary array of file contents
+ *
+ * @param path  File path
+ * @param len   Length of returned binary array
+ * @return      Binary contents of file (client needs to free)
+ */
+extern uint8_t * iot_file_read_binary (const char * path, size_t * len);
 
 #ifdef __cplusplus
 }
