@@ -90,7 +90,7 @@ static void * iot_threadpool_thread (void * arg)
     if (first) // Pull job from queue
     {
       iot_job_t job = *first;
-      iot_log_debug (pool->logger, "Thread processing job #%u", job.id);
+      iot_log_trace (pool->logger, "Thread processing job #%u", job.id);
       pool->front = first->prev;
       first->prev = pool->cache;
       pool->cache = first;
@@ -114,7 +114,7 @@ static void * iot_threadpool_thread (void * arg)
         }
       }
       (job.function) (job.arg); // Run job
-      iot_log_debug (pool->logger, "Thread completed job #%u", job.id);
+      iot_log_trace (pool->logger, "Thread completed job #%u", job.id);
       iot_component_lock (comp);
       if (--pool->working == 0)
       {
@@ -123,7 +123,7 @@ static void * iot_threadpool_thread (void * arg)
     }
     else
     {
-      iot_log_debug (pool->logger, "Thread waiting for new job");
+      iot_log_trace (pool->logger, "Thread waiting for new job");
       pthread_cond_wait (&pool->job_cond, &comp->mutex); // Wait for new job
     }
     iot_component_unlock (comp);
@@ -190,7 +190,7 @@ static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void * (*fu
   job->priority = prio;
   job->prev = NULL;
   job->id = pool->next_id++;
-  iot_log_debug (pool->logger, "Added new job #%u", job->id);
+  iot_log_trace (pool->logger, "Added new job #%u", job->id);
 
   if (job->priority != IOT_THREAD_NO_PRIORITY) // Order job by priority
   {

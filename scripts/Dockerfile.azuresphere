@@ -1,4 +1,4 @@
-FROM iotechsys/azuresphere-builder:20.06
+FROM iotechsys/azuresphere-builder:20.07
 MAINTAINER IOTech <support@iotechsys.com>
 COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/

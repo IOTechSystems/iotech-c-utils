@@ -44,6 +44,7 @@ typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t
 
 /* Default set of supported logger implementation functions */
 
+#ifdef IOT_HAS_FILE
 /**
  * @brief Log message to a file
  *
@@ -53,6 +54,7 @@ typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t
  * @param message    Log message
  */
 extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
+#endif
 
 /**
  * @brief Log message to console
@@ -78,7 +80,6 @@ typedef struct iot_logger_t
   struct iot_logger_t * next;     /**< Pointer to next logger structure */
 } iot_logger_t;
 
-/* Logger lifecycle functions */
 /**
  * @brief Allocate memory and initialize logger component with the custom log function
  *
