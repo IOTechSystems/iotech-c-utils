@@ -62,7 +62,7 @@ extern char * iot_file_read (const char * path);
 /**
  * @brief Load binary data from a file
  *
- * Function to load return a binary array of file contents
+ * Function to return a binary array of file contents
  *
  * @param path  File path
  * @param len   Length of returned binary array
