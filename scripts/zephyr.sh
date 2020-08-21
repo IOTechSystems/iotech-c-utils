@@ -3,7 +3,7 @@ set -e -x
 
 ROOT=$(dirname $(dirname $(readlink -f $0)))
 BROOT=${ROOT}/x86_64
-TARGETS="frdm_k64f native_posix acrn"
+TARGETS="frdm_k64f qemu_x86 acrn"
 
 if [ -z "${TARGET}" ] || [ "${TARGET}" = "None" ]
 then
@@ -26,6 +26,10 @@ do
     ;;
     -v2.2)
       export ZEPHYR_22=ON
+      shift 1
+    ;;
+    -v2.3)
+      export ZEPHYR_23=ON
       shift 1
     ;;
     *)

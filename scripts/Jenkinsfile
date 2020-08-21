@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-systems_x86_64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','centos-8','centos-7','fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30','zephyr-2.2','zephyr-1.14','clearlinux', 'azuresphere'] as String[]
+systems_x86_64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','centos-8','centos-7','fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30','zephyr-2.3','zephyr-2.2','zephyr-1.14','clearlinux', 'azuresphere'] as String[]
 systems_arm64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','centos-8','centos-7','fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30'] as String[]
 systems_arm32 = ['ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','opensuse-15.2','opensuse-15.1'] as String[]
 systems_i586 = ['seawolf']
@@ -228,7 +228,7 @@ def publishRpms (arch)
 
 def publishTars (arch)
 {
-  def tars_x86_64 = ['alpine-3.12','alpine-3.11', 'alpine-3.10','alpine-3.9','zephyr-2.2','zephyr-1.14','clearlinux','azuresphere']
+  def tars_x86_64 = ['alpine-3.12','alpine-3.11', 'alpine-3.10','alpine-3.9','zephyr-2.3','zephyr-2.2','zephyr-1.14','clearlinux','azuresphere']
   def tars_arm64 = ['alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9']
   def tars_arm32 = ['alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9']
   def tars_i586 = ['seawolf']
@@ -358,9 +358,9 @@ pipeline
   parameters
   {
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
-    choice (name: 'System', choices: ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','centos-8', 'centos-7','fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30','zephyr-2.2','zephyr-1.14','clearlinux','seawolf','azuresphere','all'], description: 'System to Build')
+    choice (name: 'System', choices: ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','centos-8', 'centos-7','fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30','zephyr-2.3','zephyr-2.2','zephyr-1.14','clearlinux','seawolf','azuresphere','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','arm64','arm32', 'i586', 'all'], description: 'Build Host Architecture')
-    choice (name: 'Board', choices: ['None','frdm_k64f','native_posix','acrn','all'], description: 'Target Board')
+    choice (name: 'Board', choices: ['None','frdm_k64f','qemu_x86','acrn','all'], description: 'Target Board')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
   }
   stages { stage ('All') { steps { script { parallel buildMap }}}}
