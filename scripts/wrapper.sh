@@ -1,6 +1,8 @@
 #!/bin/sh
 set -x
 
+CMD="$@"
+
 resolvelink ()
 {
   if [ ! -L "$1" ]
@@ -17,35 +19,47 @@ resolvelink ()
 ARCH=$(uname -m)
 ROOT=$(dirname $(dirname $(resolvelink $0)))
 
-case ${ARCH} in
-  armv6l)
-    BROOT=${ROOT}/arm32
-  ;;
-  armv7l)
-    BROOT=${ROOT}/arm32
-  ;;
-  aarch64)
-    BROOT=${ROOT}/arm64
-  ;;
-  x86_64)
-    if [ -f /etc/redhat-release ] && [ $(grep -c Seawolf /etc/redhat-release) = 1 ]
-    then
-      BROOT=${ROOT}/i586
-    else
-      BROOT=${ROOT}/x86_64
-    fi
-  ;;
-  *)
-    echo "Unsupported: ${ARCH}"
-    exit 2
-  ;;
-esac
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -barch)
+      shift 1
+      BARCH=$1
+      shift 1
+    ;;
+    *)
+      shift 1
+    ;;
+  esac
+done
 
-mkdir -p ${BROOT}
-$@ -broot ${BROOT}
+if [ -z "${BARCH}" ]
+then
+  case ${ARCH} in
+    armv6l)
+      BARCH=arm32
+    ;;
+    armv7l)
+      BARCH=arm32
+    ;;
+    aarch64)
+      BARCH=arm64
+    ;;
+    x86_64)
+      BARCH=x86_64
+    ;;
+    *)
+      echo "Unsupported: ${ARCH}"
+      exit 2
+    ;;
+  esac
+fi
+
+mkdir -p "${ROOT}/${BARCH}"
+${CMD} -root ${ROOT} -barch ${BARCH}
 RET=$?
 
 # Allow deletion of generated files in mounted volume
 
-chmod -R a+rw ${BROOT}
+chmod -R a+rw "${ROOT}/${BARCH}"
 exit ${RET}
