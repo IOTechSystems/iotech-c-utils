@@ -4,8 +4,9 @@ systems_x86_64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','al
 systems_arm64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','centos-8','centos-7','fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30'] as String[]
 systems_arm32 = ['ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','opensuse-15.2','opensuse-15.1'] as String[]
 systems_i586 = ['seawolf']
-targets = ['x86_64', 'arm64', 'arm32', 'i586'] as String[]
-systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32, i586: systems_i586]
+systems_x86 = ['alpine-3.12']
+targets = ['x86_64','arm64','arm32','i586','x86'] as String[]
+systemMap = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32, i586: systems_i586, x86: systems_x86]
 releaseType = ['None':'dev', 'Release':'release', 'Development':'dev']
 
 def checkoutStage (arch)
@@ -17,6 +18,7 @@ def checkoutStage (arch)
 
 def buildStage (systems, arch)
 {
+  def archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', i586: 'x86', x86: 'x86']
   def sys = getSystemParam ()
   def board = getBoardParam ()
   def nat = getNativeParam ()
@@ -31,7 +33,7 @@ def buildStage (systems, arch)
       }
       else
       {
-        sh (script: "./scripts/docker.sh ${system} ${arch} ${board}")
+        sh (script: "./scripts/docker.sh ${system} ${archs[arch]} ${board}")
       }
     }
   }
@@ -57,10 +59,10 @@ def archiveStage (arch)
   def archive = getArchiveParam ()
   if ("${archive}" != 'None')
   {
+    publishTars (arch)
     publishDebs (arch)
     publishApks (arch)
     publishRpms (arch)
-    publishTars (arch)
   }
 }
 
@@ -135,7 +137,8 @@ def publishDebs (arch)
   def debs_arm64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9']
   def debs_arm32 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9']
   def debs_i586 = []
-  def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32, i586: debs_i586]
+  def debs_x86 = []
+  def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32, i586: debs_i586, x86: debs_x86]
   def deb_archs = [x86_64: 'amd64', arm64: 'arm64', arm32: 'armhf']
   def deb_name = ['ubuntu-20.04':'focal','ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-10':'buster','debian-9':'stretch']
   def debs = deb_lists[arch]
@@ -170,9 +173,12 @@ def publishApks (arch)
   def apks_arm64 = ['alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9']
   def apks_arm32 = ['alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9']
   def apks_i586 = []
-  def apk_lists = [x86_64: apks_x86_64, arm64: apks_arm64, arm32: apks_arm32, i586: apks_i586]
-  def apk_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7']
+  def apks_x86 = ['alpine-3.12']
+  def apk_lists = [x86_64: apks_x86_64, arm64: apks_arm64, arm32: apks_arm32, i586: apks_i586, x86: apks_x86]
+  def apk_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', i586: 'x86', x86: 'x86']
+  def host_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', i586: 'i586', x86: 'x86']
   def apk_arch = apk_archs[arch]
+  def harch = host_archs[arch]
   def apks = apk_lists[arch]
   def sys = getSystemParam ()
 
@@ -180,7 +186,7 @@ def publishApks (arch)
   {
     if ("${sys}" == "${apks[i]}" || "${sys}" == 'all')
     {
-      sh "./scripts/package.sh ${apks[i]} ${arch} ${apk_arch}"
+      sh "./scripts/package.sh ${apks[i]} ${apk_arch}"
       def uploadSpec = """{"files":[
       {
         "pattern": "apk/${apks[i]}/packager/${apk_arch}/*.apk",
@@ -199,7 +205,8 @@ def publishRpms (arch)
   def rpms_arm64 = ['fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30','centos-8', 'centos-7']
   def rpms_arm32 = ['opensuse-15.2','opensuse-15.1']
   def rpms_i586 = []
-  def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32, i586: rpms_i586]
+  def rpms_x86 = []
+  def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32, i586: rpms_i586, x86: rpms_x86]
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def rpms = rpm_lists[arch]
   def sys = getSystemParam ()
@@ -232,8 +239,9 @@ def publishTars (arch)
   def tars_arm64 = ['alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9']
   def tars_arm32 = ['alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9']
   def tars_i586 = ['seawolf']
-  def tar_lists = [x86_64: tars_x86_64, arm64: tars_arm64, arm32: tars_arm32, i586: tars_i586]
-  def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', i586: 'i586']
+  def tars_x86 = ['alpine-3.12']
+  def tar_lists = [x86_64: tars_x86_64, arm64: tars_arm64, arm32: tars_arm32, i586: tars_i586, x86: tars_x86]
+  def tar_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', i586: 'i586', x86: 'x86']
   def tars = tar_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
@@ -244,12 +252,12 @@ def publishTars (arch)
     {
       def uploadSpec = """{"files":[
       {
-        "pattern": "${arch}/${tars[i]}/release/iotech-iot*.tar.gz",
+        "pattern": "${tar_archs[arch]}/${tars[i]}/release/iotech-iot*.tar.gz",
         "target": "generic-${releaseType[archive]}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       },
       {
-        "pattern": "${arch}/${tars[i]}/debug/iotech-iot-dev*.tar.gz",
+        "pattern": "${tar_archs[arch]}/${tars[i]}/debug/iotech-iot-dev*.tar.gz",
         "target": "generic-${releaseType[archive]}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
@@ -359,7 +367,7 @@ pipeline
   {
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
     choice (name: 'System', choices: ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.11','alpine-3.10','alpine-3.9','debian-10','debian-9','centos-8', 'centos-7','fedora-31','fedora-30','opensuse-15.2','opensuse-15.1','photon-30','zephyr-2.3','zephyr-2.2','zephyr-1.14','clearlinux','seawolf','azuresphere','all'], description: 'System to Build')
-    choice (name: 'Arch', choices: ['x86_64','arm64','arm32', 'i586', 'all'], description: 'Build Host Architecture')
+    choice (name: 'Arch', choices: ['x86_64','x86','arm64','arm32', 'i586', 'all'], description: 'Build Host Architecture')
     choice (name: 'Board', choices: ['None','frdm_k64f','qemu_x86','acrn','all'], description: 'Target Board')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
   }

@@ -111,6 +111,9 @@ else ()
     endif ()
   endif ()
 endif ()
+if (IOT_ARCH)
+  set (OS_ARCH ${IOT_ARCH})
+endif ()
 message (STATUS "IOT ${IOT_DOT_VERSION} for ${CMAKE_SYSTEM_NAME} ${OS_ARCH} ${LINUX_SYS}")
 
 # Build modules

@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e -x
 
-ROOT=$(dirname $(dirname $(readlink -f $0)))
 ARCH=$(uname -m)
 
 UTEST=false
@@ -37,9 +36,14 @@ do
       LCOV=true
       shift 1
     ;;
-    -broot)
+    -barch)
       shift 1
-      BROOT=$1
+      BARCH=$1
+      shift 1
+    ;;
+    -root)
+      shift 1
+      ROOT=$1
       shift 1
     ;;
     *)
@@ -48,11 +52,13 @@ do
   esac
 done
 
+BROOT="${ROOT}/${BARCH}"
+
 # Release build
 
 mkdir -p ${BROOT}/release
 cd ${BROOT}/release
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release -DIOT_ARCH=${BARCH} ${ROOT}/src
 make 2>&1 | tee release.log
 make package
 
@@ -60,7 +66,7 @@ make package
 
 mkdir -p ${BROOT}/debug
 cd ${BROOT}/debug
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_ARCH=${BARCH} ${ROOT}/src
 make 2>&1 | tee debug.log
 make package
 
@@ -78,15 +84,14 @@ run_examples ()
 }
 
 # Unit tests
-
-if [ "$UTEST" = "true" ]
+if [ "${UTEST}" = "true" ]
 then
   cd ${BROOT}/release
   c/utests/runner/runner -a -j
 fi
 
 # Run examples
-if [ "$EXAMPLES" = "true" ]
+if [ "${EXAMPLES}" = "true" ]
 then
   cd ${BROOT}/release/c/examples
   run_examples
@@ -98,7 +103,7 @@ fi
 
 # Coverage
 
-if [ "$LCOV" = "true" ]
+if [ "${LCOV}" = "true" ]
 then
 
   # Build with profiling enabled
@@ -125,7 +130,7 @@ fi
 
 # Run cppcheck if configured
 
-if [ "$CPPCHK" = "true" ]
+if [ "${CPPCHK}" = "true" ]
 then
   cd ${ROOT}
   cppcheck -DNDEBUG -D_GNU_SOURCE --std=c11 --xml --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
@@ -133,7 +138,7 @@ fi
 
 # Valgrind
 
-if [ "$VALG" = "true" ]
+if [ "${VALG}" = "true" ]
 then
   cd ${BROOT}/debug
   VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
@@ -142,6 +147,6 @@ then
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler/scheduler
   valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data/data
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container/container
-  valgrind $VG_FLAGS $VG_SUPP --xml-file=dynamic_vg.xml c/examples/dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
+  valgrind $VG_FLAGS ${VG_SUPP} --xml-file=dynamic_vg.xml c/examples/dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
 fi
