@@ -636,7 +636,7 @@ extern bool iot_data_string_map_get_bool (const iot_data_t * map, const char * k
 /**
  * @brief Get double value corresponding to key from a map
  *
- * The function to get bool value corresponding to key from the map, if the value type is IOT_DATA_FLOAT64, else return default_val
+ * The function to get double value corresponding to key from the map, if the value type is IOT_DATA_FLOAT64, else return default_val
  *
  * @param map          Map from which get a value
  * @param key          String key for the value
@@ -644,6 +644,17 @@ extern bool iot_data_string_map_get_bool (const iot_data_t * map, const char * k
  * @return             Double value corresponding to the key, else default_val
  */
 extern double iot_data_string_map_get_f64 (const iot_data_t * map, const char * key, double default_val);
+
+/**
+ * @brief Get vector corresponding to key from a string map
+ *
+ * The function to get a vector corresponding to key from the map, if the type value is not IOT_DATA_VECTOR then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          String key for the value
+ * @return             Vector found by key in the map. NULL if not found or not a vector.
+ */
+extern const iot_data_t * iot_data_string_map_get_vector (const iot_data_t * map, const char * key);
 
 /**
  * @brief  Get the key type of map
