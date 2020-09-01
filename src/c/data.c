@@ -780,6 +780,12 @@ const iot_data_t * iot_data_string_map_get_vector (const iot_data_t * map, const
   return ((data && (iot_data_type (data) == IOT_DATA_VECTOR)) ? data : NULL);
 }
 
+const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, const char * key)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_MAP)) ? data : NULL);
+}
+
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 {
   assert (map);

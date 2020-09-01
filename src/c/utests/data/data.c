@@ -536,6 +536,8 @@ static void test_data_from_json (void)
   CU_ASSERT (map2 != NULL)
   map2 = iot_config_map (map, "umbers", NULL);
   CU_ASSERT (map2 == NULL)
+  map2 = iot_data_string_map_get_map (map, "Numbers");
+  CU_ASSERT (map2 != NULL)
 
   const iot_data_t * vec = iot_data_string_map_get_vector (map, "Vector");
   CU_ASSERT (vec != NULL)

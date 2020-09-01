@@ -657,6 +657,16 @@ extern double iot_data_string_map_get_f64 (const iot_data_t * map, const char * 
 extern const iot_data_t * iot_data_string_map_get_vector (const iot_data_t * map, const char * key);
 
 /**
+ * @brief Get map corresponding to key from a string map
+ *
+ * The function to get a map corresponding to key from the map, if the type value is not IOT_DATA_MAP then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          String key for the value
+ * @return             Map found by key in the map. NULL if not found or not a map.
+ */
+extern const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, const char * key);
+/**
  * @brief  Get the key type of map
  *
  * The function to get the key type of the input map
