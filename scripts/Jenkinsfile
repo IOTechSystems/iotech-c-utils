@@ -33,7 +33,7 @@ def buildStage (systems, arch)
       }
       else
       {
-        sh (script: "./scripts/docker.sh ${system} ${archs[arch]} ${board}")
+        sh (script: "./scripts/docker.sh ${system} ${arch} ${board}")
       }
     }
   }
