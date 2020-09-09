@@ -92,7 +92,7 @@ static iot_data_t * iot_component_config_to_map (const char * config, iot_logger
       {
         if ((end = strchr (start, '}'))) // Look for "}"
         {
-          size_t len = (end - start) - 2;
+          size_t len = (size_t) ((end - start) - 2);
           strncpy (key, start + 2, len);
           key[len] = '\0';
           const char * env = getenv (key);

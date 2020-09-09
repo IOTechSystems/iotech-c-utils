@@ -477,6 +477,7 @@ static void test_data_from_json (void)
     "\"Dummy\": null,"
     "\"Boolean\":true,"
     "\"Numbers\":{ \"One\":1, \"Two\":2, \"Three\":3 },"
+    "\"Vector\":[ \"A\",\"B\"],"
     "\"DB\":0.5"
   "}";
   bool bval = false;
@@ -535,6 +536,11 @@ static void test_data_from_json (void)
   CU_ASSERT (map2 != NULL)
   map2 = iot_config_map (map, "umbers", NULL);
   CU_ASSERT (map2 == NULL)
+  map2 = iot_data_string_map_get_map (map, "Numbers");
+  CU_ASSERT (map2 != NULL)
+
+  const iot_data_t * vec = iot_data_string_map_get_vector (map, "Vector");
+  CU_ASSERT (vec != NULL)
 
   iot_data_free (map);
 }

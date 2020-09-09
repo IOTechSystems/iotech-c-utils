@@ -1,9 +1,13 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2020 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
 #include "iot/thread.h"
+
+#ifdef _AZURESPHERE_
+#define geteuid() (0)
+#endif
 
 #ifdef __ZEPHYR__
 
@@ -62,10 +66,7 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
     CPU_ZERO (&cpus);
     CPU_SET (affinity, &cpus);
     ret = pthread_attr_setaffinity_np (&attr, sizeof (cpu_set_t), &cpus);
-    if (ret != 0)
-    {
-      iot_log_warn (logger, "pthread_attr_setaffinity_np failed ret: %d", ret);
-    }
+    if (ret != 0) iot_log_warn (logger, "pthread_attr_setaffinity_np failed ret: %d", ret);
   }
 #endif
 
@@ -116,13 +117,18 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   }
   pthread_attr_destroy (&attr);
 
-#if defined (_GNU_SOURCE) && defined (__LIBMUSL__)
+#ifdef _ALPINE_
   if ((ret == 0) && (affinity > -1 && affinity < sysconf (_SC_NPROCESSORS_ONLN)))
   {
     cpu_set_t cpus;
     CPU_ZERO (&cpus);
     CPU_SET (affinity, &cpus);
-    pthread_setaffinity_np (*tid, sizeof (cpu_set_t), &cpus);
+    ret = pthread_setaffinity_np (*tid, sizeof (cpu_set_t), &cpus);
+    if (ret != 0)
+    {
+      iot_log_warn (logger, "pthread_setaffinity_np failed ret: %d", ret);
+      ret = 0; // As thread created do not return false, just warn
+    }
   }
 #endif
 
@@ -158,9 +164,11 @@ void iot_mutex_init (pthread_mutex_t * mutex)
   assert (mutex);
   pthread_mutexattr_t attr;
   pthread_mutexattr_init (&attr);
+#ifndef NDEBUG
   pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_ERRORCHECK);
+#endif
 #ifdef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
-  pthread_mutexattr_setprotocol (&attr, PTHREAD_PRIO_INHERIT);
+  pthread_mutexattr_setprotocol (&attr, PTHREAD_PRIO_INHERIT); // Note: Supported on Alpine but broken
 #endif
   pthread_mutex_init (mutex, &attr);
   pthread_mutexattr_destroy (&attr);

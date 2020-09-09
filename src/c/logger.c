@@ -8,7 +8,7 @@
 #include "iot/container.h"
 #include <stdarg.h>
 
-#if defined (__linux__)
+#ifdef IOT_HAS_PRCTL
 #include <sys/prctl.h>
 #endif
 
@@ -17,6 +17,9 @@ static time_t time (time_t *t)
 {
   return k_uptime_get () / 1000;
 }
+#endif
+#ifdef _AZURESPHERE_
+#include <applibs/log.h>
 #endif
 
 #define IOT_PRCTL_NAME_MAX 16
@@ -163,14 +166,19 @@ iot_logger_t * iot_logger_next (iot_logger_t * logger)
 static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_loglevel_t level, time_t timestamp, const char *message)
 {
   char tname[IOT_PRCTL_NAME_MAX] = { 0 };
-#ifdef IOT_HAS_PR_GET_NAME
+#ifdef IOT_HAS_PRCTL
   prctl (PR_GET_NAME, tname);
 #endif
   iot_component_lock (&logger->component);
+#ifdef _AZURESPHERE_
+  Log_Debug ("[%s:%" PRIu64 ":%s:%s] %s\n", tname, (uint64_t) timestamp, logger->name ? logger->name : "default", iot_log_levels[level], message);
+#else
   fprintf (fd, "[%s:%" PRIu64 ":%s:%s] %s\n", tname, (uint64_t) timestamp, logger->name ? logger->name : "default", iot_log_levels[level], message);
+#endif
   iot_component_unlock (&logger->component);
 }
 
+#ifdef IOT_HAS_FILE
 void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
   FILE * fd = fopen (logger->to, "a");
@@ -180,6 +188,7 @@ void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp
     fclose (fd);
   }
 }
+#endif
 
 extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
 {
@@ -216,11 +225,13 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   iot_loglevel_t level = iot_logger_config_level (map);
   const char * to = iot_data_string_map_get_string (map, "To");
 
+#ifdef IOT_HAS_FILE
   if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
   {
     impl = iot_log_file; /* Log to file */
     to += 5;
   }
+#endif
   next = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Next"));
   self_start = iot_data_string_map_get_bool (map, "Start", false);
   logger = iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next, self_start);

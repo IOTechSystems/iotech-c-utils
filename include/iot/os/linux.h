@@ -15,12 +15,27 @@
 #include <sched.h>
 #include <unistd.h>
 
-#ifndef _REDHAT_SEAWOLF_
-#ifndef __LIBMUSL__
 #define IOT_HAS_CPU_AFFINITY
 #define IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
+#define IOT_HAS_PRCTL
+#define IOT_HAS_FILE
+
+#ifdef _REDHAT_SEAWOLF_
+#undef IOT_HAS_CPU_AFFINITY
+#undef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
+#undef IOT_HAS_PRCTL
 #endif
-#define IOT_HAS_PR_GET_NAME
+
+#ifdef _ALPINE_
+#undef IOT_HAS_CPU_AFFINITY
+#undef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
+#endif
+
+#ifdef _AZURESPHERE_
+#undef IOT_HAS_CPU_AFFINITY
+#undef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
+#undef IOT_HAS_PRCTL
+#undef IOT_HAS_FILE
 #endif
 
 #endif

@@ -96,7 +96,7 @@ typedef struct iot_string_holder_t
 extern void iot_data_init (void);
 extern void iot_data_fini (void);
 
-#if defined (_GNU_SOURCE) || defined (__LIBMUSL__)
+#if defined (_GNU_SOURCE) || defined (_ALPINE_)
 #define IOT_HAS_SPINLOCK
 #endif
 
@@ -772,6 +772,18 @@ double iot_data_string_map_get_f64 (const iot_data_t * map, const char * key, do
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
   return (data && (iot_data_type (data) == IOT_DATA_FLOAT64)) ? iot_data_f64 (data) : default_val;
+}
+
+const iot_data_t * iot_data_string_map_get_vector (const iot_data_t * map, const char * key)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_VECTOR)) ? data : NULL);
+}
+
+const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, const char * key)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_MAP)) ? data : NULL);
 }
 
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)

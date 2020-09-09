@@ -5,7 +5,7 @@
 # apt install jq
 # Usage: on ubuntu host build natively and run script for debug and release
 # cd iotech-c-utils
-# ./scripts/linux.sh -broot $PWD
+# ./scripts/linux.sh -root $PWD -barch i586
 # ./scripts/gen-compile.sh $PWD debug
 # ./scripts/gen-compile.sh $PWD release
 # git add scripts/compile-debug.sh scripts/compile-release.sh
