@@ -18,7 +18,6 @@ def checkoutStage (arch)
 
 def buildStage (systems, arch)
 {
-  def archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', i586: 'x86', x86: 'x86']
   def sys = getSystemParam ()
   def board = getBoardParam ()
   def nat = getNativeParam ()
