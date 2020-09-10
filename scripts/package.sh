@@ -13,8 +13,7 @@ build_apk ()
   ARCHIVE="${ARCH}/${DIST}/release/${TGZ}"
   mkdir -p "apk/${DIST}"
   cp "${ARCHIVE}" "apk/${DIST}/"
-  sed -e"s/%APKARCH%/${APKARCH}/" -e"s/%ARCH%/${ARCH}/" <scripts/APKBUILD >"apk
-/${DIST}/APKBUILD"
+  sed -e"s/%APKARCH%/${APKARCH}/" -e"s/%ARCH%/${ARCH}/" <scripts/APKBUILD >"apk/${DIST}/APKBUILD"
   cp VERSION "apk/${DIST}/."
   docker run --rm -e UID=$(id -u ${USER}) -e GID=$(id -g ${USER}) -v "$(pwd)/apk/${DIST}:/home/packager/build" "${BUILDER}"
 }
