@@ -22,7 +22,7 @@ build_dbg_apk ()
 {
   DIST=$1
   ARCHIVE="${ARCH}/${DIST}/release/${TGZ}"
-  rm "apk/${DIST}/packager/${ARCH}/APKINDEX.tar.gz"
+  rm "apk/${DIST}/packager/${APKARCH}/APKINDEX.tar.gz"
   cp "${ARCHIVE}" "apk/${DIST}/"
   sed -e"s/%APKARCH%/${APKARCH}/" -e"s/%ARCH%/${ARCH}/" -e's/pkgname=iotech-iot/&-dbg/' <scripts/APKBUILD >"apk/${DIST}/APKBUILD"
   cp VERSION "apk/${DIST}/."
