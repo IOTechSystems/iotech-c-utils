@@ -2,6 +2,7 @@
 set -x -e
 SYSTEM=$1
 ARCH=$2
+APKARCH=$3
 VER=$(cat VERSION)
 BUILDER=iotechsys/iotech-apk-builder:0.2.1
 TGZ="iotech-iot-${VER}_${ARCH}.tar.gz"
