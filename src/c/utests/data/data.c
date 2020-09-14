@@ -545,6 +545,36 @@ static void test_data_from_json (void)
   iot_data_free (map);
 }
 
+static void test_data_from_xml (void)
+{
+  iot_data_t * xml;
+  char * json;
+  const char * test_xml = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n\
+<busmaster xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" busId=\"main_bus\">\n\
+  <deviceService name=\"virtual_device_service\" library=\"libxrt-virtual-device-service.so\" factory=\"xrt_virtual_device_service_factory\" topic=\"virtual_device_service/data\">\n\
+    <device name=\"Random-Integer-Device\" profile=\"Random-Integer-Device\">\n\
+      <resource name=\"RandomValue_Int8\" schedule=\"500000000\" />\n\
+      <protocol name=\"Other\">\n\
+        <protocolAttribute name=\"Address\" value=\"device-virtual-int-01\" />\n\
+      </protocol>\n\
+    </device>\n\
+  </deviceService>\n\
+  <container threads=\"4\">\n\
+    <logging enable=\"true\" filename=\"/dev/null\" />\n\
+  </container>\n\
+</busmaster>";
+  const char * expected = "{\"name\":\"busmaster\",\"attributes\":{\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"busId\":\"main_bus\"},\"children\":[{\"name\":\"deviceService\",\"attributes\":{\"name\":\"virtual_device_service\",\"library\":\"libxrt-virtual-device-service.so\",\"factory\":\"xrt_virtual_device_service_factory\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"name\":\"device\",\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"name\":\"resource\",\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"},\"children\":[]},{\"name\":\"protocol\",\"attributes\":{\"name\":\"Other\"},\"children\":[{\"name\":\"protocolAttribute\",\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"},\"children\":[]}],\"content\":\"\\n      \"}],\"content\":\"\\n    \"}],\"content\":\"\\n  \"},{\"name\":\"container\",\"attributes\":{\"threads\":\"4\"},\"children\":[{\"name\":\"logging\",\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"},\"children\":[]}],\"content\":\"\\n  \"}],\"content\":\"\\n\"}";
+
+
+  xml = iot_data_from_xml (test_xml);
+  CU_ASSERT (xml != NULL);
+  json = iot_data_to_json (xml);
+  CU_ASSERT (json != NULL);
+  CU_ASSERT (strcmp (json, expected) == 0);
+  free (json);
+  iot_data_free (xml);
+}
+
 static void test_data_address (void)
 {
   uint32_t * ui32ptr;
@@ -2484,6 +2514,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_string_vector", test_data_string_vector);
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
+  CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_name_type", test_data_name_type);
   CU_add_test (suite, "data_from_string", test_data_from_string);
