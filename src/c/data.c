@@ -1328,6 +1328,7 @@ static iot_data_t * iot_data_map_from_xml (bool root, yxml_t * x, iot_string_hol
         else
         {
           iot_data_free (elem);
+          elem = NULL;
           more = false;
         }
         break;
