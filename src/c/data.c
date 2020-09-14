@@ -1291,20 +1291,16 @@ iot_data_t * iot_data_from_json (const char * json)
   return data;
 }
 
-static iot_data_t * iot_data_map_from_xml (bool first, yxml_t * x, iot_string_holder_t * holder, const char ** str)
+static iot_data_t * iot_data_map_from_xml (bool root, yxml_t * x, iot_string_holder_t * holder, const char ** str)
 {
   iot_data_t * elem = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * children = iot_data_alloc_vector (0);
   iot_data_t * attrs = iot_data_alloc_map (IOT_DATA_STRING);
-  char * elem_name = NULL;
+  char * elem_name = x->elem;
   bool more = true;
   holder->str[0] = '\0';
   holder->free = holder->size - 1;
-  if (!first)
-  {
-    elem_name = x->elem;
-    iot_data_string_map_add (elem, "name", iot_data_alloc_string (elem_name, IOT_DATA_COPY));
-  }
+  iot_data_string_map_add (elem, "name", iot_data_alloc_string (elem_name, IOT_DATA_COPY));
   iot_data_string_map_add (elem, "attributes", attrs);
   iot_data_string_map_add (elem, "children", children);
   while (more && **str)
@@ -1316,7 +1312,7 @@ static iot_data_t * iot_data_map_from_xml (bool first, yxml_t * x, iot_string_ho
         iot_data_t * child = iot_data_map_from_xml (false, x, holder, str);
         if (child)
         {
-          if (first)
+          if (root)
           {
             iot_data_free (elem);
             elem = child;
@@ -1367,6 +1363,7 @@ static iot_data_t * iot_data_map_from_xml (bool first, yxml_t * x, iot_string_ho
       case YXML_ESYN:
       {
         // Error
+        iot_data_free (elem);
         elem = NULL;
         more = false;
         break;
