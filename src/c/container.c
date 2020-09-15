@@ -385,6 +385,7 @@ void iot_container_add_component (iot_container_t * cont, const char * ctype, co
   if (!factory)
   {
     iot_container_try_load_component (cont, config);
+    factory = iot_component_factory_find (ctype);
   }
 #endif
   if (factory)
