@@ -377,7 +377,7 @@ extern const iot_component_factory_t * iot_component_factory_find (const char * 
 
 void iot_container_add_component (iot_container_t * cont, const char * ctype, const char *cname, const char * config)
 {
-  assert (cont && config);
+  assert (cont && ctype && cname && config);
 
   const iot_component_factory_t * factory = iot_component_factory_find (ctype);
 
