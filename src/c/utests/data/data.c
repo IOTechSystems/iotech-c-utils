@@ -555,15 +555,16 @@ static void test_data_from_xml (void)
     <device name=\"Random-Integer-Device\" profile=\"Random-Integer-Device\">\n\
       <resource name=\"RandomValue_Int8\" schedule=\"500000000\" />\n\
       <protocol name=\"Other\">\n\
-        <protocolAttribute name=\"Address\" value=\"device-virtual-int-01\" />\n\
+        <protocolAttribute name=\"Address\" value=\"device-virtual-int-01\" />Any old rubbish\n\
       </protocol>\n\
     </device>\n\
   </deviceService>\n\
+  <fubar>Some text!</fubar>\n\
   <container threads=\"4\">\n\
     <logging enable=\"true\" filename=\"/dev/null\" />\n\
   </container>\n\
 </busmaster>";
-  const char * expected = "{\"name\":\"busmaster\",\"attributes\":{\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"busId\":\"main_bus\"},\"children\":[{\"name\":\"deviceService\",\"attributes\":{\"name\":\"virtual_device_service\",\"library\":\"libxrt-virtual-device-service.so\",\"factory\":\"xrt_virtual_device_service_factory\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"name\":\"device\",\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"name\":\"resource\",\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"},\"children\":[]},{\"name\":\"protocol\",\"attributes\":{\"name\":\"Other\"},\"children\":[{\"name\":\"protocolAttribute\",\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"},\"children\":[]}],\"content\":\"\\n      \"}],\"content\":\"\\n    \"}],\"content\":\"\\n  \"},{\"name\":\"container\",\"attributes\":{\"threads\":\"4\"},\"children\":[{\"name\":\"logging\",\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"},\"children\":[]}],\"content\":\"\\n  \"}],\"content\":\"\\n\"}";
+  const char * expected = "{\"name\":\"busmaster\",\"attributes\":{\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"busId\":\"main_bus\"},\"children\":[{\"name\":\"deviceService\",\"attributes\":{\"name\":\"virtual_device_service\",\"library\":\"libxrt-virtual-device-service.so\",\"factory\":\"xrt_virtual_device_service_factory\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"name\":\"device\",\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"name\":\"resource\",\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"}},{\"name\":\"protocol\",\"attributes\":{\"name\":\"Other\"},\"children\":[{\"name\":\"protocolAttribute\",\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"}}],\"content\":\"Any old rubbish\\n      \"}],\"content\":\"\\n    \"}],\"content\":\"\\n  \"},{\"name\":\"fubar\",\"attributes\":{},\"content\":\"Some text!\"},{\"name\":\"container\",\"attributes\":{\"threads\":\"4\"},\"children\":[{\"name\":\"logging\",\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"}}],\"content\":\"\\n  \"}],\"content\":\"\\n\"}";
 
 
   xml = iot_data_from_xml (test_xml);
