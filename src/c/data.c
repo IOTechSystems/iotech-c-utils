@@ -6,7 +6,7 @@
 #include "iot/typecode.h"
 #include "iot/json.h"
 #include "iot/base64.h"
-#include "iot/yxml.h"
+#include "yxml.h"
 
 #define IOT_DATA_BLOCK_SIZE 64
 #define IOT_JSON_BUFF_SIZE 512
