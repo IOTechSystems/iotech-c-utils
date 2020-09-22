@@ -25,7 +25,7 @@
 */
 
 #include <string.h>
-#include "iot/yxml.h"
+#include "yxml.h"
 
 typedef enum {
 	YXMLS_string,

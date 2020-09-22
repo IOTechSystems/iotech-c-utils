@@ -967,10 +967,14 @@ extern iot_data_t * iot_data_from_json (const char * json);
 /**
  * @brief Convert XML to iot_data_t type
  *
- * The function to convert input XML string to iot_data
+ * The function to convert input XML string to iot_data. The conversion results
+ * in a map containing "name", "attributes", "children" and "content" entries.
+ * The "children" and "content" entries will only be present if required.
+ * The "children" entry will contain a recursive array of map entries
+ * containing any XML child elements.
  *
  * @param  xml   Input XML string
- * @return       Pointer to data of type iot_data if input string is a XML string, NULL otherwise
+ * @return       A iot_data map if input string is a XML string, NULL otherwise.
  */
 extern iot_data_t * iot_data_from_xml (const char * xml);
 
