@@ -186,8 +186,9 @@ static iot_component_holder_t * iot_container_find_holder_locked (iot_container_
 
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 
-static void iot_container_try_load_component (iot_container_t * cont, const char * config)
+static const iot_component_factory_t * iot_container_try_load_component (iot_container_t * cont, const char * config)
 {
+  const iot_component_factory_t * result = NULL;
   iot_data_t * cmap = iot_component_config_to_map (config, cont->logger);
   if (cmap)
   {
@@ -201,7 +202,8 @@ static void iot_container_try_load_component (iot_container_t * cont, const char
         const iot_component_factory_t *(*factory_fn) (void) = dlsym (handle, factory);
         if (factory_fn)
         {
-          iot_component_factory_add (factory_fn ());
+          result = factory_fn ();
+          iot_component_factory_add (result);
         }
         else
         {
@@ -216,6 +218,7 @@ static void iot_container_try_load_component (iot_container_t * cont, const char
     }
     iot_data_free (cmap);
   }
+  return result;
 }
 #endif
 
@@ -377,14 +380,14 @@ extern const iot_component_factory_t * iot_component_factory_find (const char * 
 
 void iot_container_add_component (iot_container_t * cont, const char * ctype, const char *cname, const char * config)
 {
-  assert (cont && config);
+  assert (cont && ctype && cname && config);
 
   const iot_component_factory_t * factory = iot_component_factory_find (ctype);
 
 #ifdef IOT_BUILD_DYNAMIC_LOAD
   if (!factory)
   {
-    iot_container_try_load_component (cont, config);
+    factory = iot_container_try_load_component (cont, config);
   }
 #endif
   if (factory)
