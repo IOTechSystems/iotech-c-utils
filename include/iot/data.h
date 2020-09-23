@@ -965,6 +965,20 @@ extern char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size
 extern iot_data_t * iot_data_from_json (const char * json);
 
 /**
+ * @brief Convert XML to iot_data_t type
+ *
+ * The function to convert input XML string to iot_data. The conversion results
+ * in a map containing "name", "attributes", "children" and "content" entries.
+ * The "children" and "content" entries will only be present if required.
+ * The "children" entry will contain a recursive array of map entries
+ * containing any XML child elements.
+ *
+ * @param  xml   Input XML string
+ * @return       A iot_data map if input string is a XML string, NULL otherwise.
+ */
+extern iot_data_t * iot_data_from_xml (const char * xml);
+
+/**
  * @brief Check for equality of 2 iot_data types
  *
  * The function to check the values of the 2 iot_data types and return true if the data is same

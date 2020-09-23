@@ -23,7 +23,7 @@ if ("${LINUX_SYS}" STREQUAL "AzureSphere")
 endif ()
 
 # Set files to compile
-set (C_FILES iot.c data.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c)
+set (C_FILES iot.c data.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c yxml.c)
 if (IOT_BUILD_COMPONENTS)
   set (C_FILES ${C_FILES} container.c)
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIOT_BUILD_COMPONENTS")
