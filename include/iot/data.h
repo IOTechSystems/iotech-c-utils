@@ -115,6 +115,17 @@ extern void iot_data_free (iot_data_t * data);
 extern iot_data_type_t iot_data_type (const iot_data_t * data);
 
 /**
+ * @brief Check if data instance is of a given type
+ *
+ * The function to returns whether a data instance is of the given type
+ *
+ * @param data  Pointer to data (can be NULL)
+ * @param type  The data type
+ * @return      Whether the data is of the given type. Returns false is data is NULL.
+ */
+extern bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type);
+
+/**
  * @brief Get data type code
  *
  * The function to return the type code for the data
@@ -330,6 +341,17 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
  * @return           Type of array data
  */
 extern iot_data_type_t iot_data_array_type (const iot_data_t * array);
+
+/**
+ * @brief Check if array instance is of a given type
+ *
+ * The function to returns whether an array instance is of the given type
+ *
+ * @param array  Pointer to array (can be NULL)
+ * @param type  The array content data type
+ * @return      Whether the array content is of the given type. Returns false is array is NULL.
+ */
+extern bool iot_data_array_is_of_type (const iot_data_t * array, iot_data_type_t type);
 
 /**
  * @brief Find the number of Array elements
@@ -675,6 +697,17 @@ extern const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, c
  * @return     Data type of the map
  */
 extern iot_data_type_t iot_data_map_key_type (const iot_data_t * map);
+
+/**
+ * @brief Check if map instance key is of a given type
+ *
+ * The function to returns whether a map instance key is of the given type
+ *
+ * @param array  Pointer to map (can be NULL)
+ * @param type  The map key data type
+ * @return      Whether the map key is of the given type. Returns false is map is NULL.
+ */
+extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t type);
 
 /**
  * @brief  Decode base64 value and store it as a byte array in a map for a given key

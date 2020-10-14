@@ -304,6 +304,7 @@ static void test_data_array_iter_uint64 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint64_t), IOT_DATA_UINT64, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
+  CU_ASSERT (iot_data_array_is_of_type (array, IOT_DATA_UINT64))
   while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
@@ -1015,7 +1016,9 @@ static void test_data_equal_map (void)
   val2 = iot_data_alloc_ui32 (77u);
   key2 = iot_data_alloc_string ("key2", IOT_DATA_REF);
   iot_data_map_add (data_map2, key2, val2);
-  
+
+  CU_ASSERT (iot_data_map_key_is_of_type (data_map1, IOT_DATA_STRING))
+  CU_ASSERT (iot_data_is_of_type (data_map1, IOT_DATA_MAP))
   CU_ASSERT (iot_data_equal (data_map1, data_map2))
 
   iot_data_free (data_map1);

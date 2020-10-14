@@ -6,9 +6,22 @@
 #include "iot/typecode.h"
 #include "iot/json.h"
 #include "iot/base64.h"
-#include "yxml.h"
 
-#define IOT_DATA_BLOCK_SIZE 64
+#if IOT_BUILD_XML
+#include "yxml.h"
+#endif
+
+#if defined (_GNU_SOURCE) || defined (_ALPINE_)
+#define IOT_HAS_SPINLOCK
+#endif
+
+#if defined (NDEBUG) || defined (_AZURESPHERE_)
+#define IOT_DATA_CACHE
+#endif
+
+#define IOT_DATA_BLOCK_SIZE 56
+#define IOT_DATA_BLOCKS 73
+#define IOT_MEMORY_BLOCK_SIZE 4096
 #define IOT_JSON_BUFF_SIZE 512
 #define IOT_VAL_BUFF_SIZE 128
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096
@@ -96,17 +109,21 @@ typedef struct iot_string_holder_t
   size_t free;
 } iot_string_holder_t;
 
+// Total size of this struct should be <= IOT_MEMORY_BLOCK_SIZE
+typedef struct iot_memory_block_t
+{
+  struct iot_memory_block_t * next;
+  uint8_t chunks [IOT_DATA_BLOCKS * IOT_DATA_BLOCK_SIZE];
+} iot_memory_block_t;
+
 extern void iot_data_init (void);
 extern void iot_data_fini (void);
 
-#if defined (_GNU_SOURCE) || defined (_ALPINE_)
-#define IOT_HAS_SPINLOCK
-#endif
+// Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
-// Data cache and guard mutex or spin lock. Only enabled for release builds as makes leak checking difficult.
-
-#ifdef NDEBUG
+#ifdef IOT_DATA_CACHE
 static iot_data_t * iot_data_cache = NULL;
+static iot_memory_block_t * iot_data_blocks = NULL;
 #ifdef IOT_HAS_SPINLOCK
 static pthread_spinlock_t iot_data_slock;
 #else
@@ -119,16 +136,29 @@ static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char
 static void * iot_data_block_alloc (void)
 {
   iot_data_t * data;
-#ifdef NDEBUG
+#ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
   pthread_mutex_lock (&iot_data_mutex);
 #endif
-  if ((data = iot_data_cache))
+  if (iot_data_cache == NULL)
   {
-    iot_data_cache = data->next;
+    iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
+    block->next = iot_data_blocks;
+    iot_data_blocks = block;
+
+    uint8_t * iter = block->chunks;
+    iot_data_cache = (iot_data_t*) iter;
+    for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
+    {
+      iot_data_t * prev = (iot_data_t*) iter;
+      iter += IOT_DATA_BLOCK_SIZE;
+      prev->next = (iot_data_t*) iter;
+    }
   }
+  data = iot_data_cache;
+  iot_data_cache = data->next;
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_unlock (&iot_data_slock);
 #else
@@ -150,7 +180,7 @@ static void * iot_data_factory_alloc (void)
 
 static inline void iot_data_factory_free (iot_data_t * data)
 {
-#ifdef NDEBUG
+#ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
@@ -165,7 +195,7 @@ static inline void iot_data_factory_free (iot_data_t * data)
 #endif
 #else
   free (data);
-#endif
+#endif iot_data_type_t iot_data_type
 }
 
 static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
@@ -178,13 +208,14 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, boo
 
 void iot_data_init (void)
 {
-  _Static_assert (sizeof (iot_data_value_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_map_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_vector_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_array_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_pair_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_typecode_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-#ifdef NDEBUG
+  _Static_assert (sizeof (iot_data_value_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_pair_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block_t too big");
+#ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
 #else
@@ -195,12 +226,12 @@ void iot_data_init (void)
 
 void iot_data_fini (void)
 {
-#ifdef NDEBUG
-  while (iot_data_cache)
+#ifdef IOT_DATA_CACHE
+  while (iot_data_blocks)
   {
-    iot_data_t * data = iot_data_cache;
-    iot_data_cache = data->next;
-    free (data);
+    iot_memory_block_t * block = iot_data_blocks;
+    iot_data_blocks = block->next;
+    free (block);
   }
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_destroy (&iot_data_slock);
@@ -334,6 +365,11 @@ iot_data_type_t iot_data_type (const iot_data_t * data)
 {
   assert (data);
   return data->type;
+}
+
+bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type)
+{
+  return (data && (data->type == type));
 }
 
 void * iot_data_address (const iot_data_t * data)
@@ -551,6 +587,11 @@ extern iot_data_type_t iot_data_array_type (const iot_data_t * array)
 {
   assert (array && (array->type == IOT_DATA_ARRAY));
   return ((iot_data_array_t*) array)->type;
+}
+
+extern bool iot_data_array_is_of_type (const iot_data_t * array, iot_data_type_t type)
+{
+  return (array && (array->type == IOT_DATA_ARRAY) && (((iot_data_array_t*) array)->type == type));
 }
 
 extern uint32_t iot_data_array_size (const iot_data_t * array)
@@ -793,6 +834,11 @@ iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 {
   assert (map);
   return ((iot_data_map_t*) map)->key_type;
+}
+
+extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t type)
+{
+  return (map && (map->type == IOT_DATA_MAP) && (((iot_data_array_t*) map)->type == type));
 }
 
 void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val)
@@ -1291,6 +1337,7 @@ iot_data_t * iot_data_from_json (const char * json)
   return data;
 }
 
+#if IOT_BUILD_XML
 static iot_data_t * iot_data_map_from_xml (bool root, yxml_t * x, iot_string_holder_t * holder, const char ** str)
 {
   iot_data_t * elem = iot_data_alloc_map (IOT_DATA_STRING);
@@ -1402,6 +1449,7 @@ iot_data_t * iot_data_from_xml (const char * xml)
   free (holder.str);
   return result;
 }
+#endif
 
 iot_data_t * iot_data_copy (const iot_data_t * src)
 {

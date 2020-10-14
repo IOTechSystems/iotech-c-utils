@@ -29,6 +29,7 @@ set (IOT_BUILD_LCOV OFF CACHE BOOL "Build LCov")
 set (IOT_BUILD_STATIC ON CACHE BOOL "Build static libraries")
 set (IOT_BUILD_SHARED ON CACHE BOOL "Build shared libraries")
 set (IOT_BUILD_EXES ON CACHE BOOL "Build executables")
+set (IOT_BUILD_XML ON CACHE BOOL "Build XML support")
 
 # Configure for different target systems
 
@@ -44,6 +45,7 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Generic")
     set (IOT_BUILD_SHARED OFF)
     set (IOT_BUILD_DYNAMIC_LOAD OFF)
     set (IOT_BUILD_EXES OFF)
+    set (IOT_BUILD_XML OFF)
   endif ()
   set (CPACK_GENERATOR TGZ)
 else ()
