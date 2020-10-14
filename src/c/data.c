@@ -195,7 +195,7 @@ static inline void iot_data_factory_free (iot_data_t * data)
 #endif
 #else
   free (data);
-#endif iot_data_type_t iot_data_type
+#endif
 }
 
 static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
