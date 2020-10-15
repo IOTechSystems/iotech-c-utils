@@ -703,7 +703,7 @@ extern iot_data_type_t iot_data_map_key_type (const iot_data_t * map);
  *
  * The function to returns whether a map instance key is of the given type
  *
- * @param array  Pointer to map (can be NULL)
+ * @param map   Pointer to map (can be NULL)
  * @param type  The map key data type
  * @return      Whether the map key is of the given type. Returns false is map is NULL.
  */
