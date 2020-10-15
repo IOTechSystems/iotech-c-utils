@@ -54,8 +54,8 @@ struct iot_data_t
   iot_data_t * next;
   iot_data_t * metadata;
   atomic_uint_fast32_t refs;
-  iot_data_type_t type : 4;
-  bool release : 1;
+  iot_data_type_t type;
+  bool release;
 };
 
 struct iot_typecode_t
@@ -213,7 +213,7 @@ void iot_data_init (void)
   _Static_assert (sizeof (iot_data_value_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA _BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_pair_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block_t too big");
