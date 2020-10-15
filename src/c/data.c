@@ -21,6 +21,7 @@
 
 #define IOT_DATA_BLOCK_SIZE 56
 #define IOT_DATA_BLOCKS 73
+#define IOT_DATA_VALUE_BUFF_SIZE 16
 #define IOT_MEMORY_BLOCK_SIZE 4096
 #define IOT_JSON_BUFF_SIZE 512
 #define IOT_VAL_BUFF_SIZE 128
@@ -53,8 +54,8 @@ struct iot_data_t
   iot_data_t * next;
   iot_data_t * metadata;
   atomic_uint_fast32_t refs;
-  iot_data_type_t type;
-  bool release;
+  iot_data_type_t type : 4;
+  bool release : 1;
 };
 
 struct iot_typecode_t
@@ -68,6 +69,7 @@ typedef struct iot_data_value_t
 {
   iot_data_t base;
   iot_data_union_t value;
+  char buff [IOT_DATA_VALUE_BUFF_SIZE];
 } iot_data_value_t;
 
 typedef struct iot_data_array_t
@@ -211,7 +213,7 @@ void iot_data_init (void)
   _Static_assert (sizeof (iot_data_value_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
+  _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA _BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_pair_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block_t too big");
@@ -385,12 +387,13 @@ void iot_data_free (iot_data_t * data)
     switch (data->type)
     {
       case IOT_DATA_STRING:
+      {
         if (data->release) free (((iot_data_value_t*) data)->value.str);
         break;
+      }
       case IOT_DATA_ARRAY:
       {
-        iot_data_array_t * array = (iot_data_array_t*) data;
-        if (array->base.release) free (array->data);
+        if (data->release) free (((iot_data_array_t*) data)->data);
         break;
       }
       case IOT_DATA_MAP:
@@ -561,7 +564,20 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
 {
   assert (val);
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, ownership != IOT_DATA_REF);
-  data->value.str = (ownership == IOT_DATA_COPY) ? strdup (val) : (char*) val;
+  data->value.str = (char*) val;
+  if (ownership == IOT_DATA_COPY)
+  {
+    if (strlen (val) < IOT_DATA_VALUE_BUFF_SIZE) // If string small enough save in iot_data_value_t buffer
+    {
+      data->value.str = data->buff;
+      data->base.release = false;
+      strcpy (data->buff, val);
+    }
+    else
+    {
+      data->value.str = strdup (val);
+    }
+  }
   return (iot_data_t*) data;
 }
 
