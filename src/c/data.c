@@ -7,7 +7,7 @@
 #include "iot/json.h"
 #include "iot/base64.h"
 
-#if IOT_BUILD_XML
+#ifdef IOT_HAS_XML
 #include "yxml.h"
 #endif
 
@@ -1353,7 +1353,7 @@ iot_data_t * iot_data_from_json (const char * json)
   return data;
 }
 
-#if IOT_BUILD_XML
+#ifdef IOT_HAS_XML
 static iot_data_t * iot_data_map_from_xml (bool root, yxml_t * x, iot_string_holder_t * holder, const char ** str)
 {
   iot_data_t * elem = iot_data_alloc_map (IOT_DATA_STRING);

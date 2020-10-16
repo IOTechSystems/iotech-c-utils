@@ -25,7 +25,6 @@ endif ()
 # Set files to compile
 set (C_FILES iot.c data.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c)
 if (IOT_BUILD_XML)
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DIOT_BUILD_XML")
   set (C_FILES ${C_FILES} yxml.c)
 endif ()
 if (IOT_BUILD_COMPONENTS)

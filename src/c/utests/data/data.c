@@ -546,6 +546,7 @@ static void test_data_from_json (void)
   iot_data_free (map);
 }
 
+#ifdef IOT_HAS_XML
 static void test_data_from_xml (void)
 {
   iot_data_t * xml;
@@ -576,6 +577,7 @@ static void test_data_from_xml (void)
   free (json);
   iot_data_free (xml);
 }
+#endif
 
 static void test_data_address (void)
 {
@@ -2518,7 +2520,6 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_string_vector", test_data_string_vector);
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
-  CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_name_type", test_data_name_type);
   CU_add_test (suite, "data_from_string", test_data_from_string);
@@ -2592,4 +2593,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_complex_typecode", test_data_complex_typecode);
   CU_add_test (suite, "data_equal_typecode", test_data_equal_typecode);
   CU_add_test (suite, "data_type_typecode", test_data_type_typecode);
+#ifdef IOT_HAS_XML
+  CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
+#endif
 }

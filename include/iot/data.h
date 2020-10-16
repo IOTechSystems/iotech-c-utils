@@ -13,6 +13,7 @@
  */
 
 #include "iot/os.h"
+#include "iot/defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -997,6 +998,7 @@ extern char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size
  */
 extern iot_data_t * iot_data_from_json (const char * json);
 
+#ifdef IOT_HAS_XML
 /**
  * @brief Convert XML to iot_data_t type
  *
@@ -1010,6 +1012,7 @@ extern iot_data_t * iot_data_from_json (const char * json);
  * @return       A iot_data map if input string is a XML string, NULL otherwise.
  */
 extern iot_data_t * iot_data_from_xml (const char * xml);
+#endif
 
 /**
  * @brief Check for equality of 2 iot_data types
