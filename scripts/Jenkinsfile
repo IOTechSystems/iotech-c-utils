@@ -126,7 +126,6 @@ def publishAdvancedMetrics (system, arch)
   archiveArtifacts (artifacts: "${arch}/${system}/lcov/html/**")
   // publishCoverage (adapters: [coberturaAdapter("${arch}/${system}/lcov/cobertura.xml")], sourceFileResolver: sourceFiles('NEVER_STORE'))
   recordIssues (tools: [cppCheck (id: "CppCheck-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/cppcheck.xml")])
-  recordIssues (tools: [taskScanner (id: "TaskScan-${arch}-${env.BUILD_ID}", highTags: 'FIXME', includePattern: '**/*.c,**/*.h', lowTags: 'COMMENT', normalTags: 'TODO')])
   recordIssues (tools: [gcc (id: "GCC-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/release.log")])
 }
 
