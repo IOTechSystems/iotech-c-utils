@@ -46,9 +46,9 @@ typedef enum iot_data_type_t
  */
 typedef enum iot_data_ownership_t
 {
-  IOT_DATA_COPY,  /**< Data is copied and copy freed when no longer used */
-  IOT_DATA_TAKE,  /**< Data is taken and freed when no longer used */
-  IOT_DATA_REF    /**< Data is referenced and never freed */
+  IOT_DATA_COPY = 0u,  /**< Data is copied and copy freed when no longer used */
+  IOT_DATA_TAKE = 1u,  /**< Data is taken and freed when no longer used */
+  IOT_DATA_REF = 2u    /**< Data is referenced and never freed */
 } iot_data_ownership_t;
 
 /** Alias for iot data structure */

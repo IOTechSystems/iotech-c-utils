@@ -55,7 +55,7 @@ struct iot_data_t
   iot_data_t * metadata;
   atomic_uint_fast32_t refs;
   iot_data_type_t type;
-  bool release;
+  iot_data_ownership_t ownership;
 };
 
 struct iot_typecode_t
@@ -200,11 +200,11 @@ static inline void iot_data_factory_free (iot_data_t * data)
 #endif
 }
 
-static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
+static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot_data_ownership_t own)
 {
   iot_data_value_t * val = iot_data_factory_alloc ();
   val->base.type = type;
-  val->base.release = copy;
+  val->base.ownership = own;
   return val;
 }
 
@@ -388,12 +388,13 @@ void iot_data_free (iot_data_t * data)
     {
       case IOT_DATA_STRING:
       {
-        if (data->release) free (((iot_data_value_t*) data)->value.str);
+        iot_data_value_t * val = (iot_data_value_t*) data;
+        if ((data->ownership != IOT_DATA_REF) && (val->value.str != val->buff)) free (val->value.str);
         break;
       }
       case IOT_DATA_ARRAY:
       {
-        if (data->release) free (((iot_data_array_t*) data)->data);
+        if (data->ownership != IOT_DATA_REF) free (((iot_data_array_t*) data)->data);
         break;
       }
       case IOT_DATA_MAP:
@@ -563,14 +564,13 @@ iot_data_t * iot_data_alloc_bool (bool val)
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
 {
   assert (val);
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, ownership != IOT_DATA_REF);
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, ownership);
   data->value.str = (char*) val;
   if (ownership == IOT_DATA_COPY)
   {
     if (strlen (val) < IOT_DATA_VALUE_BUFF_SIZE) // If string small enough save in iot_data_value_t buffer
     {
       data->value.str = data->buff;
-      data->base.release = false;
       strcpy (data->buff, val);
     }
     else
@@ -590,7 +590,7 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
   array->data = data;
   array->length = length;
   array->size = iot_data_type_size[type] * length;
-  array->base.release = ownership != IOT_DATA_REF;
+  array->base.ownership = ownership;
   if (ownership == IOT_DATA_COPY)
   {
     array->data = malloc (array->size);
@@ -1473,22 +1473,18 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
   iot_data_t * data = (iot_data_t*) src;
   iot_data_t * ret;
 
-  // For data created using IOT_DATA_REF ownership just increment ref count
-  if (((data->type == IOT_DATA_STRING) || (data->type == IOT_DATA_ARRAY)) && (data->release != true))
-  {
-    iot_data_add_ref (data);
-    return data;
-  }
-
   switch (data->type)
   {
     case IOT_DATA_STRING:
-      ret = iot_data_alloc_string (((iot_data_value_t*) data)->value.str, IOT_DATA_COPY);
+    {
+      iot_data_value_t *val = (iot_data_value_t *) data;
+      ret = iot_data_alloc_string (val->value.str, val->base.ownership);
       break;
+    }
     case IOT_DATA_ARRAY:
     {
       iot_data_array_t * array = (iot_data_array_t*) data;
-      ret =  iot_data_alloc_array (array->data, array->length, array->type, IOT_DATA_COPY);
+      ret =  iot_data_alloc_array (array->data, array->length, array->type, (array->base.ownership == IOT_DATA_REF) ? IOT_DATA_REF : IOT_DATA_COPY);
       break;
     }
     case IOT_DATA_MAP:

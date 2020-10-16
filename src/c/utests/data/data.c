@@ -1575,9 +1575,9 @@ static void test_data_copy_vector_strings (void)
 
   iot_data_t *vector2 = iot_data_copy (vector1);
 
-  //vector elements should point to same address
-  CU_ASSERT (iot_data_vector_get (vector1,0) == iot_data_vector_get (vector2,0))
-  CU_ASSERT (iot_data_vector_get (vector1,1) == iot_data_vector_get (vector2,1))
+  // vector elements should not point to same address
+  CU_ASSERT (iot_data_vector_get (vector1,0) != iot_data_vector_get (vector2,0))
+  CU_ASSERT (iot_data_vector_get (vector1,1) != iot_data_vector_get (vector2,1))
   CU_ASSERT (iot_data_equal (vector1, vector2))
 
   iot_data_vector_add (vector2, 0, iot_data_alloc_string ("change", IOT_DATA_REF));
@@ -1608,8 +1608,7 @@ static void test_data_copy_vector_strings (void)
 
   vector4 = iot_data_copy (vector3);
 
-  //vector element allocated by reference should point to the same address
-  CU_ASSERT (iot_data_vector_get (vector3,0) == iot_data_vector_get (vector4,0))
+  CU_ASSERT (iot_data_vector_get (vector3,0) != iot_data_vector_get (vector4,0))
   CU_ASSERT (iot_data_vector_get (vector3,1) != iot_data_vector_get (vector4,1))
 
   iot_data_free (vector3);
