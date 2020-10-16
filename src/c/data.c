@@ -204,7 +204,7 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot
 {
   iot_data_value_t * val = iot_data_factory_alloc ();
   val->base.type = type;
-  val->base.ownership = own;
+  val->base.ownership = (own == IOT_DATA_TAKE) ? IOT_DATA_COPY : own; // Taken data must be subsequently copied
   return val;
 }
 
@@ -590,7 +590,7 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
   array->data = data;
   array->length = length;
   array->size = iot_data_type_size[type] * length;
-  array->base.ownership = ownership;
+  array->base.ownership = (ownership == IOT_DATA_TAKE) ? IOT_DATA_COPY : ownership; // Taken data must be subsequently copied
   if (ownership == IOT_DATA_COPY)
   {
     array->data = malloc (array->size);
@@ -1484,7 +1484,7 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
     case IOT_DATA_ARRAY:
     {
       iot_data_array_t * array = (iot_data_array_t*) data;
-      ret =  iot_data_alloc_array (array->data, array->length, array->type, (array->base.ownership == IOT_DATA_REF) ? IOT_DATA_REF : IOT_DATA_COPY);
+      ret =  iot_data_alloc_array (array->data, array->length, array->type, array->base.ownership);
       break;
     }
     case IOT_DATA_MAP:
