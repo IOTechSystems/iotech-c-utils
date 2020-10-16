@@ -139,7 +139,7 @@ endif ()
 
 # Configure packaging options
 
-if (CMAKE_BUILD_TYPE MATCHES Release)
+if (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinSizeRel)
   set (CPACK_PACKAGE_NAME "iotech-iot")
   set (CPACK_STRIP_FILES "TRUE")
 else ()
