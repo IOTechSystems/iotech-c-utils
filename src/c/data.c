@@ -20,7 +20,6 @@
 #if defined (NDEBUG) || defined (_AZURESPHERE_)
 #define IOT_DATA_CACHE
 #endif
-#define IOT_DATA_CACHE
 
 #define IOT_MEMORY_BLOCK_SIZE 4096
 #define IOT_JSON_BUFF_SIZE 512
@@ -235,13 +234,14 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot
 
 void iot_data_init (void)
 {
+/*
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
   printf ("sizeof (iot_data_vector_t): %zu\n", sizeof (iot_data_vector_t));
   printf ("sizeof (iot_data_array_t): %zu\n", sizeof (iot_data_array_t));
   printf ("sizeof (iot_data_pair_t): %zu\n", sizeof (iot_data_pair_t));
   printf ("IOT_DATA_BLOCK_SIZE %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
-  fflush (stdout);
+*/
 
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
