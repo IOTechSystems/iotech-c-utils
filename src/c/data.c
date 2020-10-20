@@ -21,8 +21,6 @@
 #define IOT_DATA_CACHE
 #endif
 
-#define IOT_DATA_BLOCK_SIZE 56
-#define IOT_DATA_BLOCKS 73
 #define IOT_MEMORY_BLOCK_SIZE 4096
 #define IOT_JSON_BUFF_SIZE 512
 #define IOT_VAL_BUFF_SIZE 128
@@ -71,15 +69,6 @@ typedef struct iot_data_value_base_t
   iot_data_union_t value;
 } iot_data_value_base_t;
 
-#define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
-
-typedef struct iot_data_value_t
-{
-  iot_data_t base;
-  iot_data_union_t value;
-  char buff [IOT_DATA_VALUE_BUFF_SIZE];
-} iot_data_value_t;
-
 typedef struct iot_data_array_t
 {
   iot_data_t base;
@@ -112,12 +101,24 @@ typedef struct iot_data_map_t
   iot_data_pair_t * tail;
 } iot_data_map_t;
 
+
 typedef struct iot_string_holder_t
 {
   char * str;
   size_t size;
   size_t free;
 } iot_string_holder_t;
+
+#define IOT_DATA_BLOCK_SIZE (sizeof (iot_data_map_t))
+#define IOT_DATA_BLOCKS (IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE)
+#define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
+
+typedef struct iot_data_value_t
+{
+  iot_data_t base;
+  iot_data_union_t value;
+  char buff [IOT_DATA_VALUE_BUFF_SIZE];
+} iot_data_value_t;
 
 // Total size of this struct should be <= IOT_MEMORY_BLOCK_SIZE
 typedef struct iot_memory_block_t
@@ -223,6 +224,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_vector_t): %d\n", (int) sizeof (iot_data_vector_t));
   printf ("sizeof (iot_data_array_t): %d\n", (int) sizeof (iot_data_array_t));
   printf ("sizeof (iot_data_pair_t): %d\n", (int) sizeof (iot_data_pair_t));
+  printf ("IOT_DATA_BLOCK_SIZE %d IOT_DATA_BLOCKS: %d ", (int) IOT_DATA_BLOCK_SIZE, (int) IOT_DATA_BLOCKS);
 
   _Static_assert (sizeof (iot_data_value_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
