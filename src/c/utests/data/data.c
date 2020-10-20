@@ -1621,17 +1621,18 @@ static void test_data_copy_map (void)
 
   iot_data_t * val1 = iot_data_alloc_ui32 (66u);
   iot_data_t * key1 = iot_data_alloc_string ("key1", IOT_DATA_REF);
-
   iot_data_map_add (data_map1, key1, val1);
 
   val1 = iot_data_alloc_ui32 (77u);
   key1 = iot_data_alloc_string ("key2", IOT_DATA_REF);
-
   iot_data_map_add (data_map1, key1, val1);
 
   val1 = iot_data_alloc_ui32 (88u);
   key1 = iot_data_alloc_string ("key3", IOT_DATA_COPY);
+  iot_data_map_add (data_map1, key1, val1);
 
+  val1 = iot_data_alloc_ui32 (99u);
+  key1 = iot_data_alloc_string ("key4-this-is-a-very-very-very-very-yes-still-some-more-long-key", IOT_DATA_COPY);
   iot_data_map_add (data_map1, key1, val1);
 
   iot_data_t * data_map2 = iot_data_copy (data_map1);
