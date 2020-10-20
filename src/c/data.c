@@ -123,10 +123,10 @@ typedef struct iot_data_value_t
   char buff [IOT_DATA_VALUE_BUFF_SIZE];
 } iot_data_value_t;
 
-// Total size of this struct should be <= IOT_MEMORY_BLOCK_SIZE
+// Total size of this struct should be <= IOT_MEMORY_BLOCK_SIZE, chunks must be 8 byte aligned.
 typedef struct iot_memory_block_t
 {
-  uint64_t chunks [(IOT_DATA_BLOCKS * IOT_DATA_BLOCK_SIZE) / 8];
+  uint64_t chunks [(IOT_DATA_BLOCKS * IOT_DATA_BLOCK_SIZE) / (sizeof (uint64_t))];
   struct iot_memory_block_t * next;
 } iot_memory_block_t;
 
