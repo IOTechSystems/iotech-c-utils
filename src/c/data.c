@@ -126,8 +126,8 @@ typedef struct iot_data_value_t
 // Total size of this struct should be <= IOT_MEMORY_BLOCK_SIZE
 typedef struct iot_memory_block_t
 {
+  uint64_t chunks [(IOT_DATA_BLOCKS * IOT_DATA_BLOCK_SIZE) / 8];
   struct iot_memory_block_t * next;
-  uint8_t chunks [IOT_DATA_BLOCKS * IOT_DATA_BLOCK_SIZE];
 } iot_memory_block_t;
 
 extern void iot_data_init (void);
@@ -162,7 +162,7 @@ static void * iot_data_block_alloc (void)
     block->next = iot_data_blocks;
     iot_data_blocks = block;
 
-    uint8_t * iter = block->chunks;
+    uint8_t * iter = (uint8_t*) block->chunks;
     iot_data_cache = (iot_data_t*) iter;
     for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
     {
@@ -238,6 +238,7 @@ void iot_data_init (void)
   _Static_assert (sizeof (iot_data_pair_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block_t too big");
+  _Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte aligned");
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
