@@ -227,7 +227,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_vector_t): %d\n", (int) sizeof (iot_data_vector_t));
   printf ("sizeof (iot_data_array_t): %d\n", (int) sizeof (iot_data_array_t));
   printf ("sizeof (iot_data_pair_t): %d\n", (int) sizeof (iot_data_pair_t));
-  printf ("IOT_DATA_BLOCK_SIZE %d IOT_DATA_BLOCKS: %d ", (int) IOT_DATA_BLOCK_SIZE, (int) IOT_DATA_BLOCKS);
+  printf ("IOT_DATA_BLOCK_SIZE %d IOT_DATA_BLOCKS: %d\n", (int) IOT_DATA_BLOCK_SIZE, (int) IOT_DATA_BLOCKS);
 
   // Data size sanity checks
 
