@@ -109,8 +109,11 @@ typedef struct iot_string_holder_t
   size_t free;
 } iot_string_holder_t;
 
+// Determine minimum block size that can hold all iot_data types, maximum size of
+// value string cache buffer and number of blocks per allocated memory chunk.
+
 #define IOT_DATA_BLOCK_SIZE (sizeof (iot_data_map_t))
-#define IOT_DATA_BLOCKS (IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE)
+#define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
 #define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
 
 typedef struct iot_data_value_t
@@ -225,6 +228,8 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_array_t): %d\n", (int) sizeof (iot_data_array_t));
   printf ("sizeof (iot_data_pair_t): %d\n", (int) sizeof (iot_data_pair_t));
   printf ("IOT_DATA_BLOCK_SIZE %d IOT_DATA_BLOCKS: %d ", (int) IOT_DATA_BLOCK_SIZE, (int) IOT_DATA_BLOCKS);
+
+  // Data size sanity checks
 
   _Static_assert (sizeof (iot_data_value_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
