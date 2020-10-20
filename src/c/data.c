@@ -101,7 +101,6 @@ typedef struct iot_data_map_t
   iot_data_pair_t * tail;
 } iot_data_map_t;
 
-
 typedef struct iot_string_holder_t
 {
   char * str;
@@ -222,12 +221,13 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot
 
 void iot_data_init (void)
 {
-  printf ("sizeof (iot_data_value_t): %d\n", (int) sizeof (iot_data_value_t));
-  printf ("sizeof (iot_data_map_t): %d\n", (int) sizeof (iot_data_map_t));
-  printf ("sizeof (iot_data_vector_t): %d\n", (int) sizeof (iot_data_vector_t));
-  printf ("sizeof (iot_data_array_t): %d\n", (int) sizeof (iot_data_array_t));
-  printf ("sizeof (iot_data_pair_t): %d\n", (int) sizeof (iot_data_pair_t));
-  printf ("IOT_DATA_BLOCK_SIZE %d IOT_DATA_BLOCKS: %d\n", (int) IOT_DATA_BLOCK_SIZE, (int) IOT_DATA_BLOCKS);
+  printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
+  printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
+  printf ("sizeof (iot_data_vector_t): %zu\n", sizeof (iot_data_vector_t));
+  printf ("sizeof (iot_data_array_t): %zu\n", sizeof (iot_data_array_t));
+  printf ("sizeof (iot_data_pair_t): %zu\n", sizeof (iot_data_pair_t));
+  printf ("IOT_DATA_BLOCK_SIZE %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
+  fflush (stdout);
 
   // Data size sanity checks
 
@@ -239,6 +239,7 @@ void iot_data_init (void)
   _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
   _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block_t too big");
   _Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte aligned");
+
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
