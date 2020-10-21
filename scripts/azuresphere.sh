@@ -9,7 +9,7 @@ cd "${BROOT}/release"
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DCMAKE_TOOLCHAIN_FILE=/opt/azurespheresdk/CMakeFiles/AzureSphereToolchain.cmake \
   -DAZURE_SPHERE_TARGET_API_SET="6" \
-  -DCMAKE_BUILD_TYPE="Release" \
+  -DCMAKE_BUILD_TYPE="MinSizeRel" \
   -G "Ninja" \
   -DLINUX_SYS=AzureSphere \
   "${ROOT}/src"

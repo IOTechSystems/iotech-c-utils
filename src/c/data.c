@@ -6,15 +6,26 @@
 #include "iot/typecode.h"
 #include "iot/json.h"
 #include "iot/base64.h"
-#include "yxml.h"
 
-#define IOT_DATA_BLOCK_SIZE 64
+#ifdef IOT_HAS_XML
+#include "yxml.h"
+#define YXML_PARSER_BUFF_SIZE 4096
+#define YXML_BUFF_SIZE 512
+#endif
+
+#if defined (_GNU_SOURCE) || defined (_ALPINE_)
+#define IOT_HAS_SPINLOCK
+#endif
+
+#if defined (NDEBUG) || defined (_AZURESPHERE_)
+#define IOT_DATA_CACHE
+#endif
+
+#define IOT_MEMORY_BLOCK_SIZE 4096
 #define IOT_JSON_BUFF_SIZE 512
 #define IOT_VAL_BUFF_SIZE 128
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096
 #define IOT_JSON_BUFF_INCREMENT 1024
-#define YXML_PARSER_BUFF_SIZE 4096
-#define YXML_BUFF_SIZE 512
 
 static const char * iot_data_type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","Array","Map","Vector"};
 static const uint8_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*) };
@@ -40,8 +51,9 @@ struct iot_data_t
   iot_data_t * next;
   iot_data_t * metadata;
   atomic_uint_fast32_t refs;
-  iot_data_type_t type;
-  bool release;
+  iot_data_type_t type : 8;
+  bool release : 1;
+  bool release_block : 1;
 };
 
 struct iot_typecode_t
@@ -51,11 +63,11 @@ struct iot_typecode_t
   iot_typecode_t * element_type;
 };
 
-typedef struct iot_data_value_t
+typedef struct iot_data_value_base_t
 {
   iot_data_t base;
   iot_data_union_t value;
-} iot_data_value_t;
+} iot_data_value_base_t;
 
 typedef struct iot_data_array_t
 {
@@ -96,17 +108,48 @@ typedef struct iot_string_holder_t
   size_t free;
 } iot_string_holder_t;
 
+// Determine minimum block size that can hold all iot_data types, maximum size of
+// value string cache buffer and number of blocks per allocated memory chunk.
+
+#define IOT_DATA_BLOCK_SIZE (sizeof (iot_data_map_t))
+#define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
+#define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
+
+typedef struct iot_data_value_t
+{
+  iot_data_t base;
+  iot_data_union_t value;
+  char buff [IOT_DATA_VALUE_BUFF_SIZE];
+} iot_data_value_t;
+
+// Total size of this struct should be <= IOT_MEMORY_BLOCK_SIZE, chunks must be 8 byte aligned.
+typedef struct iot_memory_block_t
+{
+  uint64_t chunks [(IOT_DATA_BLOCKS * IOT_DATA_BLOCK_SIZE) / (sizeof (uint64_t))];
+  struct iot_memory_block_t * next;
+} iot_memory_block_t;
+
+// Data size and alignment sanity checks
+
+_Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte aligned");
+_Static_assert (sizeof (iot_data_value_t) == IOT_DATA_BLOCK_SIZE, "size of iot_data_value_t not equal to IOT_DATA_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_map_t bigger than IOT_DATA_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_vector_t bigger than IOT_DATA_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_array_t bigger than IOT_DATA_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_pair_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_pair_t bigger than IOT_DATA_BLOCK_SIZE");
+_Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "iot_typecode_t bigger than IOT_DATA_BLOCK_SIZE");
+_Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block_t bigger than IOT_MEMORY_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_vector_t) <= sizeof (iot_data_map_t), "iot_data_vector_t bigger than iot_data_map_t");
+_Static_assert (sizeof (iot_data_array_t) <= sizeof (iot_data_map_t), "iot_data_array_t bigger than iot_data_map_t");
+
 extern void iot_data_init (void);
 extern void iot_data_fini (void);
 
-#if defined (_GNU_SOURCE) || defined (_ALPINE_)
-#define IOT_HAS_SPINLOCK
-#endif
+// Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
-// Data cache and guard mutex or spin lock. Only enabled for release builds as makes leak checking difficult.
-
-#ifdef NDEBUG
+#ifdef IOT_DATA_CACHE
 static iot_data_t * iot_data_cache = NULL;
+static iot_memory_block_t * iot_data_blocks = NULL;
 #ifdef IOT_HAS_SPINLOCK
 static pthread_spinlock_t iot_data_slock;
 #else
@@ -119,16 +162,29 @@ static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char
 static void * iot_data_block_alloc (void)
 {
   iot_data_t * data;
-#ifdef NDEBUG
+#ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
   pthread_mutex_lock (&iot_data_mutex);
 #endif
-  if ((data = iot_data_cache))
+  if (iot_data_cache == NULL)
   {
-    iot_data_cache = data->next;
+    iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
+    block->next = iot_data_blocks;
+    iot_data_blocks = block;
+
+    uint8_t * iter = (uint8_t*) block->chunks;
+    iot_data_cache = (iot_data_t*) iter;
+    for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
+    {
+      iot_data_t * prev = (iot_data_t*) iter;
+      iter += IOT_DATA_BLOCK_SIZE;
+      prev->next = (iot_data_t*) iter;
+    }
   }
+  data = iot_data_cache;
+  iot_data_cache = data->next;
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_unlock (&iot_data_slock);
 #else
@@ -141,16 +197,9 @@ static void * iot_data_block_alloc (void)
   return data;
 }
 
-static void * iot_data_factory_alloc (void)
+static inline void iot_data_block_free (iot_data_t * data)
 {
-  iot_data_t * data = iot_data_block_alloc ();
-  atomic_store (&data->refs, 1);
-  return data;
-}
-
-static inline void iot_data_factory_free (iot_data_t * data)
-{
-#ifdef NDEBUG
+#ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
@@ -168,23 +217,33 @@ static inline void iot_data_factory_free (iot_data_t * data)
 #endif
 }
 
-static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, bool copy)
+static void * iot_data_factory_alloc (void)
+{
+  iot_data_t * data = iot_data_block_alloc ();
+  atomic_store (&data->refs, 1);
+  return data;
+}
+
+static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot_data_ownership_t own)
 {
   iot_data_value_t * val = iot_data_factory_alloc ();
   val->base.type = type;
-  val->base.release = copy;
+  val->base.release = (own != IOT_DATA_REF);
   return val;
 }
 
 void iot_data_init (void)
 {
-  _Static_assert (sizeof (iot_data_value_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_map_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_vector_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_array_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_data_pair_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-  _Static_assert (sizeof (iot_typecode_t) < IOT_DATA_BLOCK_SIZE, "IOT_DATA_BLOCK_SIZE too small");
-#ifdef NDEBUG
+/*
+  printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
+  printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
+  printf ("sizeof (iot_data_vector_t): %zu\n", sizeof (iot_data_vector_t));
+  printf ("sizeof (iot_data_array_t): %zu\n", sizeof (iot_data_array_t));
+  printf ("sizeof (iot_data_pair_t): %zu\n", sizeof (iot_data_pair_t));
+  printf ("IOT_DATA_BLOCK_SIZE %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
+*/
+
+#ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
 #else
@@ -195,12 +254,12 @@ void iot_data_init (void)
 
 void iot_data_fini (void)
 {
-#ifdef NDEBUG
-  while (iot_data_cache)
+#ifdef IOT_DATA_CACHE
+  while (iot_data_blocks)
   {
-    iot_data_t * data = iot_data_cache;
-    iot_data_cache = data->next;
-    free (data);
+    iot_memory_block_t * block = iot_data_blocks;
+    iot_data_blocks = block->next;
+    free (block);
   }
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_destroy (&iot_data_slock);
@@ -336,6 +395,11 @@ iot_data_type_t iot_data_type (const iot_data_t * data)
   return data->type;
 }
 
+bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type)
+{
+  return (data && (data->type == type));
+}
+
 void * iot_data_address (const iot_data_t * data)
 {
   return (data && data->type <= IOT_DATA_ARRAY) ? ((data->type == IOT_DATA_ARRAY) ? ((iot_data_array_t*) data)->data : (void*)&(((iot_data_value_t*) data)->value)) : NULL;
@@ -349,12 +413,24 @@ void iot_data_free (iot_data_t * data)
     switch (data->type)
     {
       case IOT_DATA_STRING:
-        if (data->release) free (((iot_data_value_t*) data)->value.str);
+      {
+        iot_data_value_t * val = (iot_data_value_t*) data;
+        if (data->release && (val->value.str != val->buff))
+        {
+          if (data->release_block)
+          {
+            iot_data_block_free ((iot_data_t*) val->value.str);
+          }
+          else
+          {
+            free (val->value.str);
+          }
+        }
         break;
+      }
       case IOT_DATA_ARRAY:
       {
-        iot_data_array_t * array = (iot_data_array_t*) data;
-        if (array->base.release) free (array->data);
+        if (data->release) free (((iot_data_array_t*) data)->data);
         break;
       }
       case IOT_DATA_MAP:
@@ -366,7 +442,7 @@ void iot_data_free (iot_data_t * data)
           iot_data_free (pair->key);
           iot_data_free (pair->value);
           map->head = (iot_data_pair_t *) pair->base.next;
-          iot_data_factory_free (&pair->base);
+          iot_data_block_free (&pair->base);
         }
         map->size = 0;
         break;
@@ -384,7 +460,7 @@ void iot_data_free (iot_data_t * data)
       }
       default: break;
     }
-    iot_data_factory_free (data);
+    iot_data_block_free (data);
   }
 }
 
@@ -524,8 +600,27 @@ iot_data_t * iot_data_alloc_bool (bool val)
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
 {
   assert (val);
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, ownership != IOT_DATA_REF);
-  data->value.str = (ownership == IOT_DATA_COPY) ? strdup (val) : (char*) val;
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, ownership);
+  data->value.str = (char*) val;
+  if (ownership == IOT_DATA_COPY)
+  {
+    size_t len = strlen (val);
+    if (len < IOT_DATA_VALUE_BUFF_SIZE) // If string small enough save in iot_data_value_t buffer
+    {
+      data->value.str = data->buff;
+      strcpy (data->buff, val);
+    }
+    else if (len < IOT_DATA_BLOCK_SIZE) // If less than size of block save in block
+    {
+      data->value.str = iot_data_block_alloc ();
+      strcpy (data->value.str, val);
+      data->base.release_block = true;
+    }
+    else // Allocate as last resort
+    {
+      data->value.str = strdup (val);
+    }
+  }
   return (iot_data_t*) data;
 }
 
@@ -538,7 +633,7 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
   array->data = data;
   array->length = length;
   array->size = iot_data_type_size[type] * length;
-  array->base.release = ownership != IOT_DATA_REF;
+  array->base.release = (ownership != IOT_DATA_REF);
   if (ownership == IOT_DATA_COPY)
   {
     array->data = malloc (array->size);
@@ -551,6 +646,11 @@ extern iot_data_type_t iot_data_array_type (const iot_data_t * array)
 {
   assert (array && (array->type == IOT_DATA_ARRAY));
   return ((iot_data_array_t*) array)->type;
+}
+
+extern bool iot_data_array_is_of_type (const iot_data_t * array, iot_data_type_t type)
+{
+  return (array && (array->type == IOT_DATA_ARRAY) && (((iot_data_array_t*) array)->type == type));
 }
 
 extern uint32_t iot_data_array_size (const iot_data_t * array)
@@ -661,7 +761,7 @@ const char * iot_data_string (const iot_data_t * data)
 
 static iot_data_pair_t * iot_data_map_find (iot_data_map_t * map, const iot_data_t * key)
 {
-  iot_data_pair_t * pair =  map->head;
+  iot_data_pair_t * pair = map->head;
   while (pair)
   {
     if (iot_data_equal (pair->key, key))
@@ -793,6 +893,11 @@ iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 {
   assert (map);
   return ((iot_data_map_t*) map)->key_type;
+}
+
+extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t type)
+{
+  return (map && (map->type == IOT_DATA_MAP) && (((iot_data_array_t*) map)->type == type));
 }
 
 void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val)
@@ -1291,6 +1396,7 @@ iot_data_t * iot_data_from_json (const char * json)
   return data;
 }
 
+#ifdef IOT_HAS_XML
 static iot_data_t * iot_data_map_from_xml (bool root, yxml_t * x, iot_string_holder_t * holder, const char ** str)
 {
   iot_data_t * elem = iot_data_alloc_map (IOT_DATA_STRING);
@@ -1402,6 +1508,7 @@ iot_data_t * iot_data_from_xml (const char * xml)
   free (holder.str);
   return result;
 }
+#endif
 
 iot_data_t * iot_data_copy (const iot_data_t * src)
 {
@@ -1409,22 +1516,18 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
   iot_data_t * data = (iot_data_t*) src;
   iot_data_t * ret;
 
-  // For data created using IOT_DATA_REF ownership just increment ref count
-  if (((data->type == IOT_DATA_STRING) || (data->type == IOT_DATA_ARRAY)) && (data->release != true))
-  {
-    iot_data_add_ref (data);
-    return data;
-  }
-
   switch (data->type)
   {
     case IOT_DATA_STRING:
-      ret = iot_data_alloc_string (((iot_data_value_t*) data)->value.str, IOT_DATA_COPY);
+    {
+      iot_data_value_t * val = (iot_data_value_t *) data;
+      ret = iot_data_alloc_string (val->value.str, val->base.release ? IOT_DATA_COPY : IOT_DATA_REF);
       break;
+    }
     case IOT_DATA_ARRAY:
     {
       iot_data_array_t * array = (iot_data_array_t*) data;
-      ret =  iot_data_alloc_array (array->data, array->length, array->type, IOT_DATA_COPY);
+      ret = iot_data_alloc_array (array->data, array->length, array->type, array->base.release ? IOT_DATA_COPY : IOT_DATA_REF);
       break;
     }
     case IOT_DATA_MAP:
@@ -1514,7 +1617,7 @@ extern void iot_typecode_free (iot_typecode_t * typecode)
 {
   if (typecode && (typecode->type > IOT_DATA_ARRAY))
   {
-    iot_data_factory_free ((iot_data_t*) typecode);
+    iot_data_block_free ((iot_data_t*) typecode);
   }
 }
 

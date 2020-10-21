@@ -3,10 +3,12 @@ if ("${LINUX_SYS}" STREQUAL "AzureSphere")
   project (IOT LANGUAGES C)
   azsphere_configure_tools (TOOLS_REVISION "20.07")
   azsphere_configure_api (TARGET_API_SET "6")
+  set (IOT_BUILD_XML OFF)
 else ()
   cmake_minimum_required (VERSION 3.1)
   project (IOT LANGUAGES C CXX)
   set (CMAKE_CXX_STANDARD 11)
+  set (IOT_BUILD_XML ON)
 endif ()
 set (CMAKE_C_STANDARD 11)
 
@@ -30,6 +32,13 @@ set (IOT_BUILD_STATIC ON CACHE BOOL "Build static libraries")
 set (IOT_BUILD_SHARED ON CACHE BOOL "Build shared libraries")
 set (IOT_BUILD_EXES ON CACHE BOOL "Build executables")
 
+set (IOT_HAS_XML ${IOT_BUILD_XML})
+
+# Write iot/defs.h with version and build options (IOT_HAS_XXX)
+
+file (REMOVE "${CMAKE_SOURCE_DIR}/../include/iot/defs.h")
+configure_file ("${CMAKE_SOURCE_DIR}/c/defs.h.in" "${CMAKE_SOURCE_DIR}/../include/iot/defs.h")
+
 # Configure for different target systems
 
 set (OS_ARCH x86_64)
@@ -44,6 +53,7 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Generic")
     set (IOT_BUILD_SHARED OFF)
     set (IOT_BUILD_DYNAMIC_LOAD OFF)
     set (IOT_BUILD_EXES OFF)
+    set (IOT_BUILD_XML OFF)
   endif ()
   set (CPACK_GENERATOR TGZ)
 else ()
@@ -129,7 +139,7 @@ endif ()
 
 # Configure packaging options
 
-if (CMAKE_BUILD_TYPE MATCHES Release)
+if (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinSizeRel)
   set (CPACK_PACKAGE_NAME "iotech-iot")
   set (CPACK_STRIP_FILES "TRUE")
 else ()

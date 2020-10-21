@@ -12,6 +12,7 @@
  * @brief IOTech IOT API
  */
 
+#include "iot/defs.h"
 #include "iot/data.h"
 #include "iot/config.h"
 #include "iot/base64.h"
