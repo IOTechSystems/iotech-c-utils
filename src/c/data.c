@@ -325,7 +325,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
       {
         iot_data_array_t * a1 = (iot_data_array_t*) v1;
         iot_data_array_t * a2 = (iot_data_array_t*) v2;
-        return (a1->data == a2->data) || ((a1->size == a2->size) && (a1->type == a2->type) && (memcmp (a1->data, a2->data, a1->size) == 0));
+        return  ((a1->size == a2->size) && (a1->type == a2->type) && ((a1->data == a2->data) || (memcmp (a1->data, a2->data, a1->size) == 0)));
       }
       case IOT_DATA_VECTOR:
       {
