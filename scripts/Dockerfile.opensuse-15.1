@@ -1,5 +1,5 @@
 FROM opensuse/leap:15.1
-MAINTAINER IOTech <support@iotechsys.com>
+LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 RUN zypper --non-interactive install git tar cmake gcc-c++ make wget rpm-build doxygen graphviz
 COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/
