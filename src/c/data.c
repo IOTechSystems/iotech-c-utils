@@ -14,7 +14,7 @@
 #endif
 
 #if defined (_GNU_SOURCE) || defined (_ALPINE_)
-#define IOT_HAS_SPINLOCK
+// #define IOT_HAS_SPINLOCK
 #endif
 
 #if defined (NDEBUG) || defined (_AZURESPHERE_)
