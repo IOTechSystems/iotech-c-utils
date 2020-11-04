@@ -251,12 +251,12 @@ def publishTars (arch)
     {
       def uploadSpec = """{"files":[
       {
-        "pattern": "${tar_archs[arch]}/${tars[i]}/release/iotech-iot*.tar.gz",
+        "pattern": "${arch}/${tars[i]}/release/iotech-iot*.tar.gz",
         "target": "generic-${releaseType[archive]}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       },
       {
-        "pattern": "${tar_archs[arch]}/${tars[i]}/debug/iotech-iot-dev*.tar.gz",
+        "pattern": "${arch}/${tars[i]}/debug/iotech-iot-dev*.tar.gz",
         "target": "generic-${releaseType[archive]}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
