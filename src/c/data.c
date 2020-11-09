@@ -13,10 +13,6 @@
 #define YXML_BUFF_SIZE 512
 #endif
 
-#if defined (_GNU_SOURCE) || defined (_ALPINE_)
-// #define IOT_HAS_SPINLOCK
-#endif
-
 #if defined (NDEBUG) || defined (_AZURESPHERE_)
 #define IOT_DATA_CACHE
 #endif
@@ -150,11 +146,7 @@ extern void iot_data_fini (void);
 #ifdef IOT_DATA_CACHE
 static iot_data_t * iot_data_cache = NULL;
 static iot_memory_block_t * iot_data_blocks = NULL;
-#ifdef IOT_HAS_SPINLOCK
-static pthread_spinlock_t iot_data_slock;
-#else
 static pthread_mutex_t iot_data_mutex;
-#endif
 #endif
 
 static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
@@ -163,11 +155,7 @@ static void * iot_data_block_alloc (void)
 {
   iot_data_t * data;
 #ifdef IOT_DATA_CACHE
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_lock (&iot_data_slock);
-#else
   pthread_mutex_lock (&iot_data_mutex);
-#endif
   if (iot_data_cache == NULL)
   {
     iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
@@ -185,11 +173,7 @@ static void * iot_data_block_alloc (void)
   }
   data = iot_data_cache;
   iot_data_cache = data->next;
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_unlock (&iot_data_slock);
-#else
   pthread_mutex_unlock (&iot_data_mutex);
-#endif
   data = (data) ? memset (data, 0, IOT_DATA_BLOCK_SIZE) : calloc (1, IOT_DATA_BLOCK_SIZE);
 #else
   data = calloc (1, IOT_DATA_BLOCK_SIZE);
@@ -200,18 +184,10 @@ static void * iot_data_block_alloc (void)
 static inline void iot_data_block_free (iot_data_t * data)
 {
 #ifdef IOT_DATA_CACHE
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_lock (&iot_data_slock);
-#else
   pthread_mutex_lock (&iot_data_mutex);
-#endif
   data->next = iot_data_cache;
   iot_data_cache = data;
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_unlock (&iot_data_slock);
-#else
   pthread_mutex_unlock (&iot_data_mutex);
-#endif
 #else
   free (data);
 #endif
@@ -244,11 +220,7 @@ void iot_data_init (void)
 */
 
 #ifdef IOT_DATA_CACHE
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_init (&iot_data_slock, 0);
-#else
   pthread_mutex_init (&iot_data_mutex, NULL);
-#endif
 #endif
 }
 
@@ -261,11 +233,7 @@ void iot_data_fini (void)
     iot_data_blocks = block->next;
     free (block);
   }
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_destroy (&iot_data_slock);
-#else
   pthread_mutex_destroy (&iot_data_mutex);
-#endif
 #endif
 }
 
