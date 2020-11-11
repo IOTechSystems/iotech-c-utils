@@ -132,14 +132,14 @@ def publishAdvancedMetrics (system, arch)
 
 def publishDebs (arch)
 {
-  def debs_x86_64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9']
+  def debs_x86_64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9','azuresphere']
   def debs_arm64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9']
   def debs_arm32 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','debian-10','debian-9']
   def debs_i586 = []
   def debs_x86 = []
   def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32, i586: debs_i586, x86: debs_x86]
   def deb_archs = [x86_64: 'amd64', arm64: 'arm64', arm32: 'armhf']
-  def deb_name = ['ubuntu-20.04':'focal','ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-10':'buster','debian-9':'stretch']
+  def deb_name = ['ubuntu-20.04':'focal','ubuntu-18.04':'bionic','ubuntu-16.04':'xenial','debian-10':'buster','debian-9':'stretch','azuresphere':'focal']
   def debs = deb_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
@@ -151,12 +151,12 @@ def publishDebs (arch)
       def name = deb_name[debs[i]]
       def uploadSpec = """{"files":[
       {
-        "pattern": "${arch}/${debs[i]}/release/iotech-iot*.deb",
+        "pattern": "${arch}/${debs[i]}/release/iotech*iot*.deb",
         "target": "debian-${releaseType[archive]}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       },
       {
-        "pattern": "${arch}/${debs[i]}/debug/iotech-iot-dev*.deb",
+        "pattern": "${arch}/${debs[i]}/debug/iotech*iot*.deb",
         "target": "debian-${releaseType[archive]}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }
@@ -234,7 +234,7 @@ def publishRpms (arch)
 
 def publishTars (arch)
 {
-  def tars_x86_64 = ['alpine-3.12','alpine-3.11','zephyr-2.3','zephyr-1.14','clearlinux','azuresphere']
+  def tars_x86_64 = ['alpine-3.12','alpine-3.11','zephyr-2.3','zephyr-1.14','clearlinux']
   def tars_arm64 = ['alpine-3.12','alpine-3.11']
   def tars_arm32 = ['alpine-3.12','alpine-3.11']
   def tars_i586 = ['seawolf']
