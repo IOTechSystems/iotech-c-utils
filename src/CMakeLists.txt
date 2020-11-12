@@ -170,6 +170,7 @@ if (${CPACK_GENERATOR} STREQUAL "DEB")
     set (CPACK_PACKAGING_INSTALL_PREFIX "/opt/azurespheresdk/Sysroots/${AZURESPHERE_API}/opt/iotech/iot")
   else ()
     set (CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, build-essential, gcc, cmake, make")
+    set (CPACK_PACKAGING_INSTALL_PREFIX "/opt/iotech/iot")
   endif ()
 
 elseif (${CPACK_GENERATOR} STREQUAL "RPM")
