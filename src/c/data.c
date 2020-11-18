@@ -152,9 +152,8 @@ static iot_data_t * iot_data_cache = NULL;
 static iot_memory_block_t * iot_data_blocks = NULL;
 #ifdef IOT_HAS_SPINLOCK
 static pthread_spinlock_t iot_data_slock;
-#else
-static pthread_mutex_t iot_data_mutex;
 #endif
+static pthread_mutex_t iot_data_mutex;
 #endif
 
 static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
@@ -168,21 +167,38 @@ static void * iot_data_block_alloc (void)
 #else
   pthread_mutex_lock (&iot_data_mutex);
 #endif
-  if (iot_data_cache == NULL)
+#ifdef IOT_HAS_SPINLOCK
+  while (iot_data_cache <= (iot_data_t *) 1)
   {
-    iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
-    block->next = iot_data_blocks;
-    iot_data_blocks = block;
-
-    uint8_t * iter = (uint8_t*) block->chunks;
-    iot_data_cache = (iot_data_t*) iter;
-    for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
+    bool allocate = (iot_data_cache == NULL);
+    iot_data_t * new_data_cache = NULL;
+    if (allocate) iot_data_cache = (iot_data_t *) 1;
+    pthread_spin_unlock (&iot_data_slock);
+    pthread_mutex_lock (&iot_data_mutex);
+#else
+    bool allocate = (iot_data_cache == NULL);
+#endif
+    if (allocate)
     {
-      iot_data_t * prev = (iot_data_t*) iter;
-      iter += IOT_DATA_BLOCK_SIZE;
-      prev->next = (iot_data_t*) iter;
+      iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
+      block->next = iot_data_blocks;
+      iot_data_blocks = block;
+
+      uint8_t * iter = (uint8_t*) block->chunks;
+      new_data_cache = (iot_data_t*) iter;
+      for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
+      {
+        iot_data_t * prev = (iot_data_t*) iter;
+        iter += IOT_DATA_BLOCK_SIZE;
+        prev->next = (iot_data_t*) iter;
+      }
     }
+#ifdef IOT_HAS_SPINLOCK
+    pthread_mutex_unlock (&iot_data_mutex);
+    pthread_spin_lock (&iot_data_slock);
+    if (allocate) iot_data_cache = new_data_cache;
   }
+#endif
   data = iot_data_cache;
   iot_data_cache = data->next;
 #ifdef IOT_HAS_SPINLOCK
@@ -246,9 +262,8 @@ void iot_data_init (void)
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
-#else
-  pthread_mutex_init (&iot_data_mutex, NULL);
 #endif
+  pthread_mutex_init (&iot_data_mutex, NULL);
 #endif
 }
 
@@ -263,9 +278,8 @@ void iot_data_fini (void)
   }
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_destroy (&iot_data_slock);
-#else
-  pthread_mutex_destroy (&iot_data_mutex);
 #endif
+  pthread_mutex_destroy (&iot_data_mutex);
 #endif
 }
 
