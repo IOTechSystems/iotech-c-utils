@@ -114,6 +114,7 @@ typedef struct iot_string_holder_t
 #define IOT_DATA_BLOCK_SIZE (sizeof (iot_data_map_t))
 #define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
 #define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
+#define IOT_DATA_ALLOCATING ((iot_data_t *) 1)
 
 typedef struct iot_data_value_t
 {
@@ -168,11 +169,11 @@ static void * iot_data_block_alloc (void)
   pthread_mutex_lock (&iot_data_mutex);
 #endif
 #ifdef IOT_HAS_SPINLOCK
-  while (iot_data_cache <= (iot_data_t *) 1)
+  while (iot_data_cache <= IOT_DATA_ALLOCATING)
   {
     bool allocate = (iot_data_cache == NULL);
     iot_data_t * new_data_cache = NULL;
-    if (allocate) iot_data_cache = (iot_data_t *) 1;
+    if (allocate) iot_data_cache = IOT_DATA_ALLOCATING;
     pthread_spin_unlock (&iot_data_slock);
     pthread_mutex_lock (&iot_data_mutex);
 #else
@@ -218,6 +219,13 @@ static inline void iot_data_block_free (iot_data_t * data)
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
+  while (iot_data_cache == IOT_DATA_ALLOCATING)
+  {
+    pthread_spin_unlock (&iot_data_slock);
+    pthread_mutex_lock (&iot_data_mutex);
+    pthread_mutex_unlock (&iot_data_mutex);
+    pthread_spin_lock (&iot_data_slock);
+  }
 #else
   pthread_mutex_lock (&iot_data_mutex);
 #endif
