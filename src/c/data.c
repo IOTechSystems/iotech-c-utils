@@ -272,6 +272,8 @@ void iot_data_init (void)
   pthread_spin_init (&iot_data_slock, 0);
 #endif
   pthread_mutex_init (&iot_data_mutex, NULL);
+  iot_data_t * data = iot_data_block_alloc (); // Initialize data cache
+  iot_data_block_free (data);
 #endif
 }
 
