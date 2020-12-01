@@ -578,6 +578,17 @@ extern const char * iot_data_string (const iot_data_t * data);
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
 /**
+ * @brief Remove a value by key from a map
+ *
+ * The function to remove a key-value pair from a map by key
+ *
+ * @param map  Map to remove a key-value pair
+ * @param key  Key. Can be NULL (function will return false)
+ * @return     Whether key-value pair has been removed
+ */
+extern bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key);
+
+/**
  * @brief Get the size of a map
  *
  * The function to get the map size
@@ -598,6 +609,17 @@ extern uint32_t iot_data_map_size (const iot_data_t * map);
  * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
  */
 extern void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val);
+
+/**
+ * @brief Remove a value by string key from a map
+ *
+ * The function to remove a key-value pair from a map where a key is of string type
+ *
+ * @param map  Map to remove a key-value pair
+ * @param key  String key. Can be NULL (function will return false)
+ * @return     Whether key-value pair has been removed
+ */
+extern bool iot_data_string_map_remove (iot_data_t * map, const char * key);
 
 /**
  * @brief  Get value from the map for a key provided
