@@ -797,10 +797,60 @@ static iot_data_pair_t * iot_data_map_find (iot_data_map_t * map, const iot_data
   return pair;
 }
 
+bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key)
+{
+  assert (map && (map->type == IOT_DATA_MAP));
+  iot_data_pair_t * pair = NULL;
+  if (key)
+  {
+    iot_data_pair_t * prev = NULL;
+    iot_data_map_t * mp = (iot_data_map_t*) map;
+    pair = mp->head;
+    while (pair)
+    {
+      if (iot_data_equal (pair->key, key))
+      {
+        if (pair == mp->head)
+        {
+          mp->head = (iot_data_pair_t *) pair->base.next;
+        }
+        else
+        {
+          prev->base.next = pair->base.next;
+        }
+        if (pair == mp->tail)
+        {
+          mp->tail = (iot_data_pair_t *) (prev ? prev->base.next : NULL);
+        }
+        mp->size--;
+        iot_data_free (pair->key);
+        iot_data_free (pair->value);
+        iot_data_free (&pair->base);
+        break;
+      }
+      prev = pair;
+      pair = (iot_data_pair_t *) pair->base.next;
+    }
+  }
+  return (pair != NULL);
+}
+
 void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val)
 {
   assert (key);
   iot_data_map_add (map, iot_data_alloc_string (key, IOT_DATA_REF), val);
+}
+
+bool iot_data_string_map_remove (iot_data_t * map, const char * key)
+{
+  bool ret = false;
+  if (key)
+  {
+    iot_data_t * kdata = iot_data_alloc_string (key, IOT_DATA_REF);
+    ret = iot_data_map_remove (map, kdata);
+    iot_data_free (kdata);
+  }
+  return ret;
 }
 
 void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)

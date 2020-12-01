@@ -16,5 +16,10 @@
 * `iot_data_array_is_of_type`
 * `iot_data_map_key_is_of_type`
 
+- Added iot_data functions to remove map elements
+
+* `iot_data_string_map_remove`
+* `iot_data_map_remove`
+
 - Added memory usage optimisation for iot_data allocation
 - Added support for AzureSphere platform
