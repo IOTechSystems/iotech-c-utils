@@ -10,3 +10,4 @@ deps
 *~
 TAGS
 cmake-build-*
+include/iot/defs.h

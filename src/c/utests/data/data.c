@@ -304,6 +304,7 @@ static void test_data_array_iter_uint64 (void)
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint64_t), IOT_DATA_UINT64, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
 
+  CU_ASSERT (iot_data_array_is_of_type (array, IOT_DATA_UINT64))
   while (iot_data_array_iter_next (&array_iter))
   {
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
@@ -545,6 +546,7 @@ static void test_data_from_json (void)
   iot_data_free (map);
 }
 
+#ifdef IOT_HAS_XML
 static void test_data_from_xml (void)
 {
   iot_data_t * xml;
@@ -575,6 +577,7 @@ static void test_data_from_xml (void)
   free (json);
   iot_data_free (xml);
 }
+#endif
 
 static void test_data_address (void)
 {
@@ -1015,7 +1018,9 @@ static void test_data_equal_map (void)
   val2 = iot_data_alloc_ui32 (77u);
   key2 = iot_data_alloc_string ("key2", IOT_DATA_REF);
   iot_data_map_add (data_map2, key2, val2);
-  
+
+  CU_ASSERT (iot_data_map_key_is_of_type (data_map1, IOT_DATA_STRING))
+  CU_ASSERT (iot_data_is_of_type (data_map1, IOT_DATA_MAP))
   CU_ASSERT (iot_data_equal (data_map1, data_map2))
 
   iot_data_free (data_map1);
@@ -1570,9 +1575,9 @@ static void test_data_copy_vector_strings (void)
 
   iot_data_t *vector2 = iot_data_copy (vector1);
 
-  //vector elements should point to same address
-  CU_ASSERT (iot_data_vector_get (vector1,0) == iot_data_vector_get (vector2,0))
-  CU_ASSERT (iot_data_vector_get (vector1,1) == iot_data_vector_get (vector2,1))
+  // vector elements should not point to same address
+  CU_ASSERT (iot_data_vector_get (vector1,0) != iot_data_vector_get (vector2,0))
+  CU_ASSERT (iot_data_vector_get (vector1,1) != iot_data_vector_get (vector2,1))
   CU_ASSERT (iot_data_equal (vector1, vector2))
 
   iot_data_vector_add (vector2, 0, iot_data_alloc_string ("change", IOT_DATA_REF));
@@ -1603,8 +1608,7 @@ static void test_data_copy_vector_strings (void)
 
   vector4 = iot_data_copy (vector3);
 
-  //vector element allocated by reference should point to the same address
-  CU_ASSERT (iot_data_vector_get (vector3,0) == iot_data_vector_get (vector4,0))
+  CU_ASSERT (iot_data_vector_get (vector3,0) != iot_data_vector_get (vector4,0))
   CU_ASSERT (iot_data_vector_get (vector3,1) != iot_data_vector_get (vector4,1))
 
   iot_data_free (vector3);
@@ -1617,17 +1621,18 @@ static void test_data_copy_map (void)
 
   iot_data_t * val1 = iot_data_alloc_ui32 (66u);
   iot_data_t * key1 = iot_data_alloc_string ("key1", IOT_DATA_REF);
-
   iot_data_map_add (data_map1, key1, val1);
 
   val1 = iot_data_alloc_ui32 (77u);
   key1 = iot_data_alloc_string ("key2", IOT_DATA_REF);
-
   iot_data_map_add (data_map1, key1, val1);
 
   val1 = iot_data_alloc_ui32 (88u);
   key1 = iot_data_alloc_string ("key3", IOT_DATA_COPY);
+  iot_data_map_add (data_map1, key1, val1);
 
+  val1 = iot_data_alloc_ui32 (99u);
+  key1 = iot_data_alloc_string ("key4-this-is-a-very-very-very-very-yes-still-some-more-long-key", IOT_DATA_COPY);
   iot_data_map_add (data_map1, key1, val1);
 
   iot_data_t * data_map2 = iot_data_copy (data_map1);
@@ -1791,6 +1796,33 @@ static void test_map_size (void)
   iot_data_string_map_add (map, "element2", iot_data_alloc_string ("data", IOT_DATA_REF));
   CU_ASSERT (iot_data_map_size (map) == 2)
 
+  iot_data_free (map);
+}
+
+static void test_data_map_remove (void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * key2 = iot_data_alloc_string ("2", IOT_DATA_REF);
+
+  iot_data_map_add (map, iot_data_alloc_string ("1", IOT_DATA_REF), iot_data_alloc_string ("One", IOT_DATA_REF));
+  iot_data_map_add (map, iot_data_alloc_string ("2", IOT_DATA_REF), iot_data_alloc_string ("Two", IOT_DATA_REF));
+  iot_data_map_add (map, iot_data_alloc_string ("3", IOT_DATA_REF), iot_data_alloc_string ("Three", IOT_DATA_REF));
+  iot_data_map_add (map, iot_data_alloc_string ("4", IOT_DATA_REF), iot_data_alloc_string ("Four", IOT_DATA_REF));
+
+  CU_ASSERT (! iot_data_string_map_remove (map, "Nope"))
+  CU_ASSERT (! iot_data_string_map_remove (map, NULL))
+  CU_ASSERT (! iot_data_map_remove (map, NULL))
+
+  CU_ASSERT (iot_data_string_map_remove (map, "3"))
+  CU_ASSERT (iot_data_map_size (map) == 3u)
+  CU_ASSERT (iot_data_string_map_remove (map, "1"))
+  CU_ASSERT (iot_data_map_size (map) == 2u)
+  CU_ASSERT (iot_data_string_map_remove (map, "4"))
+  CU_ASSERT (iot_data_map_size (map) == 1u)
+  CU_ASSERT (iot_data_map_remove (map, key2))
+  CU_ASSERT (iot_data_map_size (map) == 0u)
+
+  iot_data_free (key2);
   iot_data_free (map);
 }
 
@@ -2515,7 +2547,6 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_string_vector", test_data_string_vector);
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
-  CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_name_type", test_data_name_type);
   CU_add_test (suite, "data_from_string", test_data_from_string);
@@ -2526,6 +2557,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_decrement", test_data_decrement);
   CU_add_test (suite, "data_map_size", test_map_size);
   CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);
+  CU_add_test (suite, "data_map_remove", test_data_map_remove);
   CU_add_test (suite, "data_vector_iter_replace", test_data_vector_iter_replace);
   CU_add_test (suite, "data_check_equal_int8", test_data_equal_int8);
   CU_add_test (suite, "data_check_equal_uint16", test_data_equal_uint16);
@@ -2589,4 +2621,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_complex_typecode", test_data_complex_typecode);
   CU_add_test (suite, "data_equal_typecode", test_data_equal_typecode);
   CU_add_test (suite, "data_type_typecode", test_data_type_typecode);
+#ifdef IOT_HAS_XML
+  CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
+#endif
 }

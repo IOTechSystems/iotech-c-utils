@@ -1,5 +1,5 @@
 FROM alpine:3.11
-MAINTAINER IOTech <support@iotechsys.com>
+LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 RUN apk add --update --no-cache build-base wget git gcc cmake make
 COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/

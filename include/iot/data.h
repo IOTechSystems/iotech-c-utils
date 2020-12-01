@@ -13,6 +13,7 @@
  */
 
 #include "iot/os.h"
+#include "iot/defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,9 +46,9 @@ typedef enum iot_data_type_t
  */
 typedef enum iot_data_ownership_t
 {
-  IOT_DATA_COPY,  /**< Data is copied and copy freed when no longer used */
-  IOT_DATA_TAKE,  /**< Data is taken and freed when no longer used */
-  IOT_DATA_REF    /**< Data is referenced and never freed */
+  IOT_DATA_COPY = 0u,  /**< Data is copied and copy freed when no longer used */
+  IOT_DATA_TAKE = 1u,  /**< Data is taken and freed when no longer used */
+  IOT_DATA_REF = 2u    /**< Data is referenced and never freed */
 } iot_data_ownership_t;
 
 /** Alias for iot data structure */
@@ -113,6 +114,17 @@ extern void iot_data_free (iot_data_t * data);
  * @return      Datatype from the enum defined in iot_data_type_t
  */
 extern iot_data_type_t iot_data_type (const iot_data_t * data);
+
+/**
+ * @brief Check if data instance is of a given type
+ *
+ * The function to returns whether a data instance is of the given type
+ *
+ * @param data  Pointer to data (can be NULL)
+ * @param type  The data type
+ * @return      Whether the data is of the given type. Returns false is data is NULL.
+ */
+extern bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type);
 
 /**
  * @brief Get data type code
@@ -330,6 +342,17 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
  * @return           Type of array data
  */
 extern iot_data_type_t iot_data_array_type (const iot_data_t * array);
+
+/**
+ * @brief Check if array instance is of a given type
+ *
+ * The function to returns whether an array instance is of the given type
+ *
+ * @param array  Pointer to array (can be NULL)
+ * @param type  The array content data type
+ * @return      Whether the array content is of the given type. Returns false is array is NULL.
+ */
+extern bool iot_data_array_is_of_type (const iot_data_t * array, iot_data_type_t type);
 
 /**
  * @brief Find the number of Array elements
@@ -555,6 +578,17 @@ extern const char * iot_data_string (const iot_data_t * data);
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
 /**
+ * @brief Remove a value by key from a map
+ *
+ * The function to remove a key-value pair from a map by key
+ *
+ * @param map  Map to remove a key-value pair
+ * @param key  Key. Can be NULL (function will return false)
+ * @return     Whether key-value pair has been removed
+ */
+extern bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key);
+
+/**
  * @brief Get the size of a map
  *
  * The function to get the map size
@@ -575,6 +609,17 @@ extern uint32_t iot_data_map_size (const iot_data_t * map);
  * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
  */
 extern void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val);
+
+/**
+ * @brief Remove a value by string key from a map
+ *
+ * The function to remove a key-value pair from a map where a key is of string type
+ *
+ * @param map  Map to remove a key-value pair
+ * @param key  String key. Can be NULL (function will return false)
+ * @return     Whether key-value pair has been removed
+ */
+extern bool iot_data_string_map_remove (iot_data_t * map, const char * key);
 
 /**
  * @brief  Get value from the map for a key provided
@@ -675,6 +720,17 @@ extern const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, c
  * @return     Data type of the map
  */
 extern iot_data_type_t iot_data_map_key_type (const iot_data_t * map);
+
+/**
+ * @brief Check if map instance key is of a given type
+ *
+ * The function to returns whether a map instance key is of the given type
+ *
+ * @param map   Pointer to map (can be NULL)
+ * @param type  The map key data type
+ * @return      Whether the map key is of the given type. Returns false is map is NULL.
+ */
+extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t type);
 
 /**
  * @brief  Decode base64 value and store it as a byte array in a map for a given key
@@ -964,6 +1020,7 @@ extern char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size
  */
 extern iot_data_t * iot_data_from_json (const char * json);
 
+#ifdef IOT_HAS_XML
 /**
  * @brief Convert XML to iot_data_t type
  *
@@ -977,6 +1034,7 @@ extern iot_data_t * iot_data_from_json (const char * json);
  * @return       A iot_data map if input string is a XML string, NULL otherwise.
  */
 extern iot_data_t * iot_data_from_xml (const char * xml);
+#endif
 
 /**
  * @brief Check for equality of 2 iot_data types

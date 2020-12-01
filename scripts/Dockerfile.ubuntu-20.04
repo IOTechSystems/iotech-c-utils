@@ -1,5 +1,5 @@
 FROM ubuntu:20.04
-MAINTAINER IOTech <support@iotechsys.com>
+LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 ENV DEBIAN_FRONTEND=noninteractive
 RUN ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
 RUN apt-get update && apt-get install -y build-essential file wget git gcc cmake make valgrind cppcheck lcov gcovr doxygen graphviz

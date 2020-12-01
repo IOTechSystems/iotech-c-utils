@@ -6,6 +6,7 @@ APKARCH=$3
 VER=$(cat VERSION)
 BUILDER=iotechsys/iotech-apk-builder:0.2.1
 TGZ="iotech-iot-${VER}_${APKARCH}.tar.gz"
+DBG_TGZ="iotech-iot-dev-${VER}_${APKARCH}.tar.gz"
 
 build_apk ()
 {
@@ -21,10 +22,10 @@ build_apk ()
 build_dbg_apk ()
 {
   DIST=$1
-  ARCHIVE="${ARCH}/${DIST}/release/${TGZ}"
+  ARCHIVE="${ARCH}/${DIST}/debug/${DBG_TGZ}"
   rm "apk/${DIST}/packager/${APKARCH}/APKINDEX.tar.gz"
   cp "${ARCHIVE}" "apk/${DIST}/"
-  sed -e"s/%APKARCH%/${APKARCH}/" -e"s/%ARCH%/${ARCH}/" -e's/pkgname=iotech-iot/&-dbg/' <scripts/APKBUILD >"apk/${DIST}/APKBUILD"
+  sed -e"s/%APKARCH%/${APKARCH}/" -e"s/%ARCH%/${ARCH}/" -e's/pkgname=iotech-iot/&-dbg/' -e's/base="iotech-iot/&-dev/'<scripts/APKBUILD >"apk/${DIST}/APKBUILD"
   cp VERSION "apk/${DIST}/."
   docker run --rm -e UID=$(id -u ${USER}) -e GID=$(id -g ${USER}) -v "$(pwd)/apk/${DIST}:/home/packager/build" "${BUILDER}"
 }

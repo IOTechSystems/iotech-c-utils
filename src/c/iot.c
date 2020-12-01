@@ -12,7 +12,6 @@
 #endif
 
 extern void iot_data_init (void);
-extern void iot_data_fini (void);
 
 void iot_init (void)
 {
@@ -21,7 +20,6 @@ void iot_init (void)
 
 void iot_fini (void)
 {
-  iot_data_fini ();
 }
 
 char * iot_file_config_loader (const char * name, const char * uri)

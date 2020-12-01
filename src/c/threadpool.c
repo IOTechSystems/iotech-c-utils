@@ -141,11 +141,11 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
   pool->affinity = affinity;
   pool->logger = logger;
-  *(uint16_t*) &pool->id = atomic_fetch_add (&pool_id, 1u);
+  *((uint16_t*) &pool->id) = (uint16_t) atomic_fetch_add (&pool_id, 1u);
   iot_logger_add_ref (logger);
   iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max_jobs: %u default_priority: %d affinity: %d)", threads, max_jobs, default_prio, affinity);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
-  *(uint32_t*) &pool->max_jobs = max_jobs ? max_jobs : UINT32_MAX;
+  *((uint32_t*) &pool->max_jobs) = max_jobs ? max_jobs : UINT32_MAX;
   pool->delay = IOT_TP_SHUTDOWN_MIN;
   atomic_store (&pool->created, 0u);
   pthread_cond_init (&pool->work_cond, NULL);
@@ -333,7 +333,7 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   uint32_t jobs = (uint32_t) iot_data_string_map_get_i64 (map, "MaxJobs", IOT_TP_JOBS_DEFAULT);
   int prio = (int) iot_data_string_map_get_i64 (map, "Priority", IOT_THREAD_NO_PRIORITY);
   int affinity = (int) iot_data_string_map_get_i64 (map, "Affinity", IOT_THREAD_NO_AFFINITY);
-  uint32_t delay = iot_data_string_map_get_i64 (map, "ShutdownDelay", IOT_TP_SHUTDOWN_MIN);
+  uint32_t delay = (uint32_t) iot_data_string_map_get_i64 (map, "ShutdownDelay", IOT_TP_SHUTDOWN_MIN);
   iot_threadpool_t * pool = iot_threadpool_alloc (threads, jobs, prio, affinity, logger);
   pool->delay = (delay < IOT_TP_SHUTDOWN_MIN) ? IOT_TP_SHUTDOWN_MIN : delay;
   return &pool->component;

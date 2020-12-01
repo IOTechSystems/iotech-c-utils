@@ -124,8 +124,6 @@ fail:
 
 /*
  * Create a component instance from it's factory with a json configuration.
- *
- * TODO: Add support for environment variable substitution in configuration json
  */
 
 static void iot_component_create (iot_container_t * cont, const char * name, const iot_component_factory_t * factory, const char * config)
