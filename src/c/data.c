@@ -144,7 +144,6 @@ _Static_assert (sizeof (iot_data_vector_t) <= sizeof (iot_data_map_t), "iot_data
 _Static_assert (sizeof (iot_data_array_t) <= sizeof (iot_data_map_t), "iot_data_array_t bigger than iot_data_map_t");
 
 extern void iot_data_init (void);
-extern void iot_data_fini (void);
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -256,6 +255,22 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot
   return val;
 }
 
+static void iot_data_fini (void)
+{
+#ifdef IOT_DATA_CACHE
+  while (iot_data_blocks)
+  {
+    iot_memory_block_t * block = iot_data_blocks;
+    iot_data_blocks = block->next;
+    free (block);
+  }
+#ifdef IOT_HAS_SPINLOCK
+  pthread_spin_destroy (&iot_data_slock);
+#endif
+  pthread_mutex_destroy (&iot_data_mutex);
+#endif
+}
+
 void iot_data_init (void)
 {
 /*
@@ -272,25 +287,9 @@ void iot_data_init (void)
   pthread_spin_init (&iot_data_slock, 0);
 #endif
   pthread_mutex_init (&iot_data_mutex, NULL);
-  iot_data_t * data = iot_data_block_alloc (); // Initialize data cache
-  iot_data_block_free (data);
+  iot_data_block_free (iot_data_block_alloc ());  // Initialize data cache
 #endif
-}
-
-void iot_data_fini (void)
-{
-#ifdef IOT_DATA_CACHE
-  while (iot_data_blocks)
-  {
-    iot_memory_block_t * block = iot_data_blocks;
-    iot_data_blocks = block->next;
-    free (block);
-  }
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_destroy (&iot_data_slock);
-#endif
-  pthread_mutex_destroy (&iot_data_mutex);
-#endif
+  atexit (iot_data_fini);
 }
 
 void iot_data_add_ref (iot_data_t * data)
