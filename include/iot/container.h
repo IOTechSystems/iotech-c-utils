@@ -37,7 +37,7 @@ typedef struct iot_container_config_t
  *
  * @param conf  Pointer to the config structure used to load JSON configurations from a specified location
  */
-extern void iot_container_config (iot_container_config_t * conf);
+extern void iot_container_config (const iot_container_config_t * conf);
 
 /**
  * @brief Get the configuration resolver for containers and components
@@ -46,7 +46,7 @@ extern void iot_container_config (iot_container_config_t * conf);
  *
  * @return Pointer to the config structure used to load JSON configurations from a specified location (NULL if not set)
  */
-extern iot_container_config_t * iot_container_get_config (void);
+extern const iot_container_config_t * iot_container_get_config (void);
 
 /**
  * @brief Allocate a named container
