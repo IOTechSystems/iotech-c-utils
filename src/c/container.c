@@ -226,6 +226,11 @@ void iot_container_config (iot_container_config_t * conf)
   iot_config = conf;
 }
 
+iot_container_config_t * iot_container_get_config (void)
+{
+  return iot_config;
+}
+
 iot_container_t * iot_container_alloc (const char * name)
 {
   iot_container_t * cont = NULL;

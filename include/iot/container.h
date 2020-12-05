@@ -35,9 +35,18 @@ typedef struct iot_container_config_t
  *
  * The function sets the global configuration resolver data for containers and components
  *
- * @param conf  Pointer to the config structure to load JSON configurations from a specified location
+ * @param conf  Pointer to the config structure used to load JSON configurations from a specified location
  */
 extern void iot_container_config (iot_container_config_t * conf);
+
+/**
+ * @brief Get the configuration resolver for containers and components
+ *
+ * The function returns the global configuration resolver data for containers and components
+ *
+ * @return Pointer to the config structure used to load JSON configurations from a specified location (NULL if not set)
+ */
+extern iot_container_config_t * iot_container_get_config (void);
 
 /**
  * @brief Allocate a named container

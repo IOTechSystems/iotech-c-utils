@@ -144,10 +144,10 @@ endif ()
 # Configure packaging options
 
 if (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinSizeRel)
-  set (CPACK_PACKAGE_NAME "iotech${PACKAGE_MOD}-iot")
+  set (CPACK_PACKAGE_NAME "iotech-iot${PACKAGE_MOD}")
   set (CPACK_STRIP_FILES "TRUE")
 else ()
-  set (CPACK_PACKAGE_NAME "iotech${PACKAGE_MOD}-iot-dev")
+  set (CPACK_PACKAGE_NAME "iotech-iot-dev${PACKAGE_MOD}")
   set (CPACK_STRIP_FILES "FALSE")
 endif ()
 set (CPACK_PACKAGE_VERSION "${IOT_DOT_VERSION}")
