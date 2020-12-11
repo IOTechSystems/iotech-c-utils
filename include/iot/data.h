@@ -20,6 +20,25 @@ extern "C" {
 #endif
 
 /**
+ * Basic type string names
+*/
+#define IOT_DATA_TYPENAME_INT8 "int8"
+#define IOT_DATA_TYPENAME_UINT8 "uint8"
+#define IOT_DATA_TYPENAME_INT16 "int16"
+#define IOT_DATA_TYPENAME_UINT16 "uint16"
+#define IOT_DATA_TYPENAME_INT32 "int32"
+#define IOT_DATA_TYPENAME_UINT32 "uint32"
+#define IOT_DATA_TYPENAME_INT64 "int64"
+#define IOT_DATA_TYPENAME_UINT64 "uint64"
+#define IOT_DATA_TYPENAME_FLOAT32 "float32"
+#define IOT_DATA_TYPENAME_FLOAT64 "float64"
+#define IOT_DATA_TYPENAME_BOOL "bool"
+#define IOT_DATA_TYPENAME_STRING "string"
+#define IOT_DATA_TYPENAME_ARRAY "array"
+#define IOT_DATA_TYPENAME_MAP "map"
+#define IOT_DATA_TYPENAME_VECTOR "vector"
+
+/**
  * Alias for data type enumeration
  */
 typedef enum iot_data_type_t

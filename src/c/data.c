@@ -27,7 +27,7 @@
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096
 #define IOT_JSON_BUFF_INCREMENT 1024
 
-static const char * iot_data_type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","Array","Map","Vector"};
+static const char * iot_data_type_names [] = {"int8","uint8","int16","uint16","int32","uint32","int64","uint64","float32","float64","bool","string","array","map","vector"};
 static const uint8_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*) };
 
 typedef union iot_data_union_t

@@ -23,3 +23,7 @@
 
 - Added memory usage optimisation for iot_data allocation
 - Added support for AzureSphere platform
+
+## Version 1.2.0
+
+- Changed iot_data type names to be all lower case ("UInt8" becomes "uint8" etc.)
