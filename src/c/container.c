@@ -221,10 +221,15 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
 }
 #endif
 
-void iot_container_config (iot_container_config_t * conf)
+void iot_container_config (const iot_container_config_t * conf)
 {
   assert (conf);
   iot_config = conf;
+}
+
+const iot_container_config_t * iot_container_get_config (void)
+{
+  return iot_config;
 }
 
 iot_container_t * iot_container_alloc (const char * name)

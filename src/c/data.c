@@ -162,6 +162,7 @@ static void * iot_data_block_alloc (void)
 {
   iot_data_t * data;
 #ifdef IOT_DATA_CACHE
+
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
@@ -177,6 +178,7 @@ static void * iot_data_block_alloc (void)
     pthread_mutex_lock (&iot_data_mutex);
 #else
     bool allocate = (iot_data_cache == NULL);
+    iot_data_t * new_data_cache = NULL;
 #endif
     if (allocate)
     {
