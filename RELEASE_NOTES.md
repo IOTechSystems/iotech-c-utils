@@ -23,3 +23,7 @@
 
 - Added memory usage optimisation for iot_data allocation
 - Added support for AzureSphere platform
+
+## Version 1.1.4
+
+- Fix `iot_data_alloc_from_string` for very large UINT64 values
