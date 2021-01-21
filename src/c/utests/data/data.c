@@ -688,6 +688,75 @@ static void test_data_from_string (void)
   CU_ASSERT (data == NULL)
   data = iot_data_alloc_from_string (IOT_DATA_VECTOR, "XXX");
   CU_ASSERT (data == NULL)
+
+  // Integer range tests
+  data = iot_data_alloc_from_string (IOT_DATA_UINT8, "0");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT8)
+  CU_ASSERT (iot_data_ui8 (data) == 0)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_UINT8, "255");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT8)
+  CU_ASSERT (iot_data_ui8 (data) == 255)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_INT8, "-128");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT8)
+  CU_ASSERT (iot_data_i8 (data) == -128)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_INT8, "127");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT8)
+  CU_ASSERT (iot_data_i8 (data) == 127)
+  iot_data_free (data);
+
+  data = iot_data_alloc_from_string (IOT_DATA_UINT16, "0");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT16)
+  CU_ASSERT (iot_data_ui16 (data) == 0)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_UINT16, "65535");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT16)
+  CU_ASSERT (iot_data_ui16 (data) == 65535)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_INT16, "-32768");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT16)
+  CU_ASSERT (iot_data_i16 (data) == -32768)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_INT16, "32767");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT16)
+  CU_ASSERT (iot_data_i16 (data) == 32767)
+  iot_data_free (data);
+
+  data = iot_data_alloc_from_string (IOT_DATA_UINT32, "0");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT32)
+  CU_ASSERT (iot_data_ui32 (data) == 0)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_UINT32, "4294967295");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT32)
+  CU_ASSERT (iot_data_ui32 (data) == 4294967295U)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_INT32, "-2147483648");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT32)
+  CU_ASSERT (iot_data_i32 (data) == -2147483647-1)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_INT32, "2147483647");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT32)
+  CU_ASSERT (iot_data_i32 (data) == 2147483647)
+  iot_data_free (data);
+
+  data = iot_data_alloc_from_string (IOT_DATA_UINT64, "0");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT64)
+  CU_ASSERT (iot_data_ui64 (data) == 0)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_UINT64, "18446744073709551615");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_UINT64)
+  CU_ASSERT (iot_data_ui64 (data) == 18446744073709551615ULL)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_INT64, "-9223372036854775808");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT64)
+  CU_ASSERT (iot_data_i64 (data) == -9223372036854775807LL-1)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_INT64, "9223372036854775807");
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_INT64)
+  CU_ASSERT (iot_data_i64 (data) == 9223372036854775807LL)
+  iot_data_free (data);
 }
 
 static void test_data_from_strings (void)
