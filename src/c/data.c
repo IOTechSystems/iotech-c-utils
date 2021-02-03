@@ -1367,8 +1367,52 @@ static char * iot_data_string_from_json_token (const char * json, iot_json_tok_t
 {
   size_t len = (size_t) (token->end - token->start);
   char * str = malloc (len + 1);
-  memcpy (str, json + token->start, len);
-  str[len] = 0;
+  if (token->type == IOT_JSON_STRING_ESC)
+  {
+    const char *src = json + token->start;
+    char *dst = str;
+    while (src < json + token->start + len)
+    {
+      if (*src == '\\')
+      {
+        switch (*++src)
+        {
+          case 'b':
+            *dst++ = '\b';
+            break;
+          case 'f':
+            *dst++ = '\f';
+            break;
+          case 'r':
+            *dst++ = '\r';
+            break;
+          case 'n':
+            *dst++ = '\n';
+            break;
+          case 't':
+            *dst++ = '\t';
+            break;
+          case 'u':         // leave escaped unicode in place
+            *dst++ = '\\';
+            *dst++ = 'u';
+            break;
+          default:
+            *dst++ = *src;
+        }
+        src++;
+      }
+      else
+      {
+        *dst++ = *src++;
+      }
+    }
+    *dst = '\0';
+  }
+  else
+  {
+    memcpy (str, json + token->start, len);
+    str[len] = 0;
+  }
   return str;
 }
 
