@@ -479,7 +479,8 @@ static void test_data_from_json (void)
     "\"Boolean\":true,"
     "\"Numbers\":{ \"One\":1, \"Two\":2, \"Three\":3 },"
     "\"Vector\":[ \"A\",\"B\"],"
-    "\"DB\":0.5"
+    "\"DB\":0.5,"
+    "\"Escaped\":\"Double \\\" Quote\""
   "}";
   bool bval = false;
   const char * sval = NULL;
@@ -501,6 +502,10 @@ static void test_data_from_json (void)
   CU_ASSERT (strcmp (sval, "scheduler") == 0)
   sval = iot_config_string (map, "Sched", false, NULL);
   CU_ASSERT (sval == NULL)
+
+  sval = iot_config_string (map, "Escaped", false, NULL);
+  CU_ASSERT (sval != NULL)
+  CU_ASSERT (strcmp (sval, "Double \" Quote") == 0)
 
   sval = iot_config_string_default (map, "Scheduler", "Hello", false);
   CU_ASSERT (sval != NULL)
