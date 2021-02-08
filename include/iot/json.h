@@ -27,7 +27,8 @@ typedef enum
   IOT_JSON_OBJECT = 1,      /**< Object */
   IOT_JSON_ARRAY = 2,       /**< Array */
   IOT_JSON_STRING = 3,      /**< String */
-  IOT_JSON_PRIMITIVE = 4    /**< Other primitive: number, boolean, or null */
+  IOT_JSON_STRING_ESC = 4,  /**< String with escape sequences */
+  IOT_JSON_PRIMITIVE = 5    /**< Other primitive: number, boolean, or null */
 } iot_json_type_t;
 
 /** Not enough tokens were provided */

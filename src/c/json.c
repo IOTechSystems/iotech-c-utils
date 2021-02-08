@@ -94,6 +94,7 @@ found:
  */
 static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_t len, iot_json_tok_t *tokens, uint32_t num_tokens)
 {
+  bool escaped = false;
   iot_json_tok_t *token;
   uint32_t start = parser->pos;
   parser->pos++;
@@ -116,7 +117,7 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
         parser->pos = start;
         return IOT_JSON_ERROR_NOMEM;
       }
-      iot_json_fill_token (token, IOT_JSON_STRING, start + 1, parser->pos);
+      iot_json_fill_token (token, escaped ? IOT_JSON_STRING_ESC : IOT_JSON_STRING, start + 1, parser->pos);
       return 0;
     }
 
@@ -125,6 +126,7 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
     {
       int i;
       parser->pos++;
+      escaped = true;
       switch (js[parser->pos])
       {
         /* Allowed escaped symbols */
@@ -274,7 +276,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
         if (tokens != NULL && parser->toksuper != -1) {
           jsontok_t *t = &tokens[parser->toksuper];
           if (t->type == JSON_OBJECT ||
-              (t->type == JSON_STRING && t->size != 0)) {
+              ((t->type == JSON_STRING || t->type == JSON_STRING_ESC) && t->size != 0)) {
             return JSON_ERROR_INVAL;
           }
         }
