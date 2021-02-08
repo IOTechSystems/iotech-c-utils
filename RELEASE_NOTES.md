@@ -27,3 +27,8 @@
 ## Version 1.1.4
 
 - Fix `iot_data_alloc_from_string` for very large UINT64 values
+- Fix iot_data handling of escape sequences in JSON strings 
+
+## Version 1.1.5
+
+- Update to use AzureSphere SDK 21.01 and API version 8
