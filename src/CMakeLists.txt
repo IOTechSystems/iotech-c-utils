@@ -32,6 +32,7 @@ set (IOT_BUILD_LCOV OFF CACHE BOOL "Build LCov")
 set (IOT_BUILD_STATIC ON CACHE BOOL "Build static libraries")
 set (IOT_BUILD_SHARED ON CACHE BOOL "Build shared libraries")
 set (IOT_BUILD_EXES ON CACHE BOOL "Build executables")
+set (IOT_BUILD_DOCS ON CACHE BOOL "Build docs")
 
 set (IOT_HAS_XML ${IOT_BUILD_XML})
 
@@ -54,6 +55,7 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Generic")
     set (IOT_BUILD_SHARED OFF)
     set (IOT_BUILD_DYNAMIC_LOAD OFF)
     set (IOT_BUILD_EXES OFF)
+    set (IOT_BUILD_DOCS OFF)
     set (IOT_BUILD_XML OFF)
     set (CPACK_GENERATOR DEB)
     set (PACKAGE_MOD "-azsphere${AZURESPHERE_API}")
@@ -137,9 +139,7 @@ if (NOT "${LINUX_SYS}" STREQUAL "AzureSphere")
 endif ()
 
 # Documentation
-if (CMAKE_BUILD_TYPE MATCHES Release)
-  add_subdirectory (docs)
-endif ()
+add_subdirectory (docs)
 
 # Configure packaging options
 
