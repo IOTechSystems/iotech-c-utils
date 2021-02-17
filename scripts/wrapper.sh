@@ -48,6 +48,9 @@ then
     x86_64)
       BARCH=x86_64
     ;;
+    i686)
+      BARCH=x86
+    ;;
     *)
       echo "Unsupported: ${ARCH}"
       exit 2

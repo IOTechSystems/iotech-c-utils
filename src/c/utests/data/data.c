@@ -977,6 +977,16 @@ static void test_data_equal_string (void)
   iot_data_free (data2);
 }
 
+static void test_data_equal_null (void)
+{
+  iot_data_t * data = iot_data_alloc_ui8 (1u);
+  CU_ASSERT (iot_data_equal (NULL, NULL))
+  CU_ASSERT (iot_data_equal (data, data))
+  CU_ASSERT (! iot_data_equal (data, NULL))
+  CU_ASSERT (! iot_data_equal (NULL, data))
+  iot_data_free (data);
+}
+
 static void test_data_equal_vector_ui8 (void)
 {
   uint32_t vector_index = 0;
@@ -985,8 +995,8 @@ static void test_data_equal_vector_ui8 (void)
 
   while (vector_index < 5)
   {
-    iot_data_vector_add (vector1, vector_index, iot_data_alloc_ui8(vector_index));
-    iot_data_vector_add (vector2, vector_index, iot_data_alloc_ui8(vector_index));
+    iot_data_vector_add (vector1, vector_index, iot_data_alloc_ui8 (vector_index));
+    iot_data_vector_add (vector2, vector_index, iot_data_alloc_ui8 (vector_index));
     vector_index++;
   }
 
@@ -2642,6 +2652,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_check_unequal_vector_ui8", test_data_unequal_vector_ui8);
   CU_add_test (suite, "data_check_equal_vector_string", test_data_equal_vector_string);
   CU_add_test (suite, "data_check_equal_vector_ui8", test_data_equal_vector_ui8);
+  CU_add_test (suite, "data_check_equal_null", test_data_equal_null);
   CU_add_test (suite, "data_check_equal_vector_ui8_refcount", test_data_equal_vector_ui8_refcount);
   CU_add_test (suite, "data_check_unequal_vector_ui8", test_data_unequal_vector_ui8);
   CU_add_test (suite, "data_check_equal_vector_string", test_data_equal_vector_string);

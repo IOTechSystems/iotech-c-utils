@@ -339,8 +339,8 @@ extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data)
 
 bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 {
-  assert (v1 && v2);
   if (v1 == v2) return true;
+  if (v1 == NULL || v2 == NULL) return false;
   if (v1->type == v2->type)
   {
     switch (v1->type)
