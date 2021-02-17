@@ -32,3 +32,4 @@
 ## Version 1.1.5
 
 - Update to use AzureSphere SDK 21.01 and API version 8
+- Update to iot_data_equal to support NULL arguments

@@ -1039,10 +1039,10 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
 /**
  * @brief Check for equality of 2 iot_data types
  *
- * The function to check the values of the 2 iot_data types and return true if the data is same
+ * The function to check the values of the 2 iot_data types and return true if the data value and type is the same.
  *
- * @param  data1 Input data1
- * @param  data2 Input data2
+ * @param  data1 Input data1 (can be NULL)
+ * @param  data2 Input data2 (can be NULL)
  * @return       'true' if data1 & data2 are equal, 'false' otherwise
  */
 extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
