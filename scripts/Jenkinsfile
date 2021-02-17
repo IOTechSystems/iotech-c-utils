@@ -191,7 +191,7 @@ def publishApks (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "apk/${apks[i]}/packager/${apk_arch}/*.apk",
-        "target": "${repo}/${apks[i]}/${apk_vers[apks[i]]}/main/${apk_arch}/",
+        "target": "${repo}/${apk_vers[apks[i]]}/main/${apk_arch}/",
         "props": "distribution=${apks[i]};architecture=${apk_arch}"
       }
       ]}"""
