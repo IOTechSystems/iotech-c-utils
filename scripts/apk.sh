@@ -2,7 +2,7 @@
 set -x -e
 
 ARCH=$1
-APKS=/xrt/${ARCH}/apks
+APKS=/iotech-iot/${ARCH}/apks
 
 # Exported environment variables substituted into APKBUILD file
 
@@ -20,24 +20,24 @@ case "${ARCH}" in
 esac
 
 mkdir ${APKS}
-chmod 0644 /xrt/scripts/apk.key
-printf '%s' "PACKAGER_PRIVKEY=/xrt/scripts/apk.key" >> /etc/abuild.conf
+chmod 0644 /iotech-iot/scripts/apk.key
+printf '%s' "PACKAGER_PRIVKEY=/iotech-iot/scripts/apk.key" >> /etc/abuild.conf
 
 build_apk()
 {
   TGZ=$1
   REPO=/tmp/repo
-  mkdir -p /xrt/apks/build
-  cp /xrt/scripts/APKBUILD /xrt/apks/build
-  cp ${TGZ} /xrt/apks/build
-  cd /xrt/apks/build
+  mkdir -p /iotech-iot/apks/build
+  cp /iotech-iot/scripts/APKBUILD /iotech-iot/apks/build
+  cp ${TGZ} /iotech-iot/apks/build
+  cd /iotech-iot/apks/build
   /usr/bin/abuild -F checksum
   /usr/bin/abuild -F -d -P ${REPO}
   mv ${REPO}/apks/${APKARCH}/*.apk ${APKS}
-  cd /xrt
-  rm -rf /xrt/apks/build ${REPO}
+  cd /iotech-iot
+  rm -rf /iotech-iot/apks/build ${REPO}
 }
 
-build_apk "${ARCH}/release/iotech-xrt-${VER}_${APKARCH}.tar.gz"
+build_apk "${ARCH}/release/iotech-iot-${VER}_${APKARCH}.tar.gz"
 DEV=-dev
-build_apk "${ARCH}/debug/iotech-xrt-dev-${VER}_${APKARCH}.tar.gz"
+build_apk "${ARCH}/debug/iotech-iot-dev-${VER}_${APKARCH}.tar.gz"
