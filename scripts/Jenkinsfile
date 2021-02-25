@@ -26,6 +26,10 @@ def buildStage (systems, arch)
     def system = systems[i]
     if ("${sys}" == "${system}" || "${sys}" == 'all')
     {
+      withCredentials ([file (credentialsId: 'AlpinePackagerRSAPrivateKey', variable: 'AlpinePackagerRSAPrivateKey')])
+      {
+        sh (script: "./scripts/auth.sh ${system}")
+      }
       if ("${nat}" == 'true')
       {
         sh (script: "./scripts/wrapper.sh ./scripts/linux.sh -utest")
@@ -187,10 +191,9 @@ def publishApks (arch)
   {
     if ("${sys}" == "${apks[i]}" || "${sys}" == 'all')
     {
-      sh "./scripts/package.sh ${apks[i]} ${arch} ${apk_arch}"
       def uploadSpec = """{"files":[
       {
-        "pattern": "apk/${apks[i]}/packager/${apk_arch}/*.apk",
+        "pattern": "${arch}/${apks[i]}/apks/*.apk",
         "target": "${repo}/${apk_vers[apks[i]]}/main/${apk_arch}/",
         "props": "distribution=${apks[i]};architecture=${apk_arch}"
       }

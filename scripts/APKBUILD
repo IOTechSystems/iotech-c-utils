@@ -1,15 +1,15 @@
 # Contributor: IOTech <support@iotechsys.com>
 # Maintainer: IOTech <support@iotechsys.com>
-pkgname=iotech-iot
+pkgname=iotech-iot${DEV}
 pkgver="${VER}"
 pkgrel=0
 pkgdesc="IOT C Framework"
 url="www.iotechsys.com"
-arch="%APKARCH%"
+arch="${APKARCH}"
 license="Apache-2.0"
 depends=""
 install=""
-base="iotech-iot-${VER}_%APKARCH%"
+base="iotech-iot-${VER}_${APKARCH}"
 source="${base}.tar.gz"
 builddir="${srcdir}/"
 options="!check !strip !tracedeps !fhs"
