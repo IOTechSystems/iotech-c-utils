@@ -70,6 +70,14 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_D
 make 2>&1 | tee debug.log
 make package
 
+# Build Alpine APK packages
+
+if [ -f /etc/alpine-release ]
+then
+  cd ${ROOT}
+  "${ROOT}/scripts/apk.sh" ${SYSTEM} ${BARCH}
+fi
+
 # Build examples with makefiles
 
 cd ${ROOT}/src/c/examples
