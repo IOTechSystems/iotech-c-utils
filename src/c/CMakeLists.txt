@@ -39,7 +39,7 @@ endif ()
 
 if (IOT_BUILD_SHARED)
   add_library (iot SHARED ${C_FILES})
-  set_target_properties (iot PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1)
+  set_target_properties (iot PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1 VERSION ${IOT_DOT_VERSION} SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR})
   target_include_directories (iot PRIVATE ../../include)
 endif ()
 if (IOT_BUILD_STATIC)
