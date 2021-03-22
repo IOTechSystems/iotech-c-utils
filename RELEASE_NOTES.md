@@ -32,5 +32,8 @@
 ## Version 1.1.5
 
 - Update to use AzureSphere SDK 21.02 and API version 8
-- Update to `iot_data_equal` to support NULL arguments
-- File `iot_file_write` and `iot_file_write_binary` operations added
+- Update to `iot_data_equal` function to support NULL arguments
+- File write functions added
+  
+* `iot_file_write`
+* `iot_file_write_binary`
