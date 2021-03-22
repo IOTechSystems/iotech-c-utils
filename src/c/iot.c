@@ -22,14 +22,11 @@ void iot_fini (void)
 {
 }
 
-char * iot_file_config_loader (const char * name, const char * uri)
+static char * iot_file_config_path (const char * name, const char * uri)
 {
   assert (name);
-
-  char * ret;
   char *  path = malloc (strlen (name) + ((uri) ? (strlen (uri) + 7) : 6));
   path[0] = '\0';
-
   if (uri)
   {
     strcpy (path, uri);
@@ -37,9 +34,23 @@ char * iot_file_config_loader (const char * name, const char * uri)
   }
   strcat (path, name);
   strcat (path, ".json");
-  ret = iot_file_read (path);
+  return path;
+}
+
+char * iot_file_config_loader (const char * name, const char * uri)
+{
+  char * path = iot_file_config_path (name, uri);
+  char * ret = iot_file_read (path);
   free (path);
   return ret;
+}
+
+bool iot_file_config_saver (const char * name, const char * uri, const char * config)
+{
+  char * path = iot_file_config_path (name, uri);
+  bool ok = iot_file_write (path, config);
+  free (path);
+  return ok;
 }
 
 char * iot_file_read (const char * path)

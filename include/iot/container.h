@@ -20,6 +20,8 @@ extern "C" {
 
 /** Alias for container configuration load function pointer */
 typedef char * (*iot_container_config_load_fn_t) (const char * name, const char * uri);
+/** Alias for container configuration save function pointer */
+typedef bool (*iot_container_config_save_fn_t) (const char * name, const char * uri, const char * config);
 
 /**
  * Alias for container configuration structure

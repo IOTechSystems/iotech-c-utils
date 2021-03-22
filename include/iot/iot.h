@@ -40,15 +40,28 @@ extern void iot_init (void);
 extern void iot_fini (void);
 
 /**
- * @brief Load JSON configuration from file
+ * @brief Load configuration from file
  *
- * The function to load JSON configuration from a file
+ * The function to load a configuration from a file
  *
- * @param name  Name of the configuration file
- * @param uri   Directory URI for configuration files
- * @return      JSON string loaded from the file
+ * @param name  Name of the configuration
+ * @param uri   URI for configuration file
+ * @return      Configuration string loaded from the file
  */
 extern char * iot_file_config_loader (const char * name, const char * uri);
+
+/**
+ * @brief Save configuration to file
+ *
+ * The function to save a configuration to a file
+ *
+ * @param name   Name of the configuration
+ * @param uri    URI for configuration file
+ * @parsm config Configuration string to save
+ * @return       Whether configuration saved successfully
+ */
+extern bool iot_file_config_saver (const char * name, const char * uri, const char * config);
+
 
 /**
  * @brief Load string from a file
