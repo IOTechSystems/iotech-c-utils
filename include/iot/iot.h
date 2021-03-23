@@ -40,15 +40,28 @@ extern void iot_init (void);
 extern void iot_fini (void);
 
 /**
- * @brief Load JSON configuration from file
+ * @brief Load configuration from file
  *
- * The function to load JSON configuration from a file
+ * The function to load a configuration from a file
  *
- * @param name  Name of the configuration file
- * @param uri   Directory URI for configuration files
- * @return      JSON string loaded from the file
+ * @param name  Name of the configuration
+ * @param uri   URI for configuration file
+ * @return      Configuration string loaded from the file
  */
 extern char * iot_file_config_loader (const char * name, const char * uri);
+
+/**
+ * @brief Save configuration to file
+ *
+ * The function to save a configuration to a file
+ *
+ * @param name   Name of the configuration
+ * @param uri    URI for configuration file
+ * @param config Configuration string to save
+ * @return       Whether configuration saved successfully
+ */
+extern bool iot_file_config_saver (const char * name, const char * uri, const char * config);
+
 
 /**
  * @brief Load string from a file
@@ -61,6 +74,17 @@ extern char * iot_file_config_loader (const char * name, const char * uri);
 extern char * iot_file_read (const char * path);
 
 /**
+ * @brief Write a string to a file
+ *
+ * Function to write a NULL terminated string to a file, overwriting any existing contents.
+ *
+ * @param path  File path
+ * @param str   String to write
+ * @return      Whether the string was successfully written to the file
+ */
+extern bool iot_file_write (const char * path, const char * str);
+
+/**
  * @brief Load binary data from a file
  *
  * Function to return a binary array of file contents
@@ -70,6 +94,18 @@ extern char * iot_file_read (const char * path);
  * @return      Binary contents of file (client needs to free)
  */
 extern uint8_t * iot_file_read_binary (const char * path, size_t * len);
+
+/**
+ * @brief Write binary data to a file
+ *
+ * Function to write a binary of given size to a file, overwriting any existing contents
+ *
+ * @param path   File path
+ * @param binary The binary array to be written
+ * @param len    Length of binary array to be written
+ * @return       Whether the binary was successfully written to the file
+ */
+extern bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len);
 
 #ifdef __cplusplus
 }

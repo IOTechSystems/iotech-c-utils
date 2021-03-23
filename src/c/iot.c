@@ -22,14 +22,11 @@ void iot_fini (void)
 {
 }
 
-char * iot_file_config_loader (const char * name, const char * uri)
+static char * iot_file_config_path (const char * name, const char * uri)
 {
   assert (name);
-
-  char * ret;
   char *  path = malloc (strlen (name) + ((uri) ? (strlen (uri) + 7) : 6));
   path[0] = '\0';
-
   if (uri)
   {
     strcpy (path, uri);
@@ -37,14 +34,33 @@ char * iot_file_config_loader (const char * name, const char * uri)
   }
   strcat (path, name);
   strcat (path, ".json");
-  ret = iot_file_read (path);
+  return path;
+}
+
+char * iot_file_config_loader (const char * name, const char * uri)
+{
+  char * path = iot_file_config_path (name, uri);
+  char * ret = iot_file_read (path);
   free (path);
   return ret;
+}
+
+bool iot_file_config_saver (const char * name, const char * uri, const char * config)
+{
+  char * path = iot_file_config_path (name, uri);
+  bool ok = iot_file_write (path, config);
+  free (path);
+  return ok;
 }
 
 char * iot_file_read (const char * path)
 {
   return (char*) iot_file_read_binary (path, NULL);
+}
+
+extern bool iot_file_write (const char * path, const char * str)
+{
+  return iot_file_write_binary (path, (const uint8_t*) str, strlen (str) + 1u);
 }
 
 #ifdef IOT_HAS_FILE
@@ -61,7 +77,7 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
     size = ftell (fd);
     rewind (fd);
     ret = malloc (size + 1); // Allocate extra byte so can be NULL terminated if a string
-    size_t items = fread (ret, size, 1, fd);
+    size_t items = fread (ret, size, 1u, fd);
     assert (items == 1);
     (void) items;
     ret[size] = 0; // String NULL terminator
@@ -70,6 +86,19 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
   if (len) *len = size;
   return ret;
 }
+
+bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
+{
+  bool ok = false;
+  FILE * fd = fopen (path, "w");
+  if (fd)
+  {
+    ok = (fwrite (binary, len, 1u, fd) == 1u);
+    fclose (fd);
+  }
+  return ok;
+}
+
 #else
 #ifdef _AZURESPHERE_
 
@@ -105,6 +134,22 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
     Log_Debug ("Error opening file: %s %s (%d)\n", path, strerror (errno), errno);
   }
   return buff;
+}
+
+bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
+{
+  bool ok = false;
+  int fd = Storage_OpenFileInImagePackage (path);
+  if (fd != -1)
+  {
+    ok = (write (fd, binary, len) == len);
+    close (fd);
+  }
+  if (! ok)
+  {
+    Log_Debug ("Error writing to file: %s %s (%d)\n", path, strerror (errno), errno);
+  }
+  return ok;
 }
 
 #endif

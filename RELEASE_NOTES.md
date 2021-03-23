@@ -10,26 +10,30 @@
 
 ## Version 1.1.3
 
-- Added iot_data utility functions for type determination
+- Added `iot_data` utility functions for type determination
 
 * `iot_data_is_of_type`
 * `iot_data_array_is_of_type`
 * `iot_data_map_key_is_of_type`
 
-- Added iot_data functions to remove map elements
+- Added `iot_data` functions to remove map elements
 
 * `iot_data_string_map_remove`
 * `iot_data_map_remove`
 
-- Added memory usage optimisation for iot_data allocation
+- Added memory usage optimisation for `iot_data` allocation
 - Added support for AzureSphere platform
 
 ## Version 1.1.4
 
 - Fix `iot_data_alloc_from_string` for very large UINT64 values
-- Fix iot_data handling of escape sequences in JSON strings 
+- Fix `iot_data` handling of escape sequences in JSON strings 
 
 ## Version 1.1.5
 
 - Update to use AzureSphere SDK 21.02 and API version 8
-- Update to iot_data_equal to support NULL arguments
+- Update to `iot_data_equal` function to support NULL arguments
+- File write functions added
+  
+* `iot_file_write`
+* `iot_file_write_binary`
