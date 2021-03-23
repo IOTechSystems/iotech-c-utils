@@ -57,7 +57,7 @@ extern char * iot_file_config_loader (const char * name, const char * uri);
  *
  * @param name   Name of the configuration
  * @param uri    URI for configuration file
- * @parsm config Configuration string to save
+ * @param config Configuration string to save
  * @return       Whether configuration saved successfully
  */
 extern bool iot_file_config_saver (const char * name, const char * uri, const char * config);
