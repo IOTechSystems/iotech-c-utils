@@ -87,6 +87,26 @@ static void test_hash (void)
   CU_ASSERT ( iot_hash ("binary") == 2016023253)
 }
 
+#ifdef IOT_HAS_FILE
+static void test_write_file (void)
+{
+  const char * str = "Hello";
+  bool file_write_ok = iot_file_write ("/tmp/iot_test.txt", str);
+  CU_ASSERT (file_write_ok);
+}
+
+static void test_read_file (void)
+{
+  char * ret = iot_file_read ("/tmp/iot_test.txt");
+  CU_ASSERT (ret != NULL)
+  if (ret)
+  {
+    CU_ASSERT (strcmp ("Hello", ret) == 0)
+    free (ret);
+  }
+}
+#endif
+
 void cunit_misc_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("time", suite_init, suite_clean);
@@ -94,4 +114,8 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "time_msecs", test_time_msecs);
   CU_add_test (suite, "time_nsecs", test_time_nsecs);
   CU_add_test (suite, "hash", test_hash);
+#ifdef IOT_HAS_FILE
+  CU_add_test (suite, "write_file", test_write_file);
+  CU_add_test (suite, "read_file", test_read_file);
+#endif
 }

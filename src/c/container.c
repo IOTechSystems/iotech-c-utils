@@ -8,6 +8,11 @@
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 #include <dlfcn.h>
 #endif
+#ifdef _AZURESPHERE_
+#include <applibs/applications.h>
+#include <applibs/log.h>
+#endif
+
 
 typedef struct iot_component_holder_t
 {
@@ -149,6 +154,9 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
     ch->prev = cont->tail;
     cont->tail = ch;
   }
+#if defined (_AZURESPHERE_) && ! defined (NDEBUG)
+  Log_Debug ("iot_component_create: %s (Total Memory: %" PRIu32 " kB)\n", cname, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
+#endif
 
 error:
 
@@ -344,6 +352,9 @@ void iot_container_start (iot_container_t * cont)
   while (holder) // Start in declaration order (dependents first)
   {
     (holder->component->start_fn) (holder->component);
+#if defined (_AZURESPHERE_) && ! defined (NDEBUG)
+    Log_Debug ("iot_container_start: %s (Total Memory: %" PRIu32 " kB)\n", holder->name, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
+#endif
     holder = holder->next;
   }
   pthread_rwlock_unlock (&cont->lock);

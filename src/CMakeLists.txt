@@ -1,7 +1,7 @@
 if ("${LINUX_SYS}" STREQUAL "AzureSphere")
   cmake_minimum_required (VERSION 3.10)
   project (IOT LANGUAGES C)
-  azsphere_configure_tools (TOOLS_REVISION "21.01")
+  azsphere_configure_tools (TOOLS_REVISION "21.02")
   azsphere_configure_api (TARGET_API_SET "8")
   set (AZURESPHERE_API "8")
   set (IOT_BUILD_XML OFF)
