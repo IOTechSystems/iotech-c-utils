@@ -85,6 +85,7 @@ static void test_hash (void)
   CU_ASSERT ( iot_hash ("boolarray") == 1007050925)
   CU_ASSERT ( iot_hash ("string") == 1386610095)
   CU_ASSERT ( iot_hash ("binary") == 2016023253)
+  CU_ASSERT ( iot_hash_data ((uint8_t*) "binary", strlen ("binary")) == 2016023253)
 }
 
 #ifdef IOT_HAS_FILE
@@ -109,7 +110,7 @@ static void test_read_file (void)
 
 void cunit_misc_test_init (void)
 {
-  CU_pSuite suite = CU_add_suite ("time", suite_init, suite_clean);
+  CU_pSuite suite = CU_add_suite ("misc", suite_init, suite_clean);
   CU_add_test (suite, "time_secs", test_time_secs);
   CU_add_test (suite, "time_msecs", test_time_msecs);
   CU_add_test (suite, "time_nsecs", test_time_nsecs);
