@@ -37,3 +37,6 @@
   
 * `iot_file_write`
 * `iot_file_write_binary`
+
+- New hash function added for arrays `iot_hash_data`
+

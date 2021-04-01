@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "iot/time.h"
 #include "data.h"
 #include "CUnit.h"
 #include <float.h>
@@ -2610,6 +2611,30 @@ static void test_data_type_typecode (void)
   iot_typecode_free (tc);
 }
 
+static void test_data_map_perf (void)
+{
+  char * keys [10]= { "common_one", "common_two", "common_three", "common_four", "common_five", "common_six", "common_seven", "common_eight", "common_nine", "common_ten" };
+  char * lookup_keys [10]= { "common_one", "common_two", "common_three", "common_four", "common_five", "common_six", "common_seven", "common_eight", "common_nine", "common_ten" }; // To avoid key address equality check
+  uint32_t i, j;
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  for (i = 0; i < 10; i++)
+  {
+    iot_data_string_map_add (map, keys[i], iot_data_alloc_ui32 (i));
+  }
+  uint64_t t1 = iot_time_msecs ();
+  for (j = 0; j < 100000; j++)
+  {
+    for (i = 0; i < 10; i++)
+    {
+      iot_data_string_map_get (map, lookup_keys[i]);
+    }
+  }
+  uint64_t t2 = iot_time_msecs ();
+  // printf ("String map[10] a million lookups in %" PRIu64 " milliseconds\n", t2 - t1);
+  CU_ASSERT (t2 > t1)
+  iot_data_free (map);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -2706,6 +2731,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_complex_typecode", test_data_complex_typecode);
   CU_add_test (suite, "data_equal_typecode", test_data_equal_typecode);
   CU_add_test (suite, "data_type_typecode", test_data_type_typecode);
+  CU_add_test (suite, "data_map_perf", test_data_map_perf);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif
