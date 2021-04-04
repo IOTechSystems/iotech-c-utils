@@ -18,3 +18,13 @@ uint32_t iot_hash (const char * str)
   }
   return hash;
 }
+
+uint32_t iot_hash_data (const uint8_t * data, size_t len)
+{
+  uint32_t hash = 538u;
+  while (len--)
+  {
+    hash = ((hash << 5u) + hash) ^ *data++;
+  }
+  return hash;
+}

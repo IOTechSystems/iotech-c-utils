@@ -71,12 +71,12 @@ int main (int argc, char* argv[])
     return -1;
   }
   iot_init ();
+  cunit_misc_test_init ();
   cunit_cont_test_init ();
   cunit_logger_test_init ();
   cunit_json_test_init ();
   cunit_data_test_init ();
   cunit_threadpool_test_init ();
-  cunit_misc_test_init ();
   cunit_scheduler_test_init ();
   cunit_base64_test_init ();
 
