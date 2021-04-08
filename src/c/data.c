@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2020 IOTech
+// Copyright (c) 2019-2021 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -53,7 +53,7 @@ struct iot_data_t
   iot_data_t * metadata;
   atomic_uint_fast32_t refs;
   uint32_t hash;
-  iot_data_type_t type : 4;
+  iot_data_type_t type;
   bool release : 1;
   bool release_block : 1;
 };
