@@ -53,7 +53,7 @@ struct iot_data_t
   iot_data_t * metadata;
   atomic_uint_fast32_t refs;
   uint32_t hash;
-  iot_data_type_t type;
+  iot_data_type_t type : 32;
   bool release : 1;
   bool release_block : 1;
 };
@@ -116,7 +116,7 @@ typedef struct iot_string_holder_t
 #define IOT_DATA_BLOCK_SIZE (sizeof (iot_data_map_t))
 #define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
 #define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
-#define IOT_DATA_ALLOCATING ((iot_data_t *) 1)
+#define IOT_DATA_ALLOCATING ((iot_data_t*) 1)
 
 typedef struct iot_data_value_t
 {
@@ -134,7 +134,9 @@ typedef struct iot_memory_block_t
 
 // Data size and alignment sanity checks
 
-_Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte aligned");
+_Static_assert ((sizeof (iot_data_t) % 8) == 0, "size of iot_data_t not 8 byte multiple");
+_Static_assert ((sizeof (atomic_uint_fast32_t) % 4) == 0, "size of iot_data_t not 4 byte multiple");
+_Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte multiple");
 _Static_assert (sizeof (iot_data_value_t) == IOT_DATA_BLOCK_SIZE, "size of iot_data_value_t not equal to IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_map_t bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_vector_t bigger than IOT_DATA_BLOCK_SIZE");
