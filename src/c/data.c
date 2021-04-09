@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2020 IOTech
+// Copyright (c) 2019-2021 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -49,11 +49,15 @@ typedef union iot_data_union_t
 
 struct iot_data_t
 {
+  union
+  {
+    uint64_t _align;
+    iot_data_t * metadata;
+  } _u;
   iot_data_t * next;
-  iot_data_t * metadata;
   atomic_uint_fast32_t refs;
   uint32_t hash;
-  iot_data_type_t type : 4;
+  iot_data_type_t type : 32;
   bool release : 1;
   bool release_block : 1;
 };
@@ -116,7 +120,7 @@ typedef struct iot_string_holder_t
 #define IOT_DATA_BLOCK_SIZE (sizeof (iot_data_map_t))
 #define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
 #define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
-#define IOT_DATA_ALLOCATING ((iot_data_t *) 1)
+#define IOT_DATA_ALLOCATING ((iot_data_t*) 1)
 
 typedef struct iot_data_value_t
 {
@@ -134,7 +138,9 @@ typedef struct iot_memory_block_t
 
 // Data size and alignment sanity checks
 
-_Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte aligned");
+_Static_assert ((sizeof (iot_data_t) % 8) == 0, "size of iot_data_t not 8 byte multiple");
+_Static_assert ((sizeof (atomic_uint_fast32_t) % 4) == 0, "size of iot_data_t not 4 byte multiple");
+_Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte multiple");
 _Static_assert (sizeof (iot_data_value_t) == IOT_DATA_BLOCK_SIZE, "size of iot_data_value_t not equal to IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_map_t bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_vector_t bigger than IOT_DATA_BLOCK_SIZE");
@@ -329,15 +335,15 @@ const char * iot_data_type_name (const iot_data_t * data)
 extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata)
 {
   assert (data);
-  if (data->metadata) iot_data_free (data->metadata);
+  if (data->_u.metadata) iot_data_free (data->_u.metadata);
   if (metadata) iot_data_add_ref (metadata);
-  data->metadata = metadata;
+  data->_u.metadata = metadata;
 }
 
 extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data)
 {
   assert (data);
-  return data->metadata;
+  return data->_u.metadata;
 }
 
 bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
@@ -438,7 +444,7 @@ void iot_data_free (iot_data_t * data)
 {
   if (data && (atomic_fetch_add (&data->refs, -1) <= 1))
   {
-    if (data->metadata) iot_data_free (data->metadata);
+    if (data->_u.metadata) iot_data_free (data->_u.metadata);
     switch (data->type)
     {
       case IOT_DATA_STRING:
@@ -1686,7 +1692,7 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
       ret = (iot_data_t*) val;
     }
   }
-  iot_data_set_metadata (ret, data->metadata);
+  iot_data_set_metadata (ret, data->_u.metadata);
   return ret;
 }
 
