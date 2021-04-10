@@ -60,7 +60,7 @@ char * iot_file_read (const char * path)
 
 extern bool iot_file_write (const char * path, const char * str)
 {
-  return iot_file_write_binary (path, (const uint8_t*) str, strlen (str) + 1u);
+  return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
 
 #ifdef IOT_HAS_FILE

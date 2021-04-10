@@ -103,6 +103,7 @@ static void test_read_file (void)
   if (ret)
   {
     CU_ASSERT (strcmp ("Hello", ret) == 0)
+    CU_ASSERT (strlen (ret) == strlen ("Hello"))
     free (ret);
   }
 }
