@@ -22,6 +22,8 @@ void iot_fini (void)
 {
 }
 
+#ifdef IOT_HAS_FILE
+
 static char * iot_file_config_path (const char * name, const char * uri)
 {
   assert (name);
@@ -63,7 +65,10 @@ extern bool iot_file_write (const char * path, const char * str)
   return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
 
-#ifdef IOT_HAS_FILE
+extern bool iot_file_delete (const char * path)
+{
+  return (remove (path) == 0);
+}
 
 uint8_t * iot_file_read_binary (const char * path, size_t * len)
 {

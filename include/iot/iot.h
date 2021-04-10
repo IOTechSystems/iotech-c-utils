@@ -85,6 +85,16 @@ extern char * iot_file_read (const char * path);
 extern bool iot_file_write (const char * path, const char * str);
 
 /**
+ * @brief Delete a file
+ *
+ * Function to delete a file
+ *
+ * @param path  File path
+ * @return      Whether the file was successfully deleted
+ */
+extern bool iot_file_delete (const char * path);
+
+/**
  * @brief Load binary data from a file
  *
  * Function to return a binary array of file contents

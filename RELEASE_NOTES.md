@@ -33,10 +33,10 @@
 
 - Update to use AzureSphere SDK 21.02 and API version 8
 - Update to `iot_data_equal` function to support NULL arguments
-- File write functions added
+- File write and delete functions added
   
 * `iot_file_write`
 * `iot_file_write_binary`
+* `iot_file_delete`
 
 - New hash function added for arrays `iot_hash_data`
-
