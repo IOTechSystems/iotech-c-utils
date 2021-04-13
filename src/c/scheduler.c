@@ -219,7 +219,7 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
   assert (scheduler && func);
-  iot_log_trace (scheduler->logger, "iot_schedule_create()");
+  iot_log_trace (scheduler->logger, "iot_schedule_create (period: %" PRId64 " repeat: %" PRId64 ")", period, repeat);
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));
   schedule->function = func;
   schedule->freefn = free_func;
