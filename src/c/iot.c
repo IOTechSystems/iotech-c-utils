@@ -22,7 +22,7 @@ void iot_fini (void)
 {
 }
 
-#ifdef IOT_HAS_FILE
+#if defined(IOT_HAS_FILE) || defined(_AZURESPHERE_)
 
 static char * iot_file_config_path (const char * name, const char * uri)
 {
@@ -64,6 +64,10 @@ extern bool iot_file_write (const char * path, const char * str)
 {
   return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
+
+#endif
+
+#ifdef IOT_HAS_FILE
 
 extern bool iot_file_delete (const char * path)
 {
