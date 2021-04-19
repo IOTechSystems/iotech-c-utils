@@ -1190,7 +1190,8 @@ static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * a
   }
   if (len == adj_len)
   {
-    strcat (holder->str, add);
+    char * ptr = holder->str + holder->size - holder->free - 1;
+    strcpy (ptr, add);
   }
   else
   {
