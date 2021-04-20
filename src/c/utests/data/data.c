@@ -1142,7 +1142,8 @@ static void test_data_equal_map_refcount (void)
   iot_data_t * key = iot_data_alloc_string ("key1", IOT_DATA_REF);
 
   iot_data_map_add (data_map1, key, val);
-  iot_data_add_ref (key);
+  const iot_data_t * tmp = iot_data_add_ref (key);
+  CU_ASSERT (tmp == key)
   iot_data_add_ref (val);
 
   iot_data_map_add (data_map2, key, val);
