@@ -561,6 +561,15 @@ static void test_data_from_json (void)
   CU_ASSERT (vec != NULL)
 
   iot_data_free (map);
+
+  iot_data_t * nd = iot_data_from_json (NULL);
+  CU_ASSERT (nd != NULL)
+  CU_ASSERT (iot_data_type (nd) == IOT_DATA_NULL)
+  iot_data_free (nd);
+  nd = iot_data_from_json ("");
+  CU_ASSERT (nd != NULL)
+  CU_ASSERT (iot_data_type (nd) == IOT_DATA_NULL)
+  iot_data_free (nd);
 }
 
 #ifdef IOT_HAS_XML

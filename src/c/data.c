@@ -1496,35 +1496,46 @@ static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char
 
 iot_data_t * iot_data_from_json (const char * json)
 {
-  iot_json_parser parser;
   iot_data_t * data = NULL;
-  int32_t used;
   const char * ptr = json;
-  uint32_t count = 1;
 
-  // Approximate token count
-  while (*ptr != '\0')
+  if (ptr && *ptr)
   {
-    switch (*ptr)
+    iot_json_parser parser;
+    int32_t used;
+    uint32_t count = 1;
+
+    // Approximate token count
+    while (*ptr != '\0')
     {
-      case ',': case '{': count++; break;
-      case ':': case '[': count += 2; break;
-      default: break;
+      switch (*ptr)
+      {
+        case ',':
+        case '{':
+          count++;
+          break;
+        case ':':
+        case '[':
+          count += 2;
+          break;
+        default:
+          break;
+      }
+      ptr++;
     }
-    ptr++;
-  }
-  iot_json_tok_t * tokens = calloc (1, sizeof (*tokens) * count);
-  iot_json_tok_t * tptr = tokens;
+    iot_json_tok_t *tokens = calloc (1, sizeof (*tokens) * count);
+    iot_json_tok_t *tptr = tokens;
 
-  iot_json_init (&parser);
-  used = iot_json_parse (&parser, json, strlen (json), tptr, count);
-  if (used)
-  {
-    assert (used <= count);
-    data = iot_data_all_from_json (&tptr, json);
+    iot_json_init (&parser);
+    used = iot_json_parse (&parser, json, strlen (json), tptr, count);
+    if (used)
+    {
+      assert (used <= count);
+      data = iot_data_all_from_json (&tptr, json);
+    }
+    free (tokens);
   }
-  free (tokens);
-  return data;
+  return data ? data : iot_data_alloc_null ();
 }
 
 #ifdef IOT_HAS_XML
