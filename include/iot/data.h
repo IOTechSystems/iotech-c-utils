@@ -36,9 +36,10 @@ typedef enum iot_data_type_t
   IOT_DATA_FLOAT64 = 9, /**< 64bit float */
   IOT_DATA_BOOL = 10,   /**< Boolean */
   IOT_DATA_STRING = 11, /**< String */
-  IOT_DATA_ARRAY = 12,  /**< Array */
-  IOT_DATA_MAP = 13,    /**< Map */
-  IOT_DATA_VECTOR = 14  /**< Vector */
+  IOT_DATA_NULL = 12,   /**< Null */
+  IOT_DATA_ARRAY = 13,  /**< Array */
+  IOT_DATA_MAP = 14,    /**< Map */
+  IOT_DATA_VECTOR = 15  /**< Vector */
 } iot_data_type_t;
 
 /**
@@ -93,8 +94,9 @@ typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
  * The function to increment reference count of data by 1
  *
  * @param data  Pointer to data
+ * @return      Returned pointer to data
  */
-extern void iot_data_add_ref (iot_data_t * data);
+extern const iot_data_t * iot_data_add_ref (const iot_data_t * data);
 
 /**
  * @brief Free memory allocated to data
@@ -305,6 +307,15 @@ extern iot_data_t * iot_data_alloc_f64 (double val);
  * @return     Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_bool (bool val);
+
+/**
+ * @brief Allocate data for data_type null
+ *
+ * The function to allocate memory for data_type null
+ *
+ * @return     Pointer to the allocated memory
+ */
+extern iot_data_t * iot_data_alloc_null (void);
 
 /**
  * @brief Allocate memory for a string

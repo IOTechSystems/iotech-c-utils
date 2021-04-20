@@ -28,8 +28,8 @@
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096
 #define IOT_JSON_BUFF_INCREMENT 1024
 
-static const char * iot_data_type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","Array","Map","Vector"};
-static const uint8_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*) };
+static const char * iot_data_type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","Null","Array","Map","Vector"};
+static const uint8_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*), 0u };
 
 typedef union iot_data_union_t
 {
@@ -297,10 +297,11 @@ void iot_data_init (void)
   atexit (iot_data_fini);
 }
 
-void iot_data_add_ref (iot_data_t * data)
+const iot_data_t * iot_data_add_ref (const iot_data_t * data)
 {
   assert (data);
-  atomic_fetch_add (&data->refs, 1);
+  atomic_fetch_add (&((iot_data_t*) data)->refs, 1);
+  return data;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)
@@ -393,6 +394,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
         }
         return true;
       }
+      case IOT_DATA_NULL: return true;
       default: return (((iot_data_value_t*) v1)->value.ui64 == ((iot_data_value_t*) v2)->value.ui64);
     }
   }
@@ -623,6 +625,12 @@ iot_data_t * iot_data_alloc_bool (bool val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_BOOL, false);
   data->value.bl = val;
+  return (iot_data_t*) data;
+}
+
+iot_data_t * iot_data_alloc_null (void)
+{
+  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_NULL, false);
   return (iot_data_t*) data;
 }
 
@@ -1190,8 +1198,7 @@ static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * a
   }
   if (len == adj_len)
   {
-    char * ptr = holder->str + holder->size - holder->free - 1;
-    strcpy (ptr, add);
+    strcpy (holder->str + holder->size - holder->free - 1, add);
   }
   else
   {
@@ -1285,6 +1292,7 @@ static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * 
     case IOT_DATA_UINT64: sprintf (buff, "%" PRIu64, iot_data_ui64 (data)); break;
     case IOT_DATA_FLOAT32: snprintf (buff, IOT_VAL_BUFF_SIZE, "%.8e", iot_data_f32 (data)); break;
     case IOT_DATA_FLOAT64: snprintf (buff, IOT_VAL_BUFF_SIZE, "%.16e", iot_data_f64 (data)); break;
+    case IOT_DATA_NULL: strcpy (buff, "null"); break;
     default: strcpy (buff, iot_data_bool (data) ? "true" : "false"); break;
   }
   iot_data_strcat_escape (holder, buff, false);
@@ -1435,7 +1443,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
   switch (str[0])
   {
     case 't': case 'f': ret = iot_data_alloc_bool (str[0] == 't'); break; // true/false
-    case 'n': ret = iot_data_alloc_string ("null", IOT_DATA_REF); break; // null
+    case 'n': ret = iot_data_alloc_null (); break; // null
     default: // Handle all floating point numbers as doubles and integers as uint64_t
       ret = (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E')) ?
         iot_data_alloc_f64 (strtod (str, NULL)) : iot_data_alloc_i64 (strtol (str, NULL, 0));
@@ -1691,11 +1699,11 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
   return ret;
 }
 
-static iot_typecode_t iot_basic_tcs [12] =
+static iot_typecode_t iot_basic_tcs [13] =
 {
   { .type = IOT_DATA_INT8 }, { .type = IOT_DATA_UINT8 }, { .type = IOT_DATA_INT16 }, { .type = IOT_DATA_UINT16 },
   { .type = IOT_DATA_INT32 }, { .type = IOT_DATA_UINT32 }, { .type = IOT_DATA_INT64 }, { .type = IOT_DATA_UINT64 },
-  { .type = IOT_DATA_FLOAT32 }, { .type = IOT_DATA_FLOAT64, }, { .type = IOT_DATA_BOOL }, { .type = IOT_DATA_STRING }
+  { .type = IOT_DATA_FLOAT32 }, { .type = IOT_DATA_FLOAT64, }, { .type = IOT_DATA_BOOL }, { .type = IOT_DATA_STRING }, { .type = IOT_DATA_NULL }
 };
 
 extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)

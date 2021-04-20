@@ -10,13 +10,13 @@
 
 ## Version 1.1.3
 
-- Added `iot_data` utility functions for type determination
+- Added `iot_data` utility functions for type determination:
 
 * `iot_data_is_of_type`
 * `iot_data_array_is_of_type`
 * `iot_data_map_key_is_of_type`
 
-- Added `iot_data` functions to remove map elements
+- Added `iot_data` functions to remove map elements:
 
 * `iot_data_string_map_remove`
 * `iot_data_map_remove`
@@ -33,10 +33,16 @@
 
 - Update to use AzureSphere SDK 21.02 and API version 8
 - Update to `iot_data_equal` function to support NULL arguments
-- File write and delete functions added
+- File write and delete functions added:
   
 * `iot_file_write`
 * `iot_file_write_binary`
 * `iot_file_delete`
 
 - New hash function added for arrays `iot_hash_data`
+
+## Version 1.2.0
+
+- Support for new iot data type IOT_DATA_NULL. New function added:
+
+* `iot_data_alloc_null`
