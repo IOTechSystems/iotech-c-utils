@@ -1038,9 +1038,7 @@ static void test_data_equal_vector_ui8_refcount (void)
     iot_data_t *value = iot_data_alloc_ui8(vector_index);
 
     iot_data_vector_add (vector1, vector_index, value);
-    iot_data_add_ref (value);
-
-    iot_data_vector_add (vector2, vector_index, value);
+    iot_data_vector_add (vector2, vector_index, iot_data_add_ref (value));
     vector_index++;
   }
 
@@ -1152,9 +1150,7 @@ static void test_data_equal_map_refcount (void)
   key = iot_data_alloc_string ("key2", IOT_DATA_REF);
 
   iot_data_map_add (data_map1, key, val);
-  iot_data_add_ref (key);
-  iot_data_add_ref (val);
-  iot_data_map_add (data_map2, key, val);
+  iot_data_map_add (data_map2, iot_data_add_ref (key), iot_data_add_ref (val));
 
   CU_ASSERT (iot_data_equal (data_map1, data_map2))
 
