@@ -297,11 +297,11 @@ void iot_data_init (void)
   atexit (iot_data_fini);
 }
 
-const iot_data_t * iot_data_add_ref (const iot_data_t * data)
+iot_data_t * iot_data_add_ref (const iot_data_t * data)
 {
   assert (data);
   atomic_fetch_add (&((iot_data_t*) data)->refs, 1);
-  return data;
+  return (iot_data_t*) data;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)

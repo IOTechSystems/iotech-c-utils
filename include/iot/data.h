@@ -96,7 +96,7 @@ typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
  * @param data  Pointer to data
  * @return      Returned pointer to data
  */
-extern const iot_data_t * iot_data_add_ref (const iot_data_t * data);
+extern iot_data_t * iot_data_add_ref (const iot_data_t * data);
 
 /**
  * @brief Free memory allocated to data
@@ -615,9 +615,9 @@ extern uint32_t iot_data_map_size (const iot_data_t * map);
  * The function to add a key-value pair to a map where a key is of string type
  *
  * @param map  Map to add a new key-value pair
- * @param key  Input key of string type
+ * @param key  String key. The key is allocated using IOT_DATA_REF and if the key is not a string constant the key string must not be changed or freed while the key used by the map. Use iot_data_map_add to add a key where this cannot be guaranteed.
  * @param val  Input value
- * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
+ * Note: The ownership of value passed is owned by the map and cannot be reused, unless reference counted.
  */
 extern void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val);
 
