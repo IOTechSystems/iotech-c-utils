@@ -1154,7 +1154,6 @@ static void test_data_equal_map_refcount (void)
   iot_data_map_add (data_map1, key, val);
   iot_data_add_ref (key);
   iot_data_add_ref (val);
-
   iot_data_map_add (data_map2, key, val);
 
   CU_ASSERT (iot_data_equal (data_map1, data_map2))
@@ -2661,6 +2660,33 @@ static void test_data_map_perf (void)
   iot_data_free (map);
 }
 
+static uint32_t test_get_string_count (iot_data_t * map, const char * str)
+{
+  const iot_data_t * count = iot_data_string_map_get (map, str);
+  if (count)
+  {
+    iot_data_increment ((iot_data_t*) count);
+  }
+  else
+  {
+    count = iot_data_alloc_ui32 (1u);
+    iot_data_string_map_add (map, str, (iot_data_t*) count);
+  }
+  return (iot_data_ui32 (count));
+}
+
+static void test_data_int_map (void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  uint32_t count = test_get_string_count (map, "Key1");
+  CU_ASSERT (count == 1)
+  count = test_get_string_count (map, "Key2");
+  CU_ASSERT (count == 1)
+  count = test_get_string_count (map, "Key1");
+  CU_ASSERT (count == 2)
+  iot_data_free (map);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -2758,6 +2784,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_equal_typecode", test_data_equal_typecode);
   CU_add_test (suite, "data_type_typecode", test_data_type_typecode);
   CU_add_test (suite, "data_map_perf", test_data_map_perf);
+  CU_add_test (suite, "data_int_map", test_data_int_map);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif
