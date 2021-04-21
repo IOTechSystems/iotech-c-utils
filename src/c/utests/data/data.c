@@ -1909,6 +1909,8 @@ static void test_data_map_remove (void)
 {
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * key2 = iot_data_alloc_string ("2", IOT_DATA_REF);
+  iot_data_t * map2;
+  char * str = NULL;
 
   iot_data_map_add (map, iot_data_alloc_string ("1", IOT_DATA_REF), iot_data_alloc_string ("One", IOT_DATA_REF));
   iot_data_map_add (map, iot_data_alloc_string ("2", IOT_DATA_REF), iot_data_alloc_string ("Two", IOT_DATA_REF));
@@ -1925,11 +1927,18 @@ static void test_data_map_remove (void)
   CU_ASSERT (iot_data_map_size (map) == 2u)
   CU_ASSERT (iot_data_string_map_remove (map, "4"))
   CU_ASSERT (iot_data_map_size (map) == 1u)
+  iot_data_map_add (map, iot_data_alloc_string ("4", IOT_DATA_REF), iot_data_alloc_string ("Four", IOT_DATA_REF));
+  str = iot_data_to_json (map);
+  map2 = iot_data_from_json (str);
+  CU_ASSERT (iot_data_equal (map, map2))
+  CU_ASSERT (iot_data_string_map_remove (map, "4"))
   CU_ASSERT (iot_data_map_remove (map, key2))
   CU_ASSERT (iot_data_map_size (map) == 0u)
 
   iot_data_free (key2);
   iot_data_free (map);
+  iot_data_free (map2);
+  free (str);
 }
 
 static void test_data_map_iter_replace (void)
