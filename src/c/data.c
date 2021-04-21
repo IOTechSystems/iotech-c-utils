@@ -832,7 +832,7 @@ bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key)
         }
         if (pair == mp->tail)
         {
-          mp->tail = (iot_data_pair_t *) (prev ? prev->base.next : NULL);
+          mp->tail = prev;
         }
         mp->size--;
         iot_data_free (pair->key);
