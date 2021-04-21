@@ -824,7 +824,7 @@ bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key)
         }
         if (pair == mp->tail)
         {
-          mp->tail = (iot_data_pair_t *) (prev ? prev->base.next : NULL);
+          mp->tail = prev;
         }
         mp->size--;
         iot_data_free (pair->key);
@@ -1190,7 +1190,8 @@ static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * a
   }
   if (len == adj_len)
   {
-    strcat (holder->str, add);
+    char * ptr = holder->str + holder->size - holder->free - 1;
+    strcpy (ptr, add);
   }
   else
   {
