@@ -1528,9 +1528,8 @@ iot_data_t * iot_data_from_json (const char * json)
 
     iot_json_init (&parser);
     used = iot_json_parse (&parser, json, strlen (json), tptr, count);
-    if (used)
+    if (used && (used <= count))
     {
-      assert (used <= count);
       data = iot_data_all_from_json (&tptr, json);
     }
     free (tokens);
