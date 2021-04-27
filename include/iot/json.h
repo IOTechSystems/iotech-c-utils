@@ -47,6 +47,7 @@ typedef struct
   int32_t start;          /**< start position in JSON data string */
   int32_t end;            /**< End position in JSON data string */
   uint32_t size;          /**< Size of array / object */
+  int32_t parent;
 } iot_json_tok_t;
 
 /**

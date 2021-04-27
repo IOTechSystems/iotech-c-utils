@@ -20,6 +20,7 @@ static iot_json_tok_t * iot_json_alloc_token (iot_json_parser *parser, iot_json_
     tok = &tokens[parser->toknext++];
     tok->start = tok->end = -1;
     tok->size = 0;
+    tok->parent = -1;
   }
   return tok;
 }
@@ -85,6 +86,7 @@ found:
     return IOT_JSON_ERROR_NOMEM;
   }
   iot_json_fill_token (token, IOT_JSON_PRIMITIVE, start, parser->pos);
+  token->parent = parser->toksuper;
   parser->pos--;
   return 0;
 }
@@ -118,6 +120,7 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
         return IOT_JSON_ERROR_NOMEM;
       }
       iot_json_fill_token (token, escaped ? IOT_JSON_STRING_ESC : IOT_JSON_STRING, start + 1, parser->pos);
+      token->parent = parser->toksuper;
       return 0;
     }
 
@@ -197,6 +200,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
         if (parser->toksuper != -1)
         {
           tokens[parser->toksuper].size++;
+          token->parent = parser->toksuper;
         }
         token->type = (c == '{' ? IOT_JSON_OBJECT : IOT_JSON_ARRAY);
         token->start = (int32_t) parser->pos;
@@ -209,27 +213,32 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
         }
         type = (c == '}' ? IOT_JSON_OBJECT : IOT_JSON_ARRAY);
 
-        for (i = parser->toknext - 1; i >= 0; i--)
+        if (parser->toknext < 1)
         {
-          token = &tokens[i];
-          if (token->start != -1 && token->end == -1)
-          {
-            if (token->type != type) return IOT_JSON_ERROR_INVAL;
-            parser->toksuper = -1;
-            token->end = (int32_t) (parser->pos + 1);
-            break;
-          }
+          return IOT_JSON_ERROR_INVAL;
         }
-        /* Error if unmatched closing bracket */
-        if (i == -1) return IOT_JSON_ERROR_INVAL;
-        for (; i >= 0; i--)
+        token = &tokens[parser->toknext - 1];
+        for (;;)
         {
-          token = &tokens[i];
           if (token->start != -1 && token->end == -1)
           {
-            parser->toksuper = i;
+            if (token->type != type)
+            {
+              return IOT_JSON_ERROR_INVAL;
+            }
+            token->end = (int32_t) parser->pos + 1;
+            parser->toksuper = token->parent;
             break;
           }
+          if (token->parent == -1)
+          {
+            if (token->type != type || parser->toksuper == -1)
+            {
+              return IOT_JSON_ERROR_INVAL;
+            }
+            break;
+          }
+          token = &tokens[token->parent];
         }
         break;
       case '\"':
@@ -254,17 +263,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
             tokens[parser->toksuper].type != IOT_JSON_ARRAY &&
             tokens[parser->toksuper].type != IOT_JSON_OBJECT)
         {
-          for (i = parser->toknext - 1; i >= 0; i--)
-          {
-            if (tokens[i].type == IOT_JSON_ARRAY || tokens[i].type == IOT_JSON_OBJECT)
-            {
-              if (tokens[i].start != -1 && tokens[i].end == -1)
-              {
-                parser->toksuper = i;
-                break;
-              }
-            }
-          }
+          parser->toksuper = tokens[parser->toksuper].parent;
         }
         break;
 #ifdef JSON_STRICT
