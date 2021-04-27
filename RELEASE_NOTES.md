@@ -46,3 +46,7 @@
 - Support for new iot data type IOT_DATA_NULL. New function added:
 
 * `iot_data_alloc_null`
+
+## Version 1.2.1
+
+- Performance enhancement for json parsing
