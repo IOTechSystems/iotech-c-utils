@@ -2705,6 +2705,17 @@ static void test_data_check_map_null_ret (void)
   iot_data_free (map);
 }
 
+static void  test_data_add_ref (void)
+{
+  iot_data_t * data = iot_data_alloc_i32 (66u);
+  iot_data_t * ref = iot_data_add_ref (data);
+  CU_ASSERT (ref == data)
+  iot_data_free (data);
+  iot_data_free (ref);
+  ref = iot_data_add_ref (NULL);
+  CU_ASSERT (ref == NULL)
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -2804,6 +2815,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_type_typecode", test_data_type_typecode);
   CU_add_test (suite, "data_map_perf", test_data_map_perf);
   CU_add_test (suite, "data_int_map", test_data_int_map);
+  CU_add_test (suite, "data_add_ref", test_data_add_ref);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif

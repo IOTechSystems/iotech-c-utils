@@ -299,8 +299,7 @@ void iot_data_init (void)
 
 iot_data_t * iot_data_add_ref (const iot_data_t * data)
 {
-  assert (data);
-  atomic_fetch_add (&((iot_data_t*) data)->refs, 1);
+  if (data) atomic_fetch_add (&((iot_data_t*) data)->refs, 1);
   return (iot_data_t*) data;
 }
 
