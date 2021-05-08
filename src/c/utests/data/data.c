@@ -1393,6 +1393,7 @@ static void test_data_metadata (void)
   CU_ASSERT (metadata1 != NULL)
   CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_STRING)
   CU_ASSERT (iot_data_equal (data2, metadata1))
+  CU_ASSERT (iot_data_get_metadata (NULL) == NULL)
 
   iot_data_free (data1);
   iot_data_free (data2);
@@ -1589,6 +1590,11 @@ static void test_data_copy_float64 (void)
   double get_src = iot_data_f64 (dest);
   CU_ASSERT (get_src == -123.45f)
   iot_data_free (dest);
+}
+
+static void test_data_copy_null (void)
+{
+  CU_ASSERT (iot_data_copy (NULL) == NULL)
 }
 
 static void test_data_copy_array (void)
@@ -2773,6 +2779,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_check_unequal_nested_vector", test_data_unequal_nested_vector);
   CU_add_test (suite, "data_check_equal_vector_map", test_data_equal_vector_map);
   CU_add_test (suite, "data_check_unequal_vector_map", test_data_unequal_vector_map);
+  CU_add_test (suite, "data_copy_null", test_data_copy_null);
   CU_add_test (suite, "data_copy_int8", test_data_copy_i8);
   CU_add_test (suite, "data_copy_ui8", test_data_copy_ui8);
   CU_add_test (suite, "data_copy_uint16", test_data_copy_uint16);

@@ -336,8 +336,7 @@ extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata)
 
 extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data)
 {
-  assert (data);
-  return data->metadata;
+  return data ? data->metadata : NULL;
 }
 
 bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
@@ -1652,9 +1651,10 @@ iot_data_t * iot_data_from_xml (const char * xml)
 
 iot_data_t * iot_data_copy (const iot_data_t * src)
 {
-  assert (src);
   iot_data_t * data = (iot_data_t*) src;
   iot_data_t * ret;
+
+  if (src == NULL) return NULL;
 
   switch (data->type)
   {
