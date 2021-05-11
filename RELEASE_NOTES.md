@@ -50,3 +50,7 @@
 ## Version 1.2.1
 
 - Performance enhancement for json parsing
+- Logger updates to use micro second timestamps
+- New function added for microsecond timestamp
+
+* `iot_time_usecs`

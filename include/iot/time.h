@@ -33,6 +33,13 @@ extern uint64_t iot_time_secs (void);
 extern uint64_t iot_time_msecs (void);
 
 /**
+ * @brief Get Unix time in microseconds
+ *
+ * @return Unix time in microseconds
+ */
+extern uint64_t iot_time_usecs (void);
+
+/**
  * @brief Get Unix time in nanoseconds
  *
  * @return Unix time in nanoseconds

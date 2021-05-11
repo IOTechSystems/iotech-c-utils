@@ -44,6 +44,17 @@ static void test_time_msecs (void)
   }
 }
 
+static void test_time_usecs (void)
+{
+  volatile uint64_t usecs_time;
+  for (int counter = 0; counter < MAX_COUNTER; counter++)
+  {
+    usecs_time = iot_time_usecs ();
+    usleep (1);
+    CU_ASSERT (iot_time_usecs ()  > usecs_time)
+  }
+}
+
 static void test_time_nsecs (void)
 {
   unsigned counter;
@@ -123,6 +134,7 @@ void cunit_misc_test_init (void)
   CU_pSuite suite = CU_add_suite ("misc", suite_init, suite_clean);
   CU_add_test (suite, "time_secs", test_time_secs);
   CU_add_test (suite, "time_msecs", test_time_msecs);
+  CU_add_test (suite, "time_usecs", test_time_usecs);
   CU_add_test (suite, "time_nsecs", test_time_nsecs);
   CU_add_test (suite, "hash", test_hash);
 #ifdef IOT_HAS_FILE
