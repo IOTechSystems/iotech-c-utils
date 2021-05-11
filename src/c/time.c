@@ -6,6 +6,7 @@
 
 #include "iot/time.h"
 
+#define IOT_TIME_NANOS_PER_MIC 1000U
 #define IOT_TIME_NANOS_PER_MIL 1000000U
 #define IOT_TIME_NANOS_PER_SEC 1000000000U
 
@@ -18,6 +19,11 @@ static inline uint64_t iot_time_nanosecs (void)
 uint64_t iot_time_msecs ()
 {
   return iot_time_nanosecs () / IOT_TIME_NANOS_PER_MIL;
+}
+
+uint64_t iot_time_usecs ()
+{
+  return iot_time_nanosecs () / IOT_TIME_NANOS_PER_MIC;
 }
 
 extern uint64_t iot_time_secs (void)

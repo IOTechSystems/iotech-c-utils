@@ -40,7 +40,7 @@ typedef enum iot_loglevel_t
 } iot_loglevel_t;
 
 /** Alias for IOT logger function pointer */
-typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
+typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 
 /* Default set of supported logger implementation functions */
 
@@ -53,7 +53,7 @@ typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t
  * @param timestamp  Timestamp information to log
  * @param message    Log message
  */
-extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
+extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 #endif
 
 /**
@@ -64,7 +64,7 @@ extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, ti
  * @param timestamp  Timestamp information to log
  * @param message    Log message
  */
-extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message);
+extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 
 /**
  * Alias for logger structure

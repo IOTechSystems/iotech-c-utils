@@ -6,6 +6,7 @@
 #include "iot/data.h"
 #include "iot/logger.h"
 #include "iot/container.h"
+#include "iot/time.h"
 #include <stdarg.h>
 
 #ifdef IOT_HAS_PRCTL
@@ -53,7 +54,7 @@ static void iot_logger_log (iot_logger_t *logger, iot_loglevel_t level, va_list 
   char str[1024];
   const char * fmt = va_arg (args, const char *);
   vsnprintf (str, sizeof (str), fmt, args);
-  time_t ts = time (NULL);
+  uint64_t ts = iot_time_usecs ();
   if (logger->level >= level) (logger->impl) (logger, level, ts, str);
   while ((logger = logger->next))
   {
@@ -163,7 +164,7 @@ iot_logger_t * iot_logger_next (iot_logger_t * logger)
   return logger->next;
 }
 
-static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_loglevel_t level, time_t timestamp, const char *message)
+static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_loglevel_t level, uint64_t timestamp, const char *message)
 {
   char tname[IOT_PRCTL_NAME_MAX] = { 0 };
 #ifdef IOT_HAS_PRCTL
@@ -173,13 +174,13 @@ static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_l
 #ifdef _AZURESPHERE_
   Log_Debug ("[%s:%" PRIu64 ":%s:%s] %s\n", tname, (uint64_t) timestamp, logger->name ? logger->name : "default", iot_log_levels[level], message);
 #else
-  fprintf (fd, "[%s:%" PRIu64 ":%s:%s] %s\n", tname, (uint64_t) timestamp, logger->name ? logger->name : "default", iot_log_levels[level], message);
+  fprintf (fd, "[%s:%" PRIu64 ":%s:%s] %s\n", tname, timestamp, logger->name ? logger->name : "default", iot_log_levels[level], message);
 #endif
   iot_component_unlock (&logger->component);
 }
 
 #ifdef IOT_HAS_FILE
-void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
+void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
 {
   FILE * fd = fopen (logger->to, "a");
   if (fd)
@@ -190,7 +191,7 @@ void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp
 }
 #endif
 
-extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, time_t timestamp, const char * message)
+extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
 {
   iot_logger_log_to_fd (logger, (level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message);
 }
