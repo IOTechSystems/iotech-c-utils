@@ -653,6 +653,7 @@ static void test_data_from_string (void)
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_INT8)
   CU_ASSERT (iot_data_i8 (data) == -6)
+  CU_ASSERT (iot_data_string (data) == NULL)
   iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_UINT8, "4");
   CU_ASSERT (data != NULL)

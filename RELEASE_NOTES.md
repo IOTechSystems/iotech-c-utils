@@ -50,6 +50,7 @@
 ## Version 1.2.1
 
 - Performance enhancement for json parsing
+- Attempting to get a string from a non string `iot_data_t` now returns NULL rather than asserting
 - Logger updates to use micro second timestamps
 - New function added for microsecond timestamp
 
