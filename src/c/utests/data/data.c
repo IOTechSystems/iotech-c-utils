@@ -653,6 +653,7 @@ static void test_data_from_string (void)
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_INT8)
   CU_ASSERT (iot_data_i8 (data) == -6)
+  CU_ASSERT (iot_data_string (data) == NULL)
   iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_UINT8, "4");
   CU_ASSERT (data != NULL)
@@ -1949,9 +1950,11 @@ static void test_data_map_iter_replace (void)
   iot_data_map_add (map, iot_data_alloc_string ("1", IOT_DATA_REF), iot_data_alloc_string ("One", IOT_DATA_REF));
   iot_data_map_add (map, iot_data_alloc_string ("2", IOT_DATA_REF), iot_data_alloc_string ("Two", IOT_DATA_REF));
   iot_data_map_add (map, iot_data_alloc_string ("3", IOT_DATA_REF), iot_data_alloc_string ("Three", IOT_DATA_REF));
+  iot_data_map_add (map, iot_data_alloc_string ("4", IOT_DATA_REF), iot_data_alloc_null ());
 
   CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "1"), "One") == 0)
   CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "3"), "Three") == 0)
+  CU_ASSERT (iot_data_string_map_get_string (map, "4") == NULL)
 
   iot_data_map_iter_t it;
   iot_data_map_iter (map, &it);

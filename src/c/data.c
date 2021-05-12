@@ -792,8 +792,8 @@ bool iot_data_bool (const iot_data_t * data)
 
 const char * iot_data_string (const iot_data_t * data)
 {
-  assert (data && (data->type == IOT_DATA_STRING));
-  return ((iot_data_value_t*) data)->value.str;
+  assert (data);
+  return (data->type == IOT_DATA_STRING) ? ((iot_data_value_t*) data)->value.str : NULL;
 }
 
 static iot_data_pair_t * iot_data_map_find (iot_data_map_t * map, const iot_data_t * key)

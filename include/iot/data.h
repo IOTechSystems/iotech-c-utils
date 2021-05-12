@@ -572,7 +572,7 @@ extern bool iot_data_bool (const iot_data_t * data);
  * The function to get the value stored in data
  *
  * @param data  Data pointer to retrieve value
- * @return      Value stored in the address pointed by data
+ * @return      Returned string pointer or NULL if date not of type string
  */
 extern const char * iot_data_string (const iot_data_t * data);
 
