@@ -35,7 +35,6 @@
 #undef IOT_HAS_CPU_AFFINITY
 #undef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
 #undef IOT_HAS_PRCTL
-#undef IOT_HAS_FILE
 #endif
 
 #endif

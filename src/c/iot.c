@@ -65,46 +65,6 @@ extern bool iot_file_write (const char * path, const char * str)
   return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
 
-extern bool iot_file_delete (const char * path)
-{
-  return (remove (path) == 0);
-}
-
-uint8_t * iot_file_read_binary (const char * path, size_t * len)
-{
-  uint8_t * ret = NULL;
-  size_t size = 0;
-
-  FILE * fd = fopen (path, "r");
-  if (fd)
-  {
-    fseek (fd, 0, SEEK_END);
-    size = ftell (fd);
-    rewind (fd);
-    ret = malloc (size + 1); // Allocate extra byte so can be NULL terminated if a string
-    size_t items = fread (ret, size, 1u, fd);
-    assert (items == 1);
-    (void) items;
-    ret[size] = 0; // String NULL terminator
-    fclose (fd);
-  }
-  if (len) *len = size;
-  return ret;
-}
-
-bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
-{
-  bool ok = false;
-  FILE * fd = fopen (path, "w");
-  if (fd)
-  {
-    ok = (fwrite (binary, len, 1u, fd) == 1u);
-    fclose (fd);
-  }
-  return ok;
-}
-
-#else
 #ifdef _AZURESPHERE_
 
 #define IOT_MALLOC_BLOCK_SIZE 512
@@ -153,6 +113,47 @@ bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t le
   if (! ok)
   {
     Log_Debug ("Error writing to file: %s %s (%d)\n", path, strerror (errno), errno);
+  }
+  return ok;
+}
+
+#else
+
+extern bool iot_file_delete (const char * path)
+{
+  return (remove (path) == 0);
+}
+
+uint8_t * iot_file_read_binary (const char * path, size_t * len)
+{
+  uint8_t * ret = NULL;
+  size_t size = 0;
+
+  FILE * fd = fopen (path, "r");
+  if (fd)
+  {
+    fseek (fd, 0, SEEK_END);
+    size = ftell (fd);
+    rewind (fd);
+    ret = malloc (size + 1); // Allocate extra byte so can be NULL terminated if a string
+    size_t items = fread (ret, size, 1u, fd);
+    assert (items == 1);
+    (void) items;
+    ret[size] = 0; // String NULL terminator
+    fclose (fd);
+  }
+  if (len) *len = size;
+  return ret;
+}
+
+bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
+{
+  bool ok = false;
+  FILE * fd = fopen (path, "w");
+  if (fd)
+  {
+    ok = (fwrite (binary, len, 1u, fd) == 1u);
+    fclose (fd);
   }
   return ok;
 }

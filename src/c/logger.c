@@ -179,7 +179,7 @@ static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_l
   iot_component_unlock (&logger->component);
 }
 
-#ifdef IOT_HAS_FILE
+#if defined(IOT_HAS_FILE) && !defined(_AZURESPHERE_)
 void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
 {
   FILE * fd = fopen (logger->to, "a");
@@ -225,7 +225,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   iot_loglevel_t level = iot_logger_config_level (map);
   const char * to = iot_data_string_map_get_string (map, "To");
 
-#ifdef IOT_HAS_FILE
+#if defined(IOT_HAS_FILE) && !defined(_AZURESPHERE_)
   if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
   {
     impl = iot_log_file; /* Log to file */
