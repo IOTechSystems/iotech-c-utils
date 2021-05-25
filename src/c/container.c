@@ -219,7 +219,7 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
       }
       else
       {
-        iot_log_error (cont->logger, "Invalid configuration, Could not dynamically load Library: %s", library);
+        iot_log_error (cont->logger, "Invalid configuration, Could not dynamically load Library: %s - %s", library, dlerror ());
       }
     }
     iot_data_free (cmap);
