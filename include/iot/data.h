@@ -40,7 +40,7 @@ typedef enum iot_data_type_t
   IOT_DATA_ARRAY = 13,  /**< Array */
   IOT_DATA_MAP = 14,    /**< Map */
   IOT_DATA_VECTOR = 15  /**< Vector */
-} iot_data_type_t;
+} __attribute__ ((__packed__)) iot_data_type_t;
 
 /**
  * Alias for data ownership enumeration
