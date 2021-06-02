@@ -7,6 +7,7 @@
 #include "iot/json.h"
 #include "iot/base64.h"
 #include "iot/hash.h"
+#include "uuid/uuid.h"
 
 #ifdef IOT_HAS_XML
 #include "yxml.h"
@@ -53,7 +54,7 @@ struct iot_data_t
   iot_data_t * next;
   atomic_uint_fast32_t refs;
   uint32_t hash;
-  iot_data_type_t type : 32;
+  iot_data_type_t type;
   bool release : 1;
   bool release_block : 1;
 };
@@ -97,10 +98,10 @@ typedef struct iot_data_pair_t
 typedef struct iot_data_map_t
 {
   iot_data_t base;
-  iot_data_type_t key_type;
-  uint32_t size;
   iot_data_pair_t * head;
   iot_data_pair_t * tail;
+  uint32_t size;
+  iot_data_type_t key_type;
 } iot_data_map_t;
 
 typedef struct iot_string_holder_t
@@ -278,6 +279,7 @@ static void iot_data_fini (void)
 void iot_data_init (void)
 {
 /*
+  printf ("sizeof (iot_data_t): %zu\n", sizeof (iot_data_t));
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
   printf ("sizeof (iot_data_vector_t): %zu\n", sizeof (iot_data_vector_t));
@@ -632,6 +634,15 @@ iot_data_t * iot_data_alloc_null (void)
   return (iot_data_t*) data;
 }
 
+iot_data_t * iot_data_alloc_uuid_string (void)
+{
+  char uuid_str[UUID_STR_LEN];
+  uuid_t uuid;
+  uuid_generate (uuid);
+  uuid_unparse (uuid, uuid_str);
+  return iot_data_alloc_string (uuid_str, IOT_DATA_COPY);
+}
+
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
 {
   assert (val);
@@ -981,7 +992,7 @@ iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 
 extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t type)
 {
-  return (map && (map->type == IOT_DATA_MAP) && (((iot_data_array_t*) map)->type == type));
+  return (map && (map->type == IOT_DATA_MAP) && (((iot_data_map_t*) map)->key_type == type));
 }
 
 void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val)
