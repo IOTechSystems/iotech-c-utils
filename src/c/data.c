@@ -53,7 +53,7 @@ struct iot_data_t
   iot_data_t * next;
   atomic_uint_fast32_t refs;
   uint32_t hash;
-  iot_data_type_t type : 32;
+  iot_data_type_t type;
   bool release : 1;
   bool release_block : 1;
 };
@@ -981,7 +981,7 @@ iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 
 extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t type)
 {
-  return (map && (map->type == IOT_DATA_MAP) && (((iot_data_array_t*) map)->type == type));
+  return (map && (map->type == IOT_DATA_MAP) && (((iot_data_map_t*) map)->key_type == type));
 }
 
 void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val)
