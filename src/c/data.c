@@ -643,6 +643,13 @@ iot_data_t * iot_data_alloc_uuid_string (void)
   return iot_data_alloc_string (uuid_str, IOT_DATA_COPY);
 }
 
+iot_data_t * iot_data_alloc_uuid (void)
+{
+  uuid_t uuid;
+  uuid_generate (uuid);
+  return iot_data_alloc_array (uuid, sizeof (uuid_t), IOT_DATA_UINT8, IOT_DATA_COPY);
+}
+
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
 {
   assert (val);
