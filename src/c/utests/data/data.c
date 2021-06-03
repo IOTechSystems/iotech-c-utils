@@ -11,6 +11,10 @@
 #include <float.h>
 #include <uuid/uuid.h>
 
+#ifndef UUID_STR_LEN
+#define UUID_STR_LEN	37u
+#endif
+
 static int suite_init (void)
 {
   iot_logger_start (iot_logger_default ());
