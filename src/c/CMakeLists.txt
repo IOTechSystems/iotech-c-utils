@@ -37,9 +37,11 @@ endif ()
 
 # Find dependencies
 
-find_package (UUID REQUIRED)
-set (LINK_LIBRARIES ${LINK_LIBRARIES} ${UUID_LIBRARY})
-set (INCLUDE_DIRS ${INCLUDE_DIRS} ${UUID_INCLUDE})
+if (IOT_BUILD_UUID)
+  find_package (UUID REQUIRED)
+  set (LINK_LIBRARIES ${LINK_LIBRARIES} ${UUID_LIBRARY})
+  set (INCLUDE_DIRS ${INCLUDE_DIRS} ${UUID_INCLUDE})
+endif ()
 
 # Main library
 

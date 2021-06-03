@@ -51,9 +51,9 @@ extern char * iot_ctok_r (char *str, const char delim, char **saveptr);
 #error Zephyr CONFIG_PTHREAD_IPC not set
 #endif
 
-/** Object-like macro - Stack size set to 4096 bytes */
+/** Default stack size */
 #define IOT_ZEPHYR_STACK_SIZE 4096
-/** Objet-like macro - Maximum number of threads set as 4 */
+/** Maximum number of threads */
 #define IOT_ZEPHYR_MAX_THREADS 4
 
 #endif

@@ -7,10 +7,12 @@
 #include "iot/json.h"
 #include "iot/base64.h"
 #include "iot/hash.h"
-#include "uuid/uuid.h"
 
+#ifdef IOT_HAS_UUID
+#include "uuid/uuid.h"
 #ifndef UUID_STR_LEN
 #define UUID_STR_LEN	37u
+#endif
 #endif
 
 #ifdef IOT_HAS_XML
@@ -638,6 +640,7 @@ iot_data_t * iot_data_alloc_null (void)
   return (iot_data_t*) data;
 }
 
+#ifdef IOT_HAS_UUID
 iot_data_t * iot_data_alloc_uuid_string (void)
 {
   char uuid_str[UUID_STR_LEN];
@@ -653,6 +656,7 @@ iot_data_t * iot_data_alloc_uuid (void)
   uuid_generate (uuid);
   return iot_data_alloc_array (uuid, sizeof (uuid_t), IOT_DATA_UINT8, IOT_DATA_COPY);
 }
+#endif
 
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
 {

@@ -9,10 +9,12 @@
 #include "data.h"
 #include "CUnit.h"
 #include <float.h>
-#include <uuid/uuid.h>
 
+#ifdef IOT_HAS_UUID
+#include <uuid/uuid.h>
 #ifndef UUID_STR_LEN
 #define UUID_STR_LEN	37u
+#endif
 #endif
 
 static int suite_init (void)
@@ -2730,6 +2732,7 @@ static void  test_data_add_ref (void)
   CU_ASSERT (ref == NULL)
 }
 
+#ifdef IOT_HAS_UUID
 static void test_data_alloc_uuid (void)
 {
   iot_data_t * data = iot_data_alloc_uuid_string ();
@@ -2743,6 +2746,7 @@ static void test_data_alloc_uuid (void)
   CU_ASSERT (iot_data_array_size (data) == sizeof (uuid_t))
   iot_data_free (data);
 }
+#endif
 
 void cunit_data_test_init (void)
 {
@@ -2845,8 +2849,10 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_map_perf", test_data_map_perf);
   CU_add_test (suite, "data_int_map", test_data_int_map);
   CU_add_test (suite, "data_add_ref", test_data_add_ref);
-  CU_add_test (suite, "data_alloc_uuid", test_data_alloc_uuid);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
+#endif
+#ifdef IOT_HAS_UUID
+  CU_add_test (suite, "data_alloc_uuid", test_data_alloc_uuid);
 #endif
 }
