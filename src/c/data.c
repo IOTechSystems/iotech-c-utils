@@ -9,6 +9,10 @@
 #include "iot/hash.h"
 #include "uuid/uuid.h"
 
+#ifndef UUID_STR_LEN
+#define UUID_STR_LEN	37u
+#endif
+
 #ifdef IOT_HAS_XML
 #include "yxml.h"
 #define YXML_PARSER_BUFF_SIZE 4096
