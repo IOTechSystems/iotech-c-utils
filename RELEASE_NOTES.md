@@ -55,3 +55,10 @@
 - New function added for microsecond timestamp
 
 * `iot_time_usecs`
+
+## Version 1.2.2
+
+- Added support for UUID in data. New functions added:
+
+* `iot_data_alloc_uuid`
+* `iot_data_alloc_uuid_string`
