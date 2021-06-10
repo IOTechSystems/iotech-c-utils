@@ -5,6 +5,7 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
+/* Ref: https://github.com/rxi/uuid4 */
 #ifndef UUID_H
 #define UUID_H
 

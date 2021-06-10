@@ -37,6 +37,7 @@ set (IOT_BUILD_EXES ON CACHE BOOL "Build executables")
 set (IOT_BUILD_DOCS ON CACHE BOOL "Build docs")
 
 set (IOT_HAS_XML ${IOT_BUILD_XML})
+set (IOT_HAS_UUID ${IOT_BUILD_UUID})
 
 # Write iot/defs.h with version and build options (IOT_HAS_XXX)
 
@@ -59,6 +60,7 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Generic")
     set (IOT_BUILD_EXES OFF)
     set (IOT_BUILD_DOCS OFF)
     set (IOT_BUILD_XML OFF)
+    set (IOT_BUILD_UUID ON)
     execute_process (COMMAND dpkg --print-architecture OUTPUT_VARIABLE OS_ARCH OUTPUT_STRIP_TRAILING_WHITESPACE)
     set (CPACK_GENERATOR DEB)
     set (PACKAGE_MOD "-azsphere${AZURESPHERE_API}")

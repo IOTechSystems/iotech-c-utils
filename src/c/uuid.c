@@ -5,6 +5,11 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
+/* NOTE:
+ * 1. uuid_init uses getrandom to get the initial seed instead of reading from /dev/urandom as file operations are not supported in azuresphere
+ * 2. uuid_unparse is equivalent to uuid_unparse_lower
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
