@@ -55,3 +55,5 @@
 - New function added for microsecond timestamp
 
 * `iot_time_usecs`
+
+- Zero length `iot_data_t` arrays now supported
