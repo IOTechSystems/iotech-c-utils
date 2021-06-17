@@ -662,11 +662,11 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
 
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)
 {
-  assert (((data == NULL && length == 0) || (data != NULL && length > 0)) && (type < IOT_DATA_STRING));
+  assert ((type < IOT_DATA_STRING) && ((length > 0 && data != NULL) || length == 0));
   iot_data_array_t * array = iot_data_factory_alloc ();
   array->base.type = IOT_DATA_ARRAY;
   array->type = type;
-  array->data = data;
+  array->data = length ? data : NULL;
   array->length = length;
   array->size = iot_data_type_size[type] * length;
   array->base.hash = data ? iot_hash_data (data, array->size) : 0;

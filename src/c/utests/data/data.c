@@ -2407,8 +2407,9 @@ static void test_data_alloc_array_bool (void)
   iot_data_free (array2);
 }
 
-static void test_data_alloc_array_zero (void)
+static void test_data_zerolength_array (void)
 {
+  uint32_t empty [0];
   iot_data_t * array1 = iot_data_alloc_array (NULL, 0, IOT_DATA_BOOL, IOT_DATA_REF);
 
   CU_ASSERT (array1 != NULL)
@@ -2416,15 +2417,19 @@ static void test_data_alloc_array_zero (void)
   CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_BOOL)
 
   iot_data_t * array2 = iot_data_alloc_array (NULL, 0, IOT_DATA_BOOL, IOT_DATA_REF);
-
-  CU_ASSERT (array2 != NULL)
-  CU_ASSERT (iot_data_type (array2) == IOT_DATA_ARRAY)
-  CU_ASSERT (iot_data_array_type (array2) == IOT_DATA_BOOL)
   CU_ASSERT (iot_data_equal (array1, array2))
 
   char * json = iot_data_to_json (array1);
   CU_ASSERT (strcmp (json, "\"\"") == 0)
   free (json);
+
+  iot_data_free (array1);
+
+  array1 = iot_data_alloc_array (empty, 0, IOT_DATA_UINT32, IOT_DATA_COPY);
+  CU_ASSERT (array1 != NULL)
+  CU_ASSERT (iot_data_type (array1) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (array1) == IOT_DATA_UINT32)
+  CU_ASSERT (! iot_data_equal (array1, array2))
 
   iot_data_free (array1);
   iot_data_free (array2);
@@ -2839,7 +2844,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_alloc_array_float32", test_data_alloc_array_f32);
   CU_add_test (suite, "data_alloc_array_float64", test_data_alloc_array_f64);
   CU_add_test (suite, "data_alloc_array_bool", test_data_alloc_array_bool);
-  CU_add_test (suite, "data_alloc_array_zero", test_data_alloc_array_zero);
+  CU_add_test (suite, "data_alloc_zerolength_array", test_data_zerolength_array);
   CU_add_test (suite, "data_alloc_zerolength_vector", test_data_zerolength_vector);
   CU_add_test (suite, "data_alloc_zerolength_vectormap", test_data_zerolength_vectormap);
   CU_add_test (suite, "data_basic_typecode", test_data_basic_typecode);
