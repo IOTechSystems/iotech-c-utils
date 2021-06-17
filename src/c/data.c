@@ -662,16 +662,16 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
 
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)
 {
-  assert (data && length && (type < IOT_DATA_STRING));
+  assert ((type < IOT_DATA_STRING) && ((length > 0 && data != NULL) || length == 0));
   iot_data_array_t * array = iot_data_factory_alloc ();
   array->base.type = IOT_DATA_ARRAY;
   array->type = type;
-  array->data = data;
+  array->data = length ? data : NULL;
   array->length = length;
   array->size = iot_data_type_size[type] * length;
-  array->base.hash = iot_hash_data (data, array->size);
-  array->base.release = (ownership != IOT_DATA_REF);
-  if (ownership == IOT_DATA_COPY)
+  array->base.hash = data ? iot_hash_data (data, array->size) : 0;
+  array->base.release = data ? (ownership != IOT_DATA_REF) : false;
+  if (length && (ownership == IOT_DATA_COPY))
   {
     array->data = malloc (array->size);
     memcpy (array->data, data, array->size);
@@ -1258,20 +1258,23 @@ static inline void iot_data_add_quote (iot_string_holder_t * holder)
 static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data_t * array)
 {
   uint32_t inLen = iot_data_array_size (array);
-  const uint8_t * data = iot_data_address (array);
-  assert (strlen (holder->str) == (holder->size - holder->free - 1));
-  size_t len = iot_b64_encodesize (inLen) - 1; /* Allow for string terminator */
-  char * out;
-
-  if (holder->free < len)
+  if (inLen)
   {
-    iot_data_holder_realloc (holder, len);
-  }
+    const uint8_t *data = iot_data_address (array);
+    assert (strlen (holder->str) == (holder->size - holder->free - 1));
+    size_t len = iot_b64_encodesize (inLen) - 1; /* Allow for string terminator */
+    char *out;
 
-  out = holder->str + holder->size - holder->free - 1;
-  iot_b64_encode (data, inLen, out, holder->free + 1);
-  holder->free -= len;
-  assert (strlen (holder->str) == (holder->size - holder->free - 1));
+    if (holder->free < len)
+    {
+      iot_data_holder_realloc (holder, len);
+    }
+
+    out = holder->str + holder->size - holder->free - 1;
+    iot_b64_encode (data, inLen, out, holder->free + 1);
+    holder->free -= len;
+    assert (strlen (holder->str) == (holder->size - holder->free - 1));
+  }
 }
 
 static void iot_data_dump_raw (iot_string_holder_t * holder, const iot_data_t * data)
