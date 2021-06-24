@@ -2122,6 +2122,6 @@ static void iot_node_remove (iot_node_t * node, iot_data_t * key)
       iot_node_set_colour (nd, iot_node_colour (c));
       iot_node_remove_balance (nd);
     }
-    iot_node_replace (node, nd, c);
+    // iot_node_replace (node, nd, c);
   }
 }
