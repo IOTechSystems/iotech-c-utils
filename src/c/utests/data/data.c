@@ -444,6 +444,7 @@ static void test_data_to_json (void)
   CU_ASSERT (json != NULL)
   if (json)
   {
+    printf ("JSON: %s\n", json);
     CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"Boolean\":true,\"NULL\":null}") == 0)
   }
   free (json);
@@ -1883,6 +1884,7 @@ static void test_data_copy_vector_map (void)
   iot_data_free (data_map1);
   iot_data_free (data_map2);
 }
+extern void iot_data_map_dump (iot_data_t * map);
 
 static void test_map_size (void)
 {
@@ -1894,15 +1896,18 @@ static void test_map_size (void)
 
   iot_data_map_add (map, key, val);
   iot_data_add_ref (key);
+  iot_data_map_dump (map);
 
   CU_ASSERT (iot_data_map_size (map) == 1)
 
   /* update value for the same key */
   val = iot_data_alloc_ui32 (2u);
   iot_data_map_add (map, key, val);
+
   CU_ASSERT (iot_data_map_size (map) == 1)
 
   iot_data_string_map_add (map, "element2", iot_data_alloc_string ("data", IOT_DATA_REF));
+  iot_data_map_dump (map);
   CU_ASSERT (iot_data_map_size (map) == 2)
 
   iot_data_free (map);
@@ -1956,6 +1961,9 @@ static void test_data_map_iter_replace (void)
   CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "3"), "Three") == 0)
   CU_ASSERT (iot_data_string_map_get_string (map, "4") == NULL)
 
+  char * json = iot_data_to_json (map);
+  printf ("JSON: %s\n", json);
+
   iot_data_map_iter_t it;
   iot_data_map_iter (map, &it);
   while (iot_data_map_iter_next (&it))
@@ -1963,7 +1971,8 @@ static void test_data_map_iter_replace (void)
     if (strcmp (iot_data_map_iter_string_key (&it), "1") == 0)
     {
       iot_data_free (iot_data_map_iter_replace_value (&it, iot_data_alloc_string ("Ace", IOT_DATA_REF)));
-    } else if (strcmp (iot_data_map_iter_string_key (&it), "3") == 0)
+    }
+    else if (strcmp (iot_data_map_iter_string_key (&it), "3") == 0)
     {
       iot_data_free (iot_data_map_iter_replace_value (&it, iot_data_alloc_string ("Trey", IOT_DATA_REF)));
     }
@@ -2770,6 +2779,9 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_array_iter_float32", test_data_array_iter_float32);
   CU_add_test (suite, "data_array_iter_float64", test_data_array_iter_float64);
   CU_add_test (suite, "data_array_iter_bool", test_data_array_iter_bool);
+  CU_add_test (suite, "data_map_size", test_map_size);
+  CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);
+  CU_add_test (suite, "data_map_remove", test_data_map_remove);
   CU_add_test (suite, "data_string_vector", test_data_string_vector);
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
@@ -2781,9 +2793,6 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_map_base64_to_array", test_data_map_base64_to_array);
   CU_add_test (suite, "data_increment", test_data_increment);
   CU_add_test (suite, "data_decrement", test_data_decrement);
-  CU_add_test (suite, "data_map_size", test_map_size);
-  CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);
-  CU_add_test (suite, "data_map_remove", test_data_map_remove);
   CU_add_test (suite, "data_vector_iter_replace", test_data_vector_iter_replace);
   CU_add_test (suite, "data_check_equal_int8", test_data_equal_int8);
   CU_add_test (suite, "data_check_equal_uint16", test_data_equal_uint16);

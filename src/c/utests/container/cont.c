@@ -102,8 +102,8 @@ static void test_list_containers (void)
 
   CU_ASSERT (iot_data_map_size (cont_map) == 2)
 
-  iot_data_t * key1 = iot_data_alloc_ui32 (0); //get value at index 0
-  iot_data_t * key2 = iot_data_alloc_ui32 (1); //get value at index 1
+  iot_data_t * key1 = iot_data_alloc_ui32 (0); // get value at index 0
+  iot_data_t * key2 = iot_data_alloc_ui32 (1); // get value at index 1
 
   CU_ASSERT (strcmp (iot_data_string (iot_data_map_get (cont_map, key1)), "test2") == 0)
   CU_ASSERT (strcmp (iot_data_string (iot_data_map_get (cont_map, key2)), "test1") == 0)

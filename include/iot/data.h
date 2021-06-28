@@ -64,7 +64,7 @@ typedef struct iot_typecode_t iot_typecode_t;
 typedef struct iot_data_map_iter_t
 {
   struct iot_data_map_t * map;   /**< Pointer to data map structure */
-  struct iot_data_pair_t * pair; /**< Pointer to data pair structure */
+  struct iot_node_t * node;      /**< Pointer to data node structure */
 } iot_data_map_iter_t;
 
 /**
