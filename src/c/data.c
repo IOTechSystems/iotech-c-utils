@@ -1827,10 +1827,10 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
 /* Red/Black binary tree manipulation functions. Implements iot_data_map_t.
  *
  * https://algorithmtutor.com/Data-Structures/Tree/Red-Black-Trees/
+ *
+ * Note that logic regards NULL nodes as Black. So all colour get/set operations
+ * need checking for node being NULL.
  */
-
-// Note that logic regards NULL nodes as Black. So all colour get/set operations
-// need checking for node being NULL.
 
 static inline iot_node_colour_t iot_node_colour (iot_node_t * node)
 {
@@ -1875,7 +1875,7 @@ static inline iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key
   return nn;
 }
 
-static inline void iot_node_delete (iot_node_t * node)
+static void iot_node_delete (iot_node_t * node)
 {
   iot_data_free (node->key);
   iot_data_free (node->value);
@@ -1943,7 +1943,7 @@ static void iot_node_insert_balance (iot_data_map_t * map, iot_node_t * k)
     }
     else
     {
-      if (IS_RED (u)) // mirror case 3.1
+      if (IS_RED (u)) // case 3.1
       {
         u->colour = IOT_NODE_BLACK;
         k->parent->colour = IOT_NODE_BLACK;
@@ -1952,12 +1952,12 @@ static void iot_node_insert_balance (iot_data_map_t * map, iot_node_t * k)
       }
       else
       {
-        if (IS_RIGHT (k)) // mirror case 3.2.2
+        if (IS_RIGHT (k)) // case 3.2.2
         {
           k = k->parent;
           iot_node_rol (map, k);
         }
-        // mirror case 3.2.1
+        // case 3.2.1
         k->parent->colour = IOT_NODE_BLACK;
         k->parent->parent->colour = IOT_NODE_RED;
         iot_node_ror (map, k->parent->parent);
