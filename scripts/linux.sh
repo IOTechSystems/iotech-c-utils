@@ -97,6 +97,7 @@ if [ "${UTEST}" = "true" ]
 then
   cd ${BROOT}/release
   c/utests/runner/runner -a -j
+  c/tests/map/map_test
 fi
 
 # Run examples
@@ -126,14 +127,16 @@ then
   run_examples
   cd ${BROOT}/lcov
   c/utests/runner/runner -a -j
+  c/tests/map/map_test
 
   # Generate coverage html report
 
   lcov --capture --no-external -d . -b ${ROOT}/src -o lcov.tmp1
   lcov --remove lcov.tmp1 "*/c/cunit/*" -o lcov.tmp2
   lcov --remove lcov.tmp2 "*/c/utests/runner/*" -o lcov.tmp3
-  genhtml -o html lcov.tmp3
-  gcovr -r ${ROOT}/src --object-directory . -e "${ROOT}/src/c/cunit/*" -e "${ROOT}/src/c/utests/runner/*" --xml -o cobertura.xml
+  lcov --remove lcov.tmp3 "*/c/tests/map/*" -o lcov.tmp4
+  genhtml -o html lcov.tmp4
+  gcovr -r ${ROOT}/src --object-directory . -e "${ROOT}/src/c/cunit/*" -e "${ROOT}/src/c/utests/runner/*" -e "${ROOT}/src/c/tests/map/*" --xml -o cobertura.xml
 
 fi
 
@@ -158,4 +161,5 @@ then
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container/container
   valgrind $VG_FLAGS ${VG_SUPP} --xml-file=dynamic_vg.xml c/examples/dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
+  valgrind $VG_FLAGS --xml-file=map_vg.xml c/tests/map/map_test
 fi
