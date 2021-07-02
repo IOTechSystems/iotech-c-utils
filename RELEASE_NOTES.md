@@ -52,9 +52,12 @@
 - Performance enhancement for json parsing
 - Attempting to get a string from a non string `iot_data_t` now returns NULL rather than asserting
 - Logger updates to use micro second timestamps
-- Data map performance enhancements. Note iteration order is now based on key ordering.
 - New function added for microsecond timestamp
 
 * `iot_time_usecs`
 
 - Zero length `iot_data_t` arrays now supported
+
+## Version 1.2.2
+
+- Data map performance enhancements. Note iteration order is now based on key ordering.
