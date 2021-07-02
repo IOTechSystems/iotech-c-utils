@@ -22,7 +22,7 @@ static void check (iot_data_t * map, const uint32_t size)
     const iot_data_t * key = iot_data_map_iter_key (&iter);
     printf ("%" PRIu32 " ", iot_data_ui32 (key));
   }
-  iot_data_map_dump (map);
+  //iot_data_map_dump (map);
   iot_data_free (map);
 }
 

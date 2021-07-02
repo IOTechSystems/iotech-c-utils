@@ -161,5 +161,5 @@ then
   valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container/container
   valgrind $VG_FLAGS ${VG_SUPP} --xml-file=dynamic_vg.xml c/examples/dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
   valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
-  valgrind $VG_FLAGS c/tests/map/map_test
+  valgrind $VG_FLAGS --xml-file=map_vg.xml c/tests/map/map_test
 fi
