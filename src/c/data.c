@@ -2094,12 +2094,12 @@ static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key)
     if (z->left == NULL)
     {
       x = z->right;
-			iot_node_transplant (map, z, z->right);
+      iot_node_transplant (map, z, z->right);
     }
     else if (z->right == NULL)
     {
       x = z->left;
-			iot_node_transplant (map, z, z->left);
+      iot_node_transplant (map, z, z->left);
     }
     else
     {
