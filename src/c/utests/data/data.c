@@ -444,8 +444,8 @@ static void test_data_to_json (void)
   CU_ASSERT (json != NULL)
   if (json)
   {
-    printf ("JSON: %s\n", json);
-    CU_ASSERT (strcmp (json, "{\"UInt32\":1,\"Name\":\"Lilith\",\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"Boolean\":true,\"NULL\":null}") == 0)
+    // printf ("JSON: %s\n", json);
+    CU_ASSERT (strcmp (json, "{\"Boolean\":true,\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"NULL\":null,\"Name\":\"Lilith\",\"UInt32\":1}") == 0)
   }
   free (json);
   iot_data_free (map);
@@ -593,13 +593,14 @@ static void test_data_from_xml (void)
     <logging enable=\"true\" filename=\"/dev/null\" />\n\
   </container>\n\
 </busmaster>";
-  const char * expected = "{\"name\":\"busmaster\",\"attributes\":{\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"busId\":\"main_bus\"},\"children\":[{\"name\":\"deviceService\",\"attributes\":{\"name\":\"virtual_device_service\",\"library\":\"libxrt-virtual-device-service.so\",\"factory\":\"xrt_virtual_device_service_factory\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"name\":\"device\",\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"name\":\"resource\",\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"}},{\"name\":\"protocol\",\"attributes\":{\"name\":\"Other\"},\"children\":[{\"name\":\"protocolAttribute\",\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"}}],\"content\":\"Any old rubbish\\n      \"}],\"content\":\"\\n    \"}],\"content\":\"\\n  \"},{\"name\":\"fubar\",\"attributes\":{},\"content\":\"Some text!\"},{\"name\":\"container\",\"attributes\":{\"threads\":\"4\"},\"children\":[{\"name\":\"logging\",\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"}}],\"content\":\"\\n  \"}],\"content\":\"\\n\"}";
+  const char * expected = "{\"attributes\":{\"busId\":\"main_bus\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\"},\"children\":[{\"attributes\":{\"factory\":\"xrt_virtual_device_service_factory\",\"library\":\"libxrt-virtual-device-service.so\",\"name\":\"virtual_device_service\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"},\"name\":\"resource\"},{\"attributes\":{\"name\":\"Other\"},\"children\":[{\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"},\"name\":\"protocolAttribute\"}],\"content\":\"Any old rubbish\\n      \",\"name\":\"protocol\"}],\"content\":\"\\n    \",\"name\":\"device\"}],\"content\":\"\\n  \",\"name\":\"deviceService\"},{\"attributes\":{},\"content\":\"Some text!\",\"name\":\"fubar\"},{\"attributes\":{\"threads\":\"4\"},\"children\":[{\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"},\"name\":\"logging\"}],\"content\":\"\\n  \",\"name\":\"container\"}],\"content\":\"\\n\",\"name\":\"busmaster\"}";
 
 
   xml = iot_data_from_xml (test_xml);
   CU_ASSERT (xml != NULL);
   json = iot_data_to_json (xml);
   CU_ASSERT (json != NULL);
+  // printf ("XML: %s\n", json);
   CU_ASSERT (strcmp (json, expected) == 0);
   free (json);
   iot_data_free (xml);
@@ -1884,7 +1885,6 @@ static void test_data_copy_vector_map (void)
   iot_data_free (data_map1);
   iot_data_free (data_map2);
 }
-extern void iot_data_map_dump (iot_data_t * map);
 
 static void test_map_size (void)
 {
@@ -1896,7 +1896,6 @@ static void test_map_size (void)
 
   iot_data_map_add (map, key, val);
   iot_data_add_ref (key);
-  iot_data_map_dump (map);
 
   CU_ASSERT (iot_data_map_size (map) == 1)
 
@@ -1907,7 +1906,6 @@ static void test_map_size (void)
   CU_ASSERT (iot_data_map_size (map) == 1)
 
   iot_data_string_map_add (map, "element2", iot_data_alloc_string ("data", IOT_DATA_REF));
-  iot_data_map_dump (map);
   CU_ASSERT (iot_data_map_size (map) == 2)
 
   iot_data_free (map);
@@ -1961,8 +1959,9 @@ static void test_data_map_iter_replace (void)
   CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "3"), "Three") == 0)
   CU_ASSERT (iot_data_string_map_get_string (map, "4") == NULL)
 
-  char * json = iot_data_to_json (map);
-  printf ("JSON: %s\n", json);
+  // char * json = iot_data_to_json (map);
+  // printf ("JSON: %s\n", json);
+  // free (json);
 
   iot_data_map_iter_t it;
   iot_data_map_iter (map, &it);
@@ -2705,7 +2704,7 @@ static void test_data_map_perf (void)
     }
   }
   uint64_t t2 = iot_time_msecs ();
-  // printf ("String map[10] a million lookups in %" PRIu64 " milliseconds\n", t2 - t1);
+  printf ("String map[10] a million lookups in %" PRIu64 " milliseconds\n", t2 - t1);
   CU_ASSERT (t2 > t1)
   iot_data_free (map);
 }

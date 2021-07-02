@@ -33,9 +33,9 @@ static const uint8_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4
 
 typedef enum iot_node_colour_t
 {
-  IOT_NODE_RED,
-  IOT_NODE_BLACK
-} iot_node_colour_t;
+  IOT_NODE_BLACK = 0,
+  IOT_NODE_RED = 1
+} __attribute__ ((__packed__)) iot_node_colour_t;
 
 typedef union iot_data_union_t
 {
@@ -107,7 +107,7 @@ typedef struct iot_node_t
   struct iot_node_t * right;
   iot_data_t * key;
   iot_data_t * value;
-  bool black : 1;
+  iot_node_colour_t colour;
 } iot_node_t;
 
 typedef struct iot_data_map_t
@@ -163,12 +163,13 @@ static pthread_mutex_t iot_data_mutex;
 #endif
 
 extern void iot_data_init (void);
+extern void iot_data_map_dump (iot_data_t * map);
 static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
 static void iot_node_free (iot_node_t * node);
 static iot_node_t * iot_node_start (iot_node_t * node);
 static iot_node_t * iot_node_next (iot_node_t * node);
-static bool iot_node_add (iot_node_t ** tree, iot_data_t * key, iot_data_t * value);
-static bool iot_node_remove (iot_node_t ** tree, const iot_data_t * key);
+static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
+static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
 static iot_node_t * iot_node_find (iot_node_t * node, const iot_data_t * key);
 
 static void * iot_data_block_alloc (void)
@@ -288,6 +289,7 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
+  /*
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
   printf ("sizeof (iot_node_t): %zu\n", sizeof (iot_node_t));
@@ -295,6 +297,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_array_t): %zu\n", sizeof (iot_data_array_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
+   */
 
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
@@ -820,7 +823,7 @@ bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key)
   if (key)
   {
     iot_data_map_t * mp = (iot_data_map_t*) map;
-    if ((ret = iot_node_remove (&mp->tree, key)))
+    if ((ret = iot_node_remove (mp, key)))
     {
       mp->size--;
     }
@@ -839,9 +842,9 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
   bool ret = false;
   if (key)
   {
-    iot_data_t * kdata = iot_data_alloc_string (key, IOT_DATA_REF);
-    ret = iot_data_map_remove (map, kdata);
-    iot_data_free (kdata);
+    iot_data_t * k = iot_data_alloc_string (key, IOT_DATA_REF);
+    ret = iot_data_map_remove (map, k);
+    iot_data_free (k);
   }
   return ret;
 }
@@ -850,7 +853,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
 {
   assert (map && (map->type == IOT_DATA_MAP));
   assert (key && key->type == map->sub_type);
-  if (iot_node_add (&((iot_data_map_t*) map)->tree, key, val))
+  if (iot_node_add ((iot_data_map_t*) map, key, val))
   {
     ((iot_data_map_t*) map)->size++;
   }
@@ -997,13 +1000,13 @@ void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
 {
   assert (iter && map && map->type == IOT_DATA_MAP);
   iter->map = (iot_data_map_t*) map;
-  iter->node = iot_node_start (iter->map->tree);
+  iter->node = NULL;
 }
 
 bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
 {
   assert (iter);
-  iter->node = iot_node_next (iter->map->tree);
+  iter->node = (iter->node) ? iot_node_next (iter->node) : iot_node_start (iter->map->tree);
   return (iter->node != NULL);
 }
 
@@ -1023,10 +1026,7 @@ iot_data_t * iot_data_map_iter_replace_value (iot_data_map_iter_t * iter, iot_da
 {
   assert (iter);
   iot_data_t * res = (iter->node) ? iter->node->value : NULL;
-  if (res)
-  {
-    iter->node->value = value;
-  }
+  if (res) iter->node->value = value;
   return res;
 }
 
@@ -1829,29 +1829,29 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
  * https://algorithmtutor.com/Data-Structures/Tree/Red-Black-Trees/
  */
 
-#define BLACK(n) ((n)->black)
-#define RED(n) (! (n)->black)
+// Note that logic regards NULL nodes as Black. So all colour get/set operations
+// need checking for node being NULL.
 
 static inline iot_node_colour_t iot_node_colour (iot_node_t * node)
 {
-  return (node == NULL) ? IOT_NODE_BLACK : ((node->black) ? IOT_NODE_BLACK : IOT_NODE_RED);
+  return (node) ? node->colour : IOT_NODE_BLACK;
 }
 
-static inline void iot_node_set_red (iot_node_t * node)
+static inline void iot_node_set_colour (iot_node_t * node, iot_node_colour_t colour)
 {
-  assert (node);
-  node->black = false;
+  if (node) node->colour = colour;
 }
 
-static inline void iot_node_set_black (iot_node_t * node)
-{
-  assert (node);
-  node->black = true;
-}
+#define IS_BLACK(n) (iot_node_colour (n) == IOT_NODE_BLACK)
+#define IS_RED(n) (iot_node_colour (n) == IOT_NODE_RED)
+#define IS_LEFT_BLACK(n) ((n) == NULL || IS_BLACK ((n)->left))
+#define IS_RIGHT_BLACK(n) ((n) == NULL || IS_BLACK ((n)->right))
+#define IS_LEFT(n) ((n) == (n)->parent->left)
+#define IS_RIGHT(n) ((n) == (n)->parent->right)
 
 static inline iot_node_t * iot_node_grandparent (iot_node_t * node)
 {
-  return (iot_node_t*) ((node && node->parent) ? node->parent->parent : NULL);
+  return (node && node->parent) ? node->parent->parent : NULL;
 }
 
 static inline iot_node_t * iot_node_uncle (iot_node_t * node)
@@ -1860,144 +1860,183 @@ static inline iot_node_t * iot_node_uncle (iot_node_t * node)
   return (gp) ? ((node->parent == gp->left) ? gp->right : gp->left) : NULL;
 }
 
-static inline iot_node_t * iot_node_child (iot_node_t * node)
+static inline iot_node_t * iot_node_sibling (iot_node_t * node)
 {
-  return (iot_node_t*) ((node == node->parent->left) ? node->parent->right : node->parent->left);
+  return IS_LEFT (node) ? node->parent->right : node->parent->left;
 }
 
-static iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key, iot_data_t * value)
+static inline iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key, iot_data_t * value)
 {
   iot_node_t * nn = (iot_node_t*) iot_data_block_alloc ();
   nn->value = value;
   nn->key = key;
   nn->parent = parent;
+  nn->colour = IOT_NODE_RED;
   return nn;
 }
 
-static void iot_node_ror (iot_node_t * node)
+static inline void iot_node_delete (iot_node_t * node)
 {
-  iot_node_t * parent = node->parent;
-  iot_node_t * left = node->left;
-
-  if (left->right) left->right->parent = node;
-  node->left = left->right;
-  node->parent = left;
-  left->right = node;
-  left->parent = parent;
-
-  if (parent)
-  {
-    (parent->right == node) ? (parent->right = left) : (parent->left = left);
-  }
+  iot_data_free (node->key);
+  iot_data_free (node->value);
+  iot_data_block_free ((iot_data_t*) node);
 }
 
-static void iot_node_rol (iot_node_t * node)
+static inline iot_node_t * iot_node_minimum (iot_node_t * node)
 {
-  iot_node_t * parent = node->parent;
-  iot_node_t * right = node->right;
-
-  if (right->left) right->left->parent = node;
-  node->right = right->left;
-  node->parent = right;
-  right->left = node;
-  right->parent = parent;
-
-  if (parent)
-  {
-    (parent->left == node) ? (parent->left = right) : (parent->right = right);
-  }
+  while (node->left) node = node->left;
+  return node;
 }
 
-static void iot_node_insert_balance (iot_node_t * node)
+static void iot_node_ror (iot_data_map_t * map, iot_node_t * x)
 {
-  iot_node_t * gp = iot_node_grandparent (node);
-  iot_node_t * un = iot_node_uncle (node);
-  iot_node_t * pa = node->parent;
-  if (pa == NULL)
-  {
-    iot_node_set_black (node);
-  }
-  else if (BLACK (pa))
-  {
-    return;
-  }
-  else if (un != NULL && RED (un))
-  {
-    iot_node_set_black (pa);
-    iot_node_set_black (un);
-    iot_node_set_red (gp);
-    iot_node_insert_balance (gp);
-  }
-  else
-  {
-    if (node == pa->right && pa == gp->left)
-    {
-      iot_node_rol (pa);
-      node = node->left;
-    }
-    else if (node == pa->left && pa == gp->right)
-    {
-      iot_node_ror (pa);
-      node = node->right;
-    }
-    gp = iot_node_grandparent (node);
-    pa = node->parent;
-    iot_node_set_black (pa);
-    iot_node_set_red (gp);
-    (node == pa->left) ? iot_node_ror (gp) : iot_node_rol (gp);
-  }
+  iot_node_t * y = x->left;
+  x->left = y->right;
+  if (y->right) y->right->parent = x;
+  y->parent = x->parent;
+  if (x->parent == NULL) map->tree = y;
+  else if (x == x->parent->right) x->parent->right = y;
+  else x->parent->left = y;
+  y->right = x;
+  x->parent = y;
 }
 
-static void iot_node_remove_balance (iot_node_t * node)
+static void iot_node_rol (iot_data_map_t * map, iot_node_t * x)
 {
-  if (node->parent)
+  iot_node_t * y = x->right;
+  x->right = y->left;
+  if (y->left) y->left->parent = x;
+  y->parent = x->parent;
+  if (x->parent == NULL) map->tree = y;
+  else if (IS_LEFT (x)) x->parent->left = y;
+  else x->parent->right = y;
+  y->left = x;
+  x->parent = y;
+}
+
+static void iot_node_insert_balance (iot_data_map_t * map, iot_node_t * k)
+{
+  while (IS_RED (k->parent))
   {
-    iot_node_t * ch = iot_node_child (node);
-    if (BLACK (ch))
+    iot_node_t * u = iot_node_uncle (k);
+    if (k->parent == k->parent->parent->right)
     {
-      iot_node_set_red (node->parent);
-      iot_node_set_black (ch);
-      (node == node->parent->left) ? iot_node_rol (node->parent) : iot_node_ror (node->parent);
-    }
-    ch = iot_node_child (node);
-    if (BLACK (node->parent) && BLACK (ch) && BLACK (ch->left) && BLACK (ch->right))
-    {
-      iot_node_set_red (ch);
-      iot_node_remove_balance (node->parent);
-    }
-    else if (RED (node->parent) && BLACK (ch) && BLACK (ch->left) && BLACK (ch->right))
-    {
-      iot_node_set_red (ch);
-      iot_node_set_black (node->parent);
-    }
-    else
-    {
-      if ((node == node->parent->left) && BLACK (ch) && RED (ch->left) && BLACK (ch->right))
+      if (IS_RED (u)) // case 3.1
       {
-        iot_node_set_red (ch);
-        iot_node_set_black (ch->left);
-        iot_node_ror (ch);
-      }
-      else if (node == node->parent->right && BLACK (ch) && RED (ch->right) && BLACK (ch->left))
-      {
-        iot_node_set_red (ch);
-        iot_node_set_black (ch->right);
-        iot_node_rol (ch);
-      }
-      ch->black = node->parent->black;
-      iot_node_set_black (node->parent);
-      if (node == node->parent->left)
-      {
-        iot_node_set_black (ch->right);
-        iot_node_rol (node->parent);
+        u->colour = IOT_NODE_BLACK;
+        k->parent->colour = IOT_NODE_BLACK;
+        k->parent->parent->colour = IOT_NODE_RED;
+        k = k->parent->parent;
       }
       else
       {
-        iot_node_set_black (ch->left);
-        iot_node_ror (node->parent);
+        if (IS_LEFT (k)) // case 3.2.2
+        {
+          k = k->parent;
+          iot_node_ror (map, k);
+        }
+        // case 3.2.1
+        k->parent->colour = IOT_NODE_BLACK;
+        k->parent->parent->colour = IOT_NODE_RED;
+        iot_node_rol (map, k->parent->parent);
+      }
+    }
+    else
+    {
+      if (IS_RED (u)) // mirror case 3.1
+      {
+        u->colour = IOT_NODE_BLACK;
+        k->parent->colour = IOT_NODE_BLACK;
+        k->parent->parent->colour = IOT_NODE_RED;
+        k = k->parent->parent;
+      }
+      else
+      {
+        if (IS_RIGHT (k)) // mirror case 3.2.2
+        {
+          k = k->parent;
+          iot_node_rol (map, k);
+        }
+        // mirror case 3.2.1
+        k->parent->colour = IOT_NODE_BLACK;
+        k->parent->parent->colour = IOT_NODE_RED;
+        iot_node_ror (map, k->parent->parent);
+      }
+    }
+    if (k == map->tree) break;
+  }
+  map->tree->colour = IOT_NODE_BLACK;
+}
+
+static void iot_node_remove_balance (iot_data_map_t * map, iot_node_t * x)
+{
+  while (x != map->tree && IS_BLACK (x))
+  {
+    iot_node_t * s = iot_node_sibling (x);
+    if (IS_LEFT (x))
+    {
+      if (IS_RED (s)) // case 3.1
+      {
+        s->colour = IOT_NODE_BLACK;
+        x->parent->colour = IOT_NODE_RED;
+        iot_node_rol (map, x->parent);
+        s = x->parent->right;
+      }
+      if (IS_LEFT_BLACK (s) && IS_RIGHT_BLACK (s)) // case 3.2
+      {
+        iot_node_set_colour (s, IOT_NODE_RED);
+        x = x->parent;
+      }
+      else
+      {
+        if (IS_RIGHT_BLACK (s)) // case 3.3
+        {
+          if (s) iot_node_set_colour (s->left, IOT_NODE_BLACK);
+          iot_node_set_colour (s, IOT_NODE_RED);
+          iot_node_ror (map, s);
+          s = x->parent->right;
+        }
+        // case 3.4
+        iot_node_set_colour (s, iot_node_colour (x->parent));
+        x->parent->colour = IOT_NODE_BLACK;
+        if (s) iot_node_set_colour (s->right, IOT_NODE_BLACK);
+        iot_node_rol (map, x->parent);
+        x = map->tree;
+      }
+    }
+    else
+    {
+      if (IS_RED (s)) // case 3.1
+      {
+        s->colour = IOT_NODE_BLACK;
+        x->parent->colour = IOT_NODE_RED;
+        iot_node_ror (map, x->parent);
+        s = x->parent->left;
+      }
+      if (IS_RIGHT_BLACK (s) && IS_LEFT_BLACK (s)) // case 3.2
+      {
+        iot_node_set_colour (s, IOT_NODE_RED);
+        x = x->parent;
+      }
+      else
+      {
+        if (IS_LEFT_BLACK (s)) // case 3.3
+        {
+          if (s) iot_node_set_colour (s->right, IOT_NODE_BLACK);
+          iot_node_set_colour (s, IOT_NODE_RED);
+          iot_node_rol (map, s);
+          s = x->parent->left;
+        }
+        // case 3.4
+        iot_node_set_colour (s, iot_node_colour (x->parent));
+        x->parent->colour = IOT_NODE_BLACK;
+        if (s) iot_node_set_colour (s->left, IOT_NODE_BLACK);
+        iot_node_ror (map, x->parent);
+        x = map->tree;
       }
     }
   }
+  x->colour = IOT_NODE_BLACK;
 }
 
 static iot_node_t * iot_node_find (iot_node_t * node, const iot_data_t * key)
@@ -2011,77 +2050,95 @@ static iot_node_t * iot_node_find (iot_node_t * node, const iot_data_t * key)
   return node;
 }
 
-static void iot_node_replace (iot_node_t ** tree, iot_node_t * old, iot_node_t * nn)
+static void iot_node_insert (iot_data_map_t * map, iot_data_t * key, iot_data_t * value)
 {
-  if (old->parent)
+  iot_node_t * node = iot_node_alloc (NULL, key, value);
+  iot_node_t * y = NULL;
+  iot_node_t * x = map->tree;
+  while (x)
   {
-    (old == old->parent->left) ? (old->parent->left = nn) : (old->parent->right = nn);
+    y = x;
+    x = (iot_data_key_cmp (key, x->key) < 0) ? x->left : x->right;
+  }
+  node->parent = y;
+  if (y == NULL) map->tree = node;
+  else if (iot_data_key_cmp (key, y->key) < 0) y->left = node;
+  else y->right = node;
+
+  if (node->parent)
+  {
+    if (node->parent->parent) iot_node_insert_balance (map, node);
   }
   else
   {
-    *tree = nn;
+    node->colour = IOT_NODE_BLACK;
   }
-  if (nn) nn->parent = old->parent;
 }
 
-static void iot_node_insert (iot_node_t ** tree, iot_data_t * key, iot_data_t * value)
+static void iot_node_transplant (iot_data_map_t * map, iot_node_t * u, iot_node_t * v)
 {
-  iot_node_t * iter = *tree;
-  iot_node_t * prev = NULL;
-  iot_node_t * nn;
-  bool left = false;
-
-  while (iter)
-  {
-    prev = iter;
-    left = iot_data_key_cmp (iter->key, value) == 1;
-    iter = left ? iter->left : iter->right;
-  }
-  nn = iot_node_alloc (prev, key, value);
-  if (prev) (left) ? (prev->left = nn) : (prev->right = nn);
-  iot_node_insert_balance (nn);
-  iter = nn;
-  while (iter)
-  {
-    prev = iter;
-    iter = iter->parent;
-  }
-  *tree = prev;
+  if (u->parent == NULL) map->tree = v;
+  else if (IS_LEFT (u)) u->parent->left = v;
+  else u->parent->right = v;
+  if (v) v->parent = u->parent;
 }
 
-static bool iot_node_remove (iot_node_t ** tree, const iot_data_t * key)
+static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key)
 {
-  iot_node_t * nd = iot_node_find (*tree, key);
-  if (nd)
+  iot_node_t * z = iot_node_find (map->tree, key);
+  if (z)
   {
-    if (nd->left && nd->right)
+    iot_node_t * x;
+    iot_node_t * y = z;
+    iot_node_colour_t col = y->colour;
+    if (z->left == NULL)
     {
-      iot_node_t * prev = nd->left;
-      while (prev->right) prev = prev->right;
-      nd = prev;
+      x = z->right;
+			iot_node_transplant (map, z, z->right);
     }
-    iot_node_t * c = nd->right ? nd->right : nd->left;
-    if (BLACK (nd))
+    else if (z->right == NULL)
     {
-      nd->black = c->black;
-      iot_node_remove_balance (nd);
+      x = z->left;
+			iot_node_transplant (map, z, z->left);
     }
-    iot_node_replace (tree, nd, c);
+    else
+    {
+      y = iot_node_minimum (z->right);
+			col = y->colour;
+			x = y->right;
+			if (y->parent == z)
+			{
+				if (x) x->parent = y;
+			}
+			else
+			{
+				iot_node_transplant (map, y, y->right);
+				y->right = z->right;
+				y->right->parent = y;
+			}
+			iot_node_transplant (map, z, y);
+			y->left = z->left;
+			y->left->parent = y;
+			y->colour = z->colour;
+    }
+    iot_node_delete (z);
+    if (x && (col == IOT_NODE_BLACK)) iot_node_remove_balance (map, x);
   }
-  return (nd != NULL);
+  return (z != NULL);
 }
 
-static bool iot_node_add (iot_node_t ** tree, iot_data_t * key, iot_data_t * value)
+static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value)
 {
-  iot_node_t * node = iot_node_find (*tree, key);
+  iot_node_t * node = iot_node_find (map->tree, key);
   if (node)
   {
+    iot_data_free (key);
     iot_data_free (node->value);
     node->value = value;
   }
   else
   {
-    iot_node_insert (tree, key, value);
+    iot_node_insert (map, key, value);
   }
   return (node == NULL);
 }
@@ -2092,27 +2149,8 @@ static void iot_node_free (iot_node_t * node)
   {
     iot_node_free (node->left);
     iot_node_free (node->right);
-    iot_data_free (node->key);
-    iot_data_free (node->value);
-    iot_data_block_free ((iot_data_t*) node);
+    iot_node_delete (node);
   }
-}
-
-static void iot_node_dump (iot_node_t * node, const char * msg)
-{
-  if (node)
-  {
-    iot_node_dump (node->left, "Left");
-    printf ("  %s %s Key: %s\n", msg, node->black ? "Black" : "Red", iot_data_string (node->key));
-    iot_node_dump (node->right, "Right");
-  }
-}
-
-extern void iot_data_map_dump (iot_data_t * map)
-{
-  iot_data_map_t * mp = (iot_data_map_t*) map;
-  printf ("\nMap size: %d\n", iot_data_map_size (map));
-  iot_node_dump (mp->tree, "Root");
 }
 
 static iot_node_t * iot_node_start (iot_node_t * node)
@@ -2142,3 +2180,32 @@ static iot_node_t * iot_node_next (iot_node_t * iter)
   }
   return iter;
 }
+
+#ifndef NDEBUG
+
+static void iot_node_dump (iot_node_t * node, const char * msg)
+{
+  static uint32_t level = 0;
+  if (node)
+  {
+    level++;
+    iot_node_dump (node->left, "Left");
+    level--;
+    char * key = iot_data_to_json (node->key);
+    for (uint32_t i = level; i > 0; i --) printf ("   ");
+    printf ("%s %s Key: %s\n", msg, (node->colour == IOT_NODE_BLACK) ? "Black" : "Red", key);
+    free (key);
+    level++;
+    iot_node_dump (node->right, "Right");
+    level--;
+  }
+}
+
+extern void iot_data_map_dump (iot_data_t * map)
+{
+  iot_data_map_t * mp = (iot_data_map_t*) map;
+  printf ("\nMap size: %d\n", iot_data_map_size (map));
+  iot_node_dump (mp->tree, "Root");
+}
+
+#endif
