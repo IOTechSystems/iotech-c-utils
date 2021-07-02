@@ -382,6 +382,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
     {
       case IOT_DATA_STRING:
         return ((iot_data_value_t*) v1)->value.str == ((iot_data_value_t*) v2)->value.str || ((v1->hash == v2->hash) && (strcmp (((iot_data_value_t*) v1)->value.str, ((iot_data_value_t*) v2)->value.str) == 0));
+      case IOT_DATA_NULL: return true;
       case IOT_DATA_ARRAY:
       {
         iot_data_array_t * a1 = (iot_data_array_t*) v1;
@@ -425,7 +426,6 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
         }
         return true;
       }
-      case IOT_DATA_NULL: return true;
       default: return (((iot_data_value_t*) v1)->value.ui64 == ((iot_data_value_t*) v2)->value.ui64);
     }
   }
@@ -2104,22 +2104,22 @@ static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key)
     else
     {
       y = iot_node_minimum (z->right);
-			col = y->colour;
-			x = y->right;
-			if (y->parent == z)
-			{
-				if (x) x->parent = y;
-			}
-			else
-			{
-				iot_node_transplant (map, y, y->right);
-				y->right = z->right;
-				y->right->parent = y;
-			}
-			iot_node_transplant (map, z, y);
-			y->left = z->left;
-			y->left->parent = y;
-			y->colour = z->colour;
+      col = y->colour;
+      x = y->right;
+      if (y->parent == z)
+      {
+        if (x) x->parent = y;
+      }
+      else
+      {
+        iot_node_transplant (map, y, y->right);
+        y->right = z->right;
+        y->right->parent = y;
+      }
+      iot_node_transplant (map, z, y);
+      y->left = z->left;
+      y->left->parent = y;
+      y->colour = z->colour;
     }
     iot_node_delete (z);
     if (x && (col == IOT_NODE_BLACK)) iot_node_remove_balance (map, x);

@@ -1010,6 +1010,12 @@ static void test_data_equal_null (void)
   CU_ASSERT (! iot_data_equal (data, NULL))
   CU_ASSERT (! iot_data_equal (NULL, data))
   iot_data_free (data);
+
+  iot_data_t * n1 = iot_data_alloc_null ();
+  iot_data_t * n2 = iot_data_alloc_null ();
+  CU_ASSERT (iot_data_equal (n1, n2))
+  iot_data_free (n1);
+  iot_data_free (n2);
 }
 
 static void test_data_equal_vector_ui8 (void)
