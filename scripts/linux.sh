@@ -127,7 +127,7 @@ then
   run_examples
   cd ${BROOT}/lcov
   c/utests/runner/runner -a -j
-  c/tests/map_test
+  c/tests/map/map_test
 
   # Generate coverage html report
 
