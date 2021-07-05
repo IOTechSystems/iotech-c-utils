@@ -76,6 +76,8 @@ extern const iot_data_t * iot_config_vector (const iot_data_t * map, const char 
   return iot_config_get_type (map, key, IOT_DATA_VECTOR, logger);
 }
 
+extern bool iot_container_load (iot_container_t * cont, const char * cname);
+
 iot_component_t * iot_config_component (const iot_data_t * map, const char * key, iot_container_t * container, iot_logger_t * logger)
 {
   assert (map && key && container);
@@ -84,10 +86,13 @@ iot_component_t * iot_config_component (const iot_data_t * map, const char * key
   if (name)
   {
     comp = iot_container_find_component (container, name);
-    if (! comp)
+    if (!comp)
     {
-      if (logger == NULL) logger = iot_logger_default ();
-      iot_log_error (logger, "Failed to resolve component: %s in container", name);
+      if (!iot_container_load (container, name) || !(comp = iot_container_find_component (container, name)))
+      {
+        if (logger == NULL) logger = iot_logger_default ();
+        iot_log_error (logger, "Failed to resolve component: %s in container", name);
+      }
     }
   }
   return comp;
