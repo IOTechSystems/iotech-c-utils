@@ -480,7 +480,7 @@ iot_component_t * iot_container_find_component (iot_container_t * cont, const ch
   {
     pthread_rwlock_rdlock (&cont->lock);
     iot_component_holder_t * holder = iot_container_find_holder_locked (cont, name);
-    if (!holder)
+    if (iot_config && !holder)
     {
       iot_container_load (cont, name);
       holder = iot_container_find_holder_locked (cont, name);
