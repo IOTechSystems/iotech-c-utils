@@ -256,9 +256,7 @@ static bool iot_container_typed_load (iot_container_t * cont, const char * cname
   return result;
 }
 
-extern bool iot_container_load (iot_container_t * cont, const char * cname);
-
-bool iot_container_load (iot_container_t * cont, const char * cname)
+static bool iot_container_load (iot_container_t * cont, const char * cname)
 {
   bool result = false;
   iot_load_in_progress_t this = { cname, iot_load_in_progress };
@@ -482,6 +480,11 @@ iot_component_t * iot_container_find_component (iot_container_t * cont, const ch
   {
     pthread_rwlock_rdlock (&cont->lock);
     iot_component_holder_t * holder = iot_container_find_holder_locked (cont, name);
+    if (!holder)
+    {
+      iot_container_load (cont, name);
+      holder = iot_container_find_holder_locked (cont, name);
+    }
     if (holder) comp = holder->component;
     pthread_rwlock_unlock (&cont->lock);
   }
