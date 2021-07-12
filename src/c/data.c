@@ -120,7 +120,7 @@ typedef struct iot_data_map_t
 // Determine minimum block size that can hold all iot_data types, maximum size of
 // value string cache buffer and number of blocks per allocated memory chunk.
 
-#define IOT_DATA_BLOCK_SIZE (((sizeof (iot_data_map_t) + 7) / 8) * 8)
+#define IOT_DATA_BLOCK_SIZE (((sizeof (iot_data_array_t) + 7) / 8) * 8)
 #define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
 #define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
 #define IOT_DATA_ALLOCATING ((iot_data_t*) 1)
@@ -148,8 +148,8 @@ _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_vec
 _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_array_t bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "iot_typecode_t bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block_t bigger than IOT_MEMORY_BLOCK_SIZE");
-_Static_assert (sizeof (iot_data_vector_t) <= sizeof (iot_data_map_t), "iot_data_vector_t bigger than iot_data_map");
-_Static_assert (sizeof (iot_data_array_t) <= sizeof (iot_data_map_t), "iot_data_array_t bigger than iot_data_map");
+_Static_assert (sizeof (iot_data_vector_t) <= sizeof (iot_data_array_t), "iot_data_vector_t bigger than iot_data_array");
+_Static_assert (sizeof (iot_data_map_t) <= sizeof (iot_data_array_t), "iot_data_map bigger than iot_data_array");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -167,7 +167,7 @@ extern void iot_data_map_dump (iot_data_t * map);
 static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
 static void iot_node_free (iot_node_t * node);
 static iot_node_t * iot_node_start (iot_node_t * node);
-static iot_node_t * iot_node_next (iot_node_t * node);
+static iot_node_t * iot_node_next (iot_node_t * iter);
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
 static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
 static iot_node_t * iot_node_find (iot_node_t * node, const iot_data_t * key);
