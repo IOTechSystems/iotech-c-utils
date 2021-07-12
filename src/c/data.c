@@ -1454,10 +1454,7 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
   while  (elements--)
   {
     iot_data_t * key = iot_data_string_from_json (tokens, json);
-    if (ordered)
-    {
-      iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
-    }
+    if (ordered) iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
     iot_data_map_add (map, key, iot_data_all_from_json (tokens, json, ordered));
   }
   if (ordered)
