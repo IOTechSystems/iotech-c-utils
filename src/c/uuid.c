@@ -17,7 +17,7 @@
 #include <string.h>
 #include <sys/random.h>
 
-#include "uuid.h"
+#include "iot/uuid.h"
 
 #define RAND_READ_DELAY 1000
 static const char  *hexdigits_lower = "0123456789abcdef";
