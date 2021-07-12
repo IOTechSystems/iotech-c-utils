@@ -24,16 +24,16 @@ extern "C" {
  */
 typedef enum iot_data_type_t
 {
-  IOT_DATA_INT8 = 0,    /**< Signed 8bit integer */
-  IOT_DATA_UINT8 = 1,   /**< Unsigned 8bit integer */
-  IOT_DATA_INT16 = 2,   /**< Signed 16bit integer */
-  IOT_DATA_UINT16 = 3,  /**< Unsigned 16bit integer */
-  IOT_DATA_INT32 = 4,   /**< Signed 32bit integer */
-  IOT_DATA_UINT32 = 5,  /**< Unsigned 32bit integer */
-  IOT_DATA_INT64 = 6,   /**< Signed 64bit integer */
-  IOT_DATA_UINT64 = 7,  /**< Unsigned 64bit integer */
-  IOT_DATA_FLOAT32 = 8, /**< 32bit float */
-  IOT_DATA_FLOAT64 = 9, /**< 64bit float */
+  IOT_DATA_INT8 = 0,    /**< Signed 8 bit integer */
+  IOT_DATA_UINT8 = 1,   /**< Unsigned 8 bit integer */
+  IOT_DATA_INT16 = 2,   /**< Signed 16 bit integer */
+  IOT_DATA_UINT16 = 3,  /**< Unsigned 16 bit integer */
+  IOT_DATA_INT32 = 4,   /**< Signed 32 bit integer */
+  IOT_DATA_UINT32 = 5,  /**< Unsigned 32 bit integer */
+  IOT_DATA_INT64 = 6,   /**< Signed 64 bit integer */
+  IOT_DATA_UINT64 = 7,  /**< Unsigned 64 bit integer */
+  IOT_DATA_FLOAT32 = 8, /**< 32 bit float */
+  IOT_DATA_FLOAT64 = 9, /**< 64 bit float */
   IOT_DATA_BOOL = 10,   /**< Boolean */
   IOT_DATA_STRING = 11, /**< String */
   IOT_DATA_NULL = 12,   /**< Null */
@@ -64,7 +64,7 @@ typedef struct iot_typecode_t iot_typecode_t;
 typedef struct iot_data_map_iter_t
 {
   struct iot_data_map_t * map;   /**< Pointer to data map structure */
-  struct iot_data_pair_t * pair; /**< Pointer to data pair structure */
+  struct iot_node_t * node;      /**< Pointer to data node structure */
 } iot_data_map_iter_t;
 
 /**
@@ -1050,7 +1050,7 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
 /**
  * @brief Check for equality of 2 iot_data types
  *
- * The function to check the values of the 2 iot_data types and return true if the data value and type is the same.
+ * The function to check the values of the 2 iot_data types and returns true if the data value and type is the same.
  *
  * @param  data1 Input data1 (can be NULL)
  * @param  data2 Input data2 (can be NULL)
