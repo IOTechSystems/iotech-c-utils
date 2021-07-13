@@ -30,6 +30,7 @@
 
 static const char * iot_data_type_names [] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","Null","Array","Map","Vector"};
 static const uint8_t iot_data_type_size [] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*), 0u };
+static const char * ORDERING_KEY = "ordering";
 
 typedef enum iot_node_colour_t
 {
@@ -164,7 +165,7 @@ static pthread_mutex_t iot_data_mutex;
 
 extern void iot_data_init (void);
 extern void iot_data_map_dump (iot_data_t * map);
-static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json);
+static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered);
 static void iot_node_free (iot_node_t * node);
 static iot_node_t * iot_node_start (iot_node_t * node);
 static iot_node_t * iot_node_next (iot_node_t * iter);
@@ -1285,21 +1286,38 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     }
     case IOT_DATA_MAP:
     {
+      const iot_data_t * metadata = iot_data_get_metadata (data);
+      const iot_data_t * ordering = metadata ? iot_data_string_map_get (metadata, ORDERING_KEY) : NULL;
       iot_data_map_iter_t iter;
       bool first = true;
+      iot_data_vector_iter_t vec_iter = {};
+      if (ordering) iot_data_vector_iter (ordering, &vec_iter);
       iot_data_map_iter (data, &iter);
       iot_data_strcat (holder, "{");
-      while (iot_data_map_iter_next (&iter))
+      while (ordering ? iot_data_vector_iter_next (&vec_iter) : iot_data_map_iter_next (&iter))
       {
-        if (! first) iot_data_strcat (holder, ",");
-        const iot_data_t * key = iot_data_map_iter_key (&iter);
-        const iot_data_t * value = iot_data_map_iter_value (&iter);
-        if (iot_data_type (key) != IOT_DATA_STRING) iot_data_add_quote (holder);
-        iot_data_dump (holder, key);
-        if (iot_data_type (key) != IOT_DATA_STRING) iot_data_add_quote (holder);
-        iot_data_strcat (holder, ":");
-        iot_data_dump (holder, value);
-        first = false;
+        const iot_data_t * key;
+        const iot_data_t * value;
+        if (ordering)
+        {
+          key = iot_data_vector_iter_value (&vec_iter);
+          value = iot_data_map_get (data, key);
+        }
+        else
+        {
+          key = iot_data_map_iter_key (&iter);
+          value = iot_data_map_iter_value (&iter);
+        }
+        if (value)
+        {
+          if (! first) iot_data_strcat (holder, ",");
+          if (iot_data_type (key) != IOT_DATA_STRING) iot_data_add_quote (holder);
+          iot_data_dump (holder, key);
+          if (iot_data_type (key) != IOT_DATA_STRING) iot_data_add_quote (holder);
+          iot_data_strcat (holder, ":");
+          iot_data_dump (holder, value);
+          first = false;
+        }
       }
       iot_data_strcat (holder, "}");
       break;
@@ -1419,21 +1437,36 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
   return ret;
 }
 
-static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char * json)
+static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered)
 {
   uint32_t elements = (*tokens)->size;
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * ordering;
+  iot_data_t * metadata;
+  uint32_t i = 0;
 
   (*tokens)++;
+  if (ordered)
+  {
+    ordering = iot_data_alloc_vector (elements);
+    metadata = iot_data_alloc_map (IOT_DATA_STRING);
+  }
   while  (elements--)
   {
     iot_data_t * key = iot_data_string_from_json (tokens, json);
-    iot_data_map_add (map, key, iot_data_all_from_json (tokens, json));
+    if (ordered) iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
+    iot_data_map_add (map, key, iot_data_all_from_json (tokens, json, ordered));
+  }
+  if (ordered)
+  {
+    iot_data_string_map_add (metadata, ORDERING_KEY, ordering);
+    iot_data_set_metadata (map, metadata);
+    iot_data_free (metadata);
   }
   return map;
 }
 
-static iot_data_t * iot_data_vector_from_json (iot_json_tok_t ** tokens, const char * json)
+static iot_data_t * iot_data_vector_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered)
 {
   uint32_t elements = (*tokens)->size;
   uint32_t index = 0;
@@ -1442,25 +1475,30 @@ static iot_data_t * iot_data_vector_from_json (iot_json_tok_t ** tokens, const c
   (*tokens)++;
   while (elements--)
   {
-    iot_data_vector_add (vector, index++, iot_data_all_from_json (tokens, json));
+    iot_data_vector_add (vector, index++, iot_data_all_from_json (tokens, json, ordered));
   }
   return vector;
 }
 
-static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json)
+static iot_data_t * iot_data_all_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered)
 {
   iot_data_t * data = NULL;
   switch ((*tokens)->type)
   {
     case IOT_JSON_PRIMITIVE: data = iot_data_primitive_from_json (tokens, json); break;
-    case IOT_JSON_OBJECT: data = iot_data_map_from_json (tokens, json); break;
-    case IOT_JSON_ARRAY: data = iot_data_vector_from_json (tokens, json); break;
+    case IOT_JSON_OBJECT: data = iot_data_map_from_json (tokens, json, ordered); break;
+    case IOT_JSON_ARRAY: data = iot_data_vector_from_json (tokens, json, ordered); break;
     default: data = iot_data_string_from_json (tokens, json); break;
   }
   return data;
 }
 
 iot_data_t * iot_data_from_json (const char * json)
+{
+  return iot_data_from_json_with_ordering (json, false);
+}
+
+iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered)
 {
   iot_data_t * data = NULL;
   const char * ptr = json;
@@ -1496,7 +1534,7 @@ iot_data_t * iot_data_from_json (const char * json)
     used = iot_json_parse (&parser, json, strlen (json), tptr, count);
     if (used && (used <= count))
     {
-      data = iot_data_all_from_json (&tptr, json);
+      data = iot_data_all_from_json (&tptr, json, ordered);
     }
     free (tokens);
   }
