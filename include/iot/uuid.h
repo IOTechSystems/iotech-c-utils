@@ -10,11 +10,11 @@
 #define UUID_H
 
 #define UUID_VERSION "1.0.0"
-#define UUID_LEN 37
+#define UUID_STR_LEN 37
 
 typedef unsigned char uuid_t[16];
 
-void uuid_generate(uuid_t out); //generate binary-type
+void uuid_generate(uuid_t out);
 void uuid_unparse(const uuid_t uu, char *out);
 
 #endif

@@ -84,3 +84,4 @@ if ("${LINUX_SYS}" STREQUAL "AzureSphere")
 else ()
   install (DIRECTORY "${CMAKE_SOURCE_DIR}/../include/" DESTINATION include PATTERN "uuid.h" EXCLUDE)
 endif ()
+
