@@ -76,7 +76,7 @@ void uuid_generate (uuid_t out)
     s.b[6] = (s.b[6] & 0xf) | 0x40; // indicate uuid4 - randomness
     s.b[8] = (s.b[8] & 0x3f) | 0x80;
 
-    memcpy (dst, s.b, sizeof (s.b));
+    memcpy (out, s.b, sizeof (s.b));
   }
   else
   {
