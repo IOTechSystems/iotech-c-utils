@@ -34,7 +34,6 @@ static uint64_t xorshift128plus(uint64_t *s) {
   return s[1] + s0;
 }
 
-
 static int uuid_init(void)
 {
   int ret = 0;
@@ -61,10 +60,8 @@ static int uuid_init(void)
   return ret;
 }
 
-
-void uuid_generate(uuid_t out)
+void uuid_generate (uuid_t out)
 {
-  static const char *template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
   union { unsigned char b[16]; uint64_t word[2]; } s;
   const char *p;
   int i, n;
@@ -74,23 +71,12 @@ void uuid_generate(uuid_t out)
     /* get random */
     s.word[0] = xorshift128plus(seed);
     s.word[1] = xorshift128plus(seed);
-  
-    /* build string */
-    p = template;
-    i = 0;
-    while (*p)
-    {
-      n = s.b[i >> 1];
-      n = (i & 1) ? (n >> 4) : (n & 0xf);
-      switch (*p)
-      {
-        case 'x'  : *out = hexdigits_lower[n];              i++;  break;
-        case 'y'  : *out = hexdigits_lower[(n & 0x3) + 8];  i++;  break;
-        default   : *out = *p;
-      }
-      out++, p++;
-    }
-    out = '\0';
+
+    //ref: https://github.com/gpakosz/uuid4/blob/master/src/uuid4.c
+    s.b[6] = (s.b[6] & 0xf) | 0x40; // indicate uuid4 - randomness
+    s.b[8] = (s.b[8] & 0x3f) | 0x80;
+
+    memcpy (dst, s.b, sizeof (s.b));
   }
   else
   {
