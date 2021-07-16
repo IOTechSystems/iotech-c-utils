@@ -63,9 +63,7 @@ static int uuid_init(void)
 void uuid_generate (uuid_t out)
 {
   union { unsigned char b[16]; uint64_t word[2]; } s;
-  const char *p;
-  int i, n;
-  
+
   if (uuid_init())
   {
     /* get random */
@@ -73,8 +71,8 @@ void uuid_generate (uuid_t out)
     s.word[1] = xorshift128plus(seed);
 
     //ref: https://github.com/gpakosz/uuid4/blob/master/src/uuid4.c
-    s.b[6] = (s.b[6] & 0xf) | 0x40; // indicate uuid4 - randomness
-    s.b[8] = (s.b[8] & 0x3f) | 0x80;
+    s.b[6] = (unsigned char) ((s.b[6] & 0xf) | 0x40); // indicate uuid4 - randomness
+    s.b[8] = (unsigned char) ((s.b[8] & 0x3f) | 0x80);
 
     memcpy (out, s.b, sizeof (s.b));
   }
