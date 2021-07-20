@@ -50,9 +50,8 @@ void uuid_generate (uuid_t out)
 void uuid_unparse (const uuid_t uuid, char *out)
 {
   char *p = out;
-  int i;
 
-  for (i = 0; i < 16; i++)
+  for (unsigned i = 0; i < 16; i++)
   {
     if (i == 4 || i == 6 || i == 8 || i == 10)
     {
