@@ -47,19 +47,17 @@ void uuid_generate (uuid_t out)
   memcpy (out, s.b, sizeof (s.b));
 }
 
-void uuid_unparse (const uuid_t uuid, char *out)
+void uuid_unparse (const uuid_t uuid, char * out)
 {
-  char *p = out;
-
   for (unsigned i = 0; i < 16; i++)
   {
     if (i == 4 || i == 6 || i == 8 || i == 10)
     {
-      *p++ = '-';
+      *out++ = '-';
     }
     size_t tmp = uuid[i];
-    *p++ = hexdigits[tmp >> 4];
-    *p++ = hexdigits[tmp & 15];
+    *out++ = hexdigits[tmp >> 4];
+    *out++ = hexdigits[tmp & 15];
   }
-  *p = '\0';
+  *out = '\0';
 }
