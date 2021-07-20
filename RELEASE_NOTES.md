@@ -64,9 +64,6 @@
 * `iot_data_alloc_uuid_string`
 
 - Zero length `iot_data_t` arrays now supported
-
-## Version 1.2.2
-
 - Data map performance enhancements. Note iteration order is now based on key ordering.
 - Added metadata based JSON object key ordering support. This includes the addition of the function:
 
