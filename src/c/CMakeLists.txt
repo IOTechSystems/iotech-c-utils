@@ -40,7 +40,7 @@ endif ()
 
 # Find dependencies
 
-if (IOT_BUILD_UUID)
+if (NOT IOT_BUILD_UUID)
   find_package (UUID REQUIRED)
   set (LINK_LIBRARIES ${LINK_LIBRARIES} ${UUID_LIBRARY})
   set (INCLUDE_DIRS ${INCLUDE_DIRS} ${UUID_INCLUDE})

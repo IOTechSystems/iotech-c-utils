@@ -317,7 +317,6 @@ extern iot_data_t * iot_data_alloc_bool (bool val);
  */
 extern iot_data_t * iot_data_alloc_null (void);
 
-#ifdef IOT_HAS_UUID
 /**
  * @brief Allocate data for a string containing a UUID
  *
@@ -331,7 +330,6 @@ extern iot_data_t * iot_data_alloc_uuid_string (void);
  * @return  Pointer to the allocated data
  */
 extern iot_data_t * iot_data_alloc_uuid (void);
-#endif
 
 /**
  * @brief Allocate memory for a string
