@@ -141,8 +141,9 @@ fail:
 static void iot_component_create (iot_container_t * cont, const char *cname, const iot_component_factory_t * factory, const char * config)
 {
   iot_data_t * map = iot_component_config_to_map (config, cont->logger);
+  iot_component_t * comp = NULL;
   if (map == NULL) goto error;
-  iot_component_t * comp = (factory->config_fn) (cont, map);
+  comp = (factory->config_fn) (cont, map);
   iot_data_free (map);
   if (comp == NULL) goto error;
 
