@@ -1,5 +1,5 @@
 if (IOT_BUILD_COMPONENTS)
   add_executable (container container.c ../mycomponent/mycomponent.c)
   target_include_directories (container PRIVATE ../../../../include ../mycomponent)
-  target_link_libraries (container PRIVATE iot-static)
+  target_link_libraries (container PRIVATE iot ${LINK_LIBRARIES})
 endif ()

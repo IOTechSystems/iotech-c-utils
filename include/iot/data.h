@@ -318,6 +318,20 @@ extern iot_data_t * iot_data_alloc_bool (bool val);
 extern iot_data_t * iot_data_alloc_null (void);
 
 /**
+ * @brief Allocate data for a string containing a UUID
+ *
+ * @return  Pointer to the allocated data
+ */
+extern iot_data_t * iot_data_alloc_uuid_string (void);
+
+/**
+ * @brief Allocate data for a binary UUID of type UINT8 and length 16
+ *
+ * @return  Pointer to the allocated data
+ */
+extern iot_data_t * iot_data_alloc_uuid (void);
+
+/**
  * @brief Allocate memory for a string
  *
  * The function to allocate memory for a string

@@ -8,6 +8,12 @@
 #include "iot/base64.h"
 #include "iot/hash.h"
 
+#ifdef IOT_HAS_UUID
+#include <uuid/uuid.h>
+#else
+#include "iot/uuid.h"
+#endif
+
 #ifdef IOT_HAS_XML
 #include "yxml.h"
 #define YXML_PARSER_BUFF_SIZE 4096
@@ -652,6 +658,22 @@ iot_data_t * iot_data_alloc_null (void)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_NULL, false);
   return (iot_data_t*) data;
+}
+
+iot_data_t * iot_data_alloc_uuid_string (void)
+{
+  char uuid_str[UUID_STR_LEN];
+  uuid_t uuid;
+  uuid_generate (uuid);
+  uuid_unparse (uuid, uuid_str);
+  return iot_data_alloc_string (uuid_str, IOT_DATA_COPY);
+}
+
+iot_data_t * iot_data_alloc_uuid (void)
+{
+  uuid_t uuid;
+  uuid_generate (uuid);
+  return iot_data_alloc_array (uuid, sizeof (uuid_t), IOT_DATA_UINT8, IOT_DATA_COPY);
 }
 
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)

@@ -1,6 +1,6 @@
 FROM photon:3.0
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
-RUN tdnf remove -y toybox && tdnf update -y && tdnf install -y wget gcc glibc-devel linux-api-headers binutils make git cmake tar gzip rpm rpm-build
+RUN tdnf remove -y toybox && tdnf update -y && tdnf install -y wget gcc glibc-devel linux-api-headers binutils make git cmake tar gzip rpm rpm-build util-linux-devel
 COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
