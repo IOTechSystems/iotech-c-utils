@@ -8,5 +8,7 @@ COPY VERSION /iotech-iot/
 COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
 COPY scripts /iotech-iot/scripts/
+COPY sonar-project.properties /iotech-iot/
+COPY .git /iotech-iot/.git/
 WORKDIR /iotech-iot
 ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/linux.sh", "-cppcheck", "-lcov", "-valgrind", "-utest"]
