@@ -16,5 +16,7 @@
 #include <unistd.h>
 
 #define IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
+#define IOT_HAS_FILE
+#define IOT_HAS_UUID
 
 #endif

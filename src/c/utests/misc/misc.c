@@ -44,6 +44,17 @@ static void test_time_msecs (void)
   }
 }
 
+static void test_time_usecs (void)
+{
+  volatile uint64_t usecs_time;
+  for (int counter = 0; counter < MAX_COUNTER; counter++)
+  {
+    usecs_time = iot_time_usecs ();
+    usleep (1);
+    CU_ASSERT (iot_time_usecs ()  > usecs_time)
+  }
+}
+
 static void test_time_nsecs (void)
 {
   unsigned counter;
@@ -85,13 +96,50 @@ static void test_hash (void)
   CU_ASSERT ( iot_hash ("boolarray") == 1007050925)
   CU_ASSERT ( iot_hash ("string") == 1386610095)
   CU_ASSERT ( iot_hash ("binary") == 2016023253)
+  CU_ASSERT ( iot_hash_data ((uint8_t*) "binary", strlen ("binary")) == 2016023253)
 }
+
+#ifdef IOT_HAS_FILE
+
+#define TEST_FILE_NAME "/tmp/iot_test.txt"
+
+static void test_write_file (void)
+{
+  const char * str = "Hello";
+  bool file_write_ok = iot_file_write (TEST_FILE_NAME, str);
+  CU_ASSERT (file_write_ok);
+}
+
+static void test_read_file (void)
+{
+  char * ret = iot_file_read (TEST_FILE_NAME);
+  CU_ASSERT (ret != NULL)
+  if (ret)
+  {
+    CU_ASSERT (strcmp ("Hello", ret) == 0)
+    CU_ASSERT (strlen (ret) == strlen ("Hello"))
+    free (ret);
+  }
+}
+
+static void test_delete_file (void)
+{
+  CU_ASSERT (iot_file_delete (TEST_FILE_NAME))
+}
+
+#endif
 
 void cunit_misc_test_init (void)
 {
-  CU_pSuite suite = CU_add_suite ("time", suite_init, suite_clean);
+  CU_pSuite suite = CU_add_suite ("misc", suite_init, suite_clean);
   CU_add_test (suite, "time_secs", test_time_secs);
   CU_add_test (suite, "time_msecs", test_time_msecs);
+  CU_add_test (suite, "time_usecs", test_time_usecs);
   CU_add_test (suite, "time_nsecs", test_time_nsecs);
   CU_add_test (suite, "hash", test_hash);
+#ifdef IOT_HAS_FILE
+  CU_add_test (suite, "write_file", test_write_file);
+  CU_add_test (suite, "read_file", test_read_file);
+  CU_add_test (suite, "delete_file", test_delete_file);
+#endif
 }

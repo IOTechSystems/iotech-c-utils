@@ -84,7 +84,7 @@ iot_component_t * iot_config_component (const iot_data_t * map, const char * key
   if (name)
   {
     comp = iot_container_find_component (container, name);
-    if (! comp)
+    if (!comp)
     {
       if (logger == NULL) logger = iot_logger_default ();
       iot_log_error (logger, "Failed to resolve component: %s in container", name);

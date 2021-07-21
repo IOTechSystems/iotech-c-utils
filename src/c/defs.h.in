@@ -3,5 +3,4 @@
 
 #define IOT_VERSION "${IOT_DOT_VERSION}"
 #cmakedefine IOT_HAS_XML
-
 #endif

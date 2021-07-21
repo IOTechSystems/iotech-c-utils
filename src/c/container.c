@@ -8,6 +8,11 @@
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 #include <dlfcn.h>
 #endif
+#ifdef _AZURESPHERE_
+#include <applibs/applications.h>
+#include <applibs/log.h>
+#endif
+
 
 typedef struct iot_component_holder_t
 {
@@ -36,9 +41,16 @@ typedef struct iot_parsed_holder_t
   size_t len;
 } iot_parsed_holder_t;
 
+typedef struct iot_load_in_progress_t
+{
+  const char * name;
+  struct iot_load_in_progress_t * next;
+} iot_load_in_progress_t;
+
 static const iot_component_factory_t * iot_component_factories = NULL;
 static iot_container_t * iot_containers = NULL;
 static const iot_container_config_t * iot_config = NULL;
+static iot_load_in_progress_t * iot_load_in_progress = NULL;
 #ifdef __ZEPHYR__
   static PTHREAD_MUTEX_DEFINE (iot_container_mutex);
 #else
@@ -126,34 +138,36 @@ fail:
  * Create a component instance from it's factory with a json configuration.
  */
 
-static void iot_component_create (iot_container_t * cont, const char * name, const iot_component_factory_t * factory, const char * config)
+static void iot_component_create (iot_container_t * cont, const char *cname, const iot_component_factory_t * factory, const char * config)
 {
-  iot_component_t * comp = NULL;
   iot_data_t * map = iot_component_config_to_map (config, cont->logger);
-  if (map)
+  if (map == NULL) goto error;
+  iot_component_t * comp = (factory->config_fn) (cont, map);
+  iot_data_free (map);
+  if (comp == NULL) goto error;
+
+  iot_component_holder_t * ch = calloc (1, sizeof (*ch));
+  ch->component = comp;
+  ch->name = strdup (cname);
+  ch->factory = factory;
+  if (cont->head == NULL) // First list element
   {
-    comp = (factory->config_fn) (cont, map);
-    iot_data_free (map);
-    if (comp)
-    {
-      iot_component_holder_t *ch = calloc (1, sizeof (*ch));
-      ch->component = comp;
-      ch->name = strdup (name);
-      ch->factory = factory;
-      if (cont->head == NULL) // First list element
-      {
-        cont->head = ch;
-        cont->tail = ch;
-      }
-      else // Add to tail of list
-      {
-        cont->tail->next = ch;
-        ch->prev = cont->tail;
-        cont->tail = ch;
-      }
-    }
+    cont->head = ch;
+    cont->tail = ch;
   }
-  if (comp == NULL) iot_log_warn (cont->logger, "Container: %s Failed to create component: %s", cont->name, name);
+  else // Add to tail of list
+  {
+    cont->tail->next = ch;
+    ch->prev = cont->tail;
+    cont->tail = ch;
+  }
+#if defined (_AZURESPHERE_) && ! defined (NDEBUG)
+  Log_Debug ("iot_component_create: %s (Total Memory: %" PRIu32 " kB)\n", cname, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
+#endif
+
+error:
+
+  if (comp == NULL) iot_log_warn (cont->logger, "Container: %s Failed to create component: %s", cont->name, cname);
 }
 
 static const iot_component_factory_t * iot_component_factory_find_locked (const char * type)
@@ -212,7 +226,7 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
       }
       else
       {
-        iot_log_error (cont->logger, "Invalid configuration, Could not dynamically load Library: %s", library);
+        iot_log_error (cont->logger, "Invalid configuration, Could not dynamically load Library: %s - %s", library, dlerror ());
       }
     }
     iot_data_free (cmap);
@@ -220,6 +234,62 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
   return result;
 }
 #endif
+
+static bool iot_container_typed_load (iot_container_t * cont, const char * cname, const char * ctype)
+{
+  bool result = false;
+  const iot_component_factory_t * factory = iot_component_factory_find (ctype);
+  if (factory)
+  {
+    char * config = (iot_config->load) (cname, iot_config->uri);
+    if (config)
+    {
+      iot_component_create (cont, cname, factory, config);
+      free (config);
+    }
+    result = true;
+  }
+  else
+  {
+    iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
+  }
+  return result;
+}
+
+static bool iot_container_load (iot_container_t * cont, const char * cname)
+{
+  bool result = false;
+  iot_load_in_progress_t this = { cname, iot_load_in_progress };
+  iot_load_in_progress_t * loading = iot_load_in_progress;
+  assert (iot_config && cont);
+
+  // Check for cycles
+  while (loading)
+  {
+    if (strcmp (loading->name, cname) == 0) break;
+    loading = loading->next;
+  }
+  if (!loading)
+  {
+    iot_load_in_progress = &this;
+    char * config = (iot_config->load) (cont->name, iot_config->uri);
+    iot_data_t * map = iot_component_config_to_map (config, cont->logger);
+    free (config);
+
+    if (map)
+    {
+      const char * ctype = iot_data_string_map_get_string (map, cname);
+      if (ctype) result = iot_container_typed_load (cont, cname, ctype);
+    }
+    iot_data_free (map);
+    iot_load_in_progress = this.next;
+  }
+  else
+  {
+    iot_log_error (cont->logger, "Invalid configuration, cyclic component reference for component %s", cname);
+  }
+  return result;
+}
 
 void iot_container_config (const iot_container_config_t * conf)
 {
@@ -289,20 +359,7 @@ bool iot_container_init (iot_container_t * cont)
     {
       cname = iot_data_map_iter_string_key (&iter);
       ctype = iot_data_map_iter_string_value (&iter);
-      factory = iot_component_factory_find (ctype);
-      if (factory)
-      {
-        config = (iot_config->load) (cname, iot_config->uri);
-        if (config)
-        {
-          iot_component_create (cont, cname, factory, config);
-          free (config);
-        }
-      }
-      else
-      {
-        iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
-      }
+      iot_container_typed_load (cont, cname, ctype);
     }
     iot_data_free (map);
   }
@@ -345,6 +402,9 @@ void iot_container_start (iot_container_t * cont)
   while (holder) // Start in declaration order (dependents first)
   {
     (holder->component->start_fn) (holder->component);
+#if defined (_AZURESPHERE_) && ! defined (NDEBUG)
+    Log_Debug ("iot_container_start: %s (Total Memory: %" PRIu32 " kB)\n", holder->name, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
+#endif
     holder = holder->next;
   }
   pthread_rwlock_unlock (&cont->lock);
@@ -420,6 +480,11 @@ iot_component_t * iot_container_find_component (iot_container_t * cont, const ch
   {
     pthread_rwlock_rdlock (&cont->lock);
     iot_component_holder_t * holder = iot_container_find_holder_locked (cont, name);
+    if (iot_config && !holder)
+    {
+      iot_container_load (cont, name);
+      holder = iot_container_find_holder_locked (cont, name);
+    }
     if (holder) comp = holder->component;
     pthread_rwlock_unlock (&cont->lock);
   }

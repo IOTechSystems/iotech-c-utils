@@ -27,7 +27,8 @@ typedef enum
   IOT_JSON_OBJECT = 1,      /**< Object */
   IOT_JSON_ARRAY = 2,       /**< Array */
   IOT_JSON_STRING = 3,      /**< String */
-  IOT_JSON_PRIMITIVE = 4    /**< Other primitive: number, boolean, or null */
+  IOT_JSON_STRING_ESC = 4,  /**< String with escape sequences */
+  IOT_JSON_PRIMITIVE = 5    /**< Other primitive: number, boolean, or null */
 } iot_json_type_t;
 
 /** Not enough tokens were provided */
@@ -46,6 +47,7 @@ typedef struct
   int32_t start;          /**< start position in JSON data string */
   int32_t end;            /**< End position in JSON data string */
   uint32_t size;          /**< Size of array / object */
+  int32_t parent;
 } iot_json_tok_t;
 
 /**
