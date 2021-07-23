@@ -2851,6 +2851,9 @@ static void test_data_alloc_pointer (void)
   CU_ASSERT (iot_data_type (data3) == IOT_DATA_POINTER)
   CU_ASSERT (iot_data_address (data3) == dummy)
   iot_data_free (data);
+  data = iot_data_alloc_vector (2);
+  CU_ASSERT (iot_data_address (data) == NULL)
+  iot_data_free (data);
   iot_data_free (data2);
   iot_data_free (data3);
 }
