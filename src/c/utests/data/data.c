@@ -2944,7 +2944,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_int_map", test_data_int_map);
   CU_add_test (suite, "data_add_ref", test_data_add_ref);
   CU_add_test (suite, "data_alloc_uuid", test_data_alloc_uuid);
- // CU_add_test (suite, "data_alloc_pointer", test_data_alloc_pointer);
+  CU_add_test (suite, "data_alloc_pointer", test_data_alloc_pointer);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif

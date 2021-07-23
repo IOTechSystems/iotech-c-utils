@@ -69,7 +69,6 @@
 
 * `iot_data_from_json_with_ordering`
 
-- Support for new iot data type IOT_DATA_POINTER. New functions added:
+- Support for new iot data type IOT_DATA_POINTER. New function added:
 
 * `iot_data_alloc_pointer`
-* `iot_typecode_alloc_pointer`

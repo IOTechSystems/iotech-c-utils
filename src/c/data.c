@@ -1780,8 +1780,9 @@ static iot_typecode_t iot_basic_tcs [13] =
 
 extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)
 {
-  assert (type < IOT_DATA_ARRAY);
-  return &iot_basic_tcs[type];
+  static iot_typecode_t tc_pointer = { .type = IOT_DATA_POINTER, .element_type = NULL };
+  assert (type < IOT_DATA_ARRAY || type == IOT_DATA_POINTER);
+  return (type < IOT_DATA_ARRAY) ? &iot_basic_tcs[type] : &tc_pointer;
 }
 
 extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
@@ -1814,12 +1815,6 @@ extern iot_typecode_t * iot_typecode_alloc_vector (iot_typecode_t * element_type
   tc->type = IOT_DATA_VECTOR;
   tc->element_type = element_type;
   return tc;
-}
-
-extern iot_typecode_t * iot_typecode_alloc_pointer (void)
-{
-  static iot_typecode_t tc = { .type = IOT_DATA_POINTER, .element_type = NULL };
-  return &tc;
 }
 
 extern void iot_typecode_free (iot_typecode_t * typecode)
@@ -1876,17 +1871,13 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
   iot_typecode_t * tc;
   iot_data_type_t type = data->type;
 
-  if (type < IOT_DATA_ARRAY)
+  if (type < IOT_DATA_ARRAY || type == IOT_DATA_POINTER)
   {
     tc = iot_typecode_alloc_basic (type);
   }
   else if (type == IOT_DATA_ARRAY)
   {
     tc = iot_typecode_alloc_array (data->sub_type);
-  }
-  else if (type == IOT_DATA_POINTER)
-  {
-    tc = iot_typecode_alloc_pointer ();
   }
   else
   {
