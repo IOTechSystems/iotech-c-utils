@@ -64,6 +64,12 @@ extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type);
 extern iot_typecode_t * iot_typecode_alloc_vector (iot_typecode_t * element_type);
 
 /**
+ * @brief  Allocate a pointer typecode
+ * @return Pointer to the allocated pointer typecode
+ */
+extern iot_typecode_t * iot_typecode_alloc_pointer (void);
+
+/**
  * @brief Free a typecode
  *
  * The function frees an allocated typecode

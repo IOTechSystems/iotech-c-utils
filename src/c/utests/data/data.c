@@ -112,6 +112,10 @@ static void test_data_types (void)
   CU_ASSERT (strcmp (iot_data_type_name (data), "Null") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_NULL)
   iot_data_free (data);
+  data = iot_data_alloc_pointer (data, NULL);
+  CU_ASSERT (strcmp (iot_data_type_name (data), "Pointer") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_POINTER)
+  iot_data_free (data);
 }
 
 static void test_data_array_key (void)
@@ -651,7 +655,47 @@ static void test_data_name_type (void)
   CU_ASSERT (iot_data_name_type ("map") == IOT_DATA_MAP)
   CU_ASSERT (iot_data_name_type ("vector") == IOT_DATA_VECTOR)
   CU_ASSERT (iot_data_name_type ("null") == IOT_DATA_NULL)
+  CU_ASSERT (iot_data_name_type ("pointer") == IOT_DATA_POINTER)
   CU_ASSERT (iot_data_name_type ("dummy") == (iot_data_type_t) -1)
+}
+
+static void test_data_type_string (void)
+{
+  const char * str;
+  str = iot_data_type_string (IOT_DATA_INT8);
+  CU_ASSERT (str && strcmp (str, "Int8") == 0)
+  str = iot_data_type_string (IOT_DATA_UINT8);
+  CU_ASSERT (str && strcmp (str, "UInt8") == 0)
+  str = iot_data_type_string (IOT_DATA_INT16);
+  CU_ASSERT (str && strcmp (str, "Int16") == 0)
+  str = iot_data_type_string (IOT_DATA_UINT16);
+  CU_ASSERT (str && strcmp (str, "UInt16") == 0)
+  str = iot_data_type_string (IOT_DATA_INT32);
+  CU_ASSERT (str && strcmp (str, "Int32") == 0)
+  str = iot_data_type_string (IOT_DATA_UINT32);
+  CU_ASSERT (str && strcmp (str, "UInt32") == 0)
+  str = iot_data_type_string (IOT_DATA_INT64);
+  CU_ASSERT (str && strcmp (str, "Int64") == 0)
+  str = iot_data_type_string (IOT_DATA_UINT64);
+  CU_ASSERT (str && strcmp (str, "UInt64") == 0)
+  str = iot_data_type_string (IOT_DATA_FLOAT32);
+  CU_ASSERT (str && strcmp (str, "Float32") == 0)
+  str = iot_data_type_string (IOT_DATA_FLOAT64);
+  CU_ASSERT (str && strcmp (str, "Float64") == 0)
+  str = iot_data_type_string (IOT_DATA_BOOL);
+  CU_ASSERT (str && strcmp (str, "Bool") == 0)
+  str = iot_data_type_string (IOT_DATA_STRING);
+  CU_ASSERT (str && strcmp (str, "String") == 0)
+  str = iot_data_type_string (IOT_DATA_NULL);
+  CU_ASSERT (str && strcmp (str, "Null") == 0)
+  str = iot_data_type_string (IOT_DATA_ARRAY);
+  CU_ASSERT (str && strcmp (str, "Array") == 0)
+  str = iot_data_type_string (IOT_DATA_MAP);
+  CU_ASSERT (str && strcmp (str, "Map") == 0)
+  str = iot_data_type_string (IOT_DATA_VECTOR);
+  CU_ASSERT (str && strcmp (str, "Vector") == 0)
+  str = iot_data_type_string (IOT_DATA_POINTER);
+  CU_ASSERT (str && strcmp (str, "Pointer") == 0)
 }
 
 static void test_data_from_string (void)
@@ -2789,11 +2833,20 @@ static void test_data_alloc_uuid (void)
   iot_data_free (data);
 }
 
+static void test_data_alloc_pointer (void)
+{
+  void * dummy = malloc (16);
+  iot_data_t * data = iot_data_alloc_pointer (dummy, free);
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_POINTER)
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
 
   CU_add_test (suite, "data_types", test_data_types);
+  CU_add_test (suite, "data_name_type", test_data_name_type);
+  CU_add_test (suite, "data_type_string", test_data_type_string);
   CU_add_test (suite, "data_array_key", test_data_array_key);
   CU_add_test (suite, "data_array_iter_next", test_data_array_iter_next);
   CU_add_test (suite, "data_array_iter_uint8", test_data_array_iter_uint8);
@@ -2814,7 +2867,6 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
   CU_add_test (suite, "data_address", test_data_address);
-  CU_add_test (suite, "data_name_type", test_data_name_type);
   CU_add_test (suite, "data_from_string", test_data_from_string);
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
   CU_add_test (suite, "data_from_base64", test_data_from_base64);
@@ -2892,6 +2944,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_int_map", test_data_int_map);
   CU_add_test (suite, "data_add_ref", test_data_add_ref);
   CU_add_test (suite, "data_alloc_uuid", test_data_alloc_uuid);
+ // CU_add_test (suite, "data_alloc_pointer", test_data_alloc_pointer);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif

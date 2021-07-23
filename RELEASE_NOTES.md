@@ -68,3 +68,8 @@
 - Added metadata based JSON object key ordering support. This includes the addition of the function:
 
 * `iot_data_from_json_with_ordering`
+
+- Support for new iot data type IOT_DATA_POINTER. New functions added:
+
+* `iot_data_alloc_pointer`
+* `iot_typecode_alloc_pointer`
