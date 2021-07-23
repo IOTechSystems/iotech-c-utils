@@ -1756,7 +1756,7 @@ iot_data_t * iot_data_copy (const iot_data_t * src)
     }
     case IOT_DATA_POINTER:
     {
-      ret = (iot_data_t*) iot_data_alloc_pointer (((iot_data_pointer_t*) data)->value, ((iot_data_pointer_t*) data)->free_fn);
+      ret = (iot_data_t*) src;
       iot_data_add_ref (ret);
       break;
     }

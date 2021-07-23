@@ -2838,10 +2838,21 @@ static void test_data_alloc_pointer (void)
   void * dummy = malloc (16);
   iot_data_t * data = iot_data_alloc_pointer (dummy, free);
   CU_ASSERT (iot_data_type (data) == IOT_DATA_POINTER)
+  iot_data_t * data2 = iot_data_alloc_pointer (dummy, NULL);
+  CU_ASSERT (iot_data_equal (data, data2))
+  CU_ASSERT (iot_data_address (data) == dummy)
+  CU_ASSERT (iot_data_address (data2) == dummy)
   iot_data_free (data);
   data = iot_data_alloc_pointer (NULL, NULL);
+  CU_ASSERT (iot_data_address (data) == NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_POINTER)
+  CU_ASSERT (! iot_data_equal (data, data2))
+  iot_data_t * data3 = iot_data_copy (data2);
+  CU_ASSERT (iot_data_type (data3) == IOT_DATA_POINTER)
+  CU_ASSERT (iot_data_address (data3) == dummy)
   iot_data_free (data);
+  iot_data_free (data2);
+  iot_data_free (data3);
 }
 
 void cunit_data_test_init (void)
