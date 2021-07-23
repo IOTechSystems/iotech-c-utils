@@ -1109,7 +1109,9 @@ extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 /**
  * @brief Copy data
  *
- * The function to copy data from src and return the pointer of the copied data
+ * This function copies data from src and returns the pointer of the copied data.
+ * Note that to maintain ownership semantics for the POINTER data type, for this type
+ * the src argument is returned with it's reference count incremented.
  *
  * @param src Data to copy
  * @return    Pointer to the copied data. The caller should free memory after use
