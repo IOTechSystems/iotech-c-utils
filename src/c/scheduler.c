@@ -349,13 +349,13 @@ static void iot_schedule_enqueue (iot_schd_queue_t * queue, iot_schedule_t * sch
   iot_schedule_t * previous_schedule = NULL;
   iot_schedule_t * current_sched = queue->front;
   
-  for (uint32_t i = 0; i < queue->length; i++)
+  while (current_sched)
   {
     if (schedule->start < current_sched->start)
     {
       next_schedule = current_sched;
       previous_schedule = current_sched->previous;
-      i = queue->length;
+      break;
     }
     else
     {
@@ -388,7 +388,7 @@ static void iot_schedule_enqueue (iot_schd_queue_t * queue, iot_schedule_t * sch
   }
   queue->length += 1;
 
-  /* If no pervious schedule, set as front */
+  /* If no previous schedule, set as front */
   if (previous_schedule == NULL)
   {
     queue->front = schedule;

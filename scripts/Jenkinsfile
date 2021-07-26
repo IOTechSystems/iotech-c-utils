@@ -21,6 +21,14 @@ def buildStage (systems, arch)
   def sys = getSystemParam ()
   def board = getBoardParam ()
   def nat = getNativeParam ()
+  def sq = getSonarQubeParam ()
+  def sonar = 'false'
+
+  if (("${sq}" == 'true' || env.BRANCH_NAME.startsWith ('PR')) && ("${sys}" == 'ubuntu-20.04') && ("${arch}" == 'x86_64'))
+  {
+    sonar = 'true'
+  }
+
   for (int i = 0; i < systems.size(); ++i)
   {
     def system = systems[i]
@@ -28,7 +36,7 @@ def buildStage (systems, arch)
     {
       withCredentials ([file (credentialsId: 'AlpinePackagerRSAPrivateKey', variable: 'AlpinePackagerRSAPrivateKey')])
       {
-        sh (script: "./scripts/auth.sh ${system}")
+        sh (script: "./scripts/auth.sh ${system} ${sonar}")
       }
       if ("${nat}" == 'true')
       {
@@ -36,7 +44,25 @@ def buildStage (systems, arch)
       }
       else
       {
-        sh (script: "./scripts/docker.sh ${system} ${arch} ${board}")
+        withSonarQubeEnv (credentialsId: 'ebe4f605-efe9-43ef-b388-607050ee29ce')
+        {
+          sh (script: "./scripts/docker.sh ${system} ${arch} ${board} ${sonar} ${env.BRANCH_NAME}")
+          if ("${sonar}" == 'true')
+          {
+            sh (script: "mv ${arch}/${sys}/lcov/sonar/report-task.txt .")
+          }
+        }
+        if ("${sonar}" == 'true')
+        {
+          timeout (time: 5, unit: 'MINUTES')
+          {
+            def qg = waitForQualityGate ()
+            if (qg.status != 'OK')
+            {
+              error "Pipeline aborted due to quality gate failure: ${qg.status}"
+            }
+          }
+        }
       }
     }
   }
@@ -340,6 +366,16 @@ def String getNativeParam ()
   return ret
 }
 
+def String getSonarQubeParam ()
+{
+  def ret = "${params.SonarQube}"
+  if ("${ret}" == 'null')
+  {
+    ret = 'false'
+  }
+  return ret
+}
+
 buildMap = [:]
 for (t in targets)
 {
@@ -374,6 +410,7 @@ pipeline
     choice (name: 'Arch', choices: ['x86_64','x86','arm64','arm32', 'i586', 'all'], description: 'Build Host Architecture')
     choice (name: 'Board', choices: ['None','frdm_k64f','qemu_x86','acrn','all'], description: 'Target Board')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
+    booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-20.04 x86_64)')
   }
   stages { stage ('All') { steps { script { parallel buildMap }}}}
 }
