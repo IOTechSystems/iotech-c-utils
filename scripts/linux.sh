@@ -54,6 +54,19 @@ done
 
 BROOT="${ROOT}/${BARCH}"
 
+# SonarQube build wrapper (only for Ubuntu 20.04 x86_64)
+
+if [ "${SONAR}" = "true" ]
+then
+  unzip -q scripts/sonar-wrapper.zip
+  unzip -q scripts/sonar-scanner.zip
+  mv sonar-scanner-*-linux sonar-scanner
+  SONAR_DIR="${BROOT}/lcov/sonar"
+  mkdir -p "${SONAR_DIR}"
+  SONAR_WRAPPER="${ROOT}/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir ${SONAR_DIR}"
+  SONAR_SCANNER="${ROOT}/sonar-scanner/bin/sonar-scanner -Dsonar.login=${SONAR_AUTH_TOKEN} -Dsonar.cfamily.build-wrapper-output=${SONAR_DIR} -Dsonar.branch.name=${BRANCH} -Dsonar.coverageReportPaths=${SONAR_DIR}/sonar.xml"
+fi
+
 # Release build
 
 mkdir -p ${BROOT}/release
@@ -121,7 +134,7 @@ then
   mkdir -p ${BROOT}/lcov
   cd ${BROOT}/lcov
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON ${ROOT}/src
-  make
+  ${SONAR_WRAPPER} make
 
   cd ${BROOT}/lcov/c/examples
   run_examples
@@ -138,6 +151,13 @@ then
   genhtml -o html lcov.tmp4
   gcovr -r ${ROOT}/src --object-directory . -e "${ROOT}/src/c/cunit/*" -e "${ROOT}/src/c/utests/runner/*" -e "${ROOT}/src/c/tests/map/*" --xml -o cobertura.xml
 
+  if [ "${SONAR}" = "true" ]
+  then
+    gcovr --sonarqube --root="${ROOT}" . > "${SONAR_DIR}/sonar.xml"
+    cd ${ROOT}
+    ${SONAR_SCANNER}
+    cp .scannerwork/report-task.txt ${SONAR_DIR}
+  fi
 fi
 
 # Run cppcheck if configured
