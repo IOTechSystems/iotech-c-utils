@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 /**
- * Alias for data type enumeration
+ * Data type enumeration
  */
 typedef enum iot_data_type_t
 {
@@ -39,11 +39,12 @@ typedef enum iot_data_type_t
   IOT_DATA_NULL = 12,   /**< Null */
   IOT_DATA_ARRAY = 13,  /**< Array */
   IOT_DATA_MAP = 14,    /**< Map */
-  IOT_DATA_VECTOR = 15  /**< Vector */
+  IOT_DATA_VECTOR = 15, /**< Vector */
+  IOT_DATA_POINTER = 16 /**< Pointer */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
 /**
- * Alias for data ownership enumeration
+ * Data ownership enumeration
  */
 typedef enum iot_data_ownership_t
 {
@@ -85,8 +86,11 @@ typedef struct iot_data_array_iter_t
   uint32_t index;                   /**< Index of the given data array */
 } iot_data_array_iter_t;
 
-/** Alias for data comparison function pointer */
+/** Type for data comparison function pointer */
 typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
+
+/** Type for data free function pointer */
+typedef void (*iot_data_free_fn) (void * ptr);
 
 /**
  * @brief Increment the data reference count
@@ -334,7 +338,7 @@ extern iot_data_t * iot_data_alloc_uuid (void);
 /**
  * @brief Allocate memory for a string
  *
- * The function to allocate memory for a string
+ * The function to allocate data for a string
  *
  * @param val        String
  * @param ownership  If the ownership is set to IOT_DATA_COPY, input val is duplicated with the address allocated, else
@@ -342,6 +346,17 @@ extern iot_data_t * iot_data_alloc_uuid (void);
  * @return           Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership);
+
+/**
+ * @brief Allocate data for a pointer, with associated free function
+ *
+ * The function to allocate data for a pointer
+ *
+ * @param ptr        Opaque pointer
+ * @param free_fn    Function to free pointer (can be NULL)
+ * @return           Pointer to the allocated data
+ */
+extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn);
 
 /**
  * @brief Allocate memory for an array
@@ -1052,13 +1067,14 @@ extern iot_data_t * iot_data_from_json (const char * json);
  * @brief Convert json to iot_data_t type with optional object ordering metadata
  *
  * The function to convert input json string to iot_data and optionally adds
- * metadata to the result. The metadata is assocatied with each map
+ * metadata to the result. The metadata is associated with each map
  * representing JSON objects. The metadata is in the form of a map which
  * contains the key string "ordering" with a vector of strings. The vector
  * consists of the JSON object keys in the order in which they appear in
  * the JSON. See also iot_data_to_json.
  *
  * @param  json  Input json string
+ * @parm ordered Whether returned map is ordered by position in json
  * @return       Pointer to data of type iot_data if input string is a json object, NULL otherwise
  */
 extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered);
@@ -1093,7 +1109,9 @@ extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 /**
  * @brief Copy data
  *
- * The function to copy data from src and return the pointer of the copied data
+ * This function copies data from src and returns the pointer of the copied data.
+ * Note that to maintain ownership semantics for the POINTER data type, for this type
+ * the src argument is returned with it's reference count incremented.
  *
  * @param src Data to copy
  * @return    Pointer to the copied data. The caller should free memory after use
