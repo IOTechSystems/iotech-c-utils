@@ -21,7 +21,11 @@ package() {
   cp ${base}/lib/lib*.* ${dest}/lib
   chmod 755 ${dest}/lib/*
   mkdir -p ${dest}/include/iot/
-  cp -r ${base}/include/* ${dest}/include/
+  if [ ${DEV} == "-dev" ]
+  then
+    cp -r ${base}/include/* ${dest}/include/
+    echo "Headers copied to dev package"
+  fi
   mkdir -p ${dest}/examples
   cp -r ${base}/examples/* ${dest}/examples/
 }
