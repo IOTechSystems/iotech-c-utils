@@ -19,7 +19,7 @@ void iot_component_init (iot_component_t * component, const iot_component_factor
   assert (component && start && stop);
   component->start_fn = start;
   component->stop_fn = stop;
-  component->factory = factory,
+  component->factory = factory;
   iot_mutex_init (&component->mutex);
   pthread_cond_init (&component->cond, NULL);
   atomic_store (&component->refs, 1);
@@ -131,6 +131,7 @@ extern const char * iot_component_state_name (iot_component_state_t state)
     case IOT_COMPONENT_RUNNING: return "Running";
     case IOT_COMPONENT_DELETED: return "Deleted";
     case IOT_COMPONENT_STARTING: return "Starting";
+    default: break;
   }
   return "Unknown";
 }
