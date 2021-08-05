@@ -98,11 +98,6 @@ bool iot_b64_encode (const void *in, size_t inLen, char *out, size_t outLen)
 {
   const uint8_t *data = (const uint8_t *) in;
   size_t resultIndex = 0;
-  uint32_t n = 0;
-  uint8_t n0;
-  uint8_t n1;
-  uint8_t n2;
-  uint8_t n3;
 
   if (outLen < iot_b64_encodesize (inLen))
   {
@@ -114,7 +109,7 @@ bool iot_b64_encode (const void *in, size_t inLen, char *out, size_t outLen)
   {
     /* combine up to three bytes into 24 bits */
 
-    n = ((uint32_t) data[x]) << 16;
+    uint32_t n = ((uint32_t) data[x]) << 16;
     if ((x + 1) < inLen)
     {
       n += ((uint32_t) data[x + 1]) << 8;
@@ -126,10 +121,10 @@ bool iot_b64_encode (const void *in, size_t inLen, char *out, size_t outLen)
 
     /* split into four 6-bit numbers */
 
-    n0 = (uint8_t) (n >> 18) & 63;
-    n1 = (uint8_t) (n >> 12) & 63;
-    n2 = (uint8_t) (n >> 6) & 63;
-    n3 = (uint8_t) n & 63;
+    uint8_t n0 = (uint8_t) (n >> 18) & 63;
+    uint8_t n1 = (uint8_t) (n >> 12) & 63;
+    uint8_t n2 = (uint8_t) (n >> 6) & 63;
+    uint8_t n3 = (uint8_t) n & 63;
 
     /* One byte -> two characters */
 
