@@ -98,9 +98,11 @@ bool iot_b64_encode (const void *in, size_t inLen, char *out, size_t outLen)
 {
   const uint8_t *data = (const uint8_t *) in;
   size_t resultIndex = 0;
-  size_t x;
   uint32_t n = 0;
-  uint8_t n0, n1, n2, n3;
+  uint8_t n0;
+  uint8_t n1;
+  uint8_t n2;
+  uint8_t n3;
 
   if (outLen < iot_b64_encodesize (inLen))
   {
@@ -108,7 +110,7 @@ bool iot_b64_encode (const void *in, size_t inLen, char *out, size_t outLen)
   }
 
   /* iterate over the length of the string, three characters at a time */
-  for (x = 0; x < inLen; x += 3)
+  for (size_t x = 0; x < inLen; x += 3)
   {
     /* combine up to three bytes into 24 bits */
 
