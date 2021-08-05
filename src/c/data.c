@@ -442,8 +442,8 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
         }
         return true;
       }
-      case IOT_DATA_POINTER: return (((iot_data_pointer_t*) v1)->value == ((iot_data_pointer_t*) v2)->value);
-      default: return (((iot_data_value_t*) v1)->value.ui64 == ((iot_data_value_t*) v2)->value.ui64);
+      case IOT_DATA_POINTER: return (((const iot_data_pointer_t*) v1)->value == ((const iot_data_pointer_t*) v2)->value);
+      default: return (((const iot_data_value_t*) v1)->value.ui64 == ((const iot_data_value_t*) v2)->value.ui64);
     }
   }
   return false;
@@ -487,9 +487,9 @@ bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type)
 void * iot_data_address (const iot_data_t * data)
 {
   if (data == NULL) return NULL;
-  else if (data->type < IOT_DATA_ARRAY) return (void*) &(((iot_data_value_t*) data)->value);
-  else if (data->type == IOT_DATA_ARRAY) return ((iot_data_array_t*) data)->data;
-  else if (data->type == IOT_DATA_POINTER) return ((iot_data_pointer_t*) data)->value;
+  else if (data->type < IOT_DATA_ARRAY) return (void*) &(((const iot_data_value_t*) data)->value);
+  else if (data->type == IOT_DATA_ARRAY) return ((const iot_data_array_t*) data)->data;
+  else if (data->type == IOT_DATA_POINTER) return ((const iot_data_pointer_t*) data)->value;
   return NULL;
 }
 
