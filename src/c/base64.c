@@ -96,65 +96,57 @@ bool iot_b64_decode (const char *in, void *outv, size_t *outLen)
 
 bool iot_b64_encode (const void *in, size_t inLen, char *out, size_t outLen)
 {
-  const uint8_t *data = (const uint8_t *) in;
-  size_t resultIndex = 0;
-
-  if (outLen < iot_b64_encodesize (inLen))
+  bool ok = outLen >= iot_b64_encodesize (inLen);
+  if (ok)
   {
-    return false;
+    const uint8_t *data = (const uint8_t *) in;
+    size_t resultIndex = 0;
+
+    /* iterate over the length of the string, three characters at a time */
+    for (size_t x = 0; x < inLen; x += 3)
+    {
+      /* combine up to three bytes into 24 bits */
+      uint32_t n = ((uint32_t) data[x]) << 16;
+      if ((x + 1) < inLen)
+      {
+        n += ((uint32_t) data[x + 1]) << 8;
+      }
+      if ((x + 2) < inLen)
+      {
+        n += data[x + 2];
+      }
+
+      /* split into four 6-bit numbers */
+      uint8_t n0 = (uint8_t) (n >> 18) & 63;
+      uint8_t n1 = (uint8_t) (n >> 12) & 63;
+      uint8_t n2 = (uint8_t) (n >> 6) & 63;
+      uint8_t n3 = (uint8_t) n & 63;
+
+      /* One byte -> two characters */
+      out[resultIndex++] = enc[n0];
+      out[resultIndex++] = enc[n1];
+
+      /* Two bytes -> three characters */
+      if ((x + 1) < inLen)
+      {
+        out[resultIndex++] = enc[n2];
+      }
+
+      /* Three bytes -> four characters */
+      if ((x + 2) < inLen)
+      {
+        out[resultIndex++] = enc[n3];
+      }
+    }
+
+    /* Pad to multiple of four characters */
+    while (resultIndex % 4)
+    {
+      out[resultIndex++] = '=';
+    }
+
+    /* Terminate string */
+    out[resultIndex] = 0;
   }
-
-  /* iterate over the length of the string, three characters at a time */
-  for (size_t x = 0; x < inLen; x += 3)
-  {
-    /* combine up to three bytes into 24 bits */
-
-    uint32_t n = ((uint32_t) data[x]) << 16;
-    if ((x + 1) < inLen)
-    {
-      n += ((uint32_t) data[x + 1]) << 8;
-    }
-    if ((x + 2) < inLen)
-    {
-      n += data[x + 2];
-    }
-
-    /* split into four 6-bit numbers */
-
-    uint8_t n0 = (uint8_t) (n >> 18) & 63;
-    uint8_t n1 = (uint8_t) (n >> 12) & 63;
-    uint8_t n2 = (uint8_t) (n >> 6) & 63;
-    uint8_t n3 = (uint8_t) n & 63;
-
-    /* One byte -> two characters */
-
-    out[resultIndex++] = enc[n0];
-    out[resultIndex++] = enc[n1];
-
-    /* Two bytes -> three characters */
-
-    if ((x + 1) < inLen)
-    {
-      out[resultIndex++] = enc[n2];
-    }
-
-    /* Three bytes -> four characters */
-
-    if ((x + 2) < inLen)
-    {
-      out[resultIndex++] = enc[n3];
-    }
-  }
-
-  /* Pad to multiple of four characters */
-
-  while (resultIndex % 4)
-  {
-    out[resultIndex++] = '=';
-  }
-
-  /* Terminate string */
-
-  out[resultIndex] = 0;
-  return true;
+  return ok;
 }
