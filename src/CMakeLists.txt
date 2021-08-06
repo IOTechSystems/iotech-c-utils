@@ -148,10 +148,10 @@ add_subdirectory (docs)
 # Configure packaging options
 
 if (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinSizeRel)
-  set (CPACK_PACKAGE_NAME "iotech-iot${PACKAGE_MOD}")
+  set (CPACK_PACKAGE_NAME "iotech-iot${PACKAGE_MOD}-${VERSION_MAJOR}.${VERSION_MINOR}")
   set (CPACK_STRIP_FILES "TRUE")
 else ()
-  set (CPACK_PACKAGE_NAME "iotech-iot-dev${PACKAGE_MOD}")
+  set (CPACK_PACKAGE_NAME "iotech-iot-dev${PACKAGE_MOD}-${VERSION_MAJOR}.${VERSION_MINOR}")
   set (CPACK_STRIP_FILES "FALSE")
 endif ()
 set (CPACK_PACKAGE_VERSION "${IOT_DOT_VERSION}")

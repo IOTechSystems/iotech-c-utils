@@ -8,6 +8,9 @@ APKS=/iotech-iot/${ARCH}/apks
 
 export APKARCH=${ARCH}
 export VER=$(cat VERSION)
+#ignore patch from version
+export PACKAGE_VER=$(cat VERSION |awk -F"." '{print $1"."$2}')
+
 export DEV=
 
 case "${ARCH}" in
@@ -38,6 +41,6 @@ build_apk()
   rm -rf /iotech-iot/apks/build ${REPO}
 }
 
-build_apk "${ARCH}/release/iotech-iot-${VER}_${APKARCH}.tar.gz"
+build_apk "${ARCH}/release/iotech-iot-${PACKAGE_VER}-${VER}_${APKARCH}.tar.gz"
 DEV=-dev
-build_apk "${ARCH}/debug/iotech-iot-dev-${VER}_${APKARCH}.tar.gz"
+build_apk "${ARCH}/debug/iotech-iot-dev-${PACKAGE_VER}-${VER}_${APKARCH}.tar.gz"

@@ -1,6 +1,6 @@
 # Contributor: IOTech <support@iotechsys.com>
 # Maintainer: IOTech <support@iotechsys.com>
-pkgname=iotech-iot${DEV}
+pkgname=iotech-iot${DEV}-${PACKAGE_VER}
 pkgver="${VER}"
 pkgrel=0
 pkgdesc="IOT C Framework"
