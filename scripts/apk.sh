@@ -8,6 +8,9 @@ APKS=/iotech-iot/${ARCH}/apks
 
 export APKARCH=${ARCH}
 export VER=$(cat VERSION)
+#ignore patch from version
+export PACKAGE_VER=$(cat VERSION |awk -F"." '{print $1"."$2}')
+
 export DEV=
 
 case "${ARCH}" in
