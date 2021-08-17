@@ -10,6 +10,9 @@
 
 #ifdef IOT_HAS_UUID
 #include <uuid/uuid.h>
+#ifndef UUID_STR_LEN
+#define UUID_STR_LEN 37
+#endif
 #else
 #include "iot/uuid.h"
 #endif
