@@ -1495,16 +1495,10 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
 {
   uint32_t elements = (*tokens)->size;
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_t * ordering;
-  iot_data_t * metadata;
+  iot_data_t * ordering = ordered ? iot_data_alloc_vector (elements) : NULL;
   uint32_t i = 0;
 
   (*tokens)++;
-  if (ordered)
-  {
-    ordering = iot_data_alloc_vector (elements);
-    metadata = iot_data_alloc_map (IOT_DATA_STRING);
-  }
   while  (elements--)
   {
     iot_data_t * key = iot_data_string_from_json (tokens, json);
@@ -1513,6 +1507,7 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
   }
   if (ordered)
   {
+    iot_data_t * metadata = iot_data_alloc_map (IOT_DATA_STRING);
     iot_data_string_map_add (metadata, ORDERING_KEY, ordering);
     iot_data_set_metadata (map, metadata);
     iot_data_free (metadata);
