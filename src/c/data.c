@@ -925,7 +925,7 @@ bool iot_data_map_base64_to_array (iot_data_t * map, const iot_data_t * key)
   assert (key && key->type == map->sub_type);
 
   bool result = false;
-  iot_data_map_t * mp = (iot_data_map_t*) map;
+  const iot_data_map_t * mp = (const iot_data_map_t*) map;
 
   iot_node_t * node = iot_node_find (mp->tree, key);
   if (node && (node->value->type == IOT_DATA_STRING))
