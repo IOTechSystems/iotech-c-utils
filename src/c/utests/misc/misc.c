@@ -69,6 +69,13 @@ static void test_time_nsecs (void)
   }
 }
 
+static void test_wait (void)
+{
+  iot_wait_secs (1u);
+  iot_wait_msecs (1000u);
+  iot_wait_usecs (1000000u);
+}
+
 static void test_hash (void)
 {
   CU_ASSERT ( iot_hash ("Dummy") == 3802084562)
@@ -136,6 +143,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "time_msecs", test_time_msecs);
   CU_add_test (suite, "time_usecs", test_time_usecs);
   CU_add_test (suite, "time_nsecs", test_time_nsecs);
+  CU_add_test (suite, "wait", test_wait);
   CU_add_test (suite, "hash", test_hash);
 #ifdef IOT_HAS_FILE
   CU_add_test (suite, "write_file", test_write_file);
