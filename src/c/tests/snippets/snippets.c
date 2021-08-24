@@ -135,7 +135,7 @@ static void schedule_greeter (iot_logger_t * logger)
   iot_scheduler_t * scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_schedule_t * schedule = iot_schedule_create (scheduler, greeter, NULL, NULL, IOT_MS_TO_NS (500), 0, 0, NULL, IOT_THREAD_NO_PRIORITY);
   iot_schedule_add (scheduler, schedule);
-  sleep (2);
+  iot_wait_secs (2u);
   iot_schedule_remove (scheduler, schedule);
   iot_scheduler_free (scheduler);
 }
