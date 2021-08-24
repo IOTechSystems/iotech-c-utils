@@ -225,7 +225,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   iot_loglevel_t level = iot_logger_config_level (map);
   const char * to = iot_data_string_map_get_string (map, "To");
 
-#if defined(IOT_HAS_FILE) && !defined(_AZURESPHERE_)
+#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
   if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
   {
     impl = iot_log_file; /* Log to file */

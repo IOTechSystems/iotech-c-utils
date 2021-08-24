@@ -57,11 +57,13 @@ bool iot_file_config_saver (const char * name, const char * uri, const char * co
 
 char * iot_file_read (const char * path)
 {
+  assert (path);
   return (char*) iot_file_read_binary (path, NULL);
 }
 
 extern bool iot_file_write (const char * path, const char * str)
 {
+  assert (path && str);
   return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
 
