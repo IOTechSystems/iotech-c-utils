@@ -58,6 +58,7 @@
 
 ## Version 1.2.2
 
+- Various SonarQube quality fixes
 - Added support for UUID in data. New functions added:
 
 * `iot_data_alloc_uuid`
