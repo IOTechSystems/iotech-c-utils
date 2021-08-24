@@ -28,7 +28,7 @@ int main (int argc, char ** argv)
   /* Start everything */
 
   iot_container_start (container);
-  sleep (2);
+  iot_wait_secs (2u);
 
   /* Stop everything and clean up */
 

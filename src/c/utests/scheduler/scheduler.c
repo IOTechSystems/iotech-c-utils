@@ -112,7 +112,7 @@ static void cunit_scheduler_start (void)
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
   CU_ASSERT (iot_schedule_add (scheduler, sched2))
 
-  sleep (2);
+  iot_wait_secs (2);
 
   CU_ASSERT (atomic_load (&sum_work1) > 0u)
   CU_ASSERT (atomic_load (&sum_work2) > 0u)
@@ -136,7 +136,7 @@ static void cunit_scheduler_stop (void)
   CU_ASSERT (sched1 != NULL)
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
 
-  sleep (2);
+  iot_wait_secs (2);
   iot_scheduler_stop (scheduler);
   CU_ASSERT (atomic_load (&sum_test) == 1u)
 
@@ -162,7 +162,7 @@ static void cunit_scheduler_create (void)
   CU_ASSERT (iot_schedule_add (scheduler, sched2))
   iot_scheduler_start (scheduler);
 
-  sleep (2);
+  iot_wait_secs (2);
   iot_scheduler_stop (scheduler);
   CU_ASSERT (atomic_load (&sum_test) == 1u)
   CU_ASSERT (atomic_load (&sum_work5) > 5u)
@@ -200,7 +200,7 @@ static void cunit_scheduler_remove (void)
   CU_ASSERT (iot_schedule_add (scheduler, sched5))
   CU_ASSERT (iot_schedule_add (scheduler, sched6))
 
-  sleep (1);
+  iot_wait_secs (1);
 
   iot_schedule_remove (scheduler, sched2);
   iot_schedule_remove (scheduler, sched3);
@@ -208,7 +208,7 @@ static void cunit_scheduler_remove (void)
   CU_ASSERT (atomic_load (&sum_work5) > 20u)
 
   uint32_t temp = atomic_load (&sum_work5);
-  sleep (1);
+  iot_wait_secs (1);
 
   CU_ASSERT (temp <= (atomic_load (&sum_work5) + 2u))
 
@@ -246,7 +246,7 @@ static void cunit_scheduler_delete (void)
   CU_ASSERT (iot_schedule_add (scheduler, sched6))
 
   iot_scheduler_start (scheduler);
-  sleep (1);
+  iot_wait_secs (1);
 
   iot_schedule_delete (scheduler, sched5);
   iot_scheduler_stop (scheduler);
@@ -257,7 +257,7 @@ static void cunit_scheduler_delete (void)
 
   uint32_t temp = atomic_load (&sum_work5);
   iot_scheduler_start (scheduler);
-  sleep (1);
+  iot_wait_secs (1);
 
   CU_ASSERT (temp == atomic_load (&sum_work5))
   iot_threadpool_free (pool);
@@ -288,7 +288,7 @@ static void cunit_scheduler_nrepeat (void)
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
 
-  sleep (2);
+  iot_wait_secs (2);
 
   iot_scheduler_stop (scheduler);
   CU_ASSERT (atomic_load (&counter) == 5u)
@@ -309,7 +309,7 @@ static void cunit_scheduler_starttime (void)
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
-  sleep (2);
+  iot_wait_secs (2);
 
   iot_scheduler_stop (scheduler);
   CU_ASSERT (atomic_load (&sum_test) == 1)
@@ -330,13 +330,13 @@ static void cunit_scheduler_reset (void)
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
 
-  sleep (1);
+  iot_wait_secs (1);
   iot_schedule_reset (scheduler, sched1);
-  sleep (1);
+  iot_wait_secs (1);
   iot_schedule_reset (scheduler, sched1);
-  sleep (1);
+  iot_wait_secs (1);
   iot_schedule_reset (scheduler, sched1);
-  sleep (1);
+  iot_wait_secs (1);
 
   iot_scheduler_stop (scheduler);
   CU_ASSERT (atomic_load (&sum_test) == 1)
@@ -363,7 +363,7 @@ static void cunit_scheduler_setpriority (void)
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
 
-  sleep (2);
+  iot_wait_secs (2);
 
   iot_scheduler_stop (scheduler);
 
@@ -389,7 +389,7 @@ static void cunit_scheduler_setfreefn (void)
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
 
-  sleep (2);
+  iot_wait_secs (2);
 
   iot_scheduler_stop (scheduler);
   iot_threadpool_free (pool);

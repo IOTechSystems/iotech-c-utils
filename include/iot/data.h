@@ -781,7 +781,7 @@ extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t
  * @param key  Input key
  * @return     'true' on Success, 'false' on Failure
  */
-extern bool iot_data_map_base64_to_array (iot_data_t * map, const iot_data_t * key);
+extern bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data_t * key);
 
 /**
  * @brief Add an element to an vector at index
