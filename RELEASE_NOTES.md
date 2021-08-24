@@ -73,3 +73,9 @@
 - Support for new iot data type IOT_DATA_POINTER. New function added:
 
 * `iot_data_alloc_pointer`
+
+- Uninterruptible wait functions added
+
+* `iot_wait_secs`
+* `iot_wait_msecs`
+* `iot_wait_usecs`

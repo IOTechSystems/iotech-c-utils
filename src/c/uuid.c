@@ -8,7 +8,7 @@
 #include "iot/iot.h"
 #include "iot/uuid.h"
 
-#define RAND_READ_DELAY 1000
+#define RAND_READ_DELAY 1000u
 static const char  * hexdigits = "0123456789abcdef";
 static uint64_t uuid_seed[2];
 static bool uuid_initialized = false;
@@ -28,7 +28,7 @@ static void uuid_init (void)
 {
   while (getrandom (uuid_seed, sizeof (uuid_seed), 0) != sizeof (uuid_seed))
   {
-    usleep (RAND_READ_DELAY);
+    iot_wait_usecs (RAND_READ_DELAY);
   }
   uuid_initialized = true;
 }

@@ -919,29 +919,25 @@ uint32_t iot_data_map_size (const iot_data_t * map)
   return ((const iot_data_map_t*) map)->size;
 }
 
-bool iot_data_map_base64_to_array (iot_data_t * map, const iot_data_t * key)
+bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data_t * key)
 {
   assert (map && (map->type == IOT_DATA_MAP));
   assert (key && key->type == map->sub_type);
 
-  bool result = false;
-  iot_data_map_t * mp = (iot_data_map_t*) map;
-
+  iot_data_t * array = NULL;
+  const iot_data_map_t * mp = (const iot_data_map_t*) map;
   iot_node_t * node = iot_node_find (mp->tree, key);
+
   if (node && (node->value->type == IOT_DATA_STRING))
   {
-    const char * str = ((iot_data_value_t*) node->value)->value.str;
-    iot_data_t * array = iot_data_alloc_array_from_base64 (str);
-
-    result = (array != NULL);
-
-    if (result)
+    array = iot_data_alloc_array_from_base64 (((iot_data_value_t*) node->value)->value.str);
+    if (array)
     {
       iot_data_free (node->value);
       node->value = array;
     }
   }
-  return result;
+  return (array != NULL);
 }
 
 const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key)

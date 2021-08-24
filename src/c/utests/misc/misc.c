@@ -28,7 +28,7 @@ static void test_time_secs (void)
   for (int counter = 0; counter < MAX_SECS_COUNTER; counter++)
   {
     secs_time = iot_time_secs ();
-    usleep (1000000);
+    iot_wait_secs (1u);
     CU_ASSERT (iot_time_secs ()  > secs_time)
   }
 }
@@ -39,7 +39,7 @@ static void test_time_msecs (void)
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
     msecs_time = iot_time_msecs ();
-    usleep (1000);
+    iot_wait_msecs (1u);
     CU_ASSERT (iot_time_msecs ()  > msecs_time)
   }
 }
@@ -50,7 +50,7 @@ static void test_time_usecs (void)
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
     usecs_time = iot_time_usecs ();
-    usleep (1);
+    iot_wait_usecs (1u);
     CU_ASSERT (iot_time_usecs ()  > usecs_time)
   }
 }
@@ -67,6 +67,13 @@ static void test_time_nsecs (void)
   {
     CU_ASSERT (times[counter] < times[counter + 1])
   }
+}
+
+static void test_wait (void)
+{
+  iot_wait_secs (1u);
+  iot_wait_msecs (1000u);
+  iot_wait_usecs (1000000u);
 }
 
 static void test_hash (void)
@@ -136,6 +143,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "time_msecs", test_time_msecs);
   CU_add_test (suite, "time_usecs", test_time_usecs);
   CU_add_test (suite, "time_nsecs", test_time_nsecs);
+  CU_add_test (suite, "wait", test_wait);
   CU_add_test (suite, "hash", test_hash);
 #ifdef IOT_HAS_FILE
   CU_add_test (suite, "write_file", test_write_file);

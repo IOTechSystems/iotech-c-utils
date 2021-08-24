@@ -115,7 +115,7 @@ static iot_data_t * iot_component_config_to_map (const char * config, iot_logger
           else
           {
             iot_log_error (logger, "Unable to resolve environment variable: %s from configuration", key);
-            goto fail;
+            goto FAIL;
           }
           start = end + 1;
           continue;
@@ -128,7 +128,7 @@ static iot_data_t * iot_component_config_to_map (const char * config, iot_logger
     map = iot_data_from_json (holder.parsed);
   }
 
-fail:
+FAIL:
 
   free (holder.parsed);
   return map;
@@ -142,10 +142,10 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
 {
   iot_data_t * map = iot_component_config_to_map (config, cont->logger);
   iot_component_t * comp = NULL;
-  if (map == NULL) goto error;
+  if (map == NULL) goto ERROR;
   comp = (factory->config_fn) (cont, map);
   iot_data_free (map);
-  if (comp == NULL) goto error;
+  if (comp == NULL) goto ERROR;
 
   iot_component_holder_t * ch = calloc (1, sizeof (*ch));
   ch->component = comp;
@@ -166,7 +166,7 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
   Log_Debug ("iot_component_create: %s (Total Memory: %" PRIu32 " kB)\n", cname, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
 #endif
 
-error:
+ERROR:
 
   if (comp == NULL) iot_log_warn (cont->logger, "Container: %s Failed to create component: %s", cont->name, cname);
 }
@@ -348,7 +348,7 @@ bool iot_container_init (iot_container_t * cont)
       config = (iot_config->load) (cname, iot_config->uri);
       factory = iot_component_factory_find (ctype);
 
-      if ((!factory) && (config))
+      if ((!factory) && config)
       {
         iot_container_try_load_component (cont, config);
       }

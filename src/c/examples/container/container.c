@@ -41,7 +41,7 @@ int main (void)
   }
   iot_component_info_free (info);
 
-  sleep (5);
+  iot_wait_secs (5u);
 
   /* Find instantiated component - the logger */
   logger = iot_container_find_component (container, "logger");

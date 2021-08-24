@@ -64,7 +64,7 @@ int main (void)
   /* Start the scheduler */
   iot_log_info (mlogger, "Start the scheduler");
   iot_scheduler_start (scheduler);
-  sleep (4);
+  iot_wait_secs (4);
 
   /* Create and add a third schedule */
   printf ("\n");
@@ -76,7 +76,7 @@ int main (void)
   iot_log_info (mlogger, "Create and add schedule 4");
   iot_schedule_t * sched4 = iot_schedule_create (scheduler, testFunc4, testFree4, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   iot_schedule_add (scheduler, sched4);
-  sleep (5);
+  iot_wait_secs (5);
 
   /* Remove a schedule */
   printf ("\n");
@@ -84,21 +84,21 @@ int main (void)
   iot_schedule_remove (scheduler, sched1);
   iot_log_info (mlogger, "Remove schedule 4");
   iot_schedule_remove (scheduler, sched4);
-  sleep (3);
+  iot_wait_secs (3);
 
   /* Delete a schedule */
   printf ("\n");
   iot_log_info (mlogger, "Delete schedule 2");
   iot_schedule_delete (scheduler, sched2);
 
-  sleep (2);
+  iot_wait_secs (2);
 
   /* Stop and delete the scheduler (and associated schedules) */
   iot_log_info (mlogger, "Stop and delete the scheduler");
   iot_scheduler_stop (scheduler);
   iot_scheduler_free (scheduler);
 
-  sleep (1);
+  iot_wait_secs (1);
   /* Destroy the thread pool */
   iot_log_info (mlogger, "Destroy the thread pool");
   iot_threadpool_stop (pool);

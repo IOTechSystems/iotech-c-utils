@@ -7,6 +7,7 @@
 #include "iot/container.h"
 #include "iot/scheduler.h"
 #include "iot/thread.h"
+#include "iot/time.h"
 
 #define IOT_NS_TO_SEC(s) ((s) / IOT_BILLION)
 #define IOT_NS_REMAINING(s) ((s) % IOT_BILLION)
@@ -326,7 +327,7 @@ void iot_scheduler_free (iot_scheduler_t * scheduler)
     clock_gettime (CLOCK_REALTIME, &scheduler->schd_time);
     iot_component_unlock (&scheduler->component);
     iot_component_set_deleted (&scheduler->component);
-    sleep (1);
+    iot_wait_secs (1u);
     while (scheduler->queue.length > 0)
     {
       iot_schedule_delete (scheduler, scheduler->queue.front);
