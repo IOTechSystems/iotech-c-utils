@@ -225,7 +225,7 @@ iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_
   schedule->freefn = free_func;
   schedule->arg = arg;
   schedule->period = period;
-  schedule->start = start;
+  schedule->start = getTimeAsUInt64 () + start;
   schedule->repeat = repeat;
   schedule->threadpool = pool;
   schedule->priority = priority;
