@@ -28,7 +28,7 @@ static void test_time_secs (void)
   for (int counter = 0; counter < MAX_SECS_COUNTER; counter++)
   {
     secs_time = iot_time_secs ();
-    usleep (1000000);
+    iot_wait_secs (1u);
     CU_ASSERT (iot_time_secs ()  > secs_time)
   }
 }
@@ -39,7 +39,7 @@ static void test_time_msecs (void)
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
     msecs_time = iot_time_msecs ();
-    usleep (1000);
+    iot_wait_msecs (1u);
     CU_ASSERT (iot_time_msecs ()  > msecs_time)
   }
 }
@@ -50,7 +50,7 @@ static void test_time_usecs (void)
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
     usecs_time = iot_time_usecs ();
-    usleep (1);
+    iot_wait_usecs (1u);
     CU_ASSERT (iot_time_usecs ()  > usecs_time)
   }
 }

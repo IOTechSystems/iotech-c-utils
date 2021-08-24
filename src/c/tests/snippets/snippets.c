@@ -24,7 +24,7 @@ iot_component_factory_add (iot_scheduler_factory ());
 
 iot_container_init (container);
 iot_container_start (container);
-usleep (2000);
+iot_wait_msecs (2u);
 iot_container_stop (container);
 iot_container_free (container);
 // CUT
@@ -144,7 +144,7 @@ static void schedule_greeter (iot_logger_t * logger)
 // CUT
 static void * sleeper_job (void * arg)
 {
-  usleep (1000000);
+  iot_wait_secs (1u);
   return NULL;
 }
 
