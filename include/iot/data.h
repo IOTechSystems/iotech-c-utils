@@ -1073,9 +1073,9 @@ extern iot_data_t * iot_data_from_json (const char * json);
  * consists of the JSON object keys in the order in which they appear in
  * the JSON. See also iot_data_to_json.
  *
- * @param  json  Input json string
- * @parm ordered Whether returned map is ordered by position in json
- * @return       Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ * @param json    Input json string
+ * @param ordered Whether returned map is ordered by position in json
+ * @return        Pointer to data of type iot_data if input string is a json object, NULL otherwise
  */
 extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered);
 

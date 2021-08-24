@@ -188,7 +188,7 @@ static iot_node_t * iot_node_start (iot_node_t * node);
 static iot_node_t * iot_node_next (iot_node_t * iter);
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
 static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
-static iot_node_t * iot_node_find (iot_node_t * node, const iot_data_t * key);
+static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key);
 
 static void * iot_data_block_alloc (void)
 {
@@ -801,49 +801,49 @@ iot_data_t * iot_data_alloc_array_from_base64 (const char * value)
 int8_t iot_data_i8 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT8));
-  return ((iot_data_value_t*) data)->value.i8;
+  return ((const iot_data_value_t*) data)->value.i8;
 }
 
 uint8_t iot_data_ui8 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT8));
-  return ((iot_data_value_t*) data)->value.ui8;
+  return ((const iot_data_value_t*) data)->value.ui8;
 }
 
 int16_t iot_data_i16 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT16));
-  return ((iot_data_value_t*) data)->value.i16;
+  return ((const iot_data_value_t*) data)->value.i16;
 }
 
 uint16_t iot_data_ui16 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT16));
-  return ((iot_data_value_t*) data)->value.ui16;
+  return ((const iot_data_value_t*) data)->value.ui16;
 }
 
 int32_t iot_data_i32 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT32));
-  return ((iot_data_value_t*) data)->value.i32;
+  return ((const iot_data_value_t*) data)->value.i32;
 }
 
 uint32_t iot_data_ui32 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT32));
-  return ((iot_data_value_t*) data)->value.ui32;
+  return ((const iot_data_value_t*) data)->value.ui32;
 }
 
 int64_t iot_data_i64 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_INT64));
-  return ((iot_data_value_t*) data)->value.i64;
+  return ((const iot_data_value_t*) data)->value.i64;
 }
 
 uint64_t iot_data_ui64 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT64));
-  return ((iot_data_value_t*) data)->value.ui64;
+  return ((const iot_data_value_t*) data)->value.ui64;
 }
 
 float iot_data_f32 (const iot_data_t * data)
@@ -855,19 +855,19 @@ float iot_data_f32 (const iot_data_t * data)
 double iot_data_f64 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_FLOAT64));
-  return ((iot_data_value_t*) data)->value.f64;
+  return ((const iot_data_value_t*) data)->value.f64;
 }
 
 bool iot_data_bool (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_BOOL));
-  return ((iot_data_value_t*) data)->value.bl;
+  return ((const iot_data_value_t*) data)->value.bl;
 }
 
 const char * iot_data_string (const iot_data_t * data)
 {
   assert (data);
-  return (data->type == IOT_DATA_STRING) ? ((iot_data_value_t*) data)->value.str : NULL;
+  return (data->type == IOT_DATA_STRING) ? ((const iot_data_value_t*) data)->value.str : NULL;
 }
 
 bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key)
@@ -916,7 +916,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
 uint32_t iot_data_map_size (const iot_data_t * map)
 {
   assert (map && (map->type == IOT_DATA_MAP));
-  return ((iot_data_map_t*) map)->size;
+  return ((const iot_data_map_t*) map)->size;
 }
 
 bool iot_data_map_base64_to_array (iot_data_t * map, const iot_data_t * key)
@@ -2133,7 +2133,7 @@ static void iot_node_remove_balance (iot_data_map_t * map, iot_node_t * x)
   x->colour = IOT_NODE_BLACK;
 }
 
-static iot_node_t * iot_node_find (iot_node_t * node, const iot_data_t * key)
+static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key)
 {
   while (node)
   {
@@ -2141,7 +2141,7 @@ static iot_node_t * iot_node_find (iot_node_t * node, const iot_data_t * key)
     if (cmp == 0) break;
     node = (cmp > 0) ? node->left : node->right;
   }
-  return node;
+  return (iot_node_t*) node;
 }
 
 static void iot_node_insert (iot_data_map_t * map, iot_data_t * key, iot_data_t * value)
