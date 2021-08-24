@@ -340,9 +340,9 @@ iot_data_type_t iot_data_name_type (const char * name)
   while (type >= 0)
   {
     if (strcasecmp (name, iot_data_type_names[type]) == 0) break;
-    type = (type == IOT_DATA_POINTER) ? -1 : (type + 1);
+    type = (type == (int) IOT_DATA_POINTER) ? -1 : (type + 1);
   }
-  return type;
+  return (iot_data_type_t) type;
 }
 
 const char * iot_data_type_string (iot_data_type_t type)
@@ -377,13 +377,13 @@ static int iot_data_key_cmp (const iot_data_t * v1, const iot_data_t * v2)
     switch (v1->type)
     {
       case IOT_DATA_STRING:
-        return strcmp (((iot_data_value_t *) v1)->value.str, ((iot_data_value_t *) v2)->value.str);
+        return strcmp (((const iot_data_value_t *) v1)->value.str, ((const iot_data_value_t *) v2)->value.str);
       case IOT_DATA_ARRAY:
         return (v1->hash == v2->hash) ? 0 : ((v1->hash < v2->hash) ? -1 : 1);
       default:
       {
-        uint64_t ui1 = ((iot_data_value_t *) v1)->value.ui64;
-        uint64_t ui2 = ((iot_data_value_t *) v2)->value.ui64;
+        uint64_t ui1 = ((const iot_data_value_t *) v1)->value.ui64;
+        uint64_t ui2 = ((const iot_data_value_t *) v2)->value.ui64;
         return (ui1 == ui2) ? 0 : ((ui1 < ui2) ? -1 : 1);
       }
     }
@@ -767,13 +767,13 @@ extern bool iot_data_array_is_of_type (const iot_data_t * array, iot_data_type_t
 extern uint32_t iot_data_array_size (const iot_data_t * array)
 {
   assert (array && (array->type == IOT_DATA_ARRAY));
-  return ((iot_data_array_t*) array)->size;
+  return ((const iot_data_array_t*) array)->size;
 }
 
 extern uint32_t iot_data_array_length (const iot_data_t * array)
 {
   assert (array && (array->type == IOT_DATA_ARRAY));
-  return ((iot_data_array_t*) array)->length;
+  return ((const iot_data_array_t*) array)->length;
 }
 
 iot_data_t * iot_data_alloc_array_from_base64 (const char * value)
@@ -849,7 +849,7 @@ uint64_t iot_data_ui64 (const iot_data_t * data)
 float iot_data_f32 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_FLOAT32));
-  return ((iot_data_value_t*) data)->value.f32;
+  return ((const iot_data_value_t*) data)->value.f32;
 }
 
 double iot_data_f64 (const iot_data_t * data)
@@ -1043,7 +1043,7 @@ void iot_data_vector_resize (iot_data_t * vector, uint32_t size)
 uint32_t iot_data_vector_size (const iot_data_t * vector)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR));
-  return ((iot_data_vector_t*) vector)->size;
+  return ((const iot_data_vector_t*) vector)->size;
 }
 
 void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
@@ -1409,7 +1409,7 @@ char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size)
   return holder.str;
 }
 
-static char * iot_data_string_from_json_token (const char * json, iot_json_tok_t * token)
+static char * iot_data_string_from_json_token (const char * json, const iot_json_tok_t * token)
 {
   size_t len = (size_t) (token->end - token->start);
   char * str = malloc (len + 1);
@@ -1464,7 +1464,7 @@ static char * iot_data_string_from_json_token (const char * json, iot_json_tok_t
 
 static iot_data_t * iot_data_string_from_json (iot_json_tok_t ** tokens, const char * json)
 {
-  char * str = iot_data_string_from_json_token (json, *tokens);
+  const char * str = iot_data_string_from_json_token (json, *tokens);
   (*tokens)++;
   return iot_data_alloc_string (str, IOT_DATA_TAKE);
 }
@@ -1592,7 +1592,7 @@ static iot_data_t * iot_data_map_from_xml (bool root, yxml_t * x, iot_string_hol
   iot_data_t * elem = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * children = NULL;
   iot_data_t * attrs = iot_data_alloc_map (IOT_DATA_STRING);
-  char * elem_name = x->elem;
+  const char * elem_name = x->elem;
   bool more = true;
   holder->str[0] = '\0';
   holder->free = holder->size - 1;
