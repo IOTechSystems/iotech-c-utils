@@ -340,7 +340,7 @@ iot_data_type_t iot_data_name_type (const char * name)
   while (type >= 0)
   {
     if (strcasecmp (name, iot_data_type_names[type]) == 0) break;
-    type = (type == (int) IOT_DATA_POINTER) ? -1 : (type + 1);
+    type = (type == IOT_DATA_POINTER) ? -1 : (type + 1);
   }
   return (iot_data_type_t) type;
 }
@@ -400,12 +400,12 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
     switch (v1->type)
     {
       case IOT_DATA_STRING:
-        return ((iot_data_value_t*) v1)->value.str == ((iot_data_value_t*) v2)->value.str || ((v1->hash == v2->hash) && (strcmp (((iot_data_value_t*) v1)->value.str, ((iot_data_value_t*) v2)->value.str) == 0));
+        return ((const iot_data_value_t*) v1)->value.str == ((const iot_data_value_t*) v2)->value.str || ((v1->hash == v2->hash) && (strcmp (((const iot_data_value_t*) v1)->value.str, ((const iot_data_value_t*) v2)->value.str) == 0));
       case IOT_DATA_NULL: return true;
       case IOT_DATA_ARRAY:
       {
-        iot_data_array_t * a1 = (iot_data_array_t*) v1;
-        iot_data_array_t * a2 = (iot_data_array_t*) v2;
+        const iot_data_array_t * a1 = (const iot_data_array_t*) v1;
+        const iot_data_array_t * a2 = (const iot_data_array_t*) v2;
         return  ((a1->size == a2->size) && (v1->sub_type == v2->sub_type) && ((a1->data == a2->data) || ((v1->hash == v2->hash) && (memcmp (a1->data, a2->data, a1->size) == 0))));
       }
       case IOT_DATA_VECTOR:
@@ -508,14 +508,7 @@ void iot_data_free (iot_data_t * data)
         iot_data_value_t * val = (iot_data_value_t*) data;
         if (data->release && (val->value.str != val->buff))
         {
-          if (data->release_block)
-          {
-            iot_data_block_free ((iot_data_t*) val->value.str);
-          }
-          else
-          {
-            free (val->value.str);
-          }
+          data->release_block ? iot_data_block_free ((iot_data_t*) val->value.str) : free (val->value.str);
         }
         break;
       }
