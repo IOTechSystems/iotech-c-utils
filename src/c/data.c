@@ -2079,9 +2079,9 @@ static void iot_node_remove_balance (iot_data_map_t * map, iot_node_t * x)
       }
       else
       {
-        if (IS_RIGHT_BLACK (s)) // case 3.3
+        if (IS_BLACK (s->right)) // case 3.3
         {
-          if (s) iot_node_set_colour (s->left, IOT_NODE_BLACK);
+          iot_node_set_colour (s->left, IOT_NODE_BLACK);
           iot_node_set_colour (s, IOT_NODE_RED);
           iot_node_ror (map, s);
           s = x->parent->right;
@@ -2110,9 +2110,9 @@ static void iot_node_remove_balance (iot_data_map_t * map, iot_node_t * x)
       }
       else
       {
-        if (IS_LEFT_BLACK (s)) // case 3.3
+        if (IS_BLACK (s->left)) // case 3.3
         {
-          if (s) iot_node_set_colour (s->right, IOT_NODE_BLACK);
+          iot_node_set_colour (s->right, IOT_NODE_BLACK);
           iot_node_set_colour (s, IOT_NODE_RED);
           iot_node_rol (map, s);
           s = x->parent->left;
