@@ -64,8 +64,8 @@ typedef struct iot_typecode_t iot_typecode_t;
  */
 typedef struct iot_data_map_iter_t
 {
-  struct iot_data_map_t * map;   /**< Pointer to data map structure */
-  struct iot_node_t * node;      /**< Pointer to data node structure */
+  const struct iot_data_map_t * map;   /**< Pointer to data map structure */
+  struct iot_node_t * node;            /**< Pointer to data node structure */
 } iot_data_map_iter_t;
 
 /**
@@ -73,8 +73,8 @@ typedef struct iot_data_map_iter_t
  */
 typedef struct iot_data_vector_iter_t
 {
-  struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
-  uint32_t index;                     /**< Index of the given vector */
+  const struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
+  uint32_t index;                           /**< Index of the given vector */
 } iot_data_vector_iter_t;
 
 /**
@@ -82,8 +82,8 @@ typedef struct iot_data_vector_iter_t
  */
 typedef struct iot_data_array_iter_t
 {
-  struct iot_data_array_t * array;  /**< Pointer to data array structure */
-  uint32_t index;                   /**< Index of the given data array */
+  const struct iot_data_array_t * array;  /**< Pointer to data array structure */
+  uint32_t index;                         /**< Index of the given data array */
 } iot_data_array_iter_t;
 
 /** Type for data comparison function pointer */
