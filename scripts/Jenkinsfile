@@ -44,16 +44,13 @@ def buildStage (systems, arch)
       }
       else
       {
-        withSonarQubeEnv (credentialsId: 'ebe4f605-efe9-43ef-b388-607050ee29ce')
-        {
-          sh (script: "./scripts/docker.sh ${system} ${arch} ${board} ${sonar} ${env.BRANCH_NAME}")
-          if ("${sonar}" == 'true')
-          {
-            sh (script: "mv ${arch}/${sys}/lcov/sonar/report-task.txt .")
-          }
-        }
         if ("${sonar}" == 'true')
         {
+          withSonarQubeEnv (credentialsId: 'ebe4f605-efe9-43ef-b388-607050ee29ce')
+          {
+            sh (script: "./scripts/docker.sh ${system} ${arch} ${board} ${sonar} ${env.BRANCH_NAME}")
+            sh (script: "mv ${arch}/${sys}/lcov/sonar/report-task.txt .")
+          }
           timeout (time: 5, unit: 'MINUTES')
           {
             def qg = waitForQualityGate ()
@@ -62,6 +59,10 @@ def buildStage (systems, arch)
               error "Pipeline aborted due to quality gate failure: ${qg.status}"
             }
           }
+        }
+        else
+        {
+          sh (script: "./scripts/docker.sh ${system} ${arch} ${board} ${sonar} ${env.BRANCH_NAME}")
         }
       }
     }
