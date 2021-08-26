@@ -294,7 +294,7 @@ static yxml_ret_t yxml_ref(yxml_t *x, unsigned ch) {
 
 
 static yxml_ret_t yxml_refend(yxml_t *x, yxml_ret_t ret) {
-	unsigned char *r = (unsigned char *)x->data;
+	const unsigned char *r = (const unsigned char *)x->data;
 	unsigned ch = 0;
 	if(*r == '#') {
 		if(r[1] == 'x')
