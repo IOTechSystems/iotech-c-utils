@@ -591,23 +591,22 @@ static void test_data_from_xml (void)
 {
   iot_data_t * xml;
   char * json;
-  const char * test_xml = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n\
-<busmaster xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" busId=\"main_bus\">\n\
-  <deviceService name=\"virtual_device_service\" library=\"libxrt-virtual-device-service.so\" factory=\"xrt_virtual_device_service_factory\" topic=\"virtual_device_service/data\">\n\
-    <device name=\"Random-Integer-Device\" profile=\"Random-Integer-Device\">\n\
-      <resource name=\"RandomValue_Int8\" schedule=\"500000000\" />\n\
-      <protocol name=\"Other\">\n\
-        <protocolAttribute name=\"Address\" value=\"device-virtual-int-01\" />Any old rubbish\n\
-      </protocol>\n\
-    </device>\n\
-  </deviceService>\n\
-  <fubar>Some text!</fubar>\n\
-  <container threads=\"4\">\n\
-    <logging enable=\"true\" filename=\"/dev/null\" />\n\
-  </container>\n\
-</busmaster>";
+  const char * test_xml = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n"
+  "<busmaster xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" busId=\"main_bus\">\n"
+  "  <deviceService name=\"virtual_device_service\" library=\"libxrt-virtual-device-service.so\" factory=\"xrt_virtual_device_service_factory\" topic=\"virtual_device_service/data\">\n"
+  "    <device name=\"Random-Integer-Device\" profile=\"Random-Integer-Device\">\n"
+  "      <resource name=\"RandomValue_Int8\" schedule=\"500000000\" />\n"
+  "      <protocol name=\"Other\">\n"
+  "        <protocolAttribute name=\"Address\" value=\"device-virtual-int-01\" />Any old rubbish\n"
+  "      </protocol>\n"
+  "    </device>\n"
+  "  </deviceService>\n"
+  "  <fubar>Some text!</fubar>\n"
+  "  <container threads=\"4\">\n"
+  "    <logging enable=\"true\" filename=\"/dev/null\" />\n"
+  "  </container>\n"
+  "</busmaster>";
   const char * expected = "{\"attributes\":{\"busId\":\"main_bus\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\"},\"children\":[{\"attributes\":{\"factory\":\"xrt_virtual_device_service_factory\",\"library\":\"libxrt-virtual-device-service.so\",\"name\":\"virtual_device_service\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"},\"name\":\"resource\"},{\"attributes\":{\"name\":\"Other\"},\"children\":[{\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"},\"name\":\"protocolAttribute\"}],\"content\":\"Any old rubbish\\n      \",\"name\":\"protocol\"}],\"content\":\"\\n    \",\"name\":\"device\"}],\"content\":\"\\n  \",\"name\":\"deviceService\"},{\"attributes\":{},\"content\":\"Some text!\",\"name\":\"fubar\"},{\"attributes\":{\"threads\":\"4\"},\"children\":[{\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"},\"name\":\"logging\"}],\"content\":\"\\n  \",\"name\":\"container\"}],\"content\":\"\\n\",\"name\":\"busmaster\"}";
-
 
   xml = iot_data_from_xml (test_xml);
   CU_ASSERT (xml != NULL)
@@ -2781,7 +2780,7 @@ static uint32_t test_get_string_count (iot_data_t * map, const char * str)
   else
   {
     count = iot_data_alloc_ui32 (1u);
-    iot_data_string_map_add (map, str, count);
+    iot_data_string_map_add (map, str, (iot_data_t*) count);
   }
   return (iot_data_ui32 (count));
 }
