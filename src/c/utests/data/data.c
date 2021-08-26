@@ -1720,7 +1720,7 @@ static void test_data_copy_vector_ui8 (void)
 
   while (index < 5)
   {
-    iot_data_vector_add (vector1, index, iot_data_alloc_ui8 (index));
+    iot_data_vector_add (vector1, index, iot_data_alloc_ui8 ((uint8_t) index));
     index++;
   }
 
@@ -2781,7 +2781,7 @@ static uint32_t test_get_string_count (iot_data_t * map, const char * str)
   else
   {
     count = iot_data_alloc_ui32 (1u);
-    iot_data_string_map_add (map, str, (iot_data_t*) count);
+    iot_data_string_map_add (map, str, count);
   }
   return (iot_data_ui32 (count));
 }

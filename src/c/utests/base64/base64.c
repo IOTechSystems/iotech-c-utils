@@ -31,7 +31,7 @@ static void test_rtrip1 (void)
   srandom (7);
   for (unsigned i = 0; i < BASE64_SRC_LEN; i++)
   {
-    input[i] = random() % 256;
+    input[i] = (uint8_t) (random () % 256);
   }
 
   for (size_t size = 1; size <= BASE64_SRC_LEN; size++)
