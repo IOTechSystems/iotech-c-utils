@@ -263,20 +263,20 @@ static inline yxml_ret_t yxml_elemcloseend(yxml_t *x, unsigned ch) {
 
 static inline yxml_ret_t yxml_attrstart  (yxml_t *x, unsigned ch) { return yxml_pushstack(x, &x->attr, ch); }
 static inline yxml_ret_t yxml_attrname   (yxml_t *x, unsigned ch) { return yxml_pushstackc(x, ch); }
-static inline yxml_ret_t yxml_attrnameend(yxml_t *x, unsigned ch) { return YXML_ATTRSTART; }
-static inline yxml_ret_t yxml_attrvalend (yxml_t *x, unsigned ch) { yxml_popstack(x); return YXML_ATTREND; }
+static inline yxml_ret_t yxml_attrnameend (void) { return YXML_ATTRSTART; }
+static inline yxml_ret_t yxml_attrvalend (yxml_t *x) { yxml_popstack(x); return YXML_ATTREND; }
 
 
 static inline yxml_ret_t yxml_pistart  (yxml_t *x, unsigned ch) { return yxml_pushstack(x, &x->pi, ch); }
 static inline yxml_ret_t yxml_piname   (yxml_t *x, unsigned ch) { return yxml_pushstackc(x, ch); }
-static inline yxml_ret_t yxml_piabort  (yxml_t *x, unsigned ch) { yxml_popstack(x); return YXML_OK; }
-static inline yxml_ret_t yxml_pinameend(yxml_t *x, unsigned ch) {
+static inline yxml_ret_t yxml_piabort  (yxml_t *x) { yxml_popstack(x); return YXML_OK; }
+static inline yxml_ret_t yxml_pinameend(yxml_t *x) {
 	return (x->pi[0]|32) == 'x' && (x->pi[1]|32) == 'm' && (x->pi[2]|32) == 'l' && !x->pi[3] ? YXML_ESYN : YXML_PISTART;
 }
-static inline yxml_ret_t yxml_pivalend (yxml_t *x, unsigned ch) { yxml_popstack(x); x->pi = (char *)x->stack; return YXML_PIEND; }
+static inline yxml_ret_t yxml_pivalend (yxml_t *x) { yxml_popstack(x); x->pi = (char *)x->stack; return YXML_PIEND; }
 
 
-static inline yxml_ret_t yxml_refstart(yxml_t *x, unsigned ch) {
+static inline yxml_ret_t yxml_refstart(yxml_t *x) {
 	memset(x->data, 0, sizeof(x->data));
 	x->reflen = 0;
 	return YXML_OK;
@@ -375,11 +375,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_attrname(x, ch);
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_attr1;
-			return yxml_attrnameend(x, ch);
+			return yxml_attrnameend();
 		}
 		if(ch == (unsigned char)'=') {
 			x->state = YXMLS_attr2;
-			return yxml_attrnameend(x, ch);
+			return yxml_attrnameend();
 		}
 		break;
 	case YXMLS_attr1:
@@ -404,11 +404,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_dataattr(x, ch);
 		if(ch == (unsigned char)'&') {
 			x->state = YXMLS_attr4;
-			return yxml_refstart(x, ch);
+			return yxml_refstart(x);
 		}
 		if(x->quote == ch) {
 			x->state = YXMLS_elem2;
-			return yxml_attrvalend(x, ch);
+			return yxml_attrvalend(x);
 		}
 		break;
 	case YXMLS_attr4:
@@ -793,7 +793,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 		}
 		if(ch == (unsigned char)'&') {
 			x->state = YXMLS_misc2a;
-			return yxml_refstart(x, ch);
+			return yxml_refstart(x);
 		}
 		if(yxml_isChar(ch))
 			return yxml_datacontent(x, ch);
@@ -825,11 +825,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_piname(x, ch);
 		if(ch == (unsigned char)'?') {
 			x->state = YXMLS_pi4;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_pi2;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		break;
 	case YXMLS_pi2:
@@ -843,7 +843,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 	case YXMLS_pi3:
 		if(ch == (unsigned char)'>') {
 			x->state = x->nextstate;
-			return yxml_pivalend(x, ch);
+			return yxml_pivalend(x);
 		}
 		if(yxml_isChar(ch)) {
 			x->state = YXMLS_pi2;
@@ -853,7 +853,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 	case YXMLS_pi4:
 		if(ch == (unsigned char)'>') {
 			x->state = x->nextstate;
-			return yxml_pivalend(x, ch);
+			return yxml_pivalend(x);
 		}
 		break;
 	case YXMLS_std0:
@@ -937,11 +937,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 		}
 		if(ch == (unsigned char)'?') {
 			x->state = YXMLS_pi4;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_pi2;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		break;
 	case YXMLS_xmldecl1:
@@ -955,17 +955,17 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 		}
 		if(ch == (unsigned char)'?') {
 			x->state = YXMLS_pi4;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_pi2;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		break;
 	case YXMLS_xmldecl2:
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_xmldecl3;
-			return yxml_piabort(x, ch);
+			return yxml_piabort(x);
 		}
 		if(yxml_isName(ch)) {
 			x->state = YXMLS_pi1;

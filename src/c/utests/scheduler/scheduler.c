@@ -27,6 +27,7 @@ static void reset_counters (void)
 
 static void * do_work1 (void *in)
 {
+  (void) in;
   for (uint32_t i = 0; i < 10; ++i)
   {
     atomic_fetch_add (&sum_work1, 1u);
@@ -36,6 +37,7 @@ static void * do_work1 (void *in)
 
 static void * do_work2 (void *in)
 {
+  (void) in;
   for (uint32_t i = 0; i < 20; ++i)
   {
     atomic_fetch_add (&sum_work2, i);
@@ -45,6 +47,7 @@ static void * do_work2 (void *in)
 
 static void * do_work3 (void *in)
 {
+  (void) in;
   for (int i = 0; i < 30; ++i)
   {
     atomic_fetch_add (&sum_work3, i);
@@ -54,18 +57,21 @@ static void * do_work3 (void *in)
 
 static void * do_work4 (void *in)
 {
+  (void) in;
   atomic_fetch_add (&sum_test, 1u);
   return NULL;
 }
 
 static void * do_work5 (void *in)
 {
+  (void) in;
   atomic_fetch_add (&sum_work5, 1u);
   return NULL;
 }
 
 static void * do_count (void *in)
 {
+  (void) in;
   atomic_fetch_add (&counter, 1u);
   return NULL;
 }
@@ -106,7 +112,7 @@ static void cunit_scheduler_start (void)
   CU_ASSERT (sched1 != NULL)
   iot_schedule_t *sched2 = iot_schedule_create (scheduler, do_work2, NULL, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (sched2 != NULL)
-  iot_schedule_t *sched3 = iot_schedule_create (scheduler, do_work3, NULL, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
+  const iot_schedule_t *sched3 = iot_schedule_create (scheduler, do_work3, NULL, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (sched3 != NULL)
 
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
