@@ -122,8 +122,8 @@ typedef enum {
  * /looks/ inefficient, but gcc compiles it down to a single movb instruction
  * on x86, even with -O0. */
 static inline void yxml_setchar(char *dest, unsigned ch) {
-	unsigned char _ch = ch;
-	memcpy(dest, &_ch, 1);
+	unsigned char _ch = (unsigned char) ch;
+	memcpy (dest, &_ch, 1);
 }
 
 
@@ -201,7 +201,7 @@ static yxml_ret_t yxml_pushstack(yxml_t *x, char **res, unsigned ch) {
 		return YXML_ESTACK;
 	x->stacklen++;
 	*res = (char *)x->stack+x->stacklen;
-	x->stack[x->stacklen] = ch;
+	x->stack[x->stacklen] = (unsigned char) ch;
 	x->stacklen++;
 	x->stack[x->stacklen] = 0;
 	return YXML_OK;
@@ -211,7 +211,7 @@ static yxml_ret_t yxml_pushstack(yxml_t *x, char **res, unsigned ch) {
 static yxml_ret_t yxml_pushstackc(yxml_t *x, unsigned ch) {
 	if(x->stacklen+1 >= x->stacksize)
 		return YXML_ESTACK;
-	x->stack[x->stacklen] = ch;
+	x->stack[x->stacklen] = (unsigned char) ch;
 	x->stacklen++;
 	x->stack[x->stacklen] = 0;
 	return YXML_OK;
@@ -255,7 +255,7 @@ static inline yxml_ret_t yxml_elemclose(yxml_t *x, unsigned ch) {
 }
 
 
-static inline yxml_ret_t yxml_elemcloseend(yxml_t *x, unsigned ch) {
+static inline yxml_ret_t yxml_elemcloseend(yxml_t *x) {
 	if(*x->elem)
 		return YXML_ECLOSE;
 	return yxml_selfclose(x);
@@ -642,11 +642,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_elemclose(x, ch);
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_etag2;
-			return yxml_elemcloseend(x, ch);
+			return yxml_elemcloseend(x);
 		}
 		if(ch == (unsigned char)'>') {
 			x->state = YXMLS_misc2;
-			return yxml_elemcloseend(x, ch);
+			return yxml_elemcloseend(x);
 		}
 		break;
 	case YXMLS_etag2:
@@ -1051,6 +1051,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return YXML_OK;
 		}
 		break;
+	default: break;
 	}
 	return YXML_ESYN;
 }
