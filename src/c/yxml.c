@@ -227,12 +227,13 @@ static void yxml_popstack(yxml_t *x) {
 
 static inline yxml_ret_t yxml_elemstart  (yxml_t *x, unsigned ch) { return yxml_pushstack(x, &x->elem, ch); }
 static inline yxml_ret_t yxml_elemname   (yxml_t *x, unsigned ch) { return yxml_pushstackc(x, ch); }
-static inline yxml_ret_t yxml_elemnameend(yxml_t *x, unsigned ch) { return YXML_ELEMSTART; }
+static inline yxml_ret_t yxml_elemnameend(void) { return YXML_ELEMSTART; }
 
 
 /* Also used in yxml_elemcloseend(), since this function just removes the last
  * element from the stack and returns ELEMEND. */
-static yxml_ret_t yxml_selfclose(yxml_t *x, unsigned ch) {
+static yxml_ret_t yxml_selfclose(yxml_t *x)
+{
 	yxml_popstack(x);
 	if(x->stacklen) {
 		x->elem = (char *)x->stack+x->stacklen-1;
@@ -257,7 +258,7 @@ static inline yxml_ret_t yxml_elemclose(yxml_t *x, unsigned ch) {
 static inline yxml_ret_t yxml_elemcloseend(yxml_t *x, unsigned ch) {
 	if(*x->elem)
 		return YXML_ECLOSE;
-	return yxml_selfclose(x, ch);
+	return yxml_selfclose(x);
 }
 
 
@@ -270,7 +271,7 @@ static inline yxml_ret_t yxml_attrvalend (yxml_t *x) { yxml_popstack(x); return 
 static inline yxml_ret_t yxml_pistart  (yxml_t *x, unsigned ch) { return yxml_pushstack(x, &x->pi, ch); }
 static inline yxml_ret_t yxml_piname   (yxml_t *x, unsigned ch) { return yxml_pushstackc(x, ch); }
 static inline yxml_ret_t yxml_piabort  (yxml_t *x) { yxml_popstack(x); return YXML_OK; }
-static inline yxml_ret_t yxml_pinameend(yxml_t *x) {
+static inline yxml_ret_t yxml_pinameend(const yxml_t *x) {
 	return (x->pi[0]|32) == 'x' && (x->pi[1]|32) == 'm' && (x->pi[2]|32) == 'l' && !x->pi[3] ? YXML_ESYN : YXML_PISTART;
 }
 static inline yxml_ret_t yxml_pivalend (yxml_t *x) { yxml_popstack(x); x->pi = (char *)x->stack; return YXML_PIEND; }
@@ -322,8 +323,8 @@ static yxml_ret_t yxml_refend(yxml_t *x, yxml_ret_t ret) {
 }
 
 
-static inline yxml_ret_t yxml_refcontent(yxml_t *x, unsigned ch) { return yxml_refend(x, YXML_CONTENT); }
-static inline yxml_ret_t yxml_refattrval(yxml_t *x, unsigned ch) { return yxml_refend(x, YXML_ATTRVAL); }
+static inline yxml_ret_t yxml_refcontent(yxml_t *x) { return yxml_refend(x, YXML_CONTENT); }
+static inline yxml_ret_t yxml_refattrval(yxml_t *x) { return yxml_refend(x, YXML_ATTRVAL); }
 
 
 void yxml_init(yxml_t *x, void *stack, size_t stacksize) {
@@ -416,7 +417,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_ref(x, ch);
 		if(ch == (unsigned char)'\x3b') {
 			x->state = YXMLS_attr3;
-			return yxml_refattrval(x, ch);
+			return yxml_refattrval(x);
 		}
 		break;
 	case YXMLS_cd0:
@@ -552,15 +553,15 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_elemname(x, ch);
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_elem1;
-			return yxml_elemnameend(x, ch);
+			return yxml_elemnameend();
 		}
 		if(ch == (unsigned char)'/') {
 			x->state = YXMLS_elem3;
-			return yxml_elemnameend(x, ch);
+			return yxml_elemnameend();
 		}
 		if(ch == (unsigned char)'>') {
 			x->state = YXMLS_misc2;
-			return yxml_elemnameend(x, ch);
+			return yxml_elemnameend();
 		}
 		break;
 	case YXMLS_elem1:
@@ -596,7 +597,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 	case YXMLS_elem3:
 		if(ch == (unsigned char)'>') {
 			x->state = YXMLS_misc2;
-			return yxml_selfclose(x, ch);
+			return yxml_selfclose(x);
 		}
 		break;
 	case YXMLS_enc0:
@@ -803,7 +804,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_ref(x, ch);
 		if(ch == (unsigned char)'\x3b') {
 			x->state = YXMLS_misc2;
-			return yxml_refcontent(x, ch);
+			return yxml_refcontent(x);
 		}
 		break;
 	case YXMLS_misc3:
@@ -1055,7 +1056,8 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 }
 
 
-yxml_ret_t yxml_eof(yxml_t *x) {
+yxml_ret_t yxml_eof (const yxml_t *x)
+{
 	if(x->state != YXMLS_misc3)
 		return YXML_EEOF;
 	return YXML_OK;

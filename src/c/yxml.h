@@ -140,7 +140,7 @@ yxml_ret_t yxml_parse(yxml_t *, int);
  * that don't end correctly. In particular, an error is returned when the XML
  * document did not contain a (complete) root element, or when the document
  * ended while in a comment or processing instruction. */
-yxml_ret_t yxml_eof(yxml_t *);
+yxml_ret_t yxml_eof (const yxml_t *);
 
 #ifdef __cplusplus
 }
