@@ -24,7 +24,7 @@ static int suite_clean (void)
 
 static void test_time_secs (void)
 {
-  volatile uint64_t secs_time;
+  uint64_t secs_time;
   for (int counter = 0; counter < MAX_SECS_COUNTER; counter++)
   {
     secs_time = iot_time_secs ();
@@ -35,7 +35,7 @@ static void test_time_secs (void)
 
 static void test_time_msecs (void)
 {
-  volatile uint64_t msecs_time;
+  uint64_t msecs_time;
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
     msecs_time = iot_time_msecs ();
@@ -46,7 +46,7 @@ static void test_time_msecs (void)
 
 static void test_time_usecs (void)
 {
-  volatile uint64_t usecs_time;
+  uint64_t usecs_time;
   for (int counter = 0; counter < MAX_COUNTER; counter++)
   {
     usecs_time = iot_time_usecs ();
