@@ -20,6 +20,7 @@ void iot_init (void)
 
 void iot_fini (void)
 {
+  // Placeholder for any required global cleanup
 }
 
 #ifdef IOT_HAS_FILE
@@ -27,7 +28,7 @@ void iot_fini (void)
 static char * iot_file_config_path (const char * name, const char * uri)
 {
   assert (name);
-  char *  path = malloc (strlen (name) + ((uri) ? (strlen (uri) + 7) : 6));
+  char *  path = malloc (strlen (name) + (uri ? (strlen (uri) + 7) : 6));
   path[0] = '\0';
   if (uri)
   {

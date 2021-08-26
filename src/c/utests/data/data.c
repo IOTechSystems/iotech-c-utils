@@ -610,11 +610,11 @@ static void test_data_from_xml (void)
 
 
   xml = iot_data_from_xml (test_xml);
-  CU_ASSERT (xml != NULL);
+  CU_ASSERT (xml != NULL)
   json = iot_data_to_json (xml);
-  CU_ASSERT (json != NULL);
+  CU_ASSERT (json != NULL)
   // printf ("XML: %s\n", json);
-  CU_ASSERT (strcmp (json, expected) == 0);
+  CU_ASSERT (strcmp (json, expected) == 0)
   free (json);
   iot_data_free (xml);
 }
@@ -1076,7 +1076,7 @@ static void test_data_equal_null (void)
 
 static void test_data_equal_vector_ui8 (void)
 {
-  uint32_t vector_index = 0;
+  uint8_t vector_index = 0;
   iot_data_t *vector1 = iot_data_alloc_vector (5);
   iot_data_t *vector2 = iot_data_alloc_vector (5);
 
@@ -1100,7 +1100,7 @@ static void test_data_equal_vector_ui8_refcount (void)
 
   while (vector_index < 5)
   {
-    iot_data_t *value = iot_data_alloc_ui8(vector_index);
+    iot_data_t * value = iot_data_alloc_ui8 ((uint8_t) vector_index);
 
     iot_data_vector_add (vector1, vector_index, value);
     iot_data_vector_add (vector2, vector_index, iot_data_add_ref (value));
@@ -1120,8 +1120,8 @@ static void test_data_unequal_vector_ui8 (void)
 
   while (vector_index < 5)
   {
-    iot_data_vector_add (vector1, vector_index, iot_data_alloc_ui8(vector_index));
-    iot_data_vector_add (vector2, vector_index, iot_data_alloc_ui8(vector_index+1));
+    iot_data_vector_add (vector1, vector_index, iot_data_alloc_ui8 ((uint8_t) vector_index));
+    iot_data_vector_add (vector2, vector_index, iot_data_alloc_ui8 ((uint8_t) (vector_index+1)));
 
     vector_index++;
   }
@@ -2751,14 +2751,14 @@ static void test_data_map_perf (void)
 {
   char * keys [10]= { "common_one", "common_two", "common_three", "common_four", "common_five", "common_six", "common_seven", "common_eight", "common_nine", "common_ten" };
   char * lookup_keys [10]= { "common_one", "common_two", "common_three", "common_four", "common_five", "common_six", "common_seven", "common_eight", "common_nine", "common_ten" }; // To avoid key address equality check
-  uint32_t i, j;
+  uint32_t i;
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   for (i = 0; i < 10; i++)
   {
     iot_data_string_map_add (map, keys[i], iot_data_alloc_ui32 (i));
   }
   uint64_t t1 = iot_time_msecs ();
-  for (j = 0; j < 100000; j++)
+  for (uint32_t j = 0; j < 100000; j++)
   {
     for (i = 0; i < 10; i++)
     {

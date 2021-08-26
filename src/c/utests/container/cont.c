@@ -47,7 +47,7 @@ static void test_alloc (void)
 
 static void test_find (void)
 {
-  iot_container_t * found;
+  const iot_container_t * found;
 
   iot_container_t * cont1 = iot_container_alloc ("one");
   iot_container_t * cont2 = iot_container_alloc ("two");
@@ -71,7 +71,7 @@ static void test_add_component (void)
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
-  iot_component_t * comp = iot_container_find_component (cont, "logger");
+  const iot_component_t * comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
 
   iot_container_free (cont);
@@ -79,7 +79,7 @@ static void test_add_component (void)
 
 static void test_delete_component (void)
 {
-  iot_component_t * comp;
+  const iot_component_t * comp;
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
