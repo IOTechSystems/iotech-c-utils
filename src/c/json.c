@@ -58,7 +58,7 @@ static int iot_json_parse_primitive (iot_json_parser * parser, const char *js, s
       case ' ':
       case ',':
       case ']':
-      case '}': goto found;
+      case '}': goto FOUND;
       default: break;
     }
     if (js[parser->pos] < 32 || js[parser->pos] >= 127)
@@ -73,7 +73,7 @@ static int iot_json_parse_primitive (iot_json_parser * parser, const char *js, s
   return JSON_ERROR_PART;
 #endif
 
-found:
+FOUND:
   if (tokens == NULL)
   {
     parser->pos--;
@@ -127,7 +127,6 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
     /* Backslash: Quoted symbol expected */
     if (c == '\\' && parser->pos + 1 < len)
     {
-      int i;
       parser->pos++;
       escaped = true;
       switch (js[parser->pos])
@@ -145,7 +144,7 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
           /* Allows escaped symbol \uXXXX */
         case 'u':
           parser->pos++;
-          for (i = 0; i < 4 && parser->pos < len && js[parser->pos] != '\0'; i++)
+          for (int i = 0; i < 4 && parser->pos < len && js[parser->pos] != '\0'; i++)
           {
             /* If it isn't a hex character we have an error */
             if (!((js[parser->pos] >= 48 && js[parser->pos] <= 57) || /* 0-9 */
@@ -176,7 +175,6 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
 int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_json_tok_t *tokens, uint32_t num_tokens)
 {
   int r;
-  int i;
   iot_json_tok_t *token;
   int32_t count = parser->toknext;
 
@@ -302,7 +300,7 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
 
   if (tokens != NULL)
   {
-    for (i = parser->toknext - 1; i >= 0; i--)
+    for (int i = parser->toknext - 1; i >= 0; i--)
     {
       /* Unmatched opened object or array */
       if (tokens[i].start != -1 && tokens[i].end == -1)

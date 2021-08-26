@@ -310,7 +310,7 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
   free (schedule);
 }
 
-extern uint64_t iot_schedule_dropped (iot_schedule_t * schedule)
+extern uint64_t iot_schedule_dropped (const iot_schedule_t * schedule)
 {
   assert (schedule);
   return atomic_load (&schedule->dropped);

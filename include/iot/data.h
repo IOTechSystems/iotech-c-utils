@@ -922,7 +922,7 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
 
-extern iot_data_t * iot_data_map_iter_replace_value (iot_data_map_iter_t * iter, iot_data_t *value);
+extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t *value);
 
 /**
  * @brief Get Key from the map referenced by an input iterator
@@ -999,7 +999,7 @@ extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
 
-extern iot_data_t * iot_data_vector_iter_replace_value (iot_data_vector_iter_t * iter, iot_data_t *value);
+extern iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t *value);
 
 /**
  * @brief Get the value as string type from the vector at an index referenced by iterator

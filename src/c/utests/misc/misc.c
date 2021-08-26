@@ -114,7 +114,7 @@ static void test_write_file (void)
 {
   const char * str = "Hello";
   bool file_write_ok = iot_file_write (TEST_FILE_NAME, str);
-  CU_ASSERT (file_write_ok);
+  CU_ASSERT (file_write_ok)
 }
 
 static void test_read_file (void)

@@ -208,7 +208,7 @@ extern void iot_scheduler_free (iot_scheduler_t * scheduler);
  * @param  schedule  Pointer to a schedule.
  * @return Number of events dropped
  */
- extern uint64_t iot_schedule_dropped (iot_schedule_t * schedule);
+ extern uint64_t iot_schedule_dropped (const iot_schedule_t * schedule);
 
 /**
  * @brief  Create Scheduler component factory

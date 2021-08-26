@@ -28,39 +28,30 @@ static void usage (void)
 
 int main (int argc, char* argv[])
 {
-  int i;
   bool automated = false;
   bool junit = false;
-  char * results = NULL;
+  const char * results = NULL;
   CU_BasicRunMode mode = CU_BRM_VERBOSE;
   CU_ErrorAction error_action = CUEA_IGNORE;
 
-  for (i = 1; i < argc; i++)
+  for (int i = 1; i < argc; i++)
   {
     if (argv[i][0] == '-')
     {
       switch (argv[i][1])
       {
         case 'a':
-        {
           automated = true;
           break;
-        }
         case 'j':
-        {
           junit = true;
           break;
-        }
         case 'r':
-        {
           results = argv[++i];
           break;
-        }
         default:
-        {
           usage ();
           return -1;
-        }
       }
     }
   }
