@@ -153,7 +153,7 @@ then
 
   if [ "${SONAR}" = "true" ]
   then
-    gcovr --sonarqube --root="${ROOT}" . > "${SONAR_DIR}/sonar.xml"
+    gcovr --exclude-lines-by-pattern='[\s]*assert[\s]*[(]'--sonarqube --root="${ROOT}" . > "${SONAR_DIR}/sonar.xml"
     cd ${ROOT}
     ${SONAR_SCANNER}
     cp .scannerwork/report-task.txt ${SONAR_DIR}
