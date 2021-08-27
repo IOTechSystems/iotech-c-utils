@@ -101,7 +101,7 @@ run_examples ()
   ./scheduler/scheduler
   ./data/data
   ./container/container
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT}/src/c/examples/dynamic
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${1}/examples/dynamic
   ./dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
 }
 
@@ -117,11 +117,11 @@ fi
 if [ "${EXAMPLES}" = "true" ]
 then
   cd ${BROOT}/release/c/examples
-  run_examples
+  run_examples ${BROOT}/release/c
 
   # Run examples made with makefiles.
   cd ${ROOT}/src/c/examples
-  run_examples
+  run_examples ${BROOT}/release/c
 fi
 
 # Coverage
@@ -137,7 +137,7 @@ then
   ${SONAR_WRAPPER} make
 
   cd ${BROOT}/lcov/c/examples
-  run_examples
+  run_examples ${BROOT}/lcov/c
   cd ${BROOT}/lcov
   c/utests/runner/runner -a -j
   c/tests/map/map_test
@@ -153,7 +153,8 @@ then
 
   if [ "${SONAR}" = "true" ]
   then
-    gcovr --exclude-lines-by-pattern='[\s]*assert[\s]*[(]'--sonarqube --root="${ROOT}" . > "${SONAR_DIR}/sonar.xml"
+    GCOVR5_FILTER="--exclude-lines-by-pattern='[\s]*assert[\s]*[(]'"
+    gcovr --sonarqube --root="${ROOT}" . > "${SONAR_DIR}/sonar.xml"
     cat "${SONAR_DIR}/sonar.xml"
     cd ${ROOT}
     ${SONAR_SCANNER}
