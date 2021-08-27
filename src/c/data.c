@@ -7,6 +7,7 @@
 #include "iot/json.h"
 #include "iot/base64.h"
 #include "iot/hash.h"
+#include <stdarg.h>
 
 #ifdef IOT_HAS_UUID
 #include <uuid/uuid.h>
@@ -726,6 +727,23 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
     }
   }
   return (iot_data_t*) data;
+}
+
+iot_data_t *iot_data_alloc_string_fmt (const char *format, ...)
+{
+  size_t n;
+  char *str;
+  va_list args;
+
+  va_start (args, format);
+  n = vsnprintf (NULL, 0, format, args);
+  va_end (args);
+
+  str = malloc (n);
+  va_start (args, format);
+  vsprintf (str, format, args);
+  va_end (args);
+  return iot_data_alloc_string (str, IOT_DATA_TAKE);
 }
 
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)

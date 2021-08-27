@@ -79,3 +79,7 @@
 * `iot_wait_secs`
 * `iot_wait_msecs`
 * `iot_wait_usecs`
+
+- Formatted string allocation added
+
+* `iot_data_alloc_string_fmt`

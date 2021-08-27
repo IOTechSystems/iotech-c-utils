@@ -90,6 +90,11 @@ static void test_data_types (void)
   CU_ASSERT (strcmp (iot_data_type_name (data), "String") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
   iot_data_free (data);
+  data = iot_data_alloc_string_fmt ("Legs: %d", 11);
+  CU_ASSERT (strcmp (iot_data_type_name (data), "String") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
+  CU_ASSERT (strcmp (iot_data_string (data), "Legs: 11") == 0)
+  iot_data_free (data);
   data = iot_data_alloc_array (array, 4, IOT_DATA_UINT8, IOT_DATA_REF);
   CU_ASSERT (strcmp (iot_data_type_name (data), "Array") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_ARRAY)
