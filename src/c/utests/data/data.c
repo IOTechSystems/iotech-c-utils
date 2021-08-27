@@ -125,10 +125,12 @@ static void test_data_array_key (void)
 {
   uint8_t data1 [4] = { 0, 1, 2 ,3 };
   uint8_t data2 [4] = { 0, 1, 2 ,4 };
+  uint8_t data3 [4] = { 4, 3, 2 ,1 };
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_ARRAY);
   CU_ASSERT (iot_data_map_key_type (map) == IOT_DATA_ARRAY)
   iot_data_t * array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_UINT8, IOT_DATA_REF);
   iot_data_t * array2 = iot_data_alloc_array (data2, sizeof (data2), IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_t * array3 = iot_data_alloc_array (data3, sizeof (data3), IOT_DATA_UINT8, IOT_DATA_REF);
   iot_data_t * val = iot_data_alloc_ui32 (66u);
   iot_data_t * duffkey = iot_data_alloc_i32 (55);
   iot_data_map_add (map, array1, val);
@@ -138,7 +140,10 @@ static void test_data_array_key (void)
   CU_ASSERT (ret == NULL)
   ret = iot_data_map_get (map, duffkey);
   CU_ASSERT (ret == NULL)
+  ret = iot_data_map_get (map, array3);
+  CU_ASSERT (ret == NULL)
   iot_data_free (array2);
+  iot_data_free (array3);
   iot_data_free (duffkey);
   iot_data_free (map);
 }
@@ -1484,6 +1489,7 @@ static void test_data_metadata (void)
   data2 = iot_data_alloc_string ("qwertyQWERTY", IOT_DATA_REF);
   CU_ASSERT (data2 != NULL)
 
+  iot_data_set_metadata (data1, data2);
   iot_data_set_metadata (data1, data2);
   metadata1 = iot_data_get_metadata (data1);
 
