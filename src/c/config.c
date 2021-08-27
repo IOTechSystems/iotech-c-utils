@@ -28,6 +28,21 @@ bool iot_config_i64 (const iot_data_t * map, const char * key, int64_t * val, io
   return (data != NULL);
 }
 
+bool iot_config_i32 (const iot_data_t * map, const char * key, int32_t * val, iot_logger_t * logger)
+{
+  int64_t val64;
+  if (iot_config_i64 (map, key, &val64, logger))
+  {
+    if (val64 <= INT32_MAX)
+    {
+      *val = (int32_t) val64;
+      return true;
+    }
+    iot_log_error (logger, "Invalid int32 configuration value for: %s", key);
+  }
+  return false;
+}
+
 bool iot_config_bool (const iot_data_t * map, const char * key, bool * val, iot_logger_t * logger)
 {
   assert (val);
