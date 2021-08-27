@@ -802,7 +802,6 @@ iot_data_t * iot_data_alloc_array_from_base64 (const char * value)
   {
     free (data);
   }
-
   return result;
 }
 
@@ -1944,7 +1943,7 @@ static inline iot_node_t * iot_node_uncle (const iot_node_t * node)
   return gp ? ((node->parent == gp->left) ? gp->right : gp->left) : NULL;
 }
 
-static inline iot_node_t * iot_node_sibling (iot_node_t * node)
+static inline iot_node_t * iot_node_sibling (const iot_node_t * node)
 {
   return IS_LEFT (node) ? node->parent->right : node->parent->left;
 }
@@ -2123,7 +2122,7 @@ static void iot_node_remove_balance (iot_data_map_t * map, iot_node_t * x)
   x->colour = IOT_NODE_BLACK;
 }
 
-static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key)
+static inline iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key)
 {
   while (node)
   {
