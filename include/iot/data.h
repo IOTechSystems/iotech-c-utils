@@ -348,6 +348,19 @@ extern iot_data_t * iot_data_alloc_uuid (void);
 extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership);
 
 /**
+ * @brief Allocate memory for a formatted string
+ *
+ * The function to allocate data for a formatted string
+ *
+ * @param format  String with formatting directives
+ * @param ...     Arguments for formatting directives
+ *
+ * @return        Pointer to the allocated memory
+ */
+
+extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
+
+/**
  * @brief Allocate data for a pointer, with associated free function
  *
  * The function to allocate data for a pointer
