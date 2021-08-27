@@ -155,7 +155,6 @@ then
   then
     GCOVR5_FILTER="--exclude-lines-by-pattern='[\s]*assert[\s]*[(]'"
     gcovr --sonarqube --root="${ROOT}" . > "${SONAR_DIR}/sonar.xml"
-    cat "${SONAR_DIR}/sonar.xml"
     cd ${ROOT}
     ${SONAR_SCANNER}
     cp .scannerwork/report-task.txt ${SONAR_DIR}
