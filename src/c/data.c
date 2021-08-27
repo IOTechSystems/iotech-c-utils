@@ -731,12 +731,12 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
 
 iot_data_t *iot_data_alloc_string_fmt (const char *format, ...)
 {
-  size_t n;
+  size_t n = 1;
   char *str;
   va_list args;
 
   va_start (args, format);
-  n = vsnprintf (NULL, 0, format, args);
+  n += vsnprintf (NULL, 0, format, args);
   va_end (args);
 
   str = malloc (n);
