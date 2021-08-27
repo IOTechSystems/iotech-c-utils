@@ -784,7 +784,6 @@ iot_data_t * iot_data_alloc_array_from_base64 (const char * value)
   {
     free (data);
   }
-
   return result;
 }
 
@@ -1926,7 +1925,7 @@ static inline iot_node_t * iot_node_uncle (const iot_node_t * node)
   return gp ? ((node->parent == gp->left) ? gp->right : gp->left) : NULL;
 }
 
-static inline iot_node_t * iot_node_sibling (iot_node_t * node)
+static inline iot_node_t * iot_node_sibling (const iot_node_t * node)
 {
   return IS_LEFT (node) ? node->parent->right : node->parent->left;
 }
