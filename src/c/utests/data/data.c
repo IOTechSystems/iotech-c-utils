@@ -517,7 +517,8 @@ static void test_data_from_json (void)
   bool bval = false;
   const char * sval = NULL;
   double dval = 1.0;
-  int64_t ival = 0;
+  int64_t ival64 = 0;
+  int32_t ival32 = 0;
   bool found;
   const iot_data_t * data;
 
@@ -559,11 +560,14 @@ static void test_data_from_json (void)
   found = iot_config_f64 (map, "B", &dval, NULL);
   CU_ASSERT (! found)
 
-  found = iot_config_i64 (map, "Interval", &ival, NULL);
+  found = iot_config_i64 (map, "Interval", &ival64, NULL);
   CU_ASSERT (found)
-  CU_ASSERT (ival == 100000)
-  found = iot_config_i64 (map, "Int", &ival, NULL);
+  CU_ASSERT (ival64 == 100000)
+  found = iot_config_i64 (map, "Int", &ival64, NULL);
   CU_ASSERT (! found)
+  found = iot_config_i32 (map, "Interval", &ival32, NULL);
+  CU_ASSERT (found)
+  CU_ASSERT (ival32 == 100000)
 
   dval = 7.7;
   dval = iot_data_string_map_get_f64 (map, "DB", 1.0);
