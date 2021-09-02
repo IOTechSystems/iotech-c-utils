@@ -606,6 +606,16 @@ extern bool iot_data_bool (const iot_data_t * data);
 extern const char * iot_data_string (const iot_data_t * data);
 
 /**
+ * @brief Get value pointer stored in data
+ *
+ * The function to get the pointer value stored in data
+ *
+ * @param data  Data pointer to retrieve value
+ * @return      Returned pointer or NULL if date not of type POINTER
+ */
+extern const void * iot_data_pointer (const iot_data_t * data);
+
+/**
  * @brief Add key-value pair to a map
  *
  * The function to add a key-value pair to a map
