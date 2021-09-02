@@ -20,6 +20,7 @@ void iot_init (void)
 
 void iot_fini (void)
 {
+  // Placeholder for any required global cleanup
 }
 
 #ifdef IOT_HAS_FILE
@@ -27,7 +28,7 @@ void iot_fini (void)
 static char * iot_file_config_path (const char * name, const char * uri)
 {
   assert (name);
-  char *  path = malloc (strlen (name) + ((uri) ? (strlen (uri) + 7) : 6));
+  char *  path = malloc (strlen (name) + (uri ? (strlen (uri) + 7) : 6));
   path[0] = '\0';
   if (uri)
   {
@@ -57,11 +58,13 @@ bool iot_file_config_saver (const char * name, const char * uri, const char * co
 
 char * iot_file_read (const char * path)
 {
+  assert (path);
   return (char*) iot_file_read_binary (path, NULL);
 }
 
 extern bool iot_file_write (const char * path, const char * str)
 {
+  assert (path && str);
   return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
 

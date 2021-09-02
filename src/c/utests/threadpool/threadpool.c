@@ -7,6 +7,7 @@
 
 #include "threadpool.h"
 #include "iot/thread.h"
+#include "iot/time.h"
 #include "CUnit.h"
 
 static int prio_min = -1;
@@ -36,7 +37,7 @@ static int suite_clean (void)
 static void * cunit_pool_sleeper (void * arg)
 {
   (void) arg;
-  usleep (1000000);
+  iot_wait_secs (1u);
   return NULL;
 }
 
@@ -53,7 +54,7 @@ static void * cunit_pool_sole_counter (void * arg)
   (void) arg;
   counter++;
   if (counter > counter_max) counter_max = counter;
-  usleep (500000);
+  iot_wait_msecs (500u);
   CU_ASSERT (counter == 1)
   counter--;
   return NULL;
@@ -112,7 +113,7 @@ static void cunit_threadpool_try_work (void)
   iot_threadpool_start (pool);
   iot_threadpool_add_work (pool, cunit_pool_blocker, &mutex, IOT_THREAD_NO_PRIORITY);
   iot_threadpool_add_work (pool, cunit_pool_blocker, &mutex, IOT_THREAD_NO_PRIORITY);
-  usleep (100000);
+  iot_wait_msecs (100u);
   ret = iot_threadpool_try_work (pool, cunit_pool_blocker, &mutex, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (ret)
   ret = iot_threadpool_try_work (pool, cunit_pool_blocker, &mutex, IOT_THREAD_NO_PRIORITY);
@@ -149,7 +150,7 @@ static void cunit_threadpool_stop_start (void)
   CU_ASSERT (counter == 2)
   iot_threadpool_stop (pool);
   iot_threadpool_add_work (pool, cunit_pool_counter, NULL, IOT_THREAD_NO_PRIORITY);
-  usleep (500000);
+  iot_wait_msecs (500u);
   CU_ASSERT (counter == 2)
   iot_threadpool_start (pool);
   iot_threadpool_wait (pool);
@@ -163,7 +164,7 @@ static void cunit_threadpool_refcount (void)
   iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_threadpool_add_ref (pool);
   iot_threadpool_free (pool);
-  usleep (500000);
+  iot_wait_msecs (500u);
   iot_threadpool_free (pool);
   iot_threadpool_free (NULL);
 }

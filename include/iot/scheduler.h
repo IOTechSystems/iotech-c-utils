@@ -103,7 +103,7 @@ extern void iot_scheduler_start (iot_scheduler_t * scheduler);
  * @param  free_func          The function to free the arg parameter when scheduler is deleted, could be NULL
  * @param  arg                The argument to be passed to the function
  * @param  period             The period of the schedule (in nanoseconds)
- * @param  start              The start time of the schedule (in nanoseconds)
+ * @param  start              The time to wait until the schedule is first triggered (in nanoseconds)
  * @param  repeat             The number of times the schedule should repeat, (0 = infinite)
  * @param  pool               The thread pool used to run the schedule
  * @param  priority           The thread priority for running the schedule, (not set if -1)
@@ -208,7 +208,7 @@ extern void iot_scheduler_free (iot_scheduler_t * scheduler);
  * @param  schedule  Pointer to a schedule.
  * @return Number of events dropped
  */
- extern uint64_t iot_schedule_dropped (iot_schedule_t * schedule);
+ extern uint64_t iot_schedule_dropped (const iot_schedule_t * schedule);
 
 /**
  * @brief  Create Scheduler component factory

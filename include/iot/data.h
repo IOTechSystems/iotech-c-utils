@@ -64,8 +64,8 @@ typedef struct iot_typecode_t iot_typecode_t;
  */
 typedef struct iot_data_map_iter_t
 {
-  struct iot_data_map_t * map;   /**< Pointer to data map structure */
-  struct iot_node_t * node;      /**< Pointer to data node structure */
+  const struct iot_data_map_t * map;   /**< Pointer to data map structure */
+  struct iot_node_t * node;            /**< Pointer to data node structure */
 } iot_data_map_iter_t;
 
 /**
@@ -73,8 +73,8 @@ typedef struct iot_data_map_iter_t
  */
 typedef struct iot_data_vector_iter_t
 {
-  struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
-  uint32_t index;                     /**< Index of the given vector */
+  const struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
+  uint32_t index;                           /**< Index of the given vector */
 } iot_data_vector_iter_t;
 
 /**
@@ -82,8 +82,8 @@ typedef struct iot_data_vector_iter_t
  */
 typedef struct iot_data_array_iter_t
 {
-  struct iot_data_array_t * array;  /**< Pointer to data array structure */
-  uint32_t index;                   /**< Index of the given data array */
+  const struct iot_data_array_t * array;  /**< Pointer to data array structure */
+  uint32_t index;                         /**< Index of the given data array */
 } iot_data_array_iter_t;
 
 /** Type for data comparison function pointer */
@@ -346,6 +346,19 @@ extern iot_data_t * iot_data_alloc_uuid (void);
  * @return           Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership);
+
+/**
+ * @brief Allocate memory for a formatted string
+ *
+ * The function to allocate data for a formatted string
+ *
+ * @param format  String with formatting directives
+ * @param ...     Arguments for formatting directives
+ *
+ * @return        Pointer to the allocated memory
+ */
+
+extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
 
 /**
  * @brief Allocate data for a pointer, with associated free function
@@ -791,7 +804,7 @@ extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t
  * @param key  Input key
  * @return     'true' on Success, 'false' on Failure
  */
-extern bool iot_data_map_base64_to_array (iot_data_t * map, const iot_data_t * key);
+extern bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data_t * key);
 
 /**
  * @brief Add an element to an vector at index
@@ -932,7 +945,7 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
 
-extern iot_data_t * iot_data_map_iter_replace_value (iot_data_map_iter_t * iter, iot_data_t *value);
+extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t *value);
 
 /**
  * @brief Get Key from the map referenced by an input iterator
@@ -1009,7 +1022,7 @@ extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
 
-extern iot_data_t * iot_data_vector_iter_replace_value (iot_data_vector_iter_t * iter, iot_data_t *value);
+extern iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t *value);
 
 /**
  * @brief Get the value as string type from the vector at an index referenced by iterator
@@ -1083,9 +1096,9 @@ extern iot_data_t * iot_data_from_json (const char * json);
  * consists of the JSON object keys in the order in which they appear in
  * the JSON. See also iot_data_to_json.
  *
- * @param  json  Input json string
- * @parm ordered Whether returned map is ordered by position in json
- * @return       Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ * @param json    Input json string
+ * @param ordered Whether returned map is ordered by position in json
+ * @return        Pointer to data of type iot_data if input string is a json object, NULL otherwise
  */
 extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered);
 

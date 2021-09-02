@@ -122,8 +122,8 @@ typedef enum {
  * /looks/ inefficient, but gcc compiles it down to a single movb instruction
  * on x86, even with -O0. */
 static inline void yxml_setchar(char *dest, unsigned ch) {
-	unsigned char _ch = ch;
-	memcpy(dest, &_ch, 1);
+	unsigned char _ch = (unsigned char) ch;
+	memcpy (dest, &_ch, 1);
 }
 
 
@@ -201,7 +201,7 @@ static yxml_ret_t yxml_pushstack(yxml_t *x, char **res, unsigned ch) {
 		return YXML_ESTACK;
 	x->stacklen++;
 	*res = (char *)x->stack+x->stacklen;
-	x->stack[x->stacklen] = ch;
+	x->stack[x->stacklen] = (unsigned char) ch;
 	x->stacklen++;
 	x->stack[x->stacklen] = 0;
 	return YXML_OK;
@@ -211,7 +211,7 @@ static yxml_ret_t yxml_pushstack(yxml_t *x, char **res, unsigned ch) {
 static yxml_ret_t yxml_pushstackc(yxml_t *x, unsigned ch) {
 	if(x->stacklen+1 >= x->stacksize)
 		return YXML_ESTACK;
-	x->stack[x->stacklen] = ch;
+	x->stack[x->stacklen] = (unsigned char) ch;
 	x->stacklen++;
 	x->stack[x->stacklen] = 0;
 	return YXML_OK;
@@ -227,12 +227,13 @@ static void yxml_popstack(yxml_t *x) {
 
 static inline yxml_ret_t yxml_elemstart  (yxml_t *x, unsigned ch) { return yxml_pushstack(x, &x->elem, ch); }
 static inline yxml_ret_t yxml_elemname   (yxml_t *x, unsigned ch) { return yxml_pushstackc(x, ch); }
-static inline yxml_ret_t yxml_elemnameend(yxml_t *x, unsigned ch) { return YXML_ELEMSTART; }
+static inline yxml_ret_t yxml_elemnameend(void) { return YXML_ELEMSTART; }
 
 
 /* Also used in yxml_elemcloseend(), since this function just removes the last
  * element from the stack and returns ELEMEND. */
-static yxml_ret_t yxml_selfclose(yxml_t *x, unsigned ch) {
+static yxml_ret_t yxml_selfclose(yxml_t *x)
+{
 	yxml_popstack(x);
 	if(x->stacklen) {
 		x->elem = (char *)x->stack+x->stacklen-1;
@@ -254,29 +255,29 @@ static inline yxml_ret_t yxml_elemclose(yxml_t *x, unsigned ch) {
 }
 
 
-static inline yxml_ret_t yxml_elemcloseend(yxml_t *x, unsigned ch) {
+static inline yxml_ret_t yxml_elemcloseend(yxml_t *x) {
 	if(*x->elem)
 		return YXML_ECLOSE;
-	return yxml_selfclose(x, ch);
+	return yxml_selfclose(x);
 }
 
 
 static inline yxml_ret_t yxml_attrstart  (yxml_t *x, unsigned ch) { return yxml_pushstack(x, &x->attr, ch); }
 static inline yxml_ret_t yxml_attrname   (yxml_t *x, unsigned ch) { return yxml_pushstackc(x, ch); }
-static inline yxml_ret_t yxml_attrnameend(yxml_t *x, unsigned ch) { return YXML_ATTRSTART; }
-static inline yxml_ret_t yxml_attrvalend (yxml_t *x, unsigned ch) { yxml_popstack(x); return YXML_ATTREND; }
+static inline yxml_ret_t yxml_attrnameend (void) { return YXML_ATTRSTART; }
+static inline yxml_ret_t yxml_attrvalend (yxml_t *x) { yxml_popstack(x); return YXML_ATTREND; }
 
 
 static inline yxml_ret_t yxml_pistart  (yxml_t *x, unsigned ch) { return yxml_pushstack(x, &x->pi, ch); }
 static inline yxml_ret_t yxml_piname   (yxml_t *x, unsigned ch) { return yxml_pushstackc(x, ch); }
-static inline yxml_ret_t yxml_piabort  (yxml_t *x, unsigned ch) { yxml_popstack(x); return YXML_OK; }
-static inline yxml_ret_t yxml_pinameend(yxml_t *x, unsigned ch) {
+static inline yxml_ret_t yxml_piabort  (yxml_t *x) { yxml_popstack(x); return YXML_OK; }
+static inline yxml_ret_t yxml_pinameend(const yxml_t *x) {
 	return (x->pi[0]|32) == 'x' && (x->pi[1]|32) == 'm' && (x->pi[2]|32) == 'l' && !x->pi[3] ? YXML_ESYN : YXML_PISTART;
 }
-static inline yxml_ret_t yxml_pivalend (yxml_t *x, unsigned ch) { yxml_popstack(x); x->pi = (char *)x->stack; return YXML_PIEND; }
+static inline yxml_ret_t yxml_pivalend (yxml_t *x) { yxml_popstack(x); x->pi = (char *)x->stack; return YXML_PIEND; }
 
 
-static inline yxml_ret_t yxml_refstart(yxml_t *x, unsigned ch) {
+static inline yxml_ret_t yxml_refstart(yxml_t *x) {
 	memset(x->data, 0, sizeof(x->data));
 	x->reflen = 0;
 	return YXML_OK;
@@ -293,7 +294,7 @@ static yxml_ret_t yxml_ref(yxml_t *x, unsigned ch) {
 
 
 static yxml_ret_t yxml_refend(yxml_t *x, yxml_ret_t ret) {
-	unsigned char *r = (unsigned char *)x->data;
+	const unsigned char *r = (const unsigned char *)x->data;
 	unsigned ch = 0;
 	if(*r == '#') {
 		if(r[1] == 'x')
@@ -322,8 +323,8 @@ static yxml_ret_t yxml_refend(yxml_t *x, yxml_ret_t ret) {
 }
 
 
-static inline yxml_ret_t yxml_refcontent(yxml_t *x, unsigned ch) { return yxml_refend(x, YXML_CONTENT); }
-static inline yxml_ret_t yxml_refattrval(yxml_t *x, unsigned ch) { return yxml_refend(x, YXML_ATTRVAL); }
+static inline yxml_ret_t yxml_refcontent(yxml_t *x) { return yxml_refend(x, YXML_CONTENT); }
+static inline yxml_ret_t yxml_refattrval(yxml_t *x) { return yxml_refend(x, YXML_ATTRVAL); }
 
 
 void yxml_init(yxml_t *x, void *stack, size_t stacksize) {
@@ -375,11 +376,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_attrname(x, ch);
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_attr1;
-			return yxml_attrnameend(x, ch);
+			return yxml_attrnameend();
 		}
 		if(ch == (unsigned char)'=') {
 			x->state = YXMLS_attr2;
-			return yxml_attrnameend(x, ch);
+			return yxml_attrnameend();
 		}
 		break;
 	case YXMLS_attr1:
@@ -404,11 +405,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_dataattr(x, ch);
 		if(ch == (unsigned char)'&') {
 			x->state = YXMLS_attr4;
-			return yxml_refstart(x, ch);
+			return yxml_refstart(x);
 		}
 		if(x->quote == ch) {
 			x->state = YXMLS_elem2;
-			return yxml_attrvalend(x, ch);
+			return yxml_attrvalend(x);
 		}
 		break;
 	case YXMLS_attr4:
@@ -416,7 +417,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_ref(x, ch);
 		if(ch == (unsigned char)'\x3b') {
 			x->state = YXMLS_attr3;
-			return yxml_refattrval(x, ch);
+			return yxml_refattrval(x);
 		}
 		break;
 	case YXMLS_cd0:
@@ -552,15 +553,15 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_elemname(x, ch);
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_elem1;
-			return yxml_elemnameend(x, ch);
+			return yxml_elemnameend();
 		}
 		if(ch == (unsigned char)'/') {
 			x->state = YXMLS_elem3;
-			return yxml_elemnameend(x, ch);
+			return yxml_elemnameend();
 		}
 		if(ch == (unsigned char)'>') {
 			x->state = YXMLS_misc2;
-			return yxml_elemnameend(x, ch);
+			return yxml_elemnameend();
 		}
 		break;
 	case YXMLS_elem1:
@@ -596,7 +597,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 	case YXMLS_elem3:
 		if(ch == (unsigned char)'>') {
 			x->state = YXMLS_misc2;
-			return yxml_selfclose(x, ch);
+			return yxml_selfclose(x);
 		}
 		break;
 	case YXMLS_enc0:
@@ -641,11 +642,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_elemclose(x, ch);
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_etag2;
-			return yxml_elemcloseend(x, ch);
+			return yxml_elemcloseend(x);
 		}
 		if(ch == (unsigned char)'>') {
 			x->state = YXMLS_misc2;
-			return yxml_elemcloseend(x, ch);
+			return yxml_elemcloseend(x);
 		}
 		break;
 	case YXMLS_etag2:
@@ -793,7 +794,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 		}
 		if(ch == (unsigned char)'&') {
 			x->state = YXMLS_misc2a;
-			return yxml_refstart(x, ch);
+			return yxml_refstart(x);
 		}
 		if(yxml_isChar(ch))
 			return yxml_datacontent(x, ch);
@@ -803,7 +804,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_ref(x, ch);
 		if(ch == (unsigned char)'\x3b') {
 			x->state = YXMLS_misc2;
-			return yxml_refcontent(x, ch);
+			return yxml_refcontent(x);
 		}
 		break;
 	case YXMLS_misc3:
@@ -825,11 +826,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return yxml_piname(x, ch);
 		if(ch == (unsigned char)'?') {
 			x->state = YXMLS_pi4;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_pi2;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		break;
 	case YXMLS_pi2:
@@ -843,7 +844,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 	case YXMLS_pi3:
 		if(ch == (unsigned char)'>') {
 			x->state = x->nextstate;
-			return yxml_pivalend(x, ch);
+			return yxml_pivalend(x);
 		}
 		if(yxml_isChar(ch)) {
 			x->state = YXMLS_pi2;
@@ -853,7 +854,7 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 	case YXMLS_pi4:
 		if(ch == (unsigned char)'>') {
 			x->state = x->nextstate;
-			return yxml_pivalend(x, ch);
+			return yxml_pivalend(x);
 		}
 		break;
 	case YXMLS_std0:
@@ -937,11 +938,11 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 		}
 		if(ch == (unsigned char)'?') {
 			x->state = YXMLS_pi4;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_pi2;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		break;
 	case YXMLS_xmldecl1:
@@ -955,17 +956,17 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 		}
 		if(ch == (unsigned char)'?') {
 			x->state = YXMLS_pi4;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_pi2;
-			return yxml_pinameend(x, ch);
+			return yxml_pinameend(x);
 		}
 		break;
 	case YXMLS_xmldecl2:
 		if(yxml_isSP(ch)) {
 			x->state = YXMLS_xmldecl3;
-			return yxml_piabort(x, ch);
+			return yxml_piabort(x);
 		}
 		if(yxml_isName(ch)) {
 			x->state = YXMLS_pi1;
@@ -1050,12 +1051,14 @@ yxml_ret_t yxml_parse(yxml_t *x, int _ch) {
 			return YXML_OK;
 		}
 		break;
+	default: break;
 	}
 	return YXML_ESYN;
 }
 
 
-yxml_ret_t yxml_eof(yxml_t *x) {
+yxml_ret_t yxml_eof (const yxml_t *x)
+{
 	if(x->state != YXMLS_misc3)
 		return YXML_EEOF;
 	return YXML_OK;

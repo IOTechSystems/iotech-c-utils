@@ -90,6 +90,11 @@ static void test_data_types (void)
   CU_ASSERT (strcmp (iot_data_type_name (data), "String") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
   iot_data_free (data);
+  data = iot_data_alloc_string_fmt ("Legs: %d", 11);
+  CU_ASSERT (strcmp (iot_data_type_name (data), "String") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
+  CU_ASSERT (strcmp (iot_data_string (data), "Legs: 11") == 0)
+  iot_data_free (data);
   data = iot_data_alloc_array (array, 4, IOT_DATA_UINT8, IOT_DATA_REF);
   CU_ASSERT (strcmp (iot_data_type_name (data), "Array") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_ARRAY)
@@ -125,10 +130,12 @@ static void test_data_array_key (void)
 {
   uint8_t data1 [4] = { 0, 1, 2 ,3 };
   uint8_t data2 [4] = { 0, 1, 2 ,4 };
+  uint8_t data3 [4] = { 4, 3, 2 ,1 };
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_ARRAY);
   CU_ASSERT (iot_data_map_key_type (map) == IOT_DATA_ARRAY)
   iot_data_t * array1 = iot_data_alloc_array (data1, sizeof (data1), IOT_DATA_UINT8, IOT_DATA_REF);
   iot_data_t * array2 = iot_data_alloc_array (data2, sizeof (data2), IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_t * array3 = iot_data_alloc_array (data3, sizeof (data3), IOT_DATA_UINT8, IOT_DATA_REF);
   iot_data_t * val = iot_data_alloc_ui32 (66u);
   iot_data_t * duffkey = iot_data_alloc_i32 (55);
   iot_data_map_add (map, array1, val);
@@ -138,7 +145,10 @@ static void test_data_array_key (void)
   CU_ASSERT (ret == NULL)
   ret = iot_data_map_get (map, duffkey);
   CU_ASSERT (ret == NULL)
+  ret = iot_data_map_get (map, array3);
+  CU_ASSERT (ret == NULL)
   iot_data_free (array2);
+  iot_data_free (array3);
   iot_data_free (duffkey);
   iot_data_free (map);
 }
@@ -507,7 +517,8 @@ static void test_data_from_json (void)
   bool bval = false;
   const char * sval = NULL;
   double dval = 1.0;
-  int64_t ival = 0;
+  int64_t ival64 = 0;
+  int32_t ival32 = 0;
   bool found;
   const iot_data_t * data;
 
@@ -549,11 +560,14 @@ static void test_data_from_json (void)
   found = iot_config_f64 (map, "B", &dval, NULL);
   CU_ASSERT (! found)
 
-  found = iot_config_i64 (map, "Interval", &ival, NULL);
+  found = iot_config_i64 (map, "Interval", &ival64, NULL);
   CU_ASSERT (found)
-  CU_ASSERT (ival == 100000)
-  found = iot_config_i64 (map, "Int", &ival, NULL);
+  CU_ASSERT (ival64 == 100000)
+  found = iot_config_i64 (map, "Int", &ival64, NULL);
   CU_ASSERT (! found)
+  found = iot_config_i32 (map, "Interval", &ival32, NULL);
+  CU_ASSERT (found)
+  CU_ASSERT (ival32 == 100000)
 
   dval = 7.7;
   dval = iot_data_string_map_get_f64 (map, "DB", 1.0);
@@ -591,30 +605,29 @@ static void test_data_from_xml (void)
 {
   iot_data_t * xml;
   char * json;
-  const char * test_xml = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n\
-<busmaster xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" busId=\"main_bus\">\n\
-  <deviceService name=\"virtual_device_service\" library=\"libxrt-virtual-device-service.so\" factory=\"xrt_virtual_device_service_factory\" topic=\"virtual_device_service/data\">\n\
-    <device name=\"Random-Integer-Device\" profile=\"Random-Integer-Device\">\n\
-      <resource name=\"RandomValue_Int8\" schedule=\"500000000\" />\n\
-      <protocol name=\"Other\">\n\
-        <protocolAttribute name=\"Address\" value=\"device-virtual-int-01\" />Any old rubbish\n\
-      </protocol>\n\
-    </device>\n\
-  </deviceService>\n\
-  <fubar>Some text!</fubar>\n\
-  <container threads=\"4\">\n\
-    <logging enable=\"true\" filename=\"/dev/null\" />\n\
-  </container>\n\
-</busmaster>";
+  const char * test_xml = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n"
+  "<busmaster xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" busId=\"main_bus\">\n"
+  "  <deviceService name=\"virtual_device_service\" library=\"libxrt-virtual-device-service.so\" factory=\"xrt_virtual_device_service_factory\" topic=\"virtual_device_service/data\">\n"
+  "    <device name=\"Random-Integer-Device\" profile=\"Random-Integer-Device\">\n"
+  "      <resource name=\"RandomValue_Int8\" schedule=\"500000000\" />\n"
+  "      <protocol name=\"Other\">\n"
+  "        <protocolAttribute name=\"Address\" value=\"device-virtual-int-01\" />Any old rubbish\n"
+  "      </protocol>\n"
+  "    </device>\n"
+  "  </deviceService>\n"
+  "  <fubar>Some text!</fubar>\n"
+  "  <container threads=\"4\">\n"
+  "    <logging enable=\"true\" filename=\"/dev/null\" />\n"
+  "  </container>\n"
+  "</busmaster>";
   const char * expected = "{\"attributes\":{\"busId\":\"main_bus\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\"},\"children\":[{\"attributes\":{\"factory\":\"xrt_virtual_device_service_factory\",\"library\":\"libxrt-virtual-device-service.so\",\"name\":\"virtual_device_service\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"},\"name\":\"resource\"},{\"attributes\":{\"name\":\"Other\"},\"children\":[{\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"},\"name\":\"protocolAttribute\"}],\"content\":\"Any old rubbish\\n      \",\"name\":\"protocol\"}],\"content\":\"\\n    \",\"name\":\"device\"}],\"content\":\"\\n  \",\"name\":\"deviceService\"},{\"attributes\":{},\"content\":\"Some text!\",\"name\":\"fubar\"},{\"attributes\":{\"threads\":\"4\"},\"children\":[{\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"},\"name\":\"logging\"}],\"content\":\"\\n  \",\"name\":\"container\"}],\"content\":\"\\n\",\"name\":\"busmaster\"}";
 
-
   xml = iot_data_from_xml (test_xml);
-  CU_ASSERT (xml != NULL);
+  CU_ASSERT (xml != NULL)
   json = iot_data_to_json (xml);
-  CU_ASSERT (json != NULL);
+  CU_ASSERT (json != NULL)
   // printf ("XML: %s\n", json);
-  CU_ASSERT (strcmp (json, expected) == 0);
+  CU_ASSERT (strcmp (json, expected) == 0)
   free (json);
   iot_data_free (xml);
 }
@@ -756,6 +769,11 @@ static void test_data_from_string (void)
   CU_ASSERT (iot_data_f64 (data) < 0.4000001 && iot_data_f64 (data) > 0.3999999)
   iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_BOOL, "true");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
+  CU_ASSERT (iot_data_bool (data))
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "True");
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
   CU_ASSERT (iot_data_bool (data))
@@ -932,6 +950,9 @@ static void test_data_increment (void)
   iot_data_increment (data);
   CU_ASSERT (iot_data_f64 (data) == 2.0)
   iot_data_free (data);
+  data = iot_data_alloc_vector (0);
+  iot_data_increment (data);
+  iot_data_free (data);
 }
 
 static void test_data_decrement (void)
@@ -1076,9 +1097,11 @@ static void test_data_equal_null (void)
 
 static void test_data_equal_vector_ui8 (void)
 {
-  uint32_t vector_index = 0;
+  uint8_t vector_index = 0;
   iot_data_t *vector1 = iot_data_alloc_vector (5);
   iot_data_t *vector2 = iot_data_alloc_vector (5);
+  iot_data_t *vector3 = iot_data_alloc_vector (1);
+
 
   while (vector_index < 5)
   {
@@ -1086,10 +1109,13 @@ static void test_data_equal_vector_ui8 (void)
     iot_data_vector_add (vector2, vector_index, iot_data_alloc_ui8 (vector_index));
     vector_index++;
   }
+  iot_data_vector_add (vector3, 0, iot_data_alloc_ui8 (0));
 
   CU_ASSERT (iot_data_equal (vector1, vector2))
+  CU_ASSERT (! iot_data_equal (vector1, vector3))
   iot_data_free (vector1);
   iot_data_free (vector2);
+  iot_data_free (vector3);
 }
 
 static void test_data_equal_vector_ui8_refcount (void)
@@ -1100,7 +1126,7 @@ static void test_data_equal_vector_ui8_refcount (void)
 
   while (vector_index < 5)
   {
-    iot_data_t *value = iot_data_alloc_ui8(vector_index);
+    iot_data_t * value = iot_data_alloc_ui8 ((uint8_t) vector_index);
 
     iot_data_vector_add (vector1, vector_index, value);
     iot_data_vector_add (vector2, vector_index, iot_data_add_ref (value));
@@ -1120,8 +1146,8 @@ static void test_data_unequal_vector_ui8 (void)
 
   while (vector_index < 5)
   {
-    iot_data_vector_add (vector1, vector_index, iot_data_alloc_ui8(vector_index));
-    iot_data_vector_add (vector2, vector_index, iot_data_alloc_ui8(vector_index+1));
+    iot_data_vector_add (vector1, vector_index, iot_data_alloc_ui8 ((uint8_t) vector_index));
+    iot_data_vector_add (vector2, vector_index, iot_data_alloc_ui8 ((uint8_t) (vector_index+1)));
 
     vector_index++;
   }
@@ -1190,6 +1216,7 @@ static void test_data_equal_map (void)
 
   CU_ASSERT (iot_data_map_key_is_of_type (data_map1, IOT_DATA_STRING))
   CU_ASSERT (iot_data_is_of_type (data_map1, IOT_DATA_MAP))
+  CU_ASSERT (! iot_data_is_of_type (NULL, IOT_DATA_MAP))
   CU_ASSERT (iot_data_equal (data_map1, data_map2))
 
   iot_data_free (data_map1);
@@ -1486,6 +1513,7 @@ static void test_data_metadata (void)
   CU_ASSERT (data2 != NULL)
 
   iot_data_set_metadata (data1, data2);
+  iot_data_set_metadata (data1, data2);
   metadata1 = iot_data_get_metadata (data1);
 
   CU_ASSERT (metadata1 != NULL)
@@ -1720,7 +1748,7 @@ static void test_data_copy_vector_ui8 (void)
 
   while (index < 5)
   {
-    iot_data_vector_add (vector1, index, iot_data_alloc_ui8 (index));
+    iot_data_vector_add (vector1, index, iot_data_alloc_ui8 ((uint8_t) index));
     index++;
   }
 
@@ -2751,14 +2779,14 @@ static void test_data_map_perf (void)
 {
   char * keys [10]= { "common_one", "common_two", "common_three", "common_four", "common_five", "common_six", "common_seven", "common_eight", "common_nine", "common_ten" };
   char * lookup_keys [10]= { "common_one", "common_two", "common_three", "common_four", "common_five", "common_six", "common_seven", "common_eight", "common_nine", "common_ten" }; // To avoid key address equality check
-  uint32_t i, j;
+  uint32_t i;
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   for (i = 0; i < 10; i++)
   {
     iot_data_string_map_add (map, keys[i], iot_data_alloc_ui32 (i));
   }
   uint64_t t1 = iot_time_msecs ();
-  for (j = 0; j < 100000; j++)
+  for (uint32_t j = 0; j < 100000; j++)
   {
     for (i = 0; i < 10; i++)
     {

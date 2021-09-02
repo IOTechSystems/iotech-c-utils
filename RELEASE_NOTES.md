@@ -74,3 +74,17 @@
 
 * `iot_data_alloc_pointer`
 * `iot_data_pointer`
+
+- Uninterruptible wait functions added
+
+* `iot_wait_secs`
+* `iot_wait_msecs`
+* `iot_wait_usecs`
+
+- Formatted string allocation added
+
+* `iot_data_alloc_string_fmt`
+
+- Config function added for 32 bit integers
+
+* `iot_config_i32`

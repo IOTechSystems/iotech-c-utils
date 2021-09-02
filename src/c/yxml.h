@@ -140,7 +140,7 @@ yxml_ret_t yxml_parse(yxml_t *, int);
  * that don't end correctly. In particular, an error is returned when the XML
  * document did not contain a (complete) root element, or when the document
  * ended while in a comment or processing instruction. */
-yxml_ret_t yxml_eof(yxml_t *);
+yxml_ret_t yxml_eof (const yxml_t *);
 
 #ifdef __cplusplus
 }
@@ -153,7 +153,8 @@ yxml_ret_t yxml_eof(yxml_t *);
  * been returned by yxml_parse(), calling this at any other time may not give
  * the correct results. This function should also NOT be used on strings other
  * than x->elem, x->attr or x->pi. */
-static inline size_t yxml_symlen(yxml_t *x, const char *s) {
+static inline size_t yxml_symlen (const yxml_t *x, const char *s)
+{
 	return (x->stack + x->stacklen) - (const unsigned char*)s;
 }
 

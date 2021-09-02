@@ -46,6 +46,27 @@ extern uint64_t iot_time_usecs (void);
  */
 extern uint64_t iot_time_nsecs (void);
 
+/**
+ * @brief Uninterrupted wait in seconds
+ *
+ * @param interval Time to wait in seconds
+ */
+extern void iot_wait_secs (uint64_t interval);
+
+/**
+ * @brief Uninterrupted wait in milliseconds
+ *
+ * @param interval Time to wait in milliseconds
+ */
+extern void iot_wait_msecs (uint64_t interval);
+
+/**
+ * @brief Uninterrupted wait in microseconds
+ *
+ * @param interval Time to wait in microseconds
+ */
+extern void iot_wait_usecs (uint64_t interval);
+
 #ifdef __cplusplus
 }
 #endif

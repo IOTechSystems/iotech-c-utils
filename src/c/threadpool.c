@@ -7,6 +7,7 @@
 #include "iot/threadpool.h"
 #include "iot/thread.h"
 #include "iot/data.h"
+#include "iot/time.h"
 
 #ifdef IOT_HAS_PRCTL
 #include <sys/prctl.h>
@@ -48,7 +49,7 @@ typedef struct iot_threadpool_t
   uint16_t working;                  // Number of threads currently working
   atomic_uint_fast16_t created;      // Number of threads created
   uint32_t jobs;                     // Number of jobs in queue
-  uint32_t delay;                    // Shutdown delay in milli seconds
+  uint32_t delay;                    // Shutdown delay in milliseconds
   uint32_t next_id;                  // Job id counter
   iot_job_t * front;                 // Front of job queue
   iot_job_t * rear;                  // Rear of job queue
@@ -141,7 +142,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
   pool->affinity = affinity;
   pool->logger = logger;
-  *((uint16_t*) &pool->id) = (uint16_t) atomic_fetch_add (&pool_id, 1u);
+  *((uint16_t*) &pool->id) = atomic_fetch_add (&pool_id, 1u);
   iot_logger_add_ref (logger);
   iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max_jobs: %u default_priority: %d affinity: %d)", threads, max_jobs, default_prio, affinity);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
@@ -164,7 +165,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   }
   while (atomic_load (&pool->created) != created)
   {
-    usleep (100); /* Wait until all threads running */
+    iot_wait_usecs (100); /* Wait until all threads running */
   }
   return pool;
 }
@@ -209,7 +210,7 @@ static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void * (*fu
         {
           pool->front = job;
         }
-        goto added;
+        goto DONE;
       }
       prev = iter;
       iter = iter->prev;
@@ -226,7 +227,7 @@ static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void * (*fu
     pool->front = job;
   }
 
-added:
+DONE:
 
   pool->jobs++;
   pthread_cond_signal (&pool->job_cond); // Signal new job added
@@ -303,7 +304,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
     iot_log_trace (pool->logger, "iot_threadpool_free()");
     iot_threadpool_stop (pool);
     iot_component_set_deleted (&pool->component);
-    usleep (pool->delay * 1000);
+    iot_wait_msecs (pool->delay);
     while ((job = pool->cache))
     {
       pool->cache = job->prev;
