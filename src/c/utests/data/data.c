@@ -2873,6 +2873,7 @@ static void test_data_alloc_pointer (void)
   CU_ASSERT (iot_data_equal (data, data2))
   CU_ASSERT (iot_data_address (data) == dummy)
   CU_ASSERT (iot_data_address (data2) == dummy)
+  CU_ASSERT (iot_data_pointer (data) == dummy)
   iot_data_free (data);
   data = iot_data_alloc_pointer (NULL, NULL);
   CU_ASSERT (iot_data_address (data) == NULL)

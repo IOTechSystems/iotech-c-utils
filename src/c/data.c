@@ -875,6 +875,12 @@ const char * iot_data_string (const iot_data_t * data)
   return (data->type == IOT_DATA_STRING) ? ((const iot_data_value_t*) data)->value.str : NULL;
 }
 
+const void * iot_data_pointer (const iot_data_t * data)
+{
+  assert (data);
+  return (data->type == IOT_DATA_POINTER) ? ((iot_data_pointer_t*) data)->value : NULL;
+}
+
 bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key)
 {
   bool ret = false;
