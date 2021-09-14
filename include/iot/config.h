@@ -116,6 +116,19 @@ extern const iot_data_t * iot_config_vector (const iot_data_t * map, const char 
  */
 extern iot_component_t * iot_config_component (const iot_data_t * map, const char * key, iot_container_t * container, iot_logger_t * logger);
 
+/**
+ * @brief Substitute environment variables in a string
+ *
+ * Replaces references of the form ${ENVIRONMENT_VARIABLE} with the corresponding environment variable. Returns a string.
+ * If a referenced environment variable does not exist an error message will
+ * be logged and NULL returned.
+ *
+ * @param str The string containing zero or more environment variable references.
+ * @param logger Logger used to log if environment variable is not found. If not set, default logger is used.
+ * @return    String loaded from the file (client needs to free) or NULL.
+ */
+extern char * iot_config_substitute_env (const char * str, iot_logger_t * logger);
+
 #ifdef __cplusplus
 }
 #endif
