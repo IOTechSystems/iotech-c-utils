@@ -88,3 +88,7 @@
 - Config function added for 32 bit integers
 
 * `iot_config_i32`
+
+- Config function added to environment variable substitution in string.
+
+* `iot_config_substitute_env`
