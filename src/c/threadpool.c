@@ -323,6 +323,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
     bool self_delete = false;
     pthread_t self = pthread_self ();
     iot_log_trace (pool->logger, "iot_threadpool_free()");
+    iot_component_lock (&pool->component);
     for (uint16_t i = 0; i < pool->threads; i++)
     {
       self_delete = !pool->thread_array[i].deleted && pthread_equal (pool->thread_array[i].tid, self);
@@ -332,6 +333,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
         break;
       }
     }
+    iot_component_unlock (&pool->component);
     if (self_delete) iot_log_debug (pool->logger, "pool %p self delete", pool);
     iot_threadpool_stop (pool);
     iot_component_set_deleted (&pool->component);
