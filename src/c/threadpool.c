@@ -186,7 +186,6 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   {
     iot_wait_usecs (100); /* Wait until all threads running */
   }
-  iot_log_debug (pool->logger, "iot_threadpool_alloc: %p", pool);
   return pool;
 }
 
