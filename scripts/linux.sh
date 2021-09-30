@@ -2,6 +2,10 @@
 set -e -x
 
 ARCH=$(uname -m)
+if [ -f /etc/os-release ]
+then
+  SYSTEM=$(sed -e 's/^ID=\(.*\)/\1/;t;d' < /etc/os-release)
+fi
 
 UTEST=false
 VALG=false
@@ -53,6 +57,8 @@ do
 done
 
 BROOT="${ROOT}/${BARCH}"
+VER=$(cat ${ROOT}/VERSION)
+PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 
 # SonarQube build wrapper (only for Ubuntu 20.04 x86_64)
 
@@ -83,13 +89,115 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_D
 make 2>&1 | tee debug.log
 make package
 
-# Build Alpine APK packages
+# Build APK, DEB or RPM packages
 
-if [ -f /etc/alpine-release ]
-then
-  cd ${ROOT}
-  "${ROOT}/scripts/apk.sh" ${SYSTEM} ${BARCH}
-fi
+MAINT_EMAIL="IOTech Support <support@iotechsys.com>"
+DESC_MAIN="IOT C Framework"
+DESC_DEV="IOT C Framework development"
+DESC_DBG="IOT C Framework (debug enabled)"
+
+case ${SYSTEM} in
+  alpine)
+    cd ${ROOT}
+    "${ROOT}/scripts/apk.sh" ${SYSTEM} ${BARCH}
+    ;;
+  debian|ubuntu)
+    OS_ARCH=$(dpkg --print-architecture)
+    cd ${ROOT}/${BARCH}/release
+
+    fpm -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
+      --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
+      -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+      --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot \
+      --description "${DESC_MAIN}" \
+      --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
+      --exclude include --exclude docs --exclude examples --exclude *.a \
+      --depends libuuid1
+
+    fpm -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
+      --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
+      -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+      --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot \
+      --description "${DESC_DEV}" \
+      --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
+      --exclude lib \
+      --depends iotech-iot-${PKG_VER}
+
+    rm *.tar.gz
+
+    cd ${ROOT}/${BARCH}/debug
+
+    fpm -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
+      --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
+      -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
+      --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot \
+      --description "${DESC_DBG}" \
+      --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
+      --depends libuuid1 \
+      --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
+
+    rm *.tar.gz
+    ;;
+  photon|centos|fedora|opensuse)
+    case $(uname -m) in
+      aarch64)
+        OS_ARCH=aarch64
+        ;;
+      armv7l)
+        if [ "${SYSTEM}" = "opensuse" ]
+        then
+          OS_ARCH=armv7hl
+        else
+          OS_ARCH=armhf
+        fi
+        ;;
+      i686)
+        OS_ARCH=x86
+        ;;
+      *)
+        OS_ARCH=x86_64
+        ;;
+    esac
+    if [ "${SYSTEM}" = "opensuse" ]
+    then
+      UUID_LIB=libuuid1
+    else
+      UUID_LIB=libuuid
+    fi
+    cd ${ROOT}/${BARCH}/release
+
+    fpm -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" \
+      -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+      --prefix /opt/iotech/iot \
+      --description "${DESC_MAIN}" \
+      --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
+      --exclude include --exclude docs --exclude examples --exclude *.a \
+      --depends ${UUID_LIB}
+
+    fpm -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
+      -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+      --prefix /opt/iotech/iot \
+      --description "${DESC_DEV}" \
+      --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
+      --exclude lib \
+      --depends iotech-iot-${PKG_VER}
+
+    rm *.tar.gz
+
+    cd ${ROOT}/${BARCH}/debug
+
+    fpm -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
+      -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
+      --prefix /opt/iotech/iot \
+      --description "${DESC_DBG}" \
+      --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
+      --depends ${UUID_LIB} \
+      --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
+
+    rm *.tar.gz
+    ;;
+  *)
+esac
 
 # Build examples with makefiles
 
