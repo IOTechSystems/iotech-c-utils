@@ -58,6 +58,7 @@
 
 ## Version 1.2.2
 
+- Update to use AzureSphere SDK 21.07 and API version 10
 - Various SonarQube quality fixes
 - Added support for UUID in data. New functions added:
 
