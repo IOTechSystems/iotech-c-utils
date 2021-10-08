@@ -1,0 +1,12 @@
+FROM iotechsys/azuresphere-builder:21.02
+LABEL MAINTAINER="IOTech <support@iotechsys.com>"
+RUN apt-get update && apt-get install -y ruby-dev && gem install --no-document fpm
+COPY VERSION /iotech-iot/
+COPY RELEASE_NOTES.md /iotech-iot/
+COPY src /iotech-iot/src/
+COPY include /iotech-iot/include/
+COPY scripts /iotech-iot/scripts/
+ENV AZ_API=8
+ENV AZ_SDK=21.02
+WORKDIR /iotech-iot
+ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/azuresphere.sh"]

@@ -7,6 +7,13 @@
 #include "iot/config.h"
 #include "iot/container.h"
 
+typedef struct iot_parsed_holder_t
+{
+  char * parsed;
+  size_t size;
+  size_t len;
+} iot_parsed_holder_t;
+
 static const iot_data_t * iot_config_get_type (const iot_data_t * map, const char * key, iot_data_type_t type, iot_logger_t * logger)
 {
   assert (map && key);
@@ -106,4 +113,67 @@ iot_component_t * iot_config_component (const iot_data_t * map, const char * key
     }
   }
   return comp;
+}
+
+#define IOT_MAX_ENV_LEN 64
+
+static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, size_t len)
+{
+  holder->len += len;
+  if (holder->len > holder->size)
+  {
+    holder->size = holder->len;
+    holder->parsed = realloc (holder->parsed, holder->size);
+  }
+  memcpy (holder->parsed + holder->len - len, str, len);
+}
+
+char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
+{
+  char * result = NULL;
+  iot_parsed_holder_t holder = { .parsed = NULL, .size = 0, .len = 0 };
+
+  if (str)
+  {
+    const char * start = str;
+    const char * end;
+    char key [IOT_MAX_ENV_LEN];
+
+    holder.size = strlen (str);
+    holder.parsed = malloc (holder.size);
+
+    while (*start)
+    {
+      if (start[0] == '$' && start[1] == '{') // Look for "${"
+      {
+        if ((end = strchr (start, '}'))) // Look for "}"
+        {
+          size_t len = (size_t) ((end - start) - 2);
+          strncpy (key, start + 2, len);
+          key[len] = '\0';
+          const char * env = getenv (key);
+          if (env)
+          {
+            iot_update_parsed (&holder, env, strlen (env));
+          }
+          else
+          {
+            if (logger == NULL) logger = iot_logger_default ();
+            iot_log_error (logger, "Unable to resolve environment variable: %s", key);
+            free (holder.parsed);
+            goto FAIL;
+          }
+          start = end + 1;
+          continue;
+        }
+      }
+      iot_update_parsed (&holder, start, 1u);
+      start++;
+    }
+    iot_update_parsed (&holder, start, 1u);
+    result = holder.parsed;
+  }
+
+FAIL:
+  return result;
 }

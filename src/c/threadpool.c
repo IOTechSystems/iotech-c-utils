@@ -38,6 +38,8 @@ typedef struct iot_thread_t
   uint16_t id;                       // Thread number
   pthread_t tid;                     // Thread id
   struct iot_threadpool_t * pool;    // Thread pool
+  bool pending_delete;               // Finalise threadpool deletion on thread exit
+  bool deleted;                      // Mark thread as exited
 } iot_thread_t;
 
 typedef struct iot_threadpool_t
@@ -47,6 +49,7 @@ typedef struct iot_threadpool_t
   const uint32_t max_jobs;           // Maximum number of queued jobs
   const uint16_t id;                 // Thread pool id
   uint16_t working;                  // Number of threads currently working
+  uint16_t threads;                  // Number of threads allocated
   atomic_uint_fast16_t created;      // Number of threads created
   uint32_t jobs;                     // Number of jobs in queue
   uint32_t delay;                    // Shutdown delay in milliseconds
@@ -61,6 +64,17 @@ typedef struct iot_threadpool_t
   iot_logger_t * logger;             // Optional logger
 } iot_threadpool_t;
 
+static void iot_threadpool_final_free (iot_threadpool_t * pool)
+{
+  pthread_cond_destroy (&pool->work_cond);
+  pthread_cond_destroy (&pool->queue_cond);
+  pthread_cond_destroy (&pool->job_cond);
+  iot_logger_free (pool->logger);
+  free (pool->thread_array);
+  iot_component_fini (&pool->component);
+  free (pool);
+}
+
 static void * iot_threadpool_thread (void * arg)
 {
   iot_thread_t * th = (iot_thread_t*) arg;
@@ -70,6 +84,7 @@ static void * iot_threadpool_thread (void * arg)
   int priority = iot_thread_get_priority (tid);
   char name[IOT_PRCTL_NAME_MAX];
   iot_component_state_t state;
+  bool pending_delete = false;
 
   snprintf (name, IOT_PRCTL_NAME_MAX, "iot-%" PRIu16 "-%" PRIu16, th->pool->id, th->id);
 #ifdef IOT_HAS_PRCTL
@@ -84,6 +99,8 @@ static void * iot_threadpool_thread (void * arg)
 
     if (state == IOT_COMPONENT_DELETED) // Exit thread on deletion
     {
+      pending_delete = th->pending_delete;
+      th->deleted = true;
       iot_component_unlock (comp);
       break;
     }
@@ -131,6 +148,7 @@ static void * iot_threadpool_thread (void * arg)
   }
   iot_log_debug (pool->logger, "Thread exiting", name);
   atomic_fetch_add (&pool->created, -1);
+  if (pending_delete) iot_threadpool_final_free (pool);
   return NULL;
 }
 
@@ -153,6 +171,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
   iot_component_init (&pool->component, IOT_THREADPOOL_FACTORY, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
+  pool->threads = threads;
   for (created = 0; created < threads; created++)
   {
     iot_thread_t * th = &pool->thread_array[created];
@@ -301,10 +320,27 @@ void iot_threadpool_free (iot_threadpool_t * pool)
   if (pool && iot_component_dec_ref (&pool->component))
   {
     iot_job_t * job;
+    bool self_delete = false;
+    pthread_t self = pthread_self ();
     iot_log_trace (pool->logger, "iot_threadpool_free()");
+    iot_component_lock (&pool->component);
+    for (uint16_t i = 0; i < pool->threads; i++)
+    {
+      self_delete = !pool->thread_array[i].deleted && pthread_equal (pool->thread_array[i].tid, self);
+      if (self_delete)
+      {
+        pool->thread_array[i].pending_delete = true;
+        break;
+      }
+    }
+    iot_component_unlock (&pool->component);
+    if (self_delete) iot_log_debug (pool->logger, "pool %p self delete", pool);
     iot_threadpool_stop (pool);
     iot_component_set_deleted (&pool->component);
-    iot_wait_msecs (pool->delay);
+    while (atomic_load (&pool->created) > (self_delete ? 1 : 0))
+    {
+      iot_wait_msecs (pool->delay);
+    }
     while ((job = pool->cache))
     {
       pool->cache = job->prev;
@@ -315,13 +351,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
       pool->front = job->prev;
       free (job);
     }
-    pthread_cond_destroy (&pool->work_cond);
-    pthread_cond_destroy (&pool->queue_cond);
-    pthread_cond_destroy (&pool->job_cond);
-    iot_logger_free (pool->logger);
-    free (pool->thread_array);
-    iot_component_fini (&pool->component);
-    free (pool);
+    if (!self_delete) iot_threadpool_final_free (pool);
   }
 }
 

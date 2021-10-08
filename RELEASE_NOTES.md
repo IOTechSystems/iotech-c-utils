@@ -58,6 +58,7 @@
 
 ## Version 1.2.2
 
+- Update to use AzureSphere SDK 21.07 and API version 10
 - Various SonarQube quality fixes
 - Added support for UUID in data. New functions added:
 
@@ -70,9 +71,10 @@
 
 * `iot_data_from_json_with_ordering`
 
-- Support for new iot data type IOT_DATA_POINTER. New function added:
+- Support for new iot data type IOT_DATA_POINTER. New functions added:
 
 * `iot_data_alloc_pointer`
+* `iot_data_pointer`
 
 - Uninterruptible wait functions added
 
@@ -87,3 +89,7 @@
 - Config function added for 32 bit integers
 
 * `iot_config_i32`
+
+- Config function added to environment variable substitution in string.
+
+* `iot_config_substitute_env`

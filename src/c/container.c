@@ -5,6 +5,7 @@
 //
 #include "iot/container.h"
 #include "iot/logger.h"
+#include "iot/config.h"
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 #include <dlfcn.h>
 #endif
@@ -34,13 +35,6 @@ struct iot_container_t
   pthread_rwlock_t lock;
 };
 
-typedef struct iot_parsed_holder_t
-{
-  char * parsed;
-  size_t size;
-  size_t len;
-} iot_parsed_holder_t;
-
 typedef struct iot_load_in_progress_t
 {
   const char * name;
@@ -69,68 +63,14 @@ static iot_container_t * iot_container_find_locked (const char * name)
   return cont;
 }
 
-#define IOT_MAX_ENV_LEN 64
-
-static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, size_t len)
-{
-  holder->len += len;
-  if (holder->len > holder->size)
-  {
-    holder->size = holder->len;
-    holder->parsed = realloc (holder->parsed, holder->size);
-  }
-  memcpy (holder->parsed + holder->len - len, str, len);
-}
-
 /* Replace ${VALUE} in configuration string with corresponding environment variable */
 
 static iot_data_t * iot_component_config_to_map (const char * config, iot_logger_t * logger)
 {
   iot_data_t * map = NULL;
-  iot_parsed_holder_t holder = { .parsed = NULL, .size = 0, .len = 0 };
-
-  if (config)
-  {
-    const char * start = config;
-    const char * end;
-    char key [IOT_MAX_ENV_LEN];
-
-    holder.size = strlen (config);
-    holder.parsed = malloc (holder.size);
-
-    while (*start)
-    {
-      if (start[0] == '$' && start[1] == '{') // Look for "${"
-      {
-        if ((end = strchr (start, '}'))) // Look for "}"
-        {
-          size_t len = (size_t) ((end - start) - 2);
-          strncpy (key, start + 2, len);
-          key[len] = '\0';
-          const char * env = getenv (key);
-          if (env)
-          {
-            iot_update_parsed (&holder, env, strlen (env));
-          }
-          else
-          {
-            iot_log_error (logger, "Unable to resolve environment variable: %s from configuration", key);
-            goto FAIL;
-          }
-          start = end + 1;
-          continue;
-        }
-      }
-      iot_update_parsed (&holder, start, 1u);
-      start++;
-    }
-    iot_update_parsed (&holder, start, 1u);
-    map = iot_data_from_json (holder.parsed);
-  }
-
-FAIL:
-
-  free (holder.parsed);
+  char * str = iot_config_substitute_env (config, logger);
+  if (str) map = iot_data_from_json (str);
+  free (str);
   return map;
 }
 
