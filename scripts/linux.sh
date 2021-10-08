@@ -2,6 +2,10 @@
 set -e -x
 
 ARCH=$(uname -m)
+if [ -f /etc/os-release ]
+then
+  SYSTEM=$(sed -e 's/^ID=\(.*\)/\1/;t;d' < /etc/os-release)
+fi
 
 UTEST=false
 VALG=false
@@ -53,6 +57,8 @@ do
 done
 
 BROOT="${ROOT}/${BARCH}"
+VER=$(cat ${ROOT}/VERSION)
+PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 
 # SonarQube build wrapper (only for Ubuntu 20.04 x86_64)
 
@@ -83,13 +89,7 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_D
 make 2>&1 | tee debug.log
 make package
 
-# Build Alpine APK packages
-
-if [ -f /etc/alpine-release ]
-then
-  cd ${ROOT}
-  "${ROOT}/scripts/apk.sh" ${SYSTEM} ${BARCH}
-fi
+"${ROOT}/scripts/package.sh" -root ${ROOT} -barch ${BARCH}
 
 # Build examples with makefiles
 
