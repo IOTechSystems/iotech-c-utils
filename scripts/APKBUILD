@@ -7,25 +7,31 @@ pkgdesc="IOT C Framework"
 url="www.iotechsys.com"
 arch="${OS_ARCH}"
 license="Apache-2.0"
-depends="util-linux-dev"
+depends="libuuid"
 install=""
-base="${pkgname}-${VER}_${OS_ARCH}"
-source="${base}.tar.gz"
+base="${SRC}"
+source="${SRC}.tar.gz"
 builddir="${srcdir}/"
 options="!check !strip !tracedeps !fhs"
 
 package() {
   cd ${builddir}
   dest=${pkgdir}/opt/iotech/iot
-  mkdir -p ${dest}/lib
-  cp ${base}/lib/lib*.* ${dest}/lib
-  chmod 755 ${dest}/lib/*
-  mkdir -p ${dest}/include/iot/
-  if [ x${DEV} == "x-dev" ]
+  if [ x${DEV} == "x" -o x${DEV} == "x-dbg" ]
   then
-    cp -r ${base}/include/* ${dest}/include/
-    echo "Headers copied to dev package"
+    mkdir -p ${dest}/lib
+    cp -P ${base}/lib/lib*.so.* ${dest}/lib
+    chmod 755 ${dest}/lib/*
   fi
-  mkdir -p ${dest}/examples
-  cp -r ${base}/examples/* ${dest}/examples/
+  if [ x${DEV} == "x-dev" -o x${DEV} == "x-dbg" ]
+  then
+    mkdir -p ${dest}/include/iot/
+    cp -r ${base}/include/* ${dest}/include/
+    mkdir -p ${dest}/examples
+    cp -r ${base}/examples/* ${dest}/examples/
+  fi
+  if [ x${DEV} == "x-dbg" ]
+  then
+    cp ${base}/lib/*.a ${dest}/lib
+  fi
 }
