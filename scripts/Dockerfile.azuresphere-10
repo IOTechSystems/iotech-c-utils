@@ -6,5 +6,7 @@ COPY RELEASE_NOTES.md /iotech-iot/
 COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
 COPY scripts /iotech-iot/scripts/
+ENV AZ_API=10
+ENV AZ_SDK=21.07
 WORKDIR /iotech-iot
 ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/azuresphere.sh"]
