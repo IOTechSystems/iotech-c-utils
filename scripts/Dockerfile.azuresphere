@@ -1,6 +1,8 @@
 FROM iotechsys/azuresphere-builder:21.07
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
+RUN apt-get update && apt-get install -y ruby-dev && gem install --no-document fpm
 COPY VERSION /iotech-iot/
+COPY RELEASE_NOTES.md /iotech-iot/
 COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
 COPY scripts /iotech-iot/scripts/
