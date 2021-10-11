@@ -1102,6 +1102,23 @@ extern iot_data_t * iot_data_from_json (const char * json);
  */
 extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered);
 
+/**
+ * @brief Convert json to iot_data_t type with optional object ordering metadata and scahred key map
+ *
+ * The function to convert input json string to iot_data and optionally adds
+ * metadata to the result. The metadata is associated with each map
+ * representing JSON objects. The metadata is in the form of a map which
+ * contains the key string "ordering" with a vector of strings. The vector
+ * consists of the JSON object keys in the order in which they appear in
+ * the JSON. See also iot_data_to_json and iot_data_from_json_with_ordering.
+ *
+ * @param json    Input json string
+ * @param ordered Whether returned map is ordered by position in json
+ * @param key_map Optional map used as a cache for key values, may be NULL
+ * @return        Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ */
+extern iot_data_t * iot_data_from_json_with_keymap (const char * json, bool ordered, iot_data_t * key_map);
+
 #ifdef IOT_HAS_XML
 /**
  * @brief Convert XML to iot_data_t type

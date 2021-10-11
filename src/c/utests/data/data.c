@@ -514,6 +514,11 @@ static void test_data_from_json (void)
     "\"DB\":0.5,"
     "\"Escaped\":\"Double \\\" Quote\""
   "}";
+  static const char * config2 =
+  "{"
+    "\"Interval\":100,"
+    "\"Scheduler\":\"scheds\""
+  "}";
   bool bval = false;
   const char * sval = NULL;
   double dval = 1.0;
@@ -589,6 +594,20 @@ static void test_data_from_json (void)
   CU_ASSERT (vec != NULL)
 
   iot_data_free (map);
+
+  iot_data_t * keymap = iot_data_alloc_map (IOT_DATA_STRING);
+  map = iot_data_from_json_with_keymap (config, false, keymap);
+  iot_data_t * map3 = iot_data_from_json_with_keymap (config2, false, keymap);
+  iot_data_map_iter_t iter;
+  iot_data_map_iter (keymap, &iter);
+  printf ("Keys: ");
+  while (iot_data_map_iter_next (&iter))
+  {
+    printf ("%s ", iot_data_map_iter_string_key (&iter));
+  }
+  iot_data_free (map);
+  iot_data_free (map3);
+  iot_data_free (keymap);
 
   iot_data_t * nd = iot_data_from_json (NULL);
   CU_ASSERT (nd != NULL)
