@@ -1103,7 +1103,7 @@ extern iot_data_t * iot_data_from_json (const char * json);
 extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered);
 
 /**
- * @brief Convert json to iot_data_t type with optional object ordering metadata and scahred key map
+ * @brief Convert json to iot_data_t type with optional object ordering metadata and shared key map
  *
  * The function to convert input json string to iot_data and optionally adds
  * metadata to the result. The metadata is associated with each map
