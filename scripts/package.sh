@@ -42,11 +42,11 @@ DESC_DBG="IOT C Framework (debug enabled)"
 
 build_apk()
 {
-  TGZ=$1
+  export SRC=$2
   REPO=/tmp/repo
   mkdir -p /iotech-iot/apks/build
   cp /iotech-iot/scripts/APKBUILD /iotech-iot/apks/build
-  cp ${TGZ} /iotech-iot/apks/build
+  cp $1/${SRC}.tar.gz /iotech-iot/apks/build
   cd /iotech-iot/apks/build
   /usr/bin/abuild -F checksum
   /usr/bin/abuild -F -d -P ${REPO}
@@ -75,9 +75,14 @@ case ${SYSTEM} in
     chmod 0644 /iotech-iot/scripts/apk.key
     printf '%s' "PACKAGER_PRIVKEY=/iotech-iot/scripts/apk.key" >> /etc/abuild.conf
     export DEV=
-    build_apk "${ARCH}/release/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}.tar.gz"
+    export DEPS=libuuid
+    build_apk "${ARCH}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dev
-    build_apk "${ARCH}/debug/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH}.tar.gz"
+    export DEPS="iotech-iot-${PKG_VER}"
+    build_apk "${ARCH}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
+    export DEV=-dbg
+    export DEPS=libuuid
+    build_apk "${ARCH}/debug" "iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH}"
     ;;
   debian|ubuntu)
     OS_ARCH=$(dpkg --print-architecture)

@@ -2,10 +2,6 @@
 set -e -x
 
 ARCH=$(uname -m)
-if [ -f /etc/os-release ]
-then
-  SYSTEM=$(sed -e 's/^ID=\(.*\)/\1/;t;d' < /etc/os-release)
-fi
 
 UTEST=false
 VALG=false
@@ -57,8 +53,6 @@ do
 done
 
 BROOT="${ROOT}/${BARCH}"
-VER=$(cat ${ROOT}/VERSION)
-PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 
 # SonarQube build wrapper (only for Ubuntu 20.04 x86_64)
 
