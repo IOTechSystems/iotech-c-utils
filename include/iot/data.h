@@ -718,7 +718,7 @@ extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const
 extern const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key);
 
 /**
- * @brief Get int64_t value corresponding to key from a map
+ * @brief Get int64_t value corresponding to a string key from a map
  *
  * The function to get int64 value corresponding to key from the map, if the value type is IOT_DATA_INT64, else return default_val
  *
