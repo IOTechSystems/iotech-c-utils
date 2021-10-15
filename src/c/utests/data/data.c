@@ -595,11 +595,11 @@ static void test_data_from_json (void)
 
   iot_data_free (map);
 
-  iot_data_t * keymap = iot_data_alloc_map (IOT_DATA_STRING);
-  map = iot_data_from_json_with_keymap (config, false, keymap);
-  iot_data_t * map3 = iot_data_from_json_with_keymap (config2, false, keymap);
+  iot_data_t * cache = iot_data_alloc_map (IOT_DATA_STRING);
+  map = iot_data_from_json_with_cache (config, false, cache);
+  iot_data_t * map3 = iot_data_from_json_with_cache (config2, false, cache);
   iot_data_map_iter_t iter;
-  iot_data_map_iter (keymap, &iter);
+  iot_data_map_iter (cache, &iter);
   printf ("Keys: ");
   while (iot_data_map_iter_next (&iter))
   {
@@ -607,7 +607,7 @@ static void test_data_from_json (void)
   }
   iot_data_free (map);
   iot_data_free (map3);
-  iot_data_free (keymap);
+  iot_data_free (cache);
 
   iot_data_t * nd = iot_data_from_json (NULL);
   CU_ASSERT (nd != NULL)
