@@ -22,7 +22,10 @@ int main (int argc, char ** argv)
   }
   iot_data_t * cache = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * map = iot_data_from_json_with_cache (profile, false, cache);
- // iot_data_map_dump (cache);
+//  iot_data_map_dump (cache);
+  iot_data_free (cache);
+  iot_data_free (map);
+  free (profile);
   iot_fini ();
   return 0;
 }
