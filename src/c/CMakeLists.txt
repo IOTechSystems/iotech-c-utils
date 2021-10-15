@@ -42,9 +42,11 @@ endif ()
 # Find dependencies
 
 if (NOT IOT_BUILD_UUID)
-  find_package (UUID REQUIRED)
-  set (LINK_LIBRARIES ${LINK_LIBRARIES} ${UUID_LIBRARY})
-  set (INCLUDE_DIRS ${INCLUDE_DIRS} ${UUID_INCLUDE})
+  if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    find_package (UUID REQUIRED)
+    set (LINK_LIBRARIES ${LINK_LIBRARIES} ${UUID_LIBRARY})
+    set (INCLUDE_DIRS ${INCLUDE_DIRS} ${UUID_INCLUDE})
+  endif ()
 endif ()
 
 # Main library

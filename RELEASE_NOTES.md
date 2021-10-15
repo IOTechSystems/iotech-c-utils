@@ -98,4 +98,4 @@
 
 - Function added to support the caching of iot data json key values:
 
-* `iot_data_from_json_with_keymap`
+* `iot_data_from_json_with_cache`

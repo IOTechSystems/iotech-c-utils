@@ -718,7 +718,7 @@ extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const
 extern const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key);
 
 /**
- * @brief Get int64_t value corresponding to key from a map
+ * @brief Get int64_t value corresponding to a string key from a map
  *
  * The function to get int64 value corresponding to key from the map, if the value type is IOT_DATA_INT64, else return default_val
  *
@@ -1114,10 +1114,10 @@ extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool or
  *
  * @param json    Input json string
  * @param ordered Whether returned map is ordered by position in json
- * @param key_map Optional map used as a cache for key values, may be NULL
+ * @param cache   Optional string map used as a cache for string values, may be NULL
  * @return        Pointer to data of type iot_data if input string is a json object, NULL otherwise
  */
-extern iot_data_t * iot_data_from_json_with_keymap (const char * json, bool ordered, iot_data_t * key_map);
+extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool ordered, iot_data_t * cache);
 
 #ifdef IOT_HAS_XML
 /**
