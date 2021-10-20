@@ -25,7 +25,6 @@ do
   esac
 done
 
-ARCH=$(uname -m)
 if [ -f /etc/os-release ]
 then
   SYSTEM=$(sed -e 's/^ID=\(.*\)/\1/;t;d' < /etc/os-release | tr -d \")
@@ -50,7 +49,7 @@ build_apk()
   cd /iotech-iot/apks/build
   /usr/bin/abuild -F checksum
   /usr/bin/abuild -F -d -P ${REPO}
-  mv ${REPO}/apks/${OS_ARCH}/*.apk /iotech-iot/${ARCH}/apks
+  mv ${REPO}/apks/${OS_ARCH}/*.apk /iotech-iot/${BARCH}/apks
   cd /iotech-iot
   rm -rf /iotech-iot/apks/build ${REPO}
 }
@@ -58,7 +57,7 @@ build_apk()
 case ${SYSTEM} in
   alpine)
     cd ${ROOT}
-    case ${ARCH} in
+    case ${BARCH} in
       arm64)
         OS_ARCH=aarch64
         ;;
@@ -66,23 +65,23 @@ case ${SYSTEM} in
         OS_ARCH=armv7
         ;;
       *)
-        OS_ARCH=${ARCH}
+        OS_ARCH=${BARCH}
         ;;
     esac
 
     export VER PKG_VER OS_ARCH
-    mkdir /iotech-iot/${ARCH}/apks
+    mkdir /iotech-iot/${BARCH}/apks
     chmod 0644 /iotech-iot/scripts/apk.key
     printf '%s' "PACKAGER_PRIVKEY=/iotech-iot/scripts/apk.key" >> /etc/abuild.conf
     export DEV=
     export DEPS=libuuid
-    build_apk "${ARCH}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
+    build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dev
     export DEPS="iotech-iot-${PKG_VER}"
-    build_apk "${ARCH}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
+    build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dbg
     export DEPS=libuuid
-    build_apk "${ARCH}/debug" "iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH}"
+    build_apk "${BROOT}/debug" "iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH}"
     ;;
   debian|ubuntu)
     OS_ARCH=$(dpkg --print-architecture)
@@ -122,11 +121,11 @@ case ${SYSTEM} in
     rm *.tar.gz
     ;;
   photon|centos|fedora|opensuse)
-    case ${ARCH} in
-      aarch64)
+    case ${BARCH} in
+      arm64)
         OS_ARCH=aarch64
         ;;
-      armv7l)
+      arm32)
         if [ "${SYSTEM}" = "opensuse" ]
         then
           OS_ARCH=armv7hl
@@ -134,11 +133,8 @@ case ${SYSTEM} in
           OS_ARCH=armhf
         fi
         ;;
-      i686)
-        OS_ARCH=x86
-        ;;
       *)
-        OS_ARCH=x86_64
+        OS_ARCH=${BARCH}
         ;;
     esac
     if [ "${SYSTEM}" = "opensuse" ]
