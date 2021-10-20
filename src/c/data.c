@@ -1933,8 +1933,10 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
  *
  * https://algorithmtutor.com/Data-Structures/Tree/Red-Black-Trees/
  *
- * Note that logic regards NULL nodes as Black. So all colour get/set operations
- * need checking for node being NULL.
+ * Note that the logic regards NULL nodes as Black. So all colour get/set operations
+ * need checking for node being NULL. Note that as a size optimisation, the node
+ * colour is carried as a bit field in the key data structure (which as is unique
+ * in the map has a one to one association with the node).
  */
 
 static inline iot_node_colour_t iot_node_colour (const iot_node_t * node)
