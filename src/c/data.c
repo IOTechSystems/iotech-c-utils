@@ -166,9 +166,9 @@ _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_vec
 _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_array bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "iot_typecode bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block bigger than IOT_MEMORY_BLOCK_SIZE");
-_Static_assert (sizeof (iot_data_array_t) <= sizeof (iot_node_t), "iot_data_vector bigger than iot_data_array");
-_Static_assert (sizeof (iot_data_map_t) <= sizeof (iot_node_t), "iot_data_map bigger than iot_data_array");
-_Static_assert (sizeof (iot_data_vector_t) <= sizeof (iot_node_t), "iot_data_node bigger than iot_data_array");
+_Static_assert (sizeof (iot_data_vector_t) <= sizeof (iot_data_array_t), "iot_data_vector bigger than iot_data_array");
+_Static_assert (sizeof (iot_data_map_t) <= sizeof (iot_data_array_t), "iot_data_map bigger than iot_data_array");
+_Static_assert (sizeof (iot_node_t) <= sizeof (iot_data_array_t), "iot_node bigger than iot_data_array");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -308,7 +308,7 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
-/*
+
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
   printf ("sizeof (iot_node_t): %zu\n", sizeof (iot_node_t));
@@ -317,7 +317,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-*/
+
 
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
