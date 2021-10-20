@@ -66,7 +66,7 @@ typedef union iot_data_union_t
 
 struct iot_data_t
 {
-  iot_data_t * metadata;
+  iot_data_t * next_or_meta;
   atomic_uint_fast32_t refs;
   uint32_t hash;
   iot_data_type_t type;
@@ -225,7 +225,7 @@ static void * iot_data_block_alloc (void)
       {
         iot_data_t * prev = (iot_data_t*) iter;
         iter += IOT_DATA_BLOCK_SIZE;
-        prev->next = (iot_data_t*) iter;
+        prev->next_or_meta = (iot_data_t*) iter;
       }
     }
 #ifdef IOT_HAS_SPINLOCK
@@ -235,7 +235,7 @@ static void * iot_data_block_alloc (void)
   }
 #endif
   data = iot_data_cache;
-  iot_data_cache = data->next;
+  iot_data_cache = data->next_or_meta;
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_unlock (&iot_data_slock);
 #else
@@ -263,7 +263,7 @@ static inline void iot_data_block_free (iot_data_t * data)
 #else
   pthread_mutex_lock (&iot_data_mutex);
 #endif
-  data->next = iot_data_cache;
+  data->next_or_meta = iot_data_cache;
   iot_data_cache = data;
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_unlock (&iot_data_slock);
@@ -361,14 +361,14 @@ const char * iot_data_type_name (const iot_data_t * data)
 extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata)
 {
   assert (data);
-  if (data->metadata) iot_data_free (data->metadata);
+  if (data->next_or_meta) iot_data_free (data->next_or_meta);
   if (metadata) iot_data_add_ref (metadata);
-  data->metadata = metadata;
+  data->next_or_meta = metadata;
 }
 
 extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data)
 {
-  return data ? data->metadata : NULL;
+  return data ? data->next_or_meta : NULL;
 }
 
 static int iot_data_key_cmp (const iot_data_t * v1, const iot_data_t * v2)
@@ -501,7 +501,7 @@ void iot_data_free (iot_data_t * data)
 {
   if (data && (atomic_fetch_add (&data->refs, -1) <= 1))
   {
-    if (data->metadata) iot_data_free (data->metadata);
+    if (data->next_or_meta) iot_data_free (data->next_or_meta);
     switch (data->type)
     {
       case IOT_DATA_STRING:
@@ -1776,7 +1776,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
       ret = (iot_data_t*) val;
     }
   }
-  iot_data_set_metadata (ret, data->metadata);
+  iot_data_set_metadata (ret, data->next_or_meta);
   return ret;
 }
 
