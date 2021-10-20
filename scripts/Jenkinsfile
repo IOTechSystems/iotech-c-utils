@@ -251,12 +251,12 @@ def publishRpms (arch)
       {
         "pattern": "${arch}/${rpms[i]}/release/iotech-iot*.rpm",
         "target": "rpm-${rpms[i]}-${releaseType[archive]}",
-        "props": "rpm.next_or_meta.release=${env.BUILD_ID}"
+        "props": "rpm.metadataa.release=${env.BUILD_ID}"
       },
       {
         "pattern": "${arch}/${rpms[i]}/debug/iotech-iot-dbg*.rpm",
         "target": "rpm-${rpms[i]}-${releaseType[archive]}",
-        "props": "rpm.next_or_meta.release=${env.BUILD_ID}"
+        "props": "rpm.metadataa.release=${env.BUILD_ID}"
       }
       ]}"""
       rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")

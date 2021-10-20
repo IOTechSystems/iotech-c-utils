@@ -67,7 +67,7 @@
 
 - Zero length `iot_data_t` arrays now supported
 - Data map performance enhancements. Note iteration order is now based on key ordering.
-- Added next_or_meta based JSON object key ordering support. This includes the addition of the function:
+- Added metadataa based JSON object key ordering support. This includes the addition of the function:
 
 * `iot_data_from_json_with_ordering`
 

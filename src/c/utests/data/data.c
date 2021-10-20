@@ -1539,7 +1539,7 @@ static void test_data_metadata (void)
   CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_STRING)
   CU_ASSERT (iot_data_equal (data2, metadata1))
 
-  // When data copied, next_or_meta should also be copied.
+  // When data copied, metadata should also be copied.
   iot_data_t * data3 = iot_data_copy (data1);
   const iot_data_t * metadata2 = iot_data_get_metadata (data3);
 
