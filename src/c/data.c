@@ -137,7 +137,7 @@ typedef struct iot_data_pointer_t
 // Determine minimum block size that can hold all iot_data types, maximum size of
 // value string cache buffer and number of blocks per allocated memory chunk.
 
-#define IOT_DATA_BLOCK_SIZE (((sizeof (iot_node_t) + 7) / 8) * 8)
+#define IOT_DATA_BLOCK_SIZE (((sizeof (iot_data_array_t) + 7) / 8) * 8)
 #define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
 #define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
 #define IOT_DATA_ALLOCATING ((iot_data_t*) 1)
