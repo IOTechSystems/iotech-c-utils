@@ -120,13 +120,13 @@ case ${SYSTEM} in
 
     rm *.tar.gz
     ;;
-  photon|centos|fedora|opensuse)
+  photon|centos|fedora|opensuse*)
     case ${BARCH} in
       arm64)
         OS_ARCH=aarch64
         ;;
       arm32)
-        if [ "${SYSTEM}" = "opensuse" ]
+        if [ "${SYSTEM}" = "opensuse-leap" ]
         then
           OS_ARCH=armv7hl
         else
@@ -137,7 +137,7 @@ case ${SYSTEM} in
         OS_ARCH=${BARCH}
         ;;
     esac
-    if [ "${SYSTEM}" = "opensuse" ]
+    if [ "${SYSTEM}" = "opensuse-leap" ]
     then
       UUID_LIB=libuuid1
     else
