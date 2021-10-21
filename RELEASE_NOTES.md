@@ -96,6 +96,7 @@
 
 ## Version 1.2.3
 
+- Support added for Debian 11
 - Memory usage optimisation for iot data
 - Function added to support the caching of iot data json key values:
 
