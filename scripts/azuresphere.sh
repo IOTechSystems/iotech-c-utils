@@ -35,11 +35,11 @@ ninja package
 OS_ARCH=`dpkg --print-architecture`
 
 cd ${BROOT}/release
-fpm -s dir -t deb -n iotech-iot-azsphere${AZ_API}-${PKG_VER} -v "${VER}" \
+fpm -s dir -t deb -n iotech-iot-azsphere${AZ_API}-${PKG_VER}-dev -v "${VER}" \
   --chdir _CPack_Packages/Generic/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/azurespheresdk/Sysroots/${AZ_API}/opt/iotech/iot \
-  --description "IOT C Framework" \
+  --description "IOT C Framework (AzureSphere)" \
   --vendor "IOTech" --maintainer "IOTech Support <support@iotechsys.com>" \
   --depends cmake --depends ninja-build
 rm *.tar.gz
@@ -49,7 +49,7 @@ fpm -s dir -t deb -n iotech-iot-azsphere${AZ_API}-${PKG_VER}-dbg -v "${VER}" \
   --chdir _CPack_Packages/Generic/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/azurespheresdk/Sysroots/${AZ_API}/opt/iotech/iot \
-  --description "IOT C Framework (debug enabled)" \
+  --description "IOT C Framework (AzureSphere debug enabled)" \
   --vendor "IOTech" --maintainer "IOTech Support <support@iotechsys.com>" \
   --depends cmake --depends ninja-build
 rm *.tar.gz

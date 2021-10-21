@@ -254,7 +254,7 @@ def publishRpms (arch)
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       },
       {
-        "pattern": "${arch}/${rpms[i]}/debug/iotech-iot-dbg*.rpm",
+        "pattern": "${arch}/${rpms[i]}/debug/iotech-iot-*-dbg*.rpm",
         "target": "rpm-${rpms[i]}-${releaseType[archive]}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }
