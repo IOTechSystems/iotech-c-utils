@@ -145,7 +145,7 @@ case ${SYSTEM} in
     fi
     cd ${ROOT}/${BARCH}/release
 
-    fpm -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" \
+    fpm.ruby2.5 -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --prefix /opt/iotech/iot \
       --description "${DESC_MAIN}" \
@@ -153,7 +153,7 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples --exclude *.a \
       --depends ${UUID_LIB}
 
-    fpm -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
+    fpm.ruby2.5 -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --prefix /opt/iotech/iot \
       --description "${DESC_DEV}" \
@@ -165,7 +165,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    fpm -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
+    fpm.ruby2.5 -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --prefix /opt/iotech/iot \
       --description "${DESC_DBG}" \
