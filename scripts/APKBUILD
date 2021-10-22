@@ -1,13 +1,13 @@
 # Contributor: IOTech <support@iotechsys.com>
 # Maintainer: IOTech <support@iotechsys.com>
-pkgname=iotech-iot${DEV}-${PKG_VER}
+pkgname=iotech-iot-${PKG_VER}${DEV}
 pkgver="${VER}"
 pkgrel=0
 pkgdesc="IOT C Framework"
 url="www.iotechsys.com"
 arch="${OS_ARCH}"
 license="Apache-2.0"
-depends="{$DEPS}"
+depends="${DEPS}"
 install=""
 base="${SRC}"
 source="${SRC}.tar.gz"
@@ -20,7 +20,7 @@ package() {
   if [ x${DEV} == "x" -o x${DEV} == "x-dbg" ]
   then
     mkdir -p ${dest}/lib
-    cp -P ${base}/lib/lib*.so.* ${dest}/lib
+    cp -P ${base}/lib/lib*.so* ${dest}/lib
     chmod 755 ${dest}/lib/*
   fi
   if [ x${DEV} == "x-dev" -o x${DEV} == "x-dbg" ]
