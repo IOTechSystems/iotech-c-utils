@@ -137,7 +137,8 @@ typedef struct iot_data_pointer_t
 // Determine minimum block size that can hold all iot_data types, maximum size of
 // value string cache buffer and number of blocks per allocated memory chunk.
 
-#define IOT_DATA_BLOCK_SIZE (((sizeof (iot_node_t) + 7) / 8) * 8)
+#define IOT_DATA_MAX ((sizeof (iot_node_t) > sizeof (iot_data_array_t)) ? sizeof (iot_node_t) : sizeof (iot_data_array_t))
+#define IOT_DATA_BLOCK_SIZE (((IOT_DATA_MAX + 7) / 8) * 8)
 #define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
 #define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
 #define IOT_DATA_ALLOCATING ((iot_data_t*) 1)
@@ -157,7 +158,7 @@ typedef struct iot_memory_block_t
 } iot_memory_block_t;
 
 // Data size and alignment sanity checks
-/*
+
 _Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte multiple");
 _Static_assert (sizeof (iot_data_value_t) == IOT_DATA_BLOCK_SIZE, "size of iot_data_value not equal to IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_map bigger than IOT_DATA_BLOCK_SIZE");
@@ -166,10 +167,12 @@ _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_vec
 _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_array bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "iot_typecode bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block bigger than IOT_MEMORY_BLOCK_SIZE");
-_Static_assert (sizeof (iot_data_vector_t) <= sizeof (iot_node_t), "iot_data_vector bigger than iot_node");
-_Static_assert (sizeof (iot_data_map_t) <= sizeof (iot_node_t), "iot_data_map bigger than iot_node");
-_Static_assert (sizeof (iot_data_array_t) <= sizeof (iot_node_t), "iot_data_array bigger than iot_node");
-*/
+_Static_assert (sizeof (iot_data_vector_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_vector bigger than IOT_MEMORY_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_map_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_map bigger than IOT_MEMORY_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_array_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_array bigger than IOT_MEMORY_BLOCK_SIZE");
+_Static_assert (sizeof (iot_node_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_node bigger than IOT_MEMORY_BLOCK_SIZE");
+
+
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
 #ifdef IOT_DATA_CACHE
