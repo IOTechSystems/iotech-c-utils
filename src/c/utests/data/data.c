@@ -619,6 +619,46 @@ static void test_data_from_json (void)
   iot_data_free (nd);
 }
 
+static void test_data_from_json2 (void)
+{
+  static const char * config =
+  "{"
+    "\"client\":\"client1\","
+    "\"request_id\":\"138094\","
+    "\"op\":\"schedule:list\","
+    "\"0\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"100\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"200\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"300\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"400\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"500\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"600\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"700\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"800\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"900\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1000\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1100\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1200\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1300\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1400\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1500\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1600\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1700\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1800\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"1900\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"2000\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"2100\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"2200\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"2300\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\","
+    "\"2400\":\"t\\\\est\\/tube\\/test\\/tub\\\\e\""
+  "}";
+
+  iot_data_t * map = iot_data_from_json (config);
+  CU_ASSERT (map != NULL)
+
+  iot_data_free (map);
+}
+
 #ifdef IOT_HAS_XML
 static void test_data_from_xml (void)
 {
@@ -2935,6 +2975,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_string_vector", test_data_string_vector);
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
+  CU_add_test (suite, "data_from_json2", test_data_from_json2);
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_from_string", test_data_from_string);
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
