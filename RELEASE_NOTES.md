@@ -96,6 +96,9 @@
 
 ## Version 1.2.3
 
+- Support added for Debian 11
+- Fedora support updated to version 34
+- OpenSUSE support updated to version 15.3
 - Memory usage optimisation for iot data
 - Function added to support the caching of iot data json key values:
 

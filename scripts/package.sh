@@ -38,6 +38,12 @@ MAINT_EMAIL="IOTech Support <support@iotechsys.com>"
 DESC_MAIN="IOT C Framework"
 DESC_DEV="IOT C Framework development"
 DESC_DBG="IOT C Framework (debug enabled)"
+FPM=fpm
+
+if [ "${SYSTEM}" = "opensuse-leap" ]
+then
+  FPM=fpm.ruby2.5
+fi
 
 build_apk()
 {
@@ -87,7 +93,7 @@ case ${SYSTEM} in
     OS_ARCH=$(dpkg --print-architecture)
     cd ${ROOT}/${BARCH}/release
 
-    fpm -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot \
@@ -96,7 +102,7 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples --exclude *.a \
       --depends libuuid1
 
-    fpm -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot \
@@ -109,7 +115,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    fpm -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot \
@@ -120,13 +126,13 @@ case ${SYSTEM} in
 
     rm *.tar.gz
     ;;
-  photon|centos|fedora|opensuse)
+  photon|centos|fedora|opensuse*)
     case ${BARCH} in
       arm64)
         OS_ARCH=aarch64
         ;;
       arm32)
-        if [ "${SYSTEM}" = "opensuse" ]
+        if [ "${SYSTEM}" = "opensuse-leap" ]
         then
           OS_ARCH=armv7hl
         else
@@ -137,7 +143,7 @@ case ${SYSTEM} in
         OS_ARCH=${BARCH}
         ;;
     esac
-    if [ "${SYSTEM}" = "opensuse" ]
+    if [ "${SYSTEM}" = "opensuse-leap" ]
     then
       UUID_LIB=libuuid1
     else
@@ -145,7 +151,7 @@ case ${SYSTEM} in
     fi
     cd ${ROOT}/${BARCH}/release
 
-    fpm -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --prefix /opt/iotech/iot \
       --description "${DESC_MAIN}" \
@@ -153,7 +159,7 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples --exclude *.a \
       --depends ${UUID_LIB}
 
-    fpm -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --prefix /opt/iotech/iot \
       --description "${DESC_DEV}" \
@@ -165,7 +171,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    fpm -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --prefix /opt/iotech/iot \
       --description "${DESC_DBG}" \
