@@ -92,7 +92,6 @@ typedef struct iot_data_array_t
 {
   iot_data_t base;
   uint32_t length;
-  uint32_t size;
   void * data;
 } iot_data_array_t;
 
@@ -311,7 +310,7 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
-/*
+
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
   printf ("sizeof (iot_node_t): %zu\n", sizeof (iot_node_t));
@@ -320,7 +319,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-*/
+
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
@@ -409,7 +408,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
       {
         const iot_data_array_t * a1 = (const iot_data_array_t*) v1;
         const iot_data_array_t * a2 = (const iot_data_array_t*) v2;
-        return  ((a1->size == a2->size) && (v1->sub_type == v2->sub_type) && ((a1->data == a2->data) || ((v1->hash == v2->hash) && (memcmp (a1->data, a2->data, a1->size) == 0))));
+        return  ((a1->length == a2->length) && (v1->sub_type == v2->sub_type) && ((a1->data == a2->data) || ((v1->hash == v2->hash) && (memcmp (a1->data, a2->data, a1->length * iot_data_type_size[a1->base.sub_type]) == 0))));
       }
       case IOT_DATA_VECTOR:
       {
@@ -750,16 +749,16 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
 {
   assert ((type < IOT_DATA_STRING) && ((length > 0 && data != NULL) || length == 0));
   iot_data_array_t * array = iot_data_factory_alloc (IOT_DATA_ARRAY);
+  size_t size = iot_data_type_size[type] * length;
   array->base.sub_type = type;
   array->data = length ? data : NULL;
   array->length = length;
-  array->size = iot_data_type_size[type] * length;
-  array->base.hash = data ? iot_hash_data (data, array->size) : 0;
+  array->base.hash = data ? iot_hash_data (data, size) : 0;
   array->base.release = data ? (ownership != IOT_DATA_REF) : false;
   if (length && (ownership == IOT_DATA_COPY))
   {
-    array->data = malloc (array->size);
-    memcpy (array->data, data, array->size);
+    array->data = malloc (size);
+    memcpy (array->data, data, size);
   }
   return (iot_data_t*) array;
 }
@@ -778,7 +777,8 @@ extern bool iot_data_array_is_of_type (const iot_data_t * array, iot_data_type_t
 extern uint32_t iot_data_array_size (const iot_data_t * array)
 {
   assert (array && (array->type == IOT_DATA_ARRAY));
-  return ((const iot_data_array_t*) array)->size;
+  const iot_data_array_t * arr = (const iot_data_array_t *) array;
+  return (arr->length * iot_data_type_size[arr->base.sub_type]);
 }
 
 extern uint32_t iot_data_array_length (const iot_data_t * array)
