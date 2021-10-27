@@ -103,3 +103,8 @@
 - Function added to support the caching of iot data json key values:
 
 * `iot_data_from_json_with_cache`
+
+- Support added for data vector and array reverse iteration
+
+* `iot_data_vector_iter_prev`
+* `iot_data_array_iter_prev`
