@@ -1404,7 +1404,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
       {
         const iot_data_t * value = iot_data_vector_iter_value (&iter);
         iot_data_dump (holder, value);
-        if (iter.index < iter.vector->size)
+        if (iter.index < (iter.vector->size - 1u))
         {
           iot_data_strcat (holder, ",");
         }

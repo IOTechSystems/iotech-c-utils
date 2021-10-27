@@ -712,7 +712,8 @@ static void test_data_from_xml (void)
   CU_ASSERT (xml != NULL)
   json = iot_data_to_json (xml);
   CU_ASSERT (json != NULL)
-  // printf ("XML: %s\n", json);
+  // printf ("\nXML: %s\n", json);
+  // printf ("\nEXP: %s\n", expected);
   CU_ASSERT (strcmp (json, expected) == 0)
   free (json);
   iot_data_free (xml);
