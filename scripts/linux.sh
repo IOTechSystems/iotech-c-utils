@@ -95,7 +95,7 @@ run_examples ()
   ./scheduler/scheduler
   ./data/data
   ./container/container
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${1}/examples/dynamic
+  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${1}/examples/dynamic
   ./dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
 }
 
