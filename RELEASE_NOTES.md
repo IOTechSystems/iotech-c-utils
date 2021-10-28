@@ -104,7 +104,8 @@
 
 * `iot_data_from_json_with_cache`
 
-- Support added for data vector and array reverse iteration
+- Support added for data vector, map and array reverse iteration
 
 * `iot_data_vector_iter_prev`
 * `iot_data_array_iter_prev`
+* `iot_data_map_iter_prev`

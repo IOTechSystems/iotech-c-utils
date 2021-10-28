@@ -17,11 +17,19 @@ static void check (iot_data_t * map, const uint32_t size)
   iot_data_map_iter_t iter;
   iot_data_map_iter (map, &iter);
   assert (size == iot_data_map_size (map));
+  printf ("\n");
   while (iot_data_map_iter_next (&iter))
   {
     const iot_data_t * key = iot_data_map_iter_key (&iter);
     printf ("%" PRIu32 " ", iot_data_ui32 (key));
   }
+  printf ("\n");
+  while (iot_data_map_iter_prev (&iter))
+  {
+    const iot_data_t * key = iot_data_map_iter_key (&iter);
+    printf ("%" PRIu32 " ", iot_data_ui32 (key));
+  }
+  printf ("\n");
   //iot_data_map_dump (map);
   iot_data_free (map);
 }

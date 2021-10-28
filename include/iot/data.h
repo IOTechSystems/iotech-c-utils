@@ -939,6 +939,17 @@ extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * ite
 extern bool iot_data_map_iter_next (iot_data_map_iter_t * iter);
 
 /**
+ * @brief Update the iterator to point to the previous element within a map
+ *
+ * The function to set the iterator to point to the previous element within a map. On reaching start of the map,
+ * iterator is set to point to last element in the map.
+ *
+ * @param iter  Input iterator
+ * @return      Returns whether the iterator is still valid (has not passed start of the map)
+ */
+extern bool iot_data_map_iter_prev (iot_data_map_iter_t * iter);
+
+/**
  * @brief Get Key from the map referenced by an input iterator
  *
  * The function to get the key in a map referenced by the iterator
