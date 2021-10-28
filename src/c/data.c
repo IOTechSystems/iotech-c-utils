@@ -187,8 +187,6 @@ extern void iot_data_init (void);
 extern void iot_data_map_dump (iot_data_t * map);
 static iot_data_t * iot_data_value_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered, iot_data_t * cache);
 static void iot_node_free (iot_node_t * node);
-static iot_node_t * iot_node_start (iot_node_t * node);
-static iot_node_t * iot_node_end (iot_node_t * node);
 static iot_node_t * iot_node_next (iot_node_t * iter);
 static iot_node_t * iot_node_prev (iot_node_t * iter);
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
@@ -1074,11 +1072,23 @@ void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
   iter->node = NULL;
 }
 
+static inline iot_node_t * iot_node_start (iot_node_t * node)
+{
+  if (node) while (node->left) node = node->left;
+  return node;
+}
+
 bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
 {
   assert (iter);
   iter->node = (iter->node) ? iot_node_next (iter->node) : iot_node_start (iter->map->tree);
   return (iter->node != NULL);
+}
+
+static inline iot_node_t * iot_node_end (iot_node_t * node)
+{
+  if (node) while (node->right) node = node->right;
+  return node;
 }
 
 bool iot_data_map_iter_prev (iot_data_map_iter_t * iter)
@@ -2289,20 +2299,6 @@ static void iot_node_free (iot_node_t * node)
     iot_node_free (node->right);
     iot_node_delete (node);
   }
-}
-
-static iot_node_t * iot_node_start (iot_node_t * node)
-{
-  iot_node_t * start = node;
-  if (start) while (start->left) start = start->left;
-  return start;
-}
-
-static iot_node_t * iot_node_end (iot_node_t * node)
-{
-  iot_node_t * end = node;
-  if (end) while (end->right) end = end->right;
-  return end;
 }
 
 static iot_node_t * iot_node_next (iot_node_t * iter)
