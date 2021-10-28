@@ -178,6 +178,33 @@ static void test_data_array_iter_next (void)
     CU_ASSERT (*((uint8_t *)iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
+  iot_data_free (array);
+}
+
+static void test_data_array_iter_prev (void)
+{
+  uint8_t data [4] = { 0, 1, 2, 3 };
+  iot_data_array_iter_t array_iter;
+
+  iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint8_t), IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_array_iter (array, &array_iter);
+
+  uint8_t index = 3;
+  while (iot_data_array_iter_prev (&array_iter))
+  {
+    CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
+    CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
+    CU_ASSERT (*((uint8_t *) iot_data_array_iter_value (&array_iter)) == data[index])
+    index--;
+  }
+  index = 3;
+  while (iot_data_array_iter_prev (&array_iter))
+  {
+    CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
+    CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
+    CU_ASSERT (*((uint8_t *) iot_data_array_iter_value (&array_iter)) == data[index])
+    index--;
+  }
 
   iot_data_free (array);
 }
@@ -685,7 +712,8 @@ static void test_data_from_xml (void)
   CU_ASSERT (xml != NULL)
   json = iot_data_to_json (xml);
   CU_ASSERT (json != NULL)
-  // printf ("XML: %s\n", json);
+  // printf ("\nXML: %s\n", json);
+  // printf ("\nEXP: %s\n", expected);
   CU_ASSERT (strcmp (json, expected) == 0)
   free (json);
   iot_data_free (xml);
@@ -1598,38 +1626,91 @@ static bool string_match (const iot_data_t * data, const void * arg)
   return strcmp (target, val) == 0;
 }
 
-static void test_data_vector_iter_next (void)
+static iot_data_t *  test_populate_vector (void)
 {
-  uint8_t index = 0;
-  uint8_t data[2] = { 0, 1 };
-
-  iot_data_t * vector = iot_data_alloc_vector (2);
+  uint8_t data[3] = { 0, 1, 2};
+  static const uint32_t size = 3;
+  iot_data_t * vector = iot_data_alloc_vector (size);
   iot_data_t * value1 = iot_data_alloc_ui8 (data[0]);
   iot_data_t * value2 = iot_data_alloc_ui8 (data[1]);
+  iot_data_t * value3 = iot_data_alloc_ui8 (data[2]);
+  iot_data_vector_add (vector, 0u, value1);
+  iot_data_vector_add (vector, 1u, value2);
+  iot_data_vector_add (vector, 2u, value3);
+  return vector;
+}
 
+static void test_data_vector_iter_next (void)
+{
+  iot_data_t * vector = test_populate_vector ();
   iot_data_vector_iter_t iter;
-
-  iot_data_vector_add (vector, 0, value1);
-  iot_data_vector_add (vector, 1, value2);
   iot_data_vector_iter (vector, &iter);
 
-  for (int i = 0; i<4; i++)
+  uint8_t index = 0;
+  while (iot_data_vector_iter_next (&iter))
   {
-    while (iot_data_vector_iter_next (&iter))
-    {
-      CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
-      CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
-      CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == data[index])
-      index++;
-    }
-    index = 0;
-
-    CU_ASSERT (iot_data_vector_iter_next (&iter) == true)
     CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
-    CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == data[index])
+    CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
+    CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == index)
     index++;
   }
+  index = 0;
+  while (iot_data_vector_iter_next (&iter))
+  {
+    CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
+    CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
+    CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == index)
+    index++;
+  }
+  iot_data_free (vector);
+}
 
+static void test_data_vector_iter_prev (void)
+{
+  iot_data_t * vector = test_populate_vector ();
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (vector, &iter);
+
+  uint32_t index = iot_data_vector_size (vector) - 1;
+  while (iot_data_vector_iter_prev (&iter))
+  {
+    CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
+    CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
+    CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == index)
+    index--;
+  }
+  index = iot_data_vector_size (vector) - 1;
+  while (iot_data_vector_iter_prev (&iter))
+  {
+    CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
+    CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
+    CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == index)
+    index--;
+  }
+  iot_data_free (vector);
+}
+
+static void test_data_vector_iters (void)
+{
+  iot_data_t * vector = test_populate_vector ();
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (vector, &iter);
+
+  uint32_t index = 0;
+  iot_data_vector_iter_next (&iter);
+  CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
+  CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
+  CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == index)
+  index++;
+  iot_data_vector_iter_next (&iter);
+  CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
+  CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
+  CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == index)
+  index--;
+  iot_data_vector_iter_prev (&iter);
+  CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
+  CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
+  CU_ASSERT (iot_data_ui8 (iot_data_vector_iter_value (&iter)) == index)
   iot_data_free (vector);
 }
 
@@ -2958,6 +3039,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_type_string", test_data_type_string);
   CU_add_test (suite, "data_array_key", test_data_array_key);
   CU_add_test (suite, "data_array_iter_next", test_data_array_iter_next);
+  CU_add_test (suite, "data_array_iter_prev", test_data_array_iter_prev);
   CU_add_test (suite, "data_array_iter_uint8", test_data_array_iter_uint8);
   CU_add_test (suite, "data_array_iter_int8", test_data_array_iter_int8);
   CU_add_test (suite, "data_array_iter_uint16", test_data_array_iter_uint16);
@@ -3024,6 +3106,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_copy_map_update_value", test_data_copy_map_update_value);
   CU_add_test (suite, "data_copy_vector_map", test_data_copy_vector_map);
   CU_add_test (suite, "data_vector_iter_next", test_data_vector_iter_next);
+  CU_add_test (suite, "data_vector_iter_prev", test_data_vector_iter_prev);
+  CU_add_test (suite, "data_vector_iters", test_data_vector_iters);
   CU_add_test (suite, "data_vector_resize", test_data_vector_resize);
   CU_add_test (suite, "data_vector_find", test_data_vector_find);
   CU_add_test (suite, "data_copy_map_base64_to_array", test_data_copy_map_base64_to_array);
