@@ -880,7 +880,7 @@ extern void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t
  * the iterator is set to point to the first element in the array.
  *
  * @param iter  Input iterator
- * @return      'true' on Success, 'false' when the iterator reaches end of the array
+ * @return      Returns whether the iterator is still valid (has not passed end of the array)
  */
 extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 
@@ -891,7 +891,7 @@ extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
  * the iterator is set to point to the last element in the array.
  *
  * @param iter  Input iterator
- * @return      'true' on Success, 'false' when the iterator reaches end of the array
+ * @return      Returns whether the iterator is still valid (has not passed start of the array)
  */
 extern bool iot_data_array_iter_prev (iot_data_array_iter_t * iter);
 
@@ -920,7 +920,7 @@ extern const void * iot_data_array_iter_value (const iot_data_array_iter_t * ite
  *
  * The function initialises an iterator to point to the beginning of a map. Note that
  * the iterator is unsafe in that the map cannot be modified when being iterated other
- * than by using the iot_data_map_iter_replace_value() function.
+ * than by using the iot_data_map_iter_replace_value function.
  *
  * @param map   Input map
  * @param iter  Iterator to initialise
@@ -934,7 +934,7 @@ extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * ite
  * iterator is set to point to first element in the map.
  *
  * @param iter  Input iterator
- * @return      'true' on Success, 'false' when the iterator reaches end of the map
+ * @return      Returns whether the iterator is still valid (has not passed end of the map)
  */
 extern bool iot_data_map_iter_next (iot_data_map_iter_t * iter);
 
@@ -993,9 +993,9 @@ extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * 
 /**
  * @brief Initialise iterator to the start of a vector
  *
- * The function initialises an iterator to to point to the first element of a vector. Note that
+ * The function initialises an iterator to point to the first element of a vector. Note that
  * the iterator is unsafe in that the vector cannot be modified when being iterated, other
- * than by using the iot_data_vector_iter_replace_value() function.
+ * than by using the iot_data_vector_iter_replace_value function.
  *
  * @param vector Input vector
  * @param iter   Input iterator
@@ -1009,7 +1009,7 @@ extern void iot_data_vector_iter (const iot_data_t * vector, iot_data_vector_ite
  * the iterator is set to point to the first element in the vector.
  *
  * @param  iter  Input iterator
- * @return       'true' if the iterator index is <= vector length, 'false' otherwise
+ * @return       Returns whether the iterator is still valid (has not passed end of the vector)
  */
 extern bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter);
 
@@ -1020,7 +1020,7 @@ extern bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter);
  * the iterator is set to point to the last element in the vector.
  *
  * @param  iter  Input iterator
- * @return       'true' if the iterator index is zero, 'false' otherwise
+ * @return       Returns whether the iterator is still valid (has not passed start of the vector)
  */
 extern bool iot_data_vector_iter_prev (iot_data_vector_iter_t * iter);
 
