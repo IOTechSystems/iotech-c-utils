@@ -187,8 +187,8 @@ extern void iot_data_init (void);
 extern void iot_data_map_dump (iot_data_t * map);
 static iot_data_t * iot_data_value_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered, iot_data_t * cache);
 static void iot_node_free (iot_node_t * node);
-static iot_node_t * iot_node_start (iot_node_t * node);
 static iot_node_t * iot_node_next (iot_node_t * iter);
+static iot_node_t * iot_node_prev (iot_node_t * iter);
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
 static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
 static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key);
@@ -421,8 +421,8 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 
         while ((iot_data_vector_iter_next (&iter1)) && (iot_data_vector_iter_next (&iter2)))
         {
-          const iot_data_t * data1 = iot_data_vector_get (v1, (iter1.index - 1));
-          const iot_data_t * data2 = iot_data_vector_get (v2, (iter2.index - 1));
+          const iot_data_t * data1 = iot_data_vector_get (v1, (iter1.index));
+          const iot_data_t * data2 = iot_data_vector_get (v2, (iter2.index));
           if (!iot_data_equal (data1, data2)) return false;
         }
         return true;
@@ -1005,6 +1005,12 @@ const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, const ch
   return ((data && (iot_data_type (data) == IOT_DATA_MAP)) ? data : NULL);
 }
 
+const void * iot_data_string_map_get_pointer (const iot_data_t * map, const char * key)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_POINTER)) ? iot_data_pointer (data) : NULL);
+}
+
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 {
   assert (map && (map->type == IOT_DATA_MAP));
@@ -1066,10 +1072,29 @@ void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
   iter->node = NULL;
 }
 
+static inline iot_node_t * iot_node_start (iot_node_t * node)
+{
+  if (node) while (node->left) node = node->left;
+  return node;
+}
+
 bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
 {
   assert (iter);
   iter->node = (iter->node) ? iot_node_next (iter->node) : iot_node_start (iter->map->tree);
+  return (iter->node != NULL);
+}
+
+static inline iot_node_t * iot_node_end (iot_node_t * node)
+{
+  if (node) while (node->right) node = node->right;
+  return node;
+}
+
+bool iot_data_map_iter_prev (iot_data_map_iter_t * iter)
+{
+  assert (iter);
+  iter->node = (iter->node) ? iot_node_prev (iter->node) : iot_node_end (iter->map->tree);
   return (iter->node != NULL);
 }
 
@@ -1109,62 +1134,76 @@ void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter
 {
   assert (iter && array && array->type == IOT_DATA_ARRAY);
   iter->array = (const iot_data_array_t*) array;
-  iter->index = 0;
+  iter->index = iter->array->length;
 }
 
 bool iot_data_array_iter_next (iot_data_array_iter_t * iter)
 {
   assert (iter);
-  iter->index = (iter->index <= iter->array->length) ? iter->index + 1 : 1;
-  return (iter->index <= iter->array->length);
+  iter->index = (iter->index < iter->array->length) ? iter->index + 1 : 0;
+  return (iter->index < iter->array->length);
+}
+
+bool iot_data_array_iter_prev (iot_data_array_iter_t * iter)
+{
+  assert (iter);
+  iter->index = (iter->index != 0) ? iter->index - 1 : iter->array->length;
+  return (iter->index < iter->array->length);
 }
 
 uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter)
 {
   assert (iter);
-  return (iter->index - 1);
+  return iter->index;
 }
 
 const void * iot_data_array_iter_value (const iot_data_array_iter_t * iter)
 {
   assert (iter);
-  return (iter->index <= iter->array->length) ? ((char*) (iter->array->data) + (iter->index - 1) * iot_data_type_size[iter->array->base.sub_type]) : NULL;
+  return (iter->index < iter->array->length) ? ((char*) (iter->array->data) + (iter->index) * iot_data_type_size[iter->array->base.sub_type]) : NULL;
 }
 
 void iot_data_vector_iter (const iot_data_t * vector, iot_data_vector_iter_t * iter)
 {
   assert (iter && vector && vector->type == IOT_DATA_VECTOR);
   iter->vector = (const iot_data_vector_t*) vector;
-  iter->index = 0;
+  iter->index = iter->vector->size;
 }
 
 bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter)
 {
   assert (iter);
-  iter->index = (iter->index <= iter->vector->size) ? iter->index + 1 : 1;
-  return (iter->index <= iter->vector->size);
+  iter->index = (iter->index < iter->vector->size) ? iter->index + 1 : 0;
+  return (iter->index < iter->vector->size);
+}
+
+bool iot_data_vector_iter_prev (iot_data_vector_iter_t * iter)
+{
+  assert (iter);
+  iter->index = (iter->index != 0) ? iter->index - 1 : iter->vector->size;
+  return (iter->index < iter->vector->size);
 }
 
 uint32_t iot_data_vector_iter_index (const iot_data_vector_iter_t * iter)
 {
   assert (iter);
-  return (iter->index - 1);
+  return iter->index;
 }
 
 const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter_t * iter)
 {
   assert (iter);
-  return (iter->index <= iter->vector->size) ? iter->vector->values[iter->index - 1] : NULL;
+  return (iter->index < iter->vector->size) ? iter->vector->values[iter->index] : NULL;
 }
 
-iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t *value)
+iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t * value)
 {
   assert (iter);
-  iot_data_t *res = NULL;
-  if (iter->index <= iter->vector->size)
+  iot_data_t * res = NULL;
+  if (iter->index < iter->vector->size)
   {
-    res = iter->vector->values[iter->index - 1];
-    iter->vector->values[iter->index - 1] = value;
+    res = iter->vector->values[iter->index];
+    iter->vector->values[iter->index] = value;
   }
   return res;
 }
@@ -1172,7 +1211,7 @@ iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * 
 const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * iter)
 {
   assert (iter);
-  return (iter->index <= iter->vector->size) ? iot_data_string (iter->vector->values[iter->index - 1]) : NULL;
+  return (iter->index < iter->vector->size) ? iot_data_string (iter->vector->values[iter->index]) : NULL;
 }
 
 const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg)
@@ -1384,7 +1423,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
       {
         const iot_data_t * value = iot_data_vector_iter_value (&iter);
         iot_data_dump (holder, value);
-        if (iter.index < iter.vector->size)
+        if (iter.index < (iter.vector->size - 1u))
         {
           iot_data_strcat (holder, ",");
         }
@@ -1761,7 +1800,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
       while (iot_data_vector_iter_next (&iter))
       {
         iot_data_t * val = iot_data_copy (iot_data_vector_iter_value (&iter));
-        iot_data_vector_add (ret, iter.index-1, val);
+        iot_data_vector_add (ret, iter.index, val);
       }
       break;
     }
@@ -2262,13 +2301,6 @@ static void iot_node_free (iot_node_t * node)
   }
 }
 
-static iot_node_t * iot_node_start (iot_node_t * node)
-{
-  iot_node_t * start = node;
-  if (start) while (start->left) start = start->left;
-  return start;
-}
-
 static iot_node_t * iot_node_next (iot_node_t * iter)
 {
   if (iter->right)
@@ -2281,6 +2313,27 @@ static iot_node_t * iot_node_next (iot_node_t * iter)
     // While the right child, chain up parent link
     iot_node_t * n = iter->parent;
     while (n && iter == n->right)
+    {
+      iter = n;
+      n = n->parent;
+    }
+    iter = n;
+  }
+  return iter;
+}
+
+static iot_node_t * iot_node_prev (iot_node_t * iter)
+{
+  if (iter->left)
+  {
+    // Left then right to the end
+    for (iter = iter->left; iter->right != NULL; iter = iter->right);
+  }
+  else
+  {
+    // While the left child, chain up parent link
+    iot_node_t * n = iter->parent;
+    while (n && iter == n->left)
     {
       iter = n;
       n = n->parent;

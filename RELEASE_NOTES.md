@@ -99,7 +99,14 @@
 - Support added for Debian 11
 - Fedora support updated to version 34
 - OpenSUSE support updated to version 15.3
+- Support added for AzureSphere SDK 21.10 and API 11
 - Memory usage optimisation for iot data
 - Function added to support the caching of iot data json key values:
 
 * `iot_data_from_json_with_cache`
+
+- Support added for data vector, map and array reverse iteration
+
+* `iot_data_vector_iter_prev`
+* `iot_data_array_iter_prev`
+* `iot_data_map_iter_prev`
