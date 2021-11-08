@@ -199,35 +199,39 @@ static bool iot_container_typed_load (iot_container_t * cont, const char * cname
 
 static bool iot_container_load (iot_container_t * cont, const char * cname)
 {
-  bool result = false;
-  iot_load_in_progress_t this = { cname, iot_load_in_progress };
-  iot_load_in_progress_t * loading = iot_load_in_progress;
-  assert (iot_config && cont);
+  bool result = iot_container_find_component (cont, cname) != NULL;
 
-  // Check for cycles
-  while (loading)
+  if (! result)
   {
-    if (strcmp (loading->name, cname) == 0) break;
-    loading = loading->next;
-  }
-  if (!loading)
-  {
-    iot_load_in_progress = &this;
-    char * config = (iot_config->load) (cont->name, iot_config->uri);
-    iot_data_t * map = iot_component_config_to_map (config, cont->logger);
-    free (config);
+    iot_load_in_progress_t this = {cname, iot_load_in_progress};
+    iot_load_in_progress_t *loading = iot_load_in_progress;
+    assert (iot_config && cont);
 
-    if (map)
+    // Check for cycles
+    while (loading)
     {
-      const char * ctype = iot_data_string_map_get_string (map, cname);
-      if (ctype) result = iot_container_typed_load (cont, cname, ctype);
+      if (strcmp (loading->name, cname) == 0) break;
+      loading = loading->next;
     }
-    iot_data_free (map);
-    iot_load_in_progress = this.next;
-  }
-  else
-  {
-    iot_log_error (cont->logger, "Invalid configuration, cyclic component reference for component %s", cname);
+    if (!loading)
+    {
+      iot_load_in_progress = &this;
+      char *config = (iot_config->load) (cont->name, iot_config->uri);
+      iot_data_t *map = iot_component_config_to_map (config, cont->logger);
+      free (config);
+
+      if (map)
+      {
+        const char *ctype = iot_data_string_map_get_string (map, cname);
+        if (ctype) result = iot_container_typed_load (cont, cname, ctype);
+      }
+      iot_data_free (map);
+      iot_load_in_progress = this.next;
+    }
+    else
+    {
+      iot_log_error (cont->logger, "Invalid configuration, cyclic component reference for component %s", cname);
+    }
   }
   return result;
 }
