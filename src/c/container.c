@@ -129,10 +129,7 @@ static iot_component_holder_t * iot_container_find_holder_locked (iot_container_
   iot_component_holder_t * holder = cont->head;
   while (holder)
   {
-    if (strcmp (holder->name, name) == 0)
-    {
-      break;
-    }
+    if (strcmp (holder->name, name) == 0) break;
     holder = holder->next;
   }
   return holder;
