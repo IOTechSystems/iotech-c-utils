@@ -197,9 +197,9 @@ static bool iot_container_typed_load (iot_container_t * cont, const char * cname
   return result;
 }
 
-static bool iot_container_load (iot_container_t * cont, const char * cname)
+static bool iot_container_load_locked (iot_container_t * cont, const char * cname)
 {
-  bool result = iot_container_find_component (cont, cname) != NULL;
+  bool result = iot_container_find_holder_locked (cont, cname) != NULL;
 
   if (! result)
   {
@@ -427,7 +427,7 @@ iot_component_t * iot_container_find_component (iot_container_t * cont, const ch
     iot_component_holder_t * holder = iot_container_find_holder_locked (cont, name);
     if (iot_config && !holder)
     {
-      iot_container_load (cont, name);
+      iot_container_load_locked (cont, name);
       holder = iot_container_find_holder_locked (cont, name);
     }
     if (holder) comp = holder->component;
