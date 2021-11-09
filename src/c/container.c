@@ -175,21 +175,24 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
 
 static bool iot_container_typed_load (iot_container_t * cont, const char * cname, const char * ctype)
 {
-  bool result = false;
-  const iot_component_factory_t * factory = iot_component_factory_find (ctype);
-  if (factory)
+  bool result = iot_container_find_holder_locked (cont, cname);
+  if (!result)
   {
-    char * config = (iot_config->load) (cname, iot_config->uri);
-    if (config)
+    const iot_component_factory_t *factory = iot_component_factory_find (ctype);
+    if (factory)
     {
-      iot_component_create (cont, cname, factory, config);
-      free (config);
+      char *config = (iot_config->load) (cname, iot_config->uri);
+      if (config)
+      {
+        iot_component_create (cont, cname, factory, config);
+        free (config);
+      }
+      result = true;
     }
-    result = true;
-  }
-  else
-  {
-    iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
+    else
+    {
+      iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
+    }
   }
   return result;
 }
@@ -387,7 +390,6 @@ extern const iot_component_factory_t * iot_component_factory_find (const char * 
 void iot_container_add_component (iot_container_t * cont, const char * ctype, const char *cname, const char * config)
 {
   assert (cont && ctype && cname && config);
-
   const iot_component_factory_t * factory = iot_component_factory_find (ctype);
 
 #ifdef IOT_BUILD_DYNAMIC_LOAD
