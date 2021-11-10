@@ -129,10 +129,7 @@ static iot_component_holder_t * iot_container_find_holder_locked (iot_container_
   iot_component_holder_t * holder = cont->head;
   while (holder)
   {
-    if (strcmp (holder->name, name) == 0)
-    {
-      break;
-    }
+    if (strcmp (holder->name, name) == 0) break;
     holder = holder->next;
   }
   return holder;
@@ -178,56 +175,63 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
 
 static bool iot_container_typed_load (iot_container_t * cont, const char * cname, const char * ctype)
 {
-  bool result = false;
-  const iot_component_factory_t * factory = iot_component_factory_find (ctype);
-  if (factory)
+  bool result = iot_container_find_holder_locked (cont, cname);
+  if (!result)
   {
-    char * config = (iot_config->load) (cname, iot_config->uri);
-    if (config)
+    const iot_component_factory_t *factory = iot_component_factory_find (ctype);
+    if (factory)
     {
-      iot_component_create (cont, cname, factory, config);
-      free (config);
+      char *config = (iot_config->load) (cname, iot_config->uri);
+      if (config)
+      {
+        iot_component_create (cont, cname, factory, config);
+        free (config);
+      }
+      result = true;
     }
-    result = true;
-  }
-  else
-  {
-    iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
+    else
+    {
+      iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
+    }
   }
   return result;
 }
 
-static bool iot_container_load (iot_container_t * cont, const char * cname)
+static bool iot_container_load_locked (iot_container_t * cont, const char * cname)
 {
-  bool result = false;
-  iot_load_in_progress_t this = { cname, iot_load_in_progress };
-  iot_load_in_progress_t * loading = iot_load_in_progress;
-  assert (iot_config && cont);
+  bool result = iot_container_find_holder_locked (cont, cname) != NULL;
 
-  // Check for cycles
-  while (loading)
+  if (! result)
   {
-    if (strcmp (loading->name, cname) == 0) break;
-    loading = loading->next;
-  }
-  if (!loading)
-  {
-    iot_load_in_progress = &this;
-    char * config = (iot_config->load) (cont->name, iot_config->uri);
-    iot_data_t * map = iot_component_config_to_map (config, cont->logger);
-    free (config);
+    iot_load_in_progress_t this = {cname, iot_load_in_progress};
+    iot_load_in_progress_t *loading = iot_load_in_progress;
+    assert (iot_config && cont);
 
-    if (map)
+    // Check for cycles
+    while (loading)
     {
-      const char * ctype = iot_data_string_map_get_string (map, cname);
-      if (ctype) result = iot_container_typed_load (cont, cname, ctype);
+      if (strcmp (loading->name, cname) == 0) break;
+      loading = loading->next;
     }
-    iot_data_free (map);
-    iot_load_in_progress = this.next;
-  }
-  else
-  {
-    iot_log_error (cont->logger, "Invalid configuration, cyclic component reference for component %s", cname);
+    if (!loading)
+    {
+      iot_load_in_progress = &this;
+      char *config = (iot_config->load) (cont->name, iot_config->uri);
+      iot_data_t *map = iot_component_config_to_map (config, cont->logger);
+      free (config);
+
+      if (map)
+      {
+        const char *ctype = iot_data_string_map_get_string (map, cname);
+        if (ctype) result = iot_container_typed_load (cont, cname, ctype);
+      }
+      iot_data_free (map);
+      iot_load_in_progress = this.next;
+    }
+    else
+    {
+      iot_log_error (cont->logger, "Invalid configuration, cyclic component reference for component %s", cname);
+    }
   }
   return result;
 }
@@ -386,7 +390,6 @@ extern const iot_component_factory_t * iot_component_factory_find (const char * 
 void iot_container_add_component (iot_container_t * cont, const char * ctype, const char *cname, const char * config)
 {
   assert (cont && ctype && cname && config);
-
   const iot_component_factory_t * factory = iot_component_factory_find (ctype);
 
 #ifdef IOT_BUILD_DYNAMIC_LOAD
@@ -423,7 +426,7 @@ iot_component_t * iot_container_find_component (iot_container_t * cont, const ch
     iot_component_holder_t * holder = iot_container_find_holder_locked (cont, name);
     if (iot_config && !holder)
     {
-      iot_container_load (cont, name);
+      iot_container_load_locked (cont, name);
       holder = iot_container_find_holder_locked (cont, name);
     }
     if (holder) comp = holder->component;
