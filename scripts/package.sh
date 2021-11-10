@@ -153,6 +153,7 @@ case ${SYSTEM} in
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+      --architecture "${OS_ARCH}" \
       --prefix /opt/iotech/iot \
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
@@ -161,6 +162,7 @@ case ${SYSTEM} in
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+      --architecture "${OS_ARCH}" \
       --prefix /opt/iotech/iot \
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
@@ -173,6 +175,7 @@ case ${SYSTEM} in
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
+      --architecture "${OS_ARCH}" \
       --prefix /opt/iotech/iot \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
