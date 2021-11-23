@@ -98,6 +98,7 @@
 
 - Support added for Debian 11
 - Fedora support updated to version 34
+- Photon Linux support updated to version 4.0
 - OpenSUSE support updated to version 15.3
 - Alpine Linux version 3.14 support added
 - Support added for AzureSphere SDK 21.10 and API 11
