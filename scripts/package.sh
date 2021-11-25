@@ -143,26 +143,38 @@ case ${SYSTEM} in
         OS_ARCH=${BARCH}
         ;;
     esac
-    if [ "${SYSTEM}" = "opensuse-leap" ]
-    then
-      UUID_LIB=libuuid1
-    else
-      UUID_LIB=libuuid
-    fi
+
+    case ${SYSTEM} in
+      photon)
+        RPM_DIST="--rpm-dist ph4"
+      ;;
+      fedora)
+        RPM_DIST="--rpm-dist fc34"
+        UUID_DEP="--depends libuuid1"
+      ;;
+      centos)
+        RPM_DIST="--rpm-dist el8"
+        UUID_DEP="--depends libuuid"
+      ;;
+      opensuse-leap)
+        FPM=fpm.ruby2.5
+        UUID_DEP="--depends libuuid1"
+      ;;
+    esac
+
     cd ${ROOT}/${BARCH}/release
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
-      --architecture "${OS_ARCH}" \
+      --architecture "${OS_ARCH}" ${RPM_DIST} \
       --prefix /opt/iotech/iot \
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude include --exclude docs --exclude examples --exclude *.a \
-      --depends ${UUID_LIB}
+      --exclude include --exclude docs --exclude examples --exclude *.a ${UUID_DEP}
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
-      --architecture "${OS_ARCH}" \
+      --architecture "${OS_ARCH}" ${RPM_DIST} \
       --prefix /opt/iotech/iot \
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
@@ -175,12 +187,11 @@ case ${SYSTEM} in
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
-      --architecture "${OS_ARCH}" \
+      --architecture "${OS_ARCH}" ${RPM_DIST} \
       --prefix /opt/iotech/iot \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends ${UUID_LIB} \
-      --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
+      --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev ${UUID_DEP}
 
     rm *.tar.gz
     ;;
