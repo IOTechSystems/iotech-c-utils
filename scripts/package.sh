@@ -1,8 +1,7 @@
 #!/bin/sh
+set -e -x
 
 # Build APK, DEB or RPM packages
-
-set -e -x
 
 # Process arguments
 
@@ -25,11 +24,6 @@ do
   esac
 done
 
-if [ -f /etc/os-release ]
-then
-  SYSTEM=$(sed -e 's/^ID=\(.*\)/\1/;t;d' < /etc/os-release | tr -d \")
-fi
-
 BROOT="${ROOT}/${BARCH}"
 VER=$(cat ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
@@ -39,11 +33,6 @@ DESC_MAIN="IOT C Framework"
 DESC_DEV="IOT C Framework development"
 DESC_DBG="IOT C Framework (debug enabled)"
 FPM=fpm
-
-if [ "${SYSTEM}" = "opensuse-leap" ]
-then
-  FPM=fpm.ruby2.5
-fi
 
 build_apk()
 {
@@ -61,7 +50,7 @@ build_apk()
 }
 
 case ${SYSTEM} in
-  alpine)
+  alpine*)
     cd ${ROOT}
     case ${BARCH} in
       arm64)
@@ -89,7 +78,7 @@ case ${SYSTEM} in
     export DEPS=libuuid
     build_apk "${BROOT}/debug" "iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH}"
     ;;
-  debian|ubuntu)
+  debian*|ubuntu*)
     OS_ARCH=$(dpkg --print-architecture)
     cd ${ROOT}/${BARCH}/release
 
@@ -126,13 +115,13 @@ case ${SYSTEM} in
 
     rm *.tar.gz
     ;;
-  photon|centos|fedora|opensuse*)
+  photon*|centos*|fedora*|opensuse*)
     case ${BARCH} in
       arm64)
         OS_ARCH=aarch64
         ;;
       arm32)
-        if [ "${SYSTEM}" = "opensuse-leap" ]
+        if [ "${SYSTEM}" = "opensuse-15.3" ]
         then
           OS_ARCH=armv7hl
         else
@@ -145,18 +134,18 @@ case ${SYSTEM} in
     esac
 
     case ${SYSTEM} in
-      photon)
+      photon-40)
         RPM_DIST="--rpm-dist ph4"
       ;;
-      fedora)
+      fedora-34)
         RPM_DIST="--rpm-dist fc34"
         UUID_DEP="--depends libuuid1"
       ;;
-      centos)
+      centos-8)
         RPM_DIST="--rpm-dist el8"
         UUID_DEP="--depends libuuid"
       ;;
-      opensuse-leap)
+      opensuse-15.3)
         FPM=fpm.ruby2.5
         UUID_DEP="--depends libuuid1"
       ;;

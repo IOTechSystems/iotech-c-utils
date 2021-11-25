@@ -1,4 +1,5 @@
 FROM ubuntu:16.04
+ENV SYSTEM="ubuntu-16.04"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 RUN apt-get update && apt-get install -y build-essential file wget git gcc cmake make doxygen graphviz uuid-dev ruby-dev
 RUN gem install --no-document fpm
