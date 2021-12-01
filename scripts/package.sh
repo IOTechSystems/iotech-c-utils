@@ -136,18 +136,22 @@ case ${SYSTEM} in
     case ${SYSTEM} in
       photon-40)
         RPM_DIST=ph4
+        UUID_DEV_DEP=util-linux-devel
       ;;
       fedora-34)
         RPM_DIST=fc34
         UUID_DEP=libuuid1
+        UUID_DEV_DEP=libuuid-devel
       ;;
       centos-8)
         RPM_DIST=el8
         UUID_DEP=libuuid
+        UUID_DEV_DEP=libuuid-devel
       ;;
       opensuse-15.3)
         FPM=fpm.ruby2.5
         UUID_DEP=libuuid1
+        UUID_DEV_DEP=libuuid-devel
       ;;
     esac
 
@@ -167,7 +171,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot \
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude lib \
+      --exclude lib ${UUID_DEV_DEP:+--depends ${UUID_DEV_DEP}} \
       --depends iotech-iot-${PKG_VER}
 
     rm *.tar.gz
@@ -180,7 +184,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev ${UUID_DEP:+--depends ${UUID_DEP}}
+      --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev ${UUID_DEV_DEP:+--depends ${UUID_DEV_DEP}}
 
     rm *.tar.gz
     ;;
