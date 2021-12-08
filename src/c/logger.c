@@ -40,7 +40,6 @@ extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level,
 extern void iot_log_udp (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 
 static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
-static const char * iot_log_format = "[%s:%" PRIu64 ":%s:%s] %s\n";
 static iot_logger_t iot_logger_dfl;
 
 iot_logger_t * iot_logger_default (void)
@@ -178,7 +177,7 @@ static inline int iot_logger_format_log (iot_logger_t * logger, iot_loglevel_t l
 #ifdef IOT_HAS_PRCTL
   prctl (PR_GET_NAME, tname);
 #endif
-  return snprintf (logger->buff, sizeof (logger->buff), iot_log_format, tname, timestamp, logger->name, iot_log_levels[level], message);
+  return snprintf (logger->buff, sizeof (logger->buff), "[%s:%" PRIu64 ":%s:%s] %s\n", tname, timestamp, logger->name, iot_log_levels[level], message);
 }
 
 static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_loglevel_t level, uint64_t timestamp, const char *message)
@@ -237,7 +236,7 @@ extern void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t t
   int len = iot_logger_format_log (logger, level, timestamp, message);
   if (len > 0)
   {
-    sendto (sock, logger->buff, sizeof (logger->buff), 0, (struct sockaddr*) &addr, sizeof (struct sockaddr_in));
+    sendto (sock, logger->buff, len, 0, (struct sockaddr*) &addr, sizeof (struct sockaddr_in));
   }
   iot_component_unlock (&logger->component);
   close (sock);
