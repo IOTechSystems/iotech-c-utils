@@ -22,6 +22,7 @@ extern "C" {
 #define IOT_LOGGER_TYPE "IOT::Logger"
 /** Default log level warning */
 #define IOT_LOGLEVEL_DEFAULT IOT_LOG_WARN
+#define IOT_LOG_MSG_MAX 1024
 
 /** Logger structure */
 struct iot_logger_t;
@@ -42,30 +43,6 @@ typedef enum iot_loglevel_t
 /** Alias for IOT logger function pointer */
 typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 
-/* Default set of supported logger implementation functions */
-
-#ifdef IOT_HAS_FILE
-/**
- * @brief Log message to a file
- *
- * @param logger     Pointer to a logger component, to get the component name. "default" is used if logger is NULL
- * @param level      Log level
- * @param timestamp  Timestamp information to log
- * @param message    Log message
- */
-extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-#endif
-
-/**
- * @brief Log message to console
- *
- * @param logger     Pointer to a logger component, to get the component name. "default" is used if logger is NULL
- * @param level      Log level
- * @param timestamp  Timestamp information to log
- * @param message    Log message
- */
-extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-
 /**
  * Alias for logger structure
  */
@@ -78,6 +55,7 @@ typedef struct iot_logger_t
   char * to;                      /**< Log 'to' a certain file */
   iot_log_function_t impl;        /**< Pointer to function that handles logging functionality */
   struct iot_logger_t * next;     /**< Pointer to next logger structure */
+  char buff [IOT_LOG_MSG_MAX];    /**< Log format buffer */
 } iot_logger_t;
 
 /**
