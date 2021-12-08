@@ -187,7 +187,7 @@ static inline void iot_logger_log_to_fd (iot_logger_t * logger, FILE * fd, iot_l
   if (iot_logger_format_log (logger, level, timestamp, message))
   {
 #ifdef _AZURESPHERE_
-    Log_Debug ("%s", buff);
+    Log_Debug ("%s", logger->buff);
 #else
     fprintf (fd, logger->buff);
 #endif
