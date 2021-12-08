@@ -112,3 +112,5 @@
 * `iot_data_vector_iter_prev`
 * `iot_data_array_iter_prev`
 * `iot_data_map_iter_prev`
+
+- Support for UDP logger added
