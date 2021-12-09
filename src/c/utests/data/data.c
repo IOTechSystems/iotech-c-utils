@@ -1895,7 +1895,6 @@ static void test_data_copy_vector_ui8 (void)
   iot_data_t * vector2 = iot_data_copy (vector1);
   CU_ASSERT (iot_data_equal (vector1, vector2))
 
-  //update array2
   iot_data_vector_add (vector2, 0, iot_data_alloc_ui8 (10));
   CU_ASSERT (!iot_data_equal (vector1, vector2))
 
@@ -2672,6 +2671,7 @@ static void test_data_zerolength_array (void)
   iot_data_free (array1);
   iot_data_free (array2);
 }
+
 static void test_data_zerolength_vector (void)
 {
   iot_data_t * vector1 = iot_data_alloc_vector (0);
