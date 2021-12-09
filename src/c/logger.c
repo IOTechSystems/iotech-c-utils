@@ -147,6 +147,7 @@ static inline iot_logger_type_t iot_logger_type (iot_log_function_t fn)
 
 iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next, bool start)
 {
+  static const int yes = 1;
   assert (name && impl);
   iot_logger_type_t type = iot_logger_type (impl);
   iot_logger_impl_t * logger = calloc (1, sizeof (*logger));
@@ -160,7 +161,7 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
     const char * sep = strchr (to, ':');
     if (sep)
     {
-      char target[17];
+      char target[17] = { 0 };
       strncpy (target, to, (size_t) (sep - to));
       inet_aton (target, &logger->addr.sin_addr);
       to = sep + 1;
@@ -170,6 +171,8 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
       logger->addr.sin_addr.s_addr = htonl (INADDR_BROADCAST);
     }
     logger->addr.sin_port = htons ((uint16_t) atoi (to));
+    logger->sock = socket (AF_INET, SOCK_DGRAM, 0);
+    if (sep == NULL) setsockopt (logger->sock, SOL_SOCKET, SO_BROADCAST, (char *) &yes, sizeof (yes));
   }
 #if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
   else if (type == IOT_LOGGER_FILE)
@@ -264,22 +267,12 @@ extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64
 
 extern void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
 {
-  static const int yes = 1;
   iot_logger_impl_t * impl = (iot_logger_impl_t*) logger;
-
   iot_component_lock (&logger->component);
-  if (impl->sock == -1)
-  {
-    impl->sock = socket (AF_INET, SOCK_DGRAM, 0);
-    setsockopt (impl->sock, SOL_SOCKET, SO_BROADCAST, (char *) &yes, sizeof (yes));
-  }
   if (impl->sock != -1)
   {
     size_t len = iot_logger_format_log (impl, level, timestamp, message);
-    if (len > 0)
-    {
-      sendto (impl->sock, impl->buff, len, 0, (struct sockaddr *) &impl->addr, sizeof (struct sockaddr_in));
-    }
+    if (len > 0) sendto (impl->sock, impl->buff, len, 0, (struct sockaddr *) &impl->addr, sizeof (struct sockaddr_in));
   }
   iot_component_unlock (&logger->component);
 }
