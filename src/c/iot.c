@@ -123,7 +123,7 @@ bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t le
 extern bool iot_file_delete (const char * path)
 {
   (void) path;
-  Storage_DeleteMutableFile ();
+  return (Storage_DeleteMutableFile () == 0);
 }
 
 #else

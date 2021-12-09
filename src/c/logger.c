@@ -190,7 +190,9 @@ void iot_logger_free (iot_logger_t * logger)
   {
     free (impl->name);
     close (impl->sock);
+#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
     if (impl->fd) fclose (impl->fd);
+#endif
     iot_component_fini (&logger->component);
     free (logger);
   }
@@ -218,13 +220,13 @@ void iot_logger_stop (iot_logger_t * logger)
   logger->level = IOT_LOG_NONE;
 }
 
-static inline int iot_logger_format_log (iot_logger_impl_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
+static inline size_t iot_logger_format_log (iot_logger_impl_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
 {
   char tname[IOT_PRCTL_NAME_MAX] = { 0 };
 #ifdef IOT_HAS_PRCTL
   prctl (PR_GET_NAME, tname);
 #endif
-  return snprintf (logger->buff, sizeof (logger->buff), "[%s:%" PRIu64 ":%s:%s] %s\n", tname, timestamp, logger->name, iot_log_levels[level], message);
+  return (size_t) snprintf (logger->buff, sizeof (logger->buff), "[%s:%" PRIu64 ":%s:%s] %s\n", tname, timestamp, logger->name, iot_log_levels[level], message);
 }
 
 static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, iot_loglevel_t level, uint64_t timestamp, const char *message)
@@ -269,7 +271,7 @@ extern void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t t
   }
   if (impl->sock != -1)
   {
-    int len = iot_logger_format_log (impl, level, timestamp, message);
+    size_t len = iot_logger_format_log (impl, level, timestamp, message);
     if (len > 0)
     {
       sendto (impl->sock, impl->buff, len, 0, (struct sockaddr *) &impl->addr, sizeof (struct sockaddr_in));
