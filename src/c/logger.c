@@ -141,7 +141,7 @@ static inline iot_logger_type_t iot_logger_type (iot_log_function_t fn)
   return IOT_LOGGER_CUSTOM;
 }
 
-iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next, bool self_start)
+iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next, bool start)
 {
   assert (name && impl);
   iot_logger_type_t type = iot_logger_type (impl);
@@ -174,13 +174,13 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
   }
 #endif
   iot_component_init (&logger->base.component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
-  if (self_start) iot_logger_start (&logger->base);
+  if (start) iot_logger_start (&logger->base);
   return &logger->base;
 }
 
-iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool self_start)
+iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool start)
 {
-  return iot_logger_alloc_custom (name, level,NULL, iot_log_console, NULL, self_start);
+  return iot_logger_alloc_custom (name, level,NULL, iot_log_console, NULL, start);
 }
 
 void iot_logger_free (iot_logger_t * logger)
@@ -321,8 +321,8 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
     to += 4;
   }
   iot_logger_t * next = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Next"));
-  bool self_start = iot_data_string_map_get_bool (map, "Start", true);
-  return (iot_component_t*) iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next, self_start);
+  bool start = iot_data_string_map_get_bool (map, "Start", true);
+  return (iot_component_t*) iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next, start);
 }
 
 static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map)
