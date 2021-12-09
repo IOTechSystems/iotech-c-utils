@@ -70,7 +70,6 @@ iot_logger_t * iot_logger_default (void)
     iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
     iot_logger_dfl.base.level = iot_logger_dfl.save = IOT_LOGLEVEL_DEFAULT;
     iot_logger_dfl.impl = iot_log_console;
-   // Steve  iot_logger_dfl.type = IOT_LOGGER_CONSOLE;
   }
   return logger;
 }
@@ -160,13 +159,13 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
       char target[17];
       strncpy (target, to, (size_t) (sep - to));
       inet_aton (target, &logger->addr.sin_addr);
-      logger->addr.sin_port = htons ((uint16_t) atoi (sep + 1));
+      to = sep + 1;
     }
     else
     {
       logger->addr.sin_addr.s_addr = htonl (INADDR_BROADCAST);
-      logger->addr.sin_port = htons ((uint16_t) atoi (to));
     }
+    logger->addr.sin_port = htons ((uint16_t) atoi (to));
   }
 #if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
   else if (type == IOT_LOGGER_FILE)
@@ -255,7 +254,7 @@ extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64
   iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message);
 }
 
-/* iot_log_udp: To is either "host:port" or "port". Latter form means broadcast. */
+/* iot_log_udp: To is either "<host>:<port>" or "<port>". Latter form means broadcast. */
 
 extern void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
 {
