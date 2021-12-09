@@ -237,7 +237,7 @@ static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, 
 #ifdef _AZURESPHERE_
     Log_Debug ("%s", logger->buff);
 #else
-    fprintf (fd, logger->buff);
+    fprintf (fd, "%s", logger->buff);
 #endif
   }
   iot_component_unlock (&logger->base.component);
