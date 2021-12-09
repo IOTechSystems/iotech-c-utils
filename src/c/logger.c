@@ -53,7 +53,9 @@ iot_logger_impl_t;
 
 // Some internal log functions actually extern for testing
 
+#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
 extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
+#endif
 static void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 extern void iot_log_udp (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 
@@ -136,7 +138,9 @@ void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
 static inline iot_logger_type_t iot_logger_type (iot_log_function_t fn)
 {
   if (fn == iot_log_console) return IOT_LOGGER_CONSOLE;
+#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
   if (fn == iot_log_file) return IOT_LOGGER_FILE;
+#endif
   if (fn == iot_log_udp) return IOT_LOGGER_UDP;
   return IOT_LOGGER_CUSTOM;
 }
