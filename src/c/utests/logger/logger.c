@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2020-2021
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -8,8 +8,9 @@
 #include "logger.h"
 #include "CUnit.h"
 
+// Internal (not in public header) log functions
+
 extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 extern void iot_log_udp (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 
 static int suite_init (void)
@@ -95,7 +96,6 @@ static void cunit_logger_sub (void)
   cunit_custom_log_count = 0;
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 3)
-  CU_ASSERT (iot_logger_next (logger) == sub)
   iot_logger_free (logger);
 }
 

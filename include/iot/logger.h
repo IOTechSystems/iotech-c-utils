@@ -22,13 +22,11 @@ extern "C" {
 #define IOT_LOGGER_TYPE "IOT::Logger"
 /** Default log level warning */
 #define IOT_LOGLEVEL_DEFAULT IOT_LOG_WARN
+/** Maximum log message size */
 #define IOT_LOG_MSG_MAX 1024
 
-/** Logger structure */
-struct iot_logger_t;
-
 /**
- * Alias for log level enumeration
+ * Log level enumeration
  */
 typedef enum iot_loglevel_t
 {
@@ -40,23 +38,42 @@ typedef enum iot_loglevel_t
   IOT_LOG_TRACE       /**< Log level 5 - max IOT debug level */
 } iot_loglevel_t;
 
-/** Alias for IOT logger function pointer */
-typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
+/**
+ * Log type enumeration
+ */
+typedef enum iot_logger_type_t
+{
+  IOT_LOGGER_CONSOLE,
+  IOT_LOGGER_FILE,
+  IOT_LOGGER_UDP,
+  IOT_LOGGER_CUSTOM
+} iot_logger_type_t;
 
 /**
- * Alias for logger structure
+ * Public logger struct. Do not use directly or stack allocate.
  */
 typedef struct iot_logger_t
 {
-  iot_component_t component;      /**< Details of a given logger component */
+  iot_component_t component;      /**< Component base */
   volatile iot_loglevel_t level;  /**< Log level */
-  volatile iot_loglevel_t save;   /**< Last saved log level */
-  char * name;                    /**< Name of logger */
-  char * to;                      /**< Log 'to' a certain file */
-  iot_log_function_t impl;        /**< Pointer to function that handles logging functionality */
-  struct iot_logger_t * next;     /**< Pointer to next logger structure */
-  char buff [IOT_LOG_MSG_MAX];    /**< Log format buffer */
 } iot_logger_t;
+
+/**
+ * Logger implementation function type
+ */
+typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
+
+/**
+ * @brief Allocate memory an initialize logger component
+ *
+ * The function to allocate memory and initialize logger component. The logger component logs messages to console
+ *
+ * @param name        Identifier to use for logging
+ * @param level       Log level
+ * @param self_start  'true' will start the logger after initialization
+ * @return            Pointer to the logger component created
+ */
+extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool self_start);
 
 /**
  * @brief Allocate memory and initialize logger component with the custom log function
@@ -72,18 +89,6 @@ typedef struct iot_logger_t
  * @return            Pointer to the logger component created
  */
 extern iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next, bool self_start);
-
-/**
- * @brief Allocate memory an initialize logger component
- *
- * The function to allocate memory and initialize logger component. The logger component logs messages to console
- *
- * @param name        Identifier to use for logging
- * @param level       Log level
- * @param self_start  'true' will start the logger after initialization
- * @return            Pointer to the logger component created
- */
-extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool self_start);
 
 /**
  * @brief Increment the logger reference count
@@ -120,14 +125,6 @@ extern void iot_logger_stop (iot_logger_t * logger);
  * @return  Pointer to the logging component
  */
 extern iot_logger_t * iot_logger_default (void);
-
-/**
- * @brief Get next logger
- *
- * @param logger  Pointer to the logger component
- * @return        Pointer to the next logger component stored by the logger
- */
-extern iot_logger_t * iot_logger_next (iot_logger_t * logger);
 
 /* Logging functions */
 /**
