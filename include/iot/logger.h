@@ -30,12 +30,12 @@ extern "C" {
  */
 typedef enum iot_loglevel_t
 {
-  IOT_LOG_NONE = 0,   /**< No logger */
-  IOT_LOG_ERROR,      /**< Log level 1 */
-  IOT_LOG_WARN,       /**< Log level 2 */
-  IOT_LOG_INFO,       /**< Log level 3 */
-  IOT_LOG_DEBUG,      /**< Log level 4 */
-  IOT_LOG_TRACE       /**< Log level 5 - max IOT debug level */
+  IOT_LOG_NONE = 0,   /**< No logging */
+  IOT_LOG_ERROR,      /**< Error logging */
+  IOT_LOG_WARN,       /**< Warning and Error logging */
+  IOT_LOG_INFO,       /**< Information, Warning and Error logging */
+  IOT_LOG_DEBUG,      /**< Debug, Information, Warning and Error logging */
+  IOT_LOG_TRACE       /**< Trace, Debug, Information, Warning and Error logging */
 } iot_loglevel_t;
 
 /**
@@ -43,10 +43,10 @@ typedef enum iot_loglevel_t
  */
 typedef enum iot_logger_type_t
 {
-  IOT_LOGGER_CONSOLE,
-  IOT_LOGGER_FILE,
-  IOT_LOGGER_UDP,
-  IOT_LOGGER_CUSTOM
+  IOT_LOGGER_CONSOLE, /**< Console logger to stdout or stderr (for Warning and Error) */
+  IOT_LOGGER_FILE,    /**< File logger */
+  IOT_LOGGER_UDP,     /**< UDP logger (to fixed address or broadcast) */
+  IOT_LOGGER_CUSTOM   /**< Non core, custom logger */
 } iot_logger_type_t;
 
 /**
