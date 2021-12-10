@@ -1124,14 +1124,14 @@ extern char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size
 /**
  * @brief  Convert data to json string, writing to provided buffer
  *
- * An initial string buffer and size is provided. If the buffer is too small a new buffer will
+ * An initial string buffer and size are provided. If the buffer is too small a new buffer will
  * be allocated, in which case the returned pointer will not be the same as the provided buffer.
  * If a stack allocated buffer is used, it must be large enough to hold the generated json.
  *
  * @param  data  Input data
  * @param  buff  Output buffer
  * @param  size  Output buffer size
- * @return       Output buffer or a new buffer if provided buffer to small
+ * @return       Output buffer or a new buffer if provided buffer too small
  */
 extern char * iot_data_to_json_with_buffer (const iot_data_t * data, char * buff, uint32_t size);
 
