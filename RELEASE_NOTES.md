@@ -114,3 +114,6 @@
 * `iot_data_map_iter_prev`
 
 - Support for UDP logger added
+- Function added to output data json representation into a provided string buffer
+
+* `iot_data_to_json_with_buffer`
