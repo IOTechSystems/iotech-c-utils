@@ -1443,11 +1443,18 @@ char * iot_data_to_json (const iot_data_t * data)
 
 char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size)
 {
-  iot_string_holder_t holder;
   assert (data && size > 0);
-  holder.str = calloc (1, size);
+  return iot_data_to_json_with_buffer (data, malloc (size), size);
+}
+
+char * iot_data_to_json_with_buffer (const iot_data_t * data, char * buff, uint32_t size)
+{
+  iot_string_holder_t holder;
+  assert (data && buff && size > 0);
+  holder.str = buff;
   holder.size = size;
   holder.free = size - 1; // Allowing for string terminator
+  *buff = 0;
   iot_data_dump (&holder, data);
   return holder.str;
 }

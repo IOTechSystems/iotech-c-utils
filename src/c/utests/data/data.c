@@ -524,6 +524,13 @@ static void test_data_to_json (void)
   CU_ASSERT (json != NULL)
   iot_data_free (val);
   free (json);
+
+  char buff[10];
+  val = iot_data_alloc_bool (true);
+  json = iot_data_to_json_with_buffer (val, buff, sizeof (buff));
+  CU_ASSERT (json == buff)
+  CU_ASSERT (strcmp (buff, "true") == 0)
+  iot_data_free (val);
 }
 
 static void test_data_from_json (void)
