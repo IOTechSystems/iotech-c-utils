@@ -276,7 +276,6 @@ bool iot_container_init (iot_container_t * cont)
 
   if (map)
   {
-    const iot_component_factory_t * factory;
     const char * cname;
     const char * ctype;
     iot_data_map_iter_t iter;
@@ -290,9 +289,8 @@ bool iot_container_init (iot_container_t * cont)
       cname = iot_data_map_iter_string_key (&iter);
       ctype = iot_data_map_iter_string_value (&iter);
       config = (iot_config->load) (cname, iot_config->uri);
-      factory = iot_component_factory_find (ctype);
 
-      if ((!factory) && config)
+      if ((iot_component_factory_find (ctype) == NULL) && config)
       {
         iot_container_try_load_component (cont, config);
       }
