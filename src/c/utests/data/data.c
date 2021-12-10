@@ -531,6 +531,13 @@ static void test_data_to_json (void)
   CU_ASSERT (json == buff)
   CU_ASSERT (strcmp (buff, "true") == 0)
   iot_data_free (val);
+
+  char * dbuff = malloc (10);
+  val = iot_data_alloc_f64 (DBL_MAX);
+  json = iot_data_to_json_with_buffer (val, dbuff, 10);
+  CU_ASSERT (json != buff)
+  iot_data_free (val);
+  free (json);
 }
 
 static void test_data_from_json (void)
