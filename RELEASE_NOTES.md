@@ -98,7 +98,9 @@
 
 - Support added for Debian 11
 - Fedora support updated to version 34
+- Photon Linux support updated to version 4.0
 - OpenSUSE support updated to version 15.3
+- Alpine Linux version 3.14 support added
 - Support added for AzureSphere SDK 21.10 and API 11
 - Memory usage optimisation for iot data
 - Function added to support the caching of iot data json key values:
@@ -110,3 +112,8 @@
 * `iot_data_vector_iter_prev`
 * `iot_data_array_iter_prev`
 * `iot_data_map_iter_prev`
+
+- Support for UDP logger added
+- Function added to output data json representation into a provided string buffer
+
+* `iot_data_to_json_with_buffer`

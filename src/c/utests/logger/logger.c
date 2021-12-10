@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2020-2021
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -91,13 +91,28 @@ static void cunit_logger_sub (void)
   cunit_custom_log_count = 0;
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 3)
-  CU_ASSERT (iot_logger_next (logger) == sub)
   iot_logger_free (logger);
 }
 
 static void cunit_logger_file (void)
 {
   iot_logger_t * logger = iot_logger_alloc_custom ("File", IOT_LOG_WARN, "./test.log", iot_log_file, NULL, false);
+  iot_logger_start (logger);
+  cunit_test_logs (logger);
+  iot_logger_free (logger);
+}
+
+static void cunit_logger_udp (void)
+{
+  iot_logger_t * logger = iot_logger_alloc_custom ("udp", IOT_LOG_WARN, "localhost:22222", iot_log_udp, NULL, false);
+  iot_logger_start (logger);
+  cunit_test_logs (logger);
+  iot_logger_free (logger);
+}
+
+static void cunit_logger_udp_broadcast (void)
+{
+  iot_logger_t * logger = iot_logger_alloc_custom ("udp-broadcast", IOT_LOG_WARN, "33333", iot_log_udp, NULL, false);
   iot_logger_start (logger);
   cunit_test_logs (logger);
   iot_logger_free (logger);
@@ -154,6 +169,8 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_impl", cunit_logger_impl);
   CU_add_test (suite, "logger_sub", cunit_logger_sub);
   CU_add_test (suite, "logger_file", cunit_logger_file);
+  CU_add_test (suite, "logger_udp", cunit_logger_udp);
+  CU_add_test (suite, "logger_udp_broadcast", cunit_logger_udp_broadcast);
   CU_add_test (suite, "logger_null", cunit_logger_null);
   CU_add_test (suite, "logger_start_stop", cunit_logger_start_stop);
   CU_add_test (suite, "logger_refcount", cunit_logger_refcount);

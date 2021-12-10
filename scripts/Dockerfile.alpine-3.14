@@ -1,5 +1,5 @@
-FROM alpine:3.13
-ENV SYSTEM="alpine-3.13"
+FROM alpine:3.14
+ENV SYSTEM="alpine-3.14"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 RUN apk add --update --no-cache build-base wget git gcc cmake make alpine-sdk util-linux-dev
 COPY VERSION /iotech-iot/

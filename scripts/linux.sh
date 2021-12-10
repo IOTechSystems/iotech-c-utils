@@ -105,6 +105,7 @@ then
   cd ${BROOT}/release
   c/utests/runner/runner -a -j
   c/tests/map/map_test
+  c/tests/schedule/schedule_test
 fi
 
 # Run examples

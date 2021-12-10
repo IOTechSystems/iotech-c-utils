@@ -1,4 +1,5 @@
 FROM ubuntu:20.04
+ENV SYSTEM="ubuntu-20.04"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 ENV DEBIAN_FRONTEND=noninteractive
 RUN ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime

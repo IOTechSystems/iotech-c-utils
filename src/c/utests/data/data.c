@@ -524,6 +524,20 @@ static void test_data_to_json (void)
   CU_ASSERT (json != NULL)
   iot_data_free (val);
   free (json);
+
+  char buff[10];
+  val = iot_data_alloc_bool (true);
+  json = iot_data_to_json_with_buffer (val, buff, sizeof (buff));
+  CU_ASSERT (json == buff)
+  CU_ASSERT (strcmp (buff, "true") == 0)
+  iot_data_free (val);
+
+  char * dbuff = malloc (10);
+  val = iot_data_alloc_f64 (DBL_MAX);
+  json = iot_data_to_json_with_buffer (val, dbuff, 10);
+  CU_ASSERT (json != buff)
+  iot_data_free (val);
+  free (json);
 }
 
 static void test_data_from_json (void)
@@ -1895,7 +1909,6 @@ static void test_data_copy_vector_ui8 (void)
   iot_data_t * vector2 = iot_data_copy (vector1);
   CU_ASSERT (iot_data_equal (vector1, vector2))
 
-  //update array2
   iot_data_vector_add (vector2, 0, iot_data_alloc_ui8 (10));
   CU_ASSERT (!iot_data_equal (vector1, vector2))
 
@@ -2672,6 +2685,7 @@ static void test_data_zerolength_array (void)
   iot_data_free (array1);
   iot_data_free (array2);
 }
+
 static void test_data_zerolength_vector (void)
 {
   iot_data_t * vector1 = iot_data_alloc_vector (0);

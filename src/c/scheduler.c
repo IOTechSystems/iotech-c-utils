@@ -69,8 +69,8 @@ static inline void iot_schedule_requeue (iot_schd_queue_t * from, iot_schd_queue
 /* Convert time in ns to timespec */
 static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
 {
-  ts->tv_sec = IOT_NS_TO_SEC (ns);
-  ts->tv_nsec = IOT_NS_REMAINING (ns);
+  ts->tv_sec = (time_t) IOT_NS_TO_SEC (ns);
+  ts->tv_nsec = (long) IOT_NS_REMAINING (ns);
 }
 
 /* Get the current time as an unsigned 64bit int */
@@ -78,7 +78,7 @@ static uint64_t getTimeAsUInt64 (void)
 {
   struct timespec ts;
   clock_gettime (CLOCK_REALTIME, &ts);
-  return (uint64_t)ts.tv_sec * IOT_BILLION + ts.tv_nsec;
+  return (uint64_t) ts.tv_sec * IOT_BILLION + ts.tv_nsec;
 }
 
 /* Scheduler thread function */
