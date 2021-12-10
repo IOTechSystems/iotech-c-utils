@@ -63,6 +63,16 @@ typedef struct iot_logger_t
  */
 typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 
+
+#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
+/** File logger function */
+extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
+#endif
+/** Console logger function */
+extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
+/** UDP logger function */
+extern void iot_log_udp (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
+
 /**
  * @brief Allocate memory an initialize logger component
  *

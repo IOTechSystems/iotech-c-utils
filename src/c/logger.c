@@ -51,14 +51,6 @@ typedef struct iot_logger_impl_t
 }
 iot_logger_impl_t;
 
-// Some internal log functions actually extern for testing
-
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-#endif
-static void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-extern void iot_log_udp (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-
 static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
 static iot_logger_impl_t iot_logger_dfl;
 
@@ -251,7 +243,7 @@ static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, 
 }
 
 #if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
+extern void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
 {
   iot_logger_impl_t * impl = (iot_logger_impl_t*) logger;
   if (impl->fd) iot_logger_log_to_fd (impl, impl->fd, level, timestamp, message);

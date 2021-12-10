@@ -8,11 +8,6 @@
 #include "logger.h"
 #include "CUnit.h"
 
-// Internal (not in public header) log functions
-
-extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-extern void iot_log_udp (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-
 static int suite_init (void)
 {
   return 0;
