@@ -9,6 +9,7 @@
 #include "data.h"
 #include "CUnit.h"
 #include <float.h>
+#include <math.h>
 
 #ifdef IOT_HAS_UUID
 #include <uuid/uuid.h>
@@ -733,6 +734,20 @@ static void test_data_from_xml (void)
   iot_data_free (xml);
 }
 #endif
+
+static void test_data_infinite (void)
+{
+  iot_data_t * f = iot_data_alloc_from_string (IOT_DATA_FLOAT32, "1e500");
+  iot_data_t * d = iot_data_alloc_from_string (IOT_DATA_FLOAT64, "1e500");
+  char * json = iot_data_to_json (f);
+  CU_ASSERT (strcmp (json, "1e400") == 0) // Use 1e400 as a representation of a float infinite value
+  free (json);
+  json = iot_data_to_json (d);
+  CU_ASSERT (strcmp (json, "1e800") == 0) // Use 1e800 as a representation of a double infinite value
+  free (json);
+  iot_data_free (f);
+  iot_data_free (d);
+}
 
 static void test_data_address (void)
 {
@@ -3073,6 +3088,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_from_json", test_data_from_json);
   CU_add_test (suite, "data_from_json2", test_data_from_json2);
   CU_add_test (suite, "data_address", test_data_address);
+  CU_add_test (suite, "data_infinite", test_data_infinite);
   CU_add_test (suite, "data_from_string", test_data_from_string);
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
   CU_add_test (suite, "data_from_base64", test_data_from_base64);
