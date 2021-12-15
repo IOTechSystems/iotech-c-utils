@@ -117,3 +117,5 @@
 - Function added to output data json representation into a provided string buffer
 
 * `iot_data_to_json_with_buffer`
+
+- Update to support the JSON representation of infinite floating point values
