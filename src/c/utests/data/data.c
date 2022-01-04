@@ -125,6 +125,10 @@ static void test_data_types (void)
   CU_ASSERT (strcmp (iot_data_type_name (data), "Pointer") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_POINTER)
   iot_data_free (data);
+  data = iot_data_alloc_list ();
+  CU_ASSERT (strcmp (iot_data_type_name (data), "List") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_LIST)
+  iot_data_free (data);
 }
 
 static void test_data_array_key (void)
@@ -828,6 +832,8 @@ static void test_data_type_string (void)
   CU_ASSERT (str && strcmp (str, "Vector") == 0)
   str = iot_data_type_string (IOT_DATA_POINTER);
   CU_ASSERT (str && strcmp (str, "Pointer") == 0)
+  str = iot_data_type_string (IOT_DATA_LIST);
+  CU_ASSERT (str && strcmp (str, "List") == 0)
 }
 
 static void test_data_from_string (void)
@@ -2884,6 +2890,13 @@ static void test_data_type_typecode (void)
   data = iot_data_alloc_i8 (-4);
   tc = iot_data_typecode (data);
   CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_INT8)
+  CU_ASSERT (iot_data_matches (data, tc))
+  iot_data_free (data);
+  iot_typecode_free (tc);
+
+  data = iot_data_alloc_list ();
+  tc = iot_data_typecode (data);
+  CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_LIST)
   CU_ASSERT (iot_data_matches (data, tc))
   iot_data_free (data);
   iot_typecode_free (tc);

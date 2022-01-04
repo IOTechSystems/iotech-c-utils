@@ -24,23 +24,24 @@ extern "C" {
  */
 typedef enum iot_data_type_t
 {
-  IOT_DATA_INT8 = 0,    /**< Signed 8 bit integer */
-  IOT_DATA_UINT8 = 1,   /**< Unsigned 8 bit integer */
-  IOT_DATA_INT16 = 2,   /**< Signed 16 bit integer */
-  IOT_DATA_UINT16 = 3,  /**< Unsigned 16 bit integer */
-  IOT_DATA_INT32 = 4,   /**< Signed 32 bit integer */
-  IOT_DATA_UINT32 = 5,  /**< Unsigned 32 bit integer */
-  IOT_DATA_INT64 = 6,   /**< Signed 64 bit integer */
-  IOT_DATA_UINT64 = 7,  /**< Unsigned 64 bit integer */
-  IOT_DATA_FLOAT32 = 8, /**< 32 bit float */
-  IOT_DATA_FLOAT64 = 9, /**< 64 bit float */
-  IOT_DATA_BOOL = 10,   /**< Boolean */
-  IOT_DATA_STRING = 11, /**< String */
-  IOT_DATA_NULL = 12,   /**< Null */
-  IOT_DATA_ARRAY = 13,  /**< Array */
-  IOT_DATA_MAP = 14,    /**< Map */
-  IOT_DATA_VECTOR = 15, /**< Vector */
-  IOT_DATA_POINTER = 16 /**< Pointer */
+  IOT_DATA_INT8 = 0,     /**< Signed 8 bit integer */
+  IOT_DATA_UINT8 = 1,    /**< Unsigned 8 bit integer */
+  IOT_DATA_INT16 = 2,    /**< Signed 16 bit integer */
+  IOT_DATA_UINT16 = 3,   /**< Unsigned 16 bit integer */
+  IOT_DATA_INT32 = 4,    /**< Signed 32 bit integer */
+  IOT_DATA_UINT32 = 5,   /**< Unsigned 32 bit integer */
+  IOT_DATA_INT64 = 6,    /**< Signed 64 bit integer */
+  IOT_DATA_UINT64 = 7,   /**< Unsigned 64 bit integer */
+  IOT_DATA_FLOAT32 = 8,  /**< 32 bit float */
+  IOT_DATA_FLOAT64 = 9,  /**< 64 bit float */
+  IOT_DATA_BOOL = 10,    /**< Boolean */
+  IOT_DATA_STRING = 11,  /**< String */
+  IOT_DATA_NULL = 12,    /**< Null */
+  IOT_DATA_ARRAY = 13,   /**< Array */
+  IOT_DATA_MAP = 14,     /**< Map */
+  IOT_DATA_VECTOR = 15,  /**< Vector */
+  IOT_DATA_POINTER = 16, /**< Pointer */
+  IOT_DATA_LIST = 17     /**< List */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
 /**
@@ -65,17 +66,26 @@ typedef struct iot_typecode_t iot_typecode_t;
 typedef struct iot_data_map_iter_t
 {
   const struct iot_data_map_t * map;   /**< Pointer to data map structure */
-  struct iot_node_t * node;            /**< Pointer to data node structure */
+  struct iot_node_t * node;            /**< Pointer to map node structure */
 } iot_data_map_iter_t;
 
 /**
- * Alias for data vector iterator structure
+ * Type for data vector iterator structure
  */
 typedef struct iot_data_vector_iter_t
 {
   const struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
   uint32_t index;                           /**< Index of the given vector */
 } iot_data_vector_iter_t;
+
+/**
+ * Type for data list iterator structure
+ */
+typedef struct iot_data_list_iter_t
+{
+  const struct iot_data_list_t * list;  /**< Pointer to data list structure */
+  struct iot_element_t * element;       /**< Pointer to list element structure */
+} iot_data_list_iter_t;
 
 /**
  * Alias for data array iterator structure
@@ -370,6 +380,87 @@ extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
  * @return           Pointer to the allocated data
  */
 extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn);
+
+/**
+ * @brief Allocate data for a list
+ *
+ * The function to allocate data for a list
+ *
+ * @return  Pointer to the allocated data
+ */
+extern iot_data_t * iot_data_alloc_list (void);
+
+/**
+ * @brief Get the list length
+ *
+ * The function to get the length of the input list
+ *
+ * @param list  Input list
+ * @return      Length of the list
+ */
+extern uint32_t iot_data_list_length (const iot_data_t * list);
+
+/**
+ * @brief Associate a list iterator with a list
+ *
+ * The function initialises an list iterator asociating it with a list. Note that
+ * the iterator is unsafe in that the list cannot be modified when being iterated, other
+ * than by using the iot_data_list_iter_replace_value function. The iterator can be moved
+ * from tail to head using the next function or from haed to tail using the prev function.
+ *
+ *
+ * @param list List
+ * @param iter List iterator
+ */
+extern void iot_data_list_iter (const iot_data_t * list, iot_data_list_iter_t * iter);
+
+/**
+ * @brief Update the iterator to point to the next element in a list
+ *
+ * The function to set the iterator to point to the next element of a list, moving from tail to head.
+ * On reaching the head of the list, the iterator is set to the tail of the list.
+ *
+ * @param iter  Input iterator
+ * @return      Returns whether the iterator is still valid (has not passed the head of the list)
+ */
+extern bool iot_data_list_iter_next (iot_data_list_iter_t * iter);
+
+/**
+ * @brief Update the iterator to point to the previous element in a list
+ *
+ * The function to set the iterator to point to the previous element of a list, moving from head to tail.
+ * On reaching the tail of the list, the iterator is set to the head of the list.
+ *
+ * @param iter  Input iterator
+ * @return      Returns whether the iterator is still valid (has not passed the tail of the list)
+ */
+extern bool iot_data_list_iter_prev (iot_data_list_iter_t * iter);
+
+/**
+ * @brief Get the value of the element associated with a list iterator
+ *
+ * The function returns the list element referenced by the list iterator.
+ *
+ * @param iter  Input iterator
+ * @return      Pointer to the current list element
+ */
+extern const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t * iter);
+
+/**
+ * @brief Replace the value associated with a list iterator
+ *
+ * The function to replace a value in a list referenced by the iterator
+ *
+ * @param iter  Input iterator
+ * @param value New value to store in the list
+ * @return      Pointer to the previous value associated with the iterator if valid, NULL otherwise
+ */
+extern iot_data_t * iot_data_list_iter_replace_value (const iot_data_list_iter_t * iter, iot_data_t * value);
+
+extern void iot_data_list_tail_push (iot_data_t * list, iot_data_t *value);
+extern iot_data_t * iot_data_list_tail_pop (iot_data_t * list);
+extern void iot_data_list_head_push (iot_data_t * list, iot_data_t *value);
+extern iot_data_t * iot_data_list_head_pop (iot_data_t * list);
 
 /**
  * @brief Allocate memory for an array
@@ -978,7 +1069,6 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
  * @param value New value to store in the map
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
-
 extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t *value);
 
 /**
