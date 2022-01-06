@@ -2348,6 +2348,31 @@ static void test_list_remove (void)
   CU_ASSERT (iot_data_list_length (list) == 0u)
   iot_data_free (list);
 }
+static void test_list_equal (void)
+{
+  uint32_t val0 = 0u;
+  uint32_t val1 = 1u;
+  uint32_t val2 = 2u;
+  iot_data_t * value;
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_t * list2 = iot_data_alloc_list ();
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (val0));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 ( val1));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (val2));
+  iot_data_list_tail_push (list2, iot_data_alloc_ui32 (val0));
+  iot_data_list_tail_push (list2, iot_data_alloc_ui32 ( val1));
+  iot_data_list_tail_push (list2, iot_data_alloc_ui32 (val2));
+  CU_ASSERT (iot_data_equal (list, list2))
+  value = iot_data_list_tail_pop (list);
+  iot_data_free (value);
+  CU_ASSERT (! iot_data_equal (list, list2))
+  value = iot_data_list_head_pop (list2);
+  iot_data_free (value);
+  CU_ASSERT (! iot_data_equal (list, list2))
+  iot_data_free (list);
+  iot_data_free (list2);
+}
+
 
 static void test_data_map_remove (void)
 {
@@ -3075,8 +3100,12 @@ static void test_data_type_typecode (void)
   iot_typecode_free (tc);
 
   data = iot_data_alloc_list ();
+  iot_data_list_tail_push (data, iot_data_alloc_ui32 (1u));
+  iot_data_list_tail_push (data, iot_data_alloc_ui32 (2u));
   tc = iot_data_typecode (data);
+  et = iot_typecode_element_type (tc);
   CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_LIST)
+  CU_ASSERT (iot_typecode_type (et) == IOT_DATA_UINT32)
   CU_ASSERT (iot_data_matches (data, tc))
   iot_data_free (data);
   iot_typecode_free (tc);
@@ -3279,6 +3308,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_list_iter_replace", test_list_iter_replace);
   CU_add_test (suite, "data_list_remove", test_list_remove);
   CU_add_test (suite, "data_list_find", test_list_find);
+  CU_add_test (suite, "data_list_equal", test_list_equal);
   CU_add_test (suite, "data_map_size", test_map_size);
   CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);
   CU_add_test (suite, "data_map_remove", test_data_map_remove);
