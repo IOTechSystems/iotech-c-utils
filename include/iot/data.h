@@ -401,11 +401,38 @@ extern iot_data_t * iot_data_alloc_list (void);
 extern uint32_t iot_data_list_length (const iot_data_t * list);
 
 /**
+ * @brief Find matching element in a list using compare function
+ *
+ * Applies a compare function to each element in a list until the compare
+ * function returns true or the end of the list is reached. The list is searched from tail to head.
+ *
+ * @param list    Input list
+ * @param cmp     A comparison function which takes an element and an argument and returns true or false
+ * @param arg     Pointer to user supplied argument that is passed to the comparison function.
+ * @return        Pointer to the first element for which the comparison function return true, NULL otherwise
+ */
+extern const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
+
+/**
+ * @brief Remove matching element in a list using compare function
+ *
+ * Applies a compare function to each element in a list until the compare
+ * function returns true or the end of the list is reached. The list is searched from tail to head,
+ * and the first matching element is removed and freed.
+ *
+ * @param list    Input list
+ * @param cmp     A comparison function which takes an element and an argument and returns true or false
+ * @param arg     Pointer to user supplied argument that is passed to the comparison function.
+ * @return        Whether an element removed
+ */
+extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
+
+/**
  * @brief Associate a list iterator with a list
  *
  * The function initialises an list iterator asociating it with a list. Note that
  * the iterator is unsafe in that the list cannot be modified when being iterated, other
- * than by using the iot_data_list_iter_replace_value function. The iterator can be moved
+ * than by using the iot_data_list_iter_replace function. The iterator can be moved
  * from tail to head using the next function or from haed to tail using the prev function.
  *
  *
@@ -455,11 +482,46 @@ extern const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t *
  * @param value New value to store in the list
  * @return      Pointer to the previous value associated with the iterator if valid, NULL otherwise
  */
-extern iot_data_t * iot_data_list_iter_replace_value (const iot_data_list_iter_t * iter, iot_data_t * value);
+extern iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value);
 
-extern void iot_data_list_tail_push (iot_data_t * list, iot_data_t *value);
+/**
+ * @brief Push a value onto the tail of a list
+ *
+ * The function to push a value onto the tail of a list
+ *
+ * @param list  Input list
+ * @param value Value to add to tail of the list
+ */
+extern void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value);
+
+/**
+ * @brief Pop a value from the tail of a list
+ *
+ * The function to pop a value from the tail of a list
+ *
+ * @param list  Input list
+ * @return      Value from the list tail or NULL if list empty
+ */
 extern iot_data_t * iot_data_list_tail_pop (iot_data_t * list);
-extern void iot_data_list_head_push (iot_data_t * list, iot_data_t *value);
+
+/**
+ * @brief Push a value onto the head of a list
+ *
+ * The function to push a value onto the head of a list
+ *
+ * @param list  Input list
+ * @param value Value to add to head of the list
+ */
+extern void iot_data_list_head_push (iot_data_t * list, iot_data_t * value);
+
+/**
+ * @brief Pop a value from the head of a list
+ *
+ * The function to pop a value from the head of a list
+ *
+ * @param list  Input list
+ * @return      Value from the list head or NULL if list empty
+ */
 extern iot_data_t * iot_data_list_head_pop (iot_data_t * list);
 
 /**
@@ -1178,11 +1240,10 @@ extern const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * 
  * pointer to the matching element or NULL.
  *
  * @param vector  Input vector
- * @param cmp     A comparison function which takes an element and an arg and return true or false
+ * @param cmp     A comparison function which takes an element and an argument and returns true or false
  * @param arg     Pointer to user supplied data that is passed to the comparison function.
  * @return        Pointer to the first element for which the comparison function return true, NULL otherwise
  */
-
 extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg);
 
 /**
@@ -1310,11 +1371,11 @@ extern iot_data_t * iot_data_copy (const iot_data_t * src);
 /**
  * @brief Check data type matches typecode
  *
- * The function returns where a data instance matches a given typecode. Not that this will
- * return false for polymorphic data types i.e. maps or vectors of differing type.
+ * The function returns where a data instance matches a given typecode. Note that this will
+ * return false for polymorphic data types i.e. maps, vectors or lists of differing type.
  *
  * @param data     Data to compare
- * @param typecode Typecode to compare dat against
+ * @param typecode Typecode to compare data against
  * @return         Whether the data matches the typecode
  */
 extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * typecode);

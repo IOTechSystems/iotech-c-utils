@@ -64,6 +64,17 @@ extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type);
 extern iot_typecode_t * iot_typecode_alloc_vector (iot_typecode_t * element_type);
 
 /**
+ * @brief Allocate a list typecode
+ *
+ * The function allocates a typecode for a list, setting the element type. The element type
+ * can be any type or NULL to indicate a variable as opposed to a fixed type element.
+ *
+ * @param element_type The type of the list element, NULL to indicate any type
+ * @return             Pointer to the allocated vector typecode
+ */
+extern iot_typecode_t * iot_typecode_alloc_list (iot_typecode_t * element_type);
+
+/**
  * @brief Free a typecode
  *
  * The function frees an allocated typecode
