@@ -102,7 +102,7 @@ static bool iot_component_cmp (const iot_data_t * value, const void * arg)
   return (strcmp ((char*) arg, comp->name) == 0);
 }
 
-static const iot_component_t * iot_container_find_component_locked (iot_container_t * cont, const char * name)
+static const iot_component_t * iot_container_find_component_locked (const iot_container_t * cont, const char * name)
 {
   assert (cont && name);
   const iot_data_t * value = iot_data_list_find (cont->components, iot_component_cmp, name);

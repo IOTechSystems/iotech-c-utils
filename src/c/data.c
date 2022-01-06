@@ -515,11 +515,11 @@ iot_data_t * iot_data_alloc_list (void)
 uint32_t iot_data_list_length (const iot_data_t * list)
 {
   assert (list);
-  iot_data_list_t * impl = (iot_data_list_t*) list;
+  const iot_data_list_t * impl = (const iot_data_list_t*) list;
   return impl->head ? impl->head->length : 0;
 }
 
-static iot_element_t * iot_data_list_find_element (iot_data_list_t * list, iot_data_cmp_fn cmp, const void * arg)
+static iot_element_t * iot_data_list_find_element (const iot_data_list_t * list, iot_data_cmp_fn cmp, const void * arg)
 {
   assert (list && cmp);
   iot_element_t * iter = list->tail;
@@ -533,7 +533,7 @@ static iot_element_t * iot_data_list_find_element (iot_data_list_t * list, iot_d
 
 const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_cmp_fn cmp, const void * arg)
 {
-  iot_element_t * element = iot_data_list_find_element ((iot_data_list_t*) list, cmp, arg);
+  iot_element_t * element = iot_data_list_find_element ((const iot_data_list_t*) list, cmp, arg);
   return element ? element->value : NULL;
 }
 
