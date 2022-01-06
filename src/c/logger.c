@@ -129,11 +129,11 @@ void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
 
 static inline iot_logger_type_t iot_logger_type (iot_log_function_t fn)
 {
-  if (fn == iot_log_console) return IOT_LOGGER_CONSOLE;
+  if (fn == &iot_log_console) return IOT_LOGGER_CONSOLE;
 #if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-  if (fn == iot_log_file) return IOT_LOGGER_FILE;
+  if (fn == &iot_log_file) return IOT_LOGGER_FILE;
 #endif
-  if (fn == iot_log_udp) return IOT_LOGGER_UDP;
+  if (fn == &iot_log_udp) return IOT_LOGGER_UDP;
   return IOT_LOGGER_CUSTOM;
 }
 
@@ -164,7 +164,7 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
     }
     logger->addr.sin_port = htons ((uint16_t) atoi (to));
     logger->sock = socket (AF_INET, SOCK_DGRAM, 0);
-    if (sep == NULL) setsockopt (logger->sock, SOL_SOCKET, SO_BROADCAST, (char *) &yes, sizeof (yes));
+    if (sep == NULL) setsockopt (logger->sock, SOL_SOCKET, SO_BROADCAST, (const void*) &yes, sizeof (yes));
   }
 #if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
   else if (type == IOT_LOGGER_FILE)
@@ -205,7 +205,7 @@ void iot_logger_add_ref (iot_logger_t * logger)
 void iot_logger_start (iot_logger_t * logger)
 {
   assert (logger);
-  iot_logger_impl_t * impl = (iot_logger_impl_t*) logger;
+  const iot_logger_impl_t * impl = (const iot_logger_impl_t*) logger;
   iot_component_set_running (&logger->component);
   logger->level = impl->save;
 }
@@ -304,10 +304,12 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   }
   else
 #endif
-  if (to && strncmp (to, "udp:", 4) == 0 && strlen (to) > 4)
   {
-    impl = iot_log_udp; /* Log to udp */
-    to += 4;
+    if (to && strncmp (to, "udp:", 4) == 0 && strlen (to) > 4)
+    {
+      impl = iot_log_udp; /* Log to udp */
+      to += 4;
+    }
   }
   iot_logger_t * next = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Next"));
   bool start = iot_data_string_map_get_bool (map, "Start", true);

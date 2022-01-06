@@ -2239,7 +2239,7 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
 
 static inline iot_node_colour_t iot_node_colour (const iot_node_t * node)
 {
-  return (node) ? node->colour : IOT_NODE_BLACK;
+  return node ? node->colour : IOT_NODE_BLACK;
 }
 
 static inline void iot_node_set_colour (iot_node_t * node, iot_node_colour_t colour)

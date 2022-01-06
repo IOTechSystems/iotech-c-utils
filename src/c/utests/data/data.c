@@ -2311,7 +2311,7 @@ static void test_list_iter_replace (void)
 
 static bool test_list_cmp_fn (const iot_data_t * value, const void * arg)
 {
-  return (iot_data_ui32 (value) == *((uint32_t*) arg));
+  return (iot_data_ui32 (value) == *((const uint32_t*) arg));
 }
 
 static void test_list_find (void)
