@@ -99,14 +99,14 @@ static const iot_component_factory_t * iot_component_factory_find_locked (const 
 static bool iot_component_cmp (const iot_data_t * value, const void * arg)
 {
   const iot_component_t * comp = iot_data_pointer (value);
-  return (strcmp ((char*) arg, comp->name) == 0);
+  return (strcmp ((const char*) arg, comp->name) == 0);
 }
 
 static const iot_component_t * iot_container_find_component_locked (const iot_container_t * cont, const char * name)
 {
   assert (cont && name);
   const iot_data_t * value = iot_data_list_find (cont->components, iot_component_cmp, name);
-  return (iot_component_t*) (value ? iot_data_pointer (value) : NULL);
+  return (const iot_component_t*) (value ? iot_data_pointer (value) : NULL);
 }
 
 #ifdef IOT_BUILD_DYNAMIC_LOAD

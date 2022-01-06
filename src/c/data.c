@@ -533,7 +533,7 @@ static iot_element_t * iot_data_list_find_element (const iot_data_list_t * list,
 
 const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_cmp_fn cmp, const void * arg)
 {
-  iot_element_t * element = iot_data_list_find_element ((const iot_data_list_t*) list, cmp, arg);
+  const iot_element_t * element = iot_data_list_find_element ((const iot_data_list_t*) list, cmp, arg);
   return element ? element->value : NULL;
 }
 
