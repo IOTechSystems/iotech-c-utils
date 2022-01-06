@@ -119,7 +119,10 @@
 * `iot_data_to_json_with_buffer`
 
 - Update to support the JSON representation of infinite floating point values
-- Support added for data list:
+
+## Version 1.3.0
+
+- Support added for data list type:
 
 * `iot_data_alloc_list`
 * `iot_data_list_length`
