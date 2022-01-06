@@ -14,14 +14,11 @@
 #include <applibs/log.h>
 #endif
 
-
 typedef struct iot_component_holder_t
 {
   iot_component_t * component;
   char * name;
   const iot_component_factory_t * factory;
-  struct iot_component_holder_t * next;
-  struct iot_component_holder_t * prev;
 } iot_component_holder_t;
 
 struct iot_container_t
@@ -460,7 +457,6 @@ iot_component_info_t * iot_container_list_components (iot_container_t * cont)
     data->next = info->data;
     info->data = data;
     info->count++;
-    holder = holder->next;
   }
   pthread_rwlock_unlock (&cont->lock);
   return info;

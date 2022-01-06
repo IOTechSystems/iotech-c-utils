@@ -554,6 +554,7 @@ extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const 
     {
       element->next->prev = element->prev;
       element->prev->next = element->next;
+      impl->head->length--;
       iot_data_block_free ((iot_data_t*) element);
     }
     iot_data_free (value);

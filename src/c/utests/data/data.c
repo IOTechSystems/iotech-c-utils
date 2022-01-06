@@ -2300,6 +2300,7 @@ static void test_list_iter_replace (void)
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (2u));
   iot_data_list_iter (list, &iter);
   iot_data_list_iter_next (&iter);
+  iot_data_list_iter_next (&iter);
   old = iot_data_list_iter_replace (&iter, iot_data_alloc_ui32 (3u));
   CU_ASSERT (old && iot_data_ui32 (old) == 1u)
   value = iot_data_list_iter_value (&iter);
@@ -2310,8 +2311,7 @@ static void test_list_iter_replace (void)
 
 static bool test_list_cmp_fn (const iot_data_t * value, const void * arg)
 {
-  uint32_t val = iot_data_ui32 (value);
-  return (val = *((uint32_t*) arg));
+  return (iot_data_ui32 (value) == *((uint32_t*) arg));
 }
 
 static void test_list_find (void)
@@ -2319,6 +2319,7 @@ static void test_list_find (void)
   uint32_t val0 = 0u;
   uint32_t val1 = 1u;
   uint32_t val2 = 2u;
+  uint32_t val3 = 3u;
   iot_data_t * list = iot_data_alloc_list ();
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (val0));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 ( val1));
@@ -2326,6 +2327,7 @@ static void test_list_find (void)
   CU_ASSERT (iot_data_list_find (list, test_list_cmp_fn, &val0) != NULL)
   CU_ASSERT (iot_data_list_find (list, test_list_cmp_fn, &val1) != NULL)
   CU_ASSERT (iot_data_list_find (list, test_list_cmp_fn, &val2) != NULL)
+  CU_ASSERT (iot_data_list_find (list, test_list_cmp_fn, &val3) == NULL)
   iot_data_free (list);
 }
 
@@ -2338,11 +2340,11 @@ static void test_list_remove (void)
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (val0));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 ( val1));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (val2));
-  iot_data_list_remove (list, test_list_cmp_fn, &val1);
+  CU_ASSERT (iot_data_list_remove (list, test_list_cmp_fn, &val1))
   CU_ASSERT (iot_data_list_length (list) == 2u)
-  iot_data_list_remove (list, test_list_cmp_fn, &val0);
+  CU_ASSERT (iot_data_list_remove (list, test_list_cmp_fn, &val0))
   CU_ASSERT (iot_data_list_length (list) == 1u)
-  iot_data_list_remove (list, test_list_cmp_fn, &val2);
+  CU_ASSERT (iot_data_list_remove (list, test_list_cmp_fn, &val2))
   CU_ASSERT (iot_data_list_length (list) == 0u)
   iot_data_free (list);
 }
