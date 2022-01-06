@@ -2998,6 +2998,12 @@ static void test_data_complex_typecode (void)
   CU_ASSERT (iot_typecode_type (et) == IOT_DATA_BOOL)
   CU_ASSERT (iot_typecode_key_type (tc) == IOT_DATA_UINT32)
   iot_typecode_free (tc);
+
+  tc = iot_typecode_alloc_list (iot_typecode_alloc_basic (IOT_DATA_UINT32));
+  CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_LIST)
+  et = iot_typecode_element_type (tc);
+  CU_ASSERT (iot_typecode_type (et) == IOT_DATA_UINT32)
+  iot_typecode_free (tc);
 }
 
 static void test_data_equal_typecode (void)

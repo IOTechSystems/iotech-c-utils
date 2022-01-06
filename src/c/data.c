@@ -40,8 +40,8 @@
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096u
 #define IOT_JSON_BUFF_INCREMENT 1024u
 
-static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","String","Null","Array","Map","Vector","Pointer","List"};
-static const uint8_t iot_data_type_size [IOT_DATA_TYPES] = { 1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (char*), 0u, 0u, 0u, 0u, sizeof (void*), 0u};
+static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Array","Map","Vector","List"};
+static const uint8_t iot_data_type_size [IOT_DATA_TYPES] = { 1u,1u,2u,2u,4u,4u,8u,8u,4u,8u,sizeof (bool),sizeof (void*),sizeof (char*),0u,0u,0u,0u,0u};
 static const char * ORDERING_KEY = "ordering";
 
 typedef enum iot_node_colour_t
@@ -138,6 +138,8 @@ typedef struct iot_element_t
   uint32_t length;
 } iot_element_t;
 
+/* Note: Due to size constraints, list length is carried by head element */
+
 typedef struct iot_data_list_t
 {
   iot_data_t base;
@@ -190,7 +192,7 @@ _Static_assert (sizeof (iot_data_map_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_map 
 _Static_assert (sizeof (iot_data_array_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_array bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_list_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_list bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_node_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_node bigger than IOT_MEMORY_BLOCK_SIZE");
-
+_Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bigger than IOT_MEMORY_BLOCK_SIZE");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -336,6 +338,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_node_t): %zu\n", sizeof (iot_node_t));
   printf ("sizeof (iot_data_vector_t): %zu\n", sizeof (iot_data_vector_t));
   printf ("sizeof (iot_data_array_t): %zu\n", sizeof (iot_data_array_t));
+  printf ("sizeof (iot_data_list_t): %zu\n", sizeof (iot_data_list_t));
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
@@ -697,10 +700,12 @@ bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type)
 
 void * iot_data_address (const iot_data_t * data)
 {
-  if (data == NULL) return NULL;
-  else if (data->type < IOT_DATA_ARRAY) return (void*) &(((const iot_data_value_t*) data)->value);
-  else if (data->type == IOT_DATA_ARRAY) return ((const iot_data_array_t*) data)->data;
-  else if (data->type == IOT_DATA_POINTER) return ((const iot_data_pointer_t*) data)->value;
+  if (data)
+  {
+    if (data->type == IOT_DATA_POINTER) return ((const iot_data_pointer_t *) data)->value;
+    else if (data->type < IOT_DATA_ARRAY) return (void *) &(((const iot_data_value_t *) data)->value);
+    else if (data->type == IOT_DATA_ARRAY) return ((const iot_data_array_t *) data)->data;
+  }
   return NULL;
 }
 
@@ -749,13 +754,13 @@ void iot_data_free (iot_data_t * data)
       }
       case IOT_DATA_LIST:
       {
-        iot_element_t * element = ((iot_data_list_t*) data)->tail;
-        iot_element_t * iter;
-        while ((iter = element))
+        iot_element_t * iter = ((iot_data_list_t*) data)->tail;
+        while (iter)
         {
-          element = element->next;
-          iot_data_free (iter->value);
-          iot_data_block_free ((iot_data_t*) iter);
+          iot_element_t * element = iter;
+          iter = iter->next;
+          iot_data_free (element->value);
+          iot_data_block_free ((iot_data_t*) element);
         }
         break;
       }
@@ -2054,31 +2059,30 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
   return ret;
 }
 
-static iot_typecode_t iot_basic_tcs [13] =
+static iot_typecode_t iot_basic_tcs [14] =
 {
   { .type = IOT_DATA_INT8 }, { .type = IOT_DATA_UINT8 }, { .type = IOT_DATA_INT16 }, { .type = IOT_DATA_UINT16 },
   { .type = IOT_DATA_INT32 }, { .type = IOT_DATA_UINT32 }, { .type = IOT_DATA_INT64 }, { .type = IOT_DATA_UINT64 },
-  { .type = IOT_DATA_FLOAT32 }, { .type = IOT_DATA_FLOAT64, }, { .type = IOT_DATA_BOOL }, { .type = IOT_DATA_STRING },
-  { .type = IOT_DATA_NULL }
+  { .type = IOT_DATA_FLOAT32 }, { .type = IOT_DATA_FLOAT64, }, { .type = IOT_DATA_BOOL }, { .type = IOT_DATA_POINTER },
+  { .type = IOT_DATA_STRING }, { .type = IOT_DATA_NULL }
 };
 
 extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)
 {
-  static iot_typecode_t tc_pointer = { .type = IOT_DATA_POINTER, .element_type = NULL };
-  assert (type < IOT_DATA_ARRAY || type == IOT_DATA_POINTER);
-  return (type < IOT_DATA_ARRAY) ? &iot_basic_tcs[type] : &tc_pointer;
+  assert (type < IOT_DATA_ARRAY);
+  return &iot_basic_tcs[type];
 }
 
 extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
 {
-  static iot_typecode_t iot_array_tcs [11] =
+  static iot_typecode_t iot_array_tcs [12] =
   {
     { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_INT8] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_UINT8] },
     { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_INT16] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_UINT16] },
     { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_INT32] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_UINT32] },
     { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_INT64] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_UINT64] },
     { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_FLOAT32] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_FLOAT64] },
-    { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_BOOL] }
+    { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_BOOL] }, { .type = IOT_DATA_ARRAY, .element_type = &iot_basic_tcs[IOT_DATA_POINTER] }
   };
   assert (element_type < IOT_DATA_STRING);
   return &iot_array_tcs[element_type];
@@ -2111,7 +2115,7 @@ extern iot_typecode_t * iot_typecode_alloc_list (iot_typecode_t * element_type)
 
 extern void iot_typecode_free (iot_typecode_t * typecode)
 {
-  if (typecode && (typecode->type > IOT_DATA_ARRAY) && (typecode->type != IOT_DATA_POINTER))
+  if (typecode && (typecode->type > IOT_DATA_ARRAY))
   {
     iot_data_block_free ((iot_data_t*) typecode);
   }
@@ -2137,7 +2141,7 @@ extern iot_data_type_t iot_typecode_key_type (const iot_typecode_t * typecode)
 
 extern const iot_typecode_t * iot_typecode_element_type (const iot_typecode_t * typecode)
 {
-  assert (typecode && (typecode->type >= IOT_DATA_ARRAY) && (typecode->type != IOT_DATA_POINTER));
+  assert (typecode && (typecode->type >= IOT_DATA_ARRAY));
   return typecode->element_type;
 }
 
@@ -2163,7 +2167,7 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
   iot_typecode_t * tc;
   iot_data_type_t type = data->type;
 
-  if (type < IOT_DATA_ARRAY || type == IOT_DATA_POINTER)
+  if (type < IOT_DATA_ARRAY)
   {
     tc = iot_typecode_alloc_basic (type);
   }

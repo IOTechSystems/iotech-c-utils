@@ -35,12 +35,12 @@ typedef enum iot_data_type_t
   IOT_DATA_FLOAT32 = 8,  /**< 32 bit float */
   IOT_DATA_FLOAT64 = 9,  /**< 64 bit float */
   IOT_DATA_BOOL = 10,    /**< Boolean */
-  IOT_DATA_STRING = 11,  /**< String */
-  IOT_DATA_NULL = 12,    /**< Null */
-  IOT_DATA_ARRAY = 13,   /**< Array */
-  IOT_DATA_MAP = 14,     /**< Map */
-  IOT_DATA_VECTOR = 15,  /**< Vector */
-  IOT_DATA_POINTER = 16, /**< Pointer */
+  IOT_DATA_POINTER = 11, /**< Pointer */
+  IOT_DATA_STRING = 12,  /**< String */
+  IOT_DATA_NULL = 13,    /**< Null */
+  IOT_DATA_ARRAY = 14,   /**< Array */
+  IOT_DATA_MAP = 15,     /**< Map */
+  IOT_DATA_VECTOR = 16,  /**< Vector */
   IOT_DATA_LIST = 17     /**< List */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
