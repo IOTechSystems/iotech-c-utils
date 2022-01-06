@@ -25,8 +25,6 @@ struct iot_container_t
 {
   iot_logger_t * logger;
   iot_data_t * holder_list;
-  iot_container_t * next;
-  iot_container_t * prev;
   char * name;
   pthread_rwlock_t lock;
 };
@@ -38,7 +36,6 @@ typedef struct iot_load_in_progress_t
 } iot_load_in_progress_t;
 
 static const iot_component_factory_t * iot_component_factories = NULL;
-static iot_container_t * iot_containers = NULL;
 static const iot_container_config_t * iot_config = NULL;
 static iot_load_in_progress_t * iot_load_in_progress = NULL;
 
@@ -58,18 +55,6 @@ static void iot_component_holder_free (void * ptr)
   (holder->factory->free_fn) (holder->component);
   free (holder->name);
   free (holder);
-}
-
-static iot_container_t * iot_container_find_locked (const char * name)
-{
-  assert (name);
-  iot_container_t * cont = iot_containers;
-  while (cont)
-  {
-    if (strcmp (cont->name, name) == 0) break;
-    cont = cont->next;
-  }
-  return cont;
 }
 
 /* Replace ${VALUE} in configuration string with corresponding environment variable */
@@ -249,21 +234,12 @@ const iot_container_config_t * iot_container_get_config (void)
 
 iot_container_t * iot_container_alloc (const char * name)
 {
-  iot_container_t * cont = NULL;
-  pthread_mutex_lock (&iot_container_mutex);
-  if (iot_container_find_locked (name) == NULL)
-  {
-    cont = calloc (1, sizeof (*cont));
-    cont->name = strdup (name);
-    cont->logger = iot_logger_default ();
-    iot_logger_start (cont->logger);
-    pthread_rwlock_init (&cont->lock, NULL);
-    cont->next = iot_containers;
-    cont->holder_list = iot_data_alloc_list ();
-    if (iot_containers) iot_containers->prev = cont;
-    iot_containers = cont;
-  }
-  pthread_mutex_unlock (&iot_container_mutex);
+  iot_container_t * cont = malloc (sizeof (*cont));
+  cont->name = strdup (name);
+  cont->logger = iot_logger_default ();
+  cont->holder_list = iot_data_alloc_list ();
+  pthread_rwlock_init (&cont->lock, NULL);
+  iot_logger_start (cont->logger);
   return cont;
 }
 
@@ -314,17 +290,6 @@ void iot_container_free (iot_container_t * cont)
 {
   if (cont)
   {
-    pthread_mutex_lock (&iot_container_mutex);
-    if (cont->next) cont->next->prev = cont->prev;
-    if (cont->prev)
-    {
-      cont->prev->next = cont->next;
-    }
-    else
-    {
-      iot_containers = cont->next;
-    }
-    pthread_mutex_unlock (&iot_container_mutex);
     iot_data_free (cont->holder_list);
     pthread_rwlock_destroy (&cont->lock);
     free (cont->name);
@@ -405,14 +370,6 @@ void iot_container_add_component (iot_container_t * cont, const char * ctype, co
   }
 }
 
-extern iot_container_t * iot_container_find (const char * name)
-{
-  pthread_mutex_lock (&iot_container_mutex);
-  iot_container_t * cont = iot_container_find_locked (name);
-  pthread_mutex_unlock (&iot_container_mutex);
-  return cont;
-}
-
 iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name)
 {
   assert (cont);
@@ -460,23 +417,4 @@ iot_component_info_t * iot_container_list_components (iot_container_t * cont)
   }
   pthread_rwlock_unlock (&cont->lock);
   return info;
-}
-
-iot_data_t * iot_container_list_containers ()
-{
-  iot_container_t * cont;
-  uint32_t index = 0;
-  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
-
-  pthread_mutex_lock (&iot_container_mutex);
-  cont = iot_containers;
-  while (cont)
-  {
-    iot_data_t * val = iot_data_alloc_string (cont->name, IOT_DATA_REF);
-    iot_data_t * key = iot_data_alloc_ui32 (index++);
-    iot_data_map_add (map, key, val);
-    cont = cont->next;
-  }
-  pthread_mutex_unlock (&iot_container_mutex);
-  return map;
 }
