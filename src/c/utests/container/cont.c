@@ -31,18 +31,8 @@ static void test_alloc (void)
   CU_ASSERT (cont1 != NULL)
   iot_container_t * cont2 = iot_container_alloc ("two");
   CU_ASSERT (cont2 != NULL)
-  iot_container_t * cont3 = iot_container_alloc ("three");
-  CU_ASSERT (cont3 != NULL)
-  iot_container_t * cont4 = iot_container_alloc ("four");
-  CU_ASSERT (cont4 != NULL)
-  iot_container_t * dup = iot_container_alloc ("three");
-  CU_ASSERT (dup == NULL)
-
-  iot_container_free (cont2);
-  iot_container_free (cont4);
   iot_container_free (cont1);
-  iot_container_free (cont3);
-  iot_container_free (dup);
+  iot_container_free (cont2);
 }
 
 static void test_add_component (void)
@@ -53,6 +43,7 @@ static void test_add_component (void)
 
   const iot_component_t * comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
+  CU_ASSERT (strcmp (comp->name, "logger") == 0)
 
   iot_container_free (cont);
 }

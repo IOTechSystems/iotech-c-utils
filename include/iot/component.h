@@ -85,12 +85,13 @@ struct iot_component_factory_t
  */
 struct iot_component_t
 {
+  char * name;                              /**< Component name */
   volatile iot_component_state_t state;     /**< Current state of component */
-  pthread_mutex_t mutex;                    /**< Thread mutex settings of component */
-  pthread_cond_t cond;                      /**< Thread condition settings of component */
+  pthread_mutex_t mutex;                    /**< Synchronisation mutex */
+  pthread_cond_t cond;                      /**< Synchronisation condition */
   iot_component_start_fn_t start_fn;        /**< Pointer to function that handles starting a component */
   iot_component_stop_fn_t stop_fn;          /**< Pointer to function that handles stopping a component */
-  atomic_uint_fast32_t refs;                /**< Current reference count of a given component */
+  atomic_uint_fast32_t refs;                /**< Current reference count */
   const iot_component_factory_t * factory;  /**< Pointer to component factory structure */
 };
 
