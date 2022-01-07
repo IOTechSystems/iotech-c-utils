@@ -166,7 +166,7 @@ static void test_data_array_iter_next (void)
 
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (uint8_t), IOT_DATA_UINT8, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
-
+  CU_ASSERT (iot_data_array_iter_value (&array_iter) == NULL)
   for (int i = 0; i<4; i++)
   {
     while (iot_data_array_iter_next (&array_iter))
@@ -2449,10 +2449,11 @@ static void test_data_map_iter_replace (void)
 
   iot_data_map_iter_t it;
   iot_data_map_iter (map, &it);
-  CU_ASSERT ( iot_data_map_iter_key (&it) == NULL)
-  CU_ASSERT ( iot_data_map_iter_value (&it) == NULL)
-  CU_ASSERT ( iot_data_map_iter_string_key (&it) == NULL)
-  CU_ASSERT ( iot_data_map_iter_string_value (&it) == NULL)
+  CU_ASSERT (iot_data_map_iter_key (&it) == NULL)
+  CU_ASSERT (iot_data_map_iter_value (&it) == NULL)
+  CU_ASSERT (iot_data_map_iter_string_key (&it) == NULL)
+  CU_ASSERT (iot_data_map_iter_string_value (&it) == NULL)
+  CU_ASSERT (iot_data_map_iter_replace_value (&it, map) == NULL)
   while (iot_data_map_iter_next (&it))
   {
     if (strcmp (iot_data_map_iter_string_key (&it), "1") == 0)
@@ -2943,6 +2944,7 @@ static void test_data_zerolength_vector (void)
   CU_ASSERT (iot_data_vector_iter_next (&iter) == false)
   CU_ASSERT (iot_data_vector_iter_index (&iter) == 0)
   CU_ASSERT (iot_data_vector_iter_value (&iter) == NULL)
+  CU_ASSERT (iot_data_vector_iter_string (&iter) == NULL)
 
   iot_data_free (vector1);
 }
@@ -3302,6 +3304,10 @@ static void test_data_alloc_pointer (void)
   data = iot_data_alloc_vector (2);
   CU_ASSERT (iot_data_address (data) == NULL)
   CU_ASSERT (iot_data_address (NULL) == NULL)
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (map, "Pointer", iot_data_alloc_pointer (dummy, NULL));
+  CU_ASSERT (iot_data_string_map_get_pointer (map, "Pointer") == dummy)
+  iot_data_free (map);
   iot_data_free (data);
   iot_data_free (data2);
   iot_data_free (data3);
