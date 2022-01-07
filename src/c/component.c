@@ -136,20 +136,3 @@ extern const char * iot_component_state_name (iot_component_state_t state)
   }
   return "Unknown";
 }
-
-extern void iot_component_info_free (iot_component_info_t * info)
-{
-  if (info)
-  {
-    iot_component_data_t * data;
-    while (info->data)
-    {
-      data = info->data;
-      info->data = data->next;
-      free (data->name);
-      free (data->type);
-      free (data);
-    }
-    free (info);
-  }
-}

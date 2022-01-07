@@ -38,23 +38,13 @@ typedef enum
 } iot_component_state_t;
 
 /**
- * Component data struct
- */
-typedef struct iot_component_data_t
-{
-  struct iot_component_data_t * next; /**< Pointer to next component data struct in list */
-  char * name;                        /**< The component name */
-  char * type;                        /**< The component type name */
-  iot_component_state_t state;        /**< The component state */
-} iot_component_data_t;
-
-/**
  * Component info struct
  */
 typedef struct iot_component_info_t
 {
-  uint32_t count;                 /**< The number of component data elements */
-  iot_component_data_t * data;    /**< List of component data */
+  char * name;                        /**< The component name */
+  char * type;                        /**< The component type name */
+  iot_component_state_t state;        /**< The component state */
 } iot_component_info_t;
 
 /** Alias for component configuration function pointer */
@@ -259,15 +249,6 @@ extern const iot_component_factory_t * iot_component_factory_find (const char * 
  * @return      Pointer to a constant string representing the state name
  */
 extern const char * iot_component_state_name (iot_component_state_t state);
-
-/**
- * @brief Frees a component info struct
- *
- * The function frees a component info struct
- *
- * @param info Pointer to the struct to be freed
- */
-extern void iot_component_info_free (iot_component_info_t * info);
 
 #ifdef __cplusplus
 }

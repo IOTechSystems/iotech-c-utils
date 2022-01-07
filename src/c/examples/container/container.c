@@ -32,14 +32,15 @@ int main (void)
   iot_container_start (container);
 
   /* list components state */
-  iot_component_info_t * info = iot_container_list_components (container);
-  iot_component_data_t * data = info->data;
-  while (data)
+  iot_data_t * map = iot_container_list_components (container);
+  iot_data_map_iter_t iter;
+  iot_data_map_iter (map, &iter);
+  while (iot_data_map_iter_next (&iter))
   {
-    printf ("Component: %s type: %s state: %s\n", data->name, data->type, iot_component_state_name (data->state));
-    data = data->next;
+    iot_component_info_t * info = iot_data_pointer (iot_data_map_iter_value (&iter));
+    printf ("Component: %s type: %s state: %s\n", info->name, info->type, iot_component_state_name (info->state));
   }
-  iot_component_info_free (info);
+  iot_data_free (map);
 
   iot_wait_secs (5u);
 

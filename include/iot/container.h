@@ -137,9 +137,9 @@ extern void iot_container_delete_component (iot_container_t * cont, const char *
  * @brief List the components within a container
  *
  * @param cont  Pointer to a container
- * @return      Pointer to an array of structure that contain component name, type and state
+ * @return      String map of component info, keyed by component name
  */
-extern iot_component_info_t * iot_container_list_components (iot_container_t * cont);
+extern iot_data_t * iot_container_list_components (iot_container_t * cont);
 
 #ifdef __cplusplus
 }

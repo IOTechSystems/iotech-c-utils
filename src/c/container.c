@@ -382,24 +382,33 @@ void iot_container_delete_component (iot_container_t * cont, const char * name)
   pthread_rwlock_unlock (&cont->lock);
 }
 
-iot_component_info_t * iot_container_list_components (iot_container_t * cont)
+static void iot_component_info_free (void * val)
+{
+  iot_component_info_t * info = val;
+  if (info)
+  {
+    free (info->name);
+    free (info->type);
+    free (info);
+  }
+}
+
+iot_data_t * iot_container_list_components (iot_container_t * cont)
 {
   assert (cont);
-  iot_component_info_t * info = calloc (1, sizeof (*info));
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   pthread_rwlock_rdlock (&cont->lock);
   iot_data_list_iter_t iter;
   iot_data_list_iter (cont->components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
-    iot_component_data_t * data = malloc (sizeof (*data));
     const iot_component_t * comp = iot_data_pointer (iot_data_list_iter_value (&iter));
-    data->name = strdup (comp->name);
-    data->type = strdup (comp->factory->type);
-    data->state = comp->state;
-    data->next = info->data;
-    info->data = data;
-    info->count++;
+    iot_component_info_t * info = malloc (sizeof (*info));
+    info->name = strdup (comp->name);
+    info->type = strdup (comp->factory->type);
+    info->state = comp->state;
+    iot_data_map_add (map, iot_data_alloc_string (info->name, IOT_DATA_REF), iot_data_alloc_pointer (info, iot_component_info_free));
   }
   pthread_rwlock_unlock (&cont->lock);
-  return info;
+  return map;
 }
