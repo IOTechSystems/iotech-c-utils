@@ -900,6 +900,16 @@ static void test_data_from_string (void)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
   CU_ASSERT (iot_data_bool (data))
   iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "False");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
+  CU_ASSERT (! iot_data_bool (data))
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "X");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
+  CU_ASSERT (! iot_data_bool (data))
+  iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_STRING, "Wibble");
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
@@ -2205,6 +2215,8 @@ static void test_list_size (void)
   CU_ASSERT (value && iot_data_ui32 (value) == 0u)
   iot_data_free (value);
   CU_ASSERT (iot_data_list_length (list) == 0u)
+  value = iot_data_list_tail_pop (list);
+  CU_ASSERT (value == NULL)
 
   // Repeat test swapping head/tail push/pop
 
@@ -2232,6 +2244,8 @@ static void test_list_size (void)
   CU_ASSERT (value && iot_data_ui32 (value) == 0u)
   iot_data_free (value);
   CU_ASSERT (iot_data_list_length (list) == 0u)
+  value = iot_data_list_head_pop (list);
+  CU_ASSERT (value == NULL)
 
   iot_data_free (list);
 }
@@ -2285,6 +2299,8 @@ static void test_list_iter (void)
     CU_ASSERT (value && iot_data_ui32 (value) == counter)
     counter++;
   }
+  value = iot_data_list_iter_value (&iter);
+  CU_ASSERT (value == NULL)
 
   iot_data_free (list);
 }
@@ -2303,9 +2319,14 @@ static void test_list_iter_replace (void)
   iot_data_list_iter_next (&iter);
   old = iot_data_list_iter_replace (&iter, iot_data_alloc_ui32 (3u));
   CU_ASSERT (old && iot_data_ui32 (old) == 1u)
+  iot_data_free (old);
   value = iot_data_list_iter_value (&iter);
   CU_ASSERT (value && iot_data_ui32 (value) == 3u)
-  iot_data_free (old);
+  iot_data_list_iter (list, &iter);
+  iot_data_t * val = iot_data_alloc_ui32 (4u);
+  old = iot_data_list_iter_replace (&iter, val);
+  CU_ASSERT (old == NULL)
+  iot_data_free (val);
   iot_data_free (list);
 }
 
@@ -2428,6 +2449,10 @@ static void test_data_map_iter_replace (void)
 
   iot_data_map_iter_t it;
   iot_data_map_iter (map, &it);
+  CU_ASSERT ( iot_data_map_iter_key (&it) == NULL)
+  CU_ASSERT ( iot_data_map_iter_value (&it) == NULL)
+  CU_ASSERT ( iot_data_map_iter_string_key (&it) == NULL)
+  CU_ASSERT ( iot_data_map_iter_string_value (&it) == NULL)
   while (iot_data_map_iter_next (&it))
   {
     if (strcmp (iot_data_map_iter_string_key (&it), "1") == 0)
@@ -3276,6 +3301,7 @@ static void test_data_alloc_pointer (void)
   iot_data_free (data);
   data = iot_data_alloc_vector (2);
   CU_ASSERT (iot_data_address (data) == NULL)
+  CU_ASSERT (iot_data_address (NULL) == NULL)
   iot_data_free (data);
   iot_data_free (data2);
   iot_data_free (data3);
