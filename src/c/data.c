@@ -440,7 +440,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
         iot_data_vector_iter_t iter2;
         iot_data_vector_iter (v1, &iter1);
         iot_data_vector_iter (v2, &iter2);
-        while ((iot_data_vector_iter_next (&iter1)) && (iot_data_vector_iter_next (&iter2)))
+        while ((iot_data_vector_iter_next (&iter1)), (iot_data_vector_iter_next (&iter2)))
         {
           if (!iot_data_equal (iot_data_vector_iter_value (&iter1), iot_data_vector_iter_value (&iter2))) return false;
         }
@@ -453,7 +453,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
         iot_data_map_iter_t iter2;
         iot_data_map_iter (v1, &iter1);
         iot_data_map_iter (v2, &iter2);
-        while ((iot_data_map_iter_next (&iter1)) && (iot_data_map_iter_next (&iter2)))
+        while ((iot_data_map_iter_next (&iter1)), (iot_data_map_iter_next (&iter2)))
         {
           const iot_data_t * key1 = iot_data_map_iter_key (&iter1);
           const iot_data_t * value1 = iot_data_map_iter_value (&iter1);
@@ -471,7 +471,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
         iot_data_list_iter_t iter2;
         iot_data_list_iter (v1, &iter1);
         iot_data_list_iter (v2, &iter2);
-        while ((iot_data_list_iter_next (&iter1)) && (iot_data_list_iter_next (&iter2)))
+        while ((iot_data_list_iter_next (&iter1)), (iot_data_list_iter_next (&iter2)))
         {
           if (!iot_data_equal (iot_data_list_iter_value (&iter1), iot_data_list_iter_value (&iter2))) return false;
         }
