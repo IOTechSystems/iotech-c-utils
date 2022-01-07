@@ -2367,6 +2367,10 @@ static void test_list_remove (void)
   CU_ASSERT (iot_data_list_length (list) == 1u)
   CU_ASSERT (iot_data_list_remove (list, test_list_cmp_fn, &val2))
   CU_ASSERT (iot_data_list_length (list) == 0u)
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (val0));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 ( val1));
+  CU_ASSERT (iot_data_list_remove (list, test_list_cmp_fn, &val1))
+  CU_ASSERT (iot_data_list_length (list) == 1u)
   iot_data_free (list);
 }
 static void test_list_equal (void)
@@ -3134,6 +3138,11 @@ static void test_data_type_typecode (void)
   CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_LIST)
   CU_ASSERT (iot_typecode_type (et) == IOT_DATA_UINT32)
   CU_ASSERT (iot_data_matches (data, tc))
+  iot_typecode_free (tc);
+  iot_data_list_tail_push (data, iot_data_alloc_i32 (3));
+  tc = iot_data_typecode (data);
+  et = iot_typecode_element_type (tc);
+  CU_ASSERT (et == NULL)
   iot_data_free (data);
   iot_typecode_free (tc);
 

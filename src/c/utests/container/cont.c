@@ -52,7 +52,7 @@ static void test_add_component (void)
   CU_ASSERT (comp && strcmp (comp->name, "logger") == 0)
 
   iot_data_t * map = iot_data_from_json (main_config);
-  iot_component_t * cmp = iot_config_component (map, "ref", cont, NULL);
+  const iot_component_t * cmp = iot_config_component (map, "ref", cont, NULL);
   CU_ASSERT (cmp != NULL)
   cmp = iot_config_component (map, "Nope", cont, NULL);
   CU_ASSERT (cmp == NULL)
@@ -63,13 +63,14 @@ static void test_add_component (void)
 
 static void test_delete_component (void)
 {
-  const iot_component_t * comp;
+  iot_component_t * comp;
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp != NULL)
+  iot_component_set_starting (comp);
   iot_container_delete_component (cont, "logger");
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp == NULL)
