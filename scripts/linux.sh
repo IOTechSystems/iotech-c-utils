@@ -148,7 +148,7 @@ then
 
   if [ "${SONAR}" = "true" ]
   then
-    GCOVR5_FILTER="--exclude-lines-by-pattern='[\s]*assert[\s]*[(]'"
+    GCOVR5_FILTER="--exclude-lines-by-pattern='\s*assert\s*('"
     gcovr ${GCOVR5_FILTER} --sonarqube --root="${ROOT}" . > "${SONAR_DIR}/sonar.xml"
     cd ${ROOT}
     ${SONAR_SCANNER}
