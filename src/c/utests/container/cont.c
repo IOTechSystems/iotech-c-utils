@@ -9,6 +9,11 @@
 #include "CUnit.h"
 #include "iot/config.h"
 
+static const char * main_config =
+"{"
+  "\"ref\":\"logger\""
+"}";
+
 static const char * logger_config =
 "{"
   "\"Name\":\"${USER}\","
@@ -42,8 +47,16 @@ static void test_add_component (void)
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
   const iot_component_t * comp = iot_container_find_component (cont, "logger");
-  CU_ASSERT (strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
-  CU_ASSERT (strcmp (comp->name, "logger") == 0)
+  CU_ASSERT (comp != NULL)
+  CU_ASSERT (comp && strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
+  CU_ASSERT (comp && strcmp (comp->name, "logger") == 0)
+
+  iot_data_t * map = iot_data_from_json (main_config);
+  iot_component_t * cmp = iot_config_component (map, "ref", cont, NULL);
+  CU_ASSERT (cmp != NULL)
+  cmp = iot_config_component (map, "Nope", cont, NULL);
+  CU_ASSERT (cmp == NULL)
+  iot_data_free (map);
 
   iot_container_free (cont);
 }
