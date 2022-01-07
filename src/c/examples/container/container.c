@@ -64,8 +64,8 @@ int main (void)
 
 static const char * main_config =
 "{"
-  "\"file_logger\":\"IOT::Logger\","
   "\"logger\":\"IOT::Logger\","
+  "\"file_logger\":\"IOT::Logger\","
   "\"pool\":\"IOT::ThreadPool\","
   "\"scheduler\":\"IOT::Scheduler\","
   "\"mycomp\":\"IOT::MyComponent\""
