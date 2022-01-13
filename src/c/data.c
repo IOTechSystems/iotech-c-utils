@@ -2036,7 +2036,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
     {
       const iot_data_array_t * array = (const iot_data_array_t *) data;
       ret = iot_data_alloc_array (array->data, array->length, array->base.sub_type, array->base.release ? IOT_DATA_COPY : IOT_DATA_REF);
-      ret->type = data->type;
+      ret->type = data->type; // May be binary or array
       break;
     }
     case IOT_DATA_MAP:
