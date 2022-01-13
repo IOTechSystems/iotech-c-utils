@@ -1638,8 +1638,8 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
       const iot_data_t * metadata = iot_data_get_metadata (data);
       const iot_data_t * ordering = metadata ? iot_data_string_map_get (metadata, ORDERING_KEY) : NULL;
       iot_data_map_iter_t iter;
+      iot_data_vector_iter_t vec_iter = { 0 };
       bool first = true;
-      iot_data_vector_iter_t vec_iter;
       if (ordering) iot_data_vector_iter (ordering, &vec_iter);
       iot_data_map_iter (data, &iter);
       iot_data_strcat (holder, "{");
