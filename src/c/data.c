@@ -581,6 +581,12 @@ bool iot_data_list_iter_next (iot_data_list_iter_t * iter)
   return (iter->element != NULL);
 }
 
+bool iot_data_list_iter_has_next (iot_data_list_iter_t * iter)
+{
+  assert (iter);
+  return (iter->element && iter->element->next);
+}
+
 bool iot_data_list_iter_prev (iot_data_list_iter_t * iter)
 {
   assert (iter);

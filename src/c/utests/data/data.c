@@ -2273,10 +2273,14 @@ static void test_list_iter (void)
   const iot_data_t * value;
   uint32_t counter;
 
-  iot_data_list_iter (list, &iter);
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (0u));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (1u));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (2u));
+
+  iot_data_list_iter (list, &iter);
+  iot_data_list_iter_next (&iter);
+  CU_ASSERT (iot_data_list_iter_has_next (&iter))
+  iot_data_list_iter (list, &iter);
 
   counter = 2;
   while (iot_data_list_iter_next (&iter))
@@ -2308,6 +2312,7 @@ static void test_list_iter (void)
   }
   value = iot_data_list_iter_value (&iter);
   CU_ASSERT (value == NULL)
+  CU_ASSERT (! iot_data_list_iter_has_next (&iter))
 
   iot_data_free (list);
 }

@@ -454,6 +454,16 @@ extern void iot_data_list_iter (const iot_data_t * list, iot_data_list_iter_t * 
 extern bool iot_data_list_iter_next (iot_data_list_iter_t * iter);
 
 /**
+ * @brief Returns whether a list iterator has a next element
+ *
+ * The function returns whether the iterator is currently valid and has a next element.
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_list_iter_has_next (iot_data_list_iter_t * iter);
+
+/**
  * @brief Update the iterator to point to the previous element in a list
  *
  * The function to set the iterator to point to the previous element of a list, moving from head to tail.
@@ -1054,7 +1064,7 @@ extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 /**
  * @brief Returns whether an array iterator has a next element
  *
- * The function returns whether the iterator has a next element.
+ * The function returns whether the iterator is currently valid and has a next element.
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
@@ -1202,7 +1212,7 @@ extern bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter);
 /**
  * @brief Returns whether a vector iterator has a next element
  *
- * The function returns whether the iterator has a next element.
+ * The function returns whether the iterator is currently valid and has a next element.
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
