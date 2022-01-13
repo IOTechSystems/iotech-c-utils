@@ -38,10 +38,11 @@ typedef enum iot_data_type_t
   IOT_DATA_POINTER = 11, /**< Pointer */
   IOT_DATA_STRING = 12,  /**< String */
   IOT_DATA_NULL = 13,    /**< Null */
-  IOT_DATA_ARRAY = 14,   /**< Array */
-  IOT_DATA_MAP = 15,     /**< Map */
-  IOT_DATA_VECTOR = 16,  /**< Vector */
-  IOT_DATA_LIST = 17     /**< List */
+  IOT_DATA_BINARY = 14,  /**< Binary */
+  IOT_DATA_ARRAY = 15,   /**< Array of basic type (integer, float, bool or pointer) */
+  IOT_DATA_MAP = 16,     /**< Map */
+  IOT_DATA_VECTOR = 17,  /**< Vector */
+  IOT_DATA_LIST = 18     /**< List */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
 /**
@@ -523,6 +524,19 @@ extern void iot_data_list_head_push (iot_data_t * list, iot_data_t * value);
  * @return      Value from the list head or NULL if list empty
  */
 extern iot_data_t * iot_data_list_head_pop (iot_data_t * list);
+
+/**
+ * @brief Allocate data for a binary array
+ *
+ * The function to allocate data for a binary array of given size (in bytes)
+ *
+ * @param data       Pointer to an array of bytes
+ * @param length     Lenngth of the byte array
+ * @param ownership  If the ownership is set to IOT_DATA_COPY, a new allocation is made and data is copied to the allocated
+ *                   memory, else the ownership of the data is taken.
+ * @return           Pointer to the allocated data
+ */
+extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_data_ownership_t ownership);
 
 /**
  * @brief Allocate memory for an array
@@ -1038,6 +1052,15 @@ extern void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t
 extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 
 /**
+ * @brief Returns whether an array iterator has a next element
+ *
+ * The function returns whether the iterator has a next element.
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_array_iter_has_next (iot_data_array_iter_t * iter);
+/**
  * @brief Update the iterator to point to the previous element within an array
  *
  * The function to set the iterator to point to the previous element of an array. On reaching end of the array,
@@ -1175,6 +1198,16 @@ extern void iot_data_vector_iter (const iot_data_t * vector, iot_data_vector_ite
  * @return       Returns whether the iterator is still valid (has not passed end of the vector)
  */
 extern bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter);
+
+/**
+ * @brief Returns whether a vector iterator has a next element
+ *
+ * The function returns whether the iterator has a next element.
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_vector_iter_has_next (iot_data_vector_iter_t * iter);
 
 /**
  * @brief Iterate to previous vector element

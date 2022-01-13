@@ -100,6 +100,10 @@ static void test_data_types (void)
   CU_ASSERT (strcmp (iot_data_type_name (data), "Array") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_ARRAY)
   iot_data_free (data);
+  data = iot_data_alloc_binary (array, 4, IOT_DATA_REF);
+  CU_ASSERT (strcmp (iot_data_type_name (data), "Binary") == 0)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BINARY)
+  iot_data_free (data);
   data = iot_data_alloc_array (calloc (1, sizeof (array)), 4, IOT_DATA_UINT8, IOT_DATA_TAKE);
   CU_ASSERT (strcmp (iot_data_type_name (data), "Array") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_ARRAY)
@@ -480,12 +484,15 @@ static void test_data_to_json (void)
   iot_data_t * val = iot_data_alloc_ui32 (1u);
   iot_data_t * key = iot_data_alloc_string ("UInt32", IOT_DATA_REF);
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_t * binary = iot_data_alloc_binary (data, sizeof (data), IOT_DATA_REF);
   iot_data_map_add (map, key, val);
   val = iot_data_alloc_string ("Lilith", IOT_DATA_REF);
   key = iot_data_alloc_string ("Name", IOT_DATA_REF);
   iot_data_map_add (map, key, val);
-  key = iot_data_alloc_string ("Data", IOT_DATA_REF);
+  key = iot_data_alloc_string ("Array", IOT_DATA_REF);
   iot_data_map_add (map, key, array);
+  key = iot_data_alloc_string ("Binary", IOT_DATA_REF);
+  iot_data_map_add (map, key, binary);
   key = iot_data_alloc_string ("Escaped", IOT_DATA_REF);
   val = iot_data_alloc_string ("abc\t\n123\x0b\x1fxyz", IOT_DATA_REF);
   iot_data_map_add (map, key, val);
@@ -500,7 +507,7 @@ static void test_data_to_json (void)
   if (json)
   {
     // printf ("JSON: %s\n", json);
-    CU_ASSERT (strcmp (json, "{\"Boolean\":true,\"Data\":\"AAECAw==\",\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"NULL\":null,\"Name\":\"Lilith\",\"UInt32\":1}") == 0)
+    CU_ASSERT (strcmp (json, "{\"Array\":[0,1,2,3],\"Binary\":\"AAECAw==\",\"Boolean\":true,\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"NULL\":null,\"Name\":\"Lilith\",\"UInt32\":1}") == 0)
   }
   free (json);
   iot_data_free (map);
@@ -2921,7 +2928,7 @@ static void test_data_zerolength_array (void)
   CU_ASSERT (iot_data_equal (array1, array2))
 
   char * json = iot_data_to_json (array1);
-  CU_ASSERT (strcmp (json, "\"\"") == 0)
+  CU_ASSERT (strcmp (json, "[]") == 0)
   free (json);
 
   iot_data_free (array1);
@@ -3028,6 +3035,10 @@ static void test_data_basic_typecode (void)
   tc = iot_typecode_alloc_basic (IOT_DATA_NULL);
   CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_NULL)
   CU_ASSERT (strcmp (iot_typecode_type_name (tc), "Null") == 0)
+  iot_typecode_free (tc);
+  tc = iot_typecode_alloc_basic (IOT_DATA_BINARY);
+  CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_BINARY)
+  CU_ASSERT (strcmp (iot_typecode_type_name (tc), "Binary") == 0)
   iot_typecode_free (tc);
 }
 
