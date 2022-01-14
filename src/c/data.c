@@ -33,15 +33,15 @@
 #define IOT_DATA_CACHE
 #endif
 
-#define IOT_DATA_TYPES 19u
+#define IOT_DATA_TYPES 20u
 #define IOT_MEMORY_BLOCK_SIZE 4096u
 #define IOT_JSON_BUFF_SIZE 512u
 #define IOT_VAL_BUFF_SIZE 128u
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096u
 #define IOT_JSON_BUFF_INCREMENT 1024u
 
-static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Map","Vector","List"};
-static const uint8_t iot_data_type_size [IOT_DATA_TYPES] = { 1u,1u,2u,2u,4u,4u,8u,8u,4u,8u,sizeof (bool),sizeof (void*),sizeof (char*),0u,1u, 0u, 0u,0u,0u};
+static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Map","Vector","List","Multi"};
+static const uint8_t iot_data_type_size [IOT_DATA_TYPES] = { 1u,1u,2u,2u,4u,4u,8u,8u,4u,8u,sizeof (bool),sizeof (void*),sizeof (char*),0u,1u, 0u, 0u,0u,0u,0u};
 static const char * ORDERING_KEY = "ordering";
 
 typedef enum iot_node_colour_t
@@ -304,6 +304,7 @@ static void * iot_data_factory_alloc (iot_data_type_t type)
   iot_data_t * data = iot_data_block_alloc ();
   atomic_store (&data->refs, 1);
   data->type = type;
+  if (type >= IOT_DATA_ARRAY && type <= IOT_DATA_LIST) data->sub_type = IOT_DATA_MULTI;
   return data;
 }
 
@@ -332,7 +333,7 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
-/*
+
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
   printf ("sizeof (iot_node_t): %zu\n", sizeof (iot_node_t));
@@ -342,7 +343,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-*/
+
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
@@ -365,20 +366,20 @@ iot_data_type_t iot_data_name_type (const char * name)
   while (type >= 0)
   {
     if (strcasecmp (name, iot_data_type_names[type]) == 0) break;
-    type = (type == IOT_DATA_LIST) ? -1 : (type + 1);
+    type = (type == IOT_DATA_MULTI) ? -1 : (type + 1);
   }
   return (iot_data_type_t) type;
 }
 
 const char * iot_data_type_string (iot_data_type_t type)
 {
-  assert (type <= IOT_DATA_LIST);
+  assert (type <= IOT_DATA_MULTI);
   return iot_data_type_names[type];
 }
 
 const char * iot_data_type_name (const iot_data_t * data)
 {
-  assert (data && (data->type <= IOT_DATA_LIST));
+  assert (data && (data->type <= IOT_DATA_MULTI));
   return iot_data_type_names[data->type];
 }
 
@@ -491,6 +492,13 @@ iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)
   iot_data_map_t * map = iot_data_factory_alloc (IOT_DATA_MAP);
   map->base.sub_type = key_type;
   return (iot_data_t*) map;
+}
+
+extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t element_type)
+{
+  iot_data_t * map = iot_data_alloc_map (key_type);
+  map->sub_type = element_type;
+  return map;
 }
 
 iot_data_t * iot_data_alloc_vector (uint32_t size)
@@ -2159,7 +2167,7 @@ extern iot_data_type_t iot_typecode_type (const iot_typecode_t * typecode)
 
 const char * iot_typecode_type_name (const iot_typecode_t * typecode)
 {
-  assert (typecode && (typecode->type <= IOT_DATA_LIST));
+  assert (typecode && (typecode->type <= IOT_DATA_MULTI));
   return iot_data_type_names[typecode->type];
 }
 

@@ -42,7 +42,8 @@ typedef enum iot_data_type_t
   IOT_DATA_ARRAY = 15,   /**< Array of basic type (integer, float, bool or pointer) */
   IOT_DATA_MAP = 16,     /**< Map */
   IOT_DATA_VECTOR = 17,  /**< Vector */
-  IOT_DATA_LIST = 18     /**< List */
+  IOT_DATA_LIST = 18,    /**< List */
+  IOT_DATA_MULTI = 19    /**< Multiple data types, used for array, map, vector and list contained type */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
 /**
@@ -605,14 +606,25 @@ extern uint32_t iot_data_array_length (const iot_data_t * array);
 extern uint32_t iot_data_array_size (const iot_data_t * array);
 
 /**
- * @brief  Allocate memory for a map
+ * @brief  Allocate map data type
  *
- * The function to allocate memory for a map with a key type
+ * The function to allocate a data map with a key type
  *
  * @param key_type  Datatype of the key associated with the map
- * @return          Pointer to the allocated memory
+ * @return          Pointer to the allocated data
  */
 extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
+
+/**
+ * @brief  Allocate map data type
+ *
+ * The function to allocate a data map with a key type and element type
+ *
+ * @param key_type     Datatype of the key associated with the map
+ * @param element_type Datatype of the element associated with the map
+ * @return             Pointer to the allocated data
+ */
+extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t element_type);
 
 /**
  * @brief Allocate memory for an vector
