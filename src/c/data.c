@@ -1631,7 +1631,7 @@ static void iot_data_dump_ptr (iot_string_holder_t * holder, const void * ptr, c
       (fpclassify (*(float*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "1e400") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.8e", *(float*) ptr); break;
     case IOT_DATA_FLOAT64:
       (fpclassify (*(double*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "1e800") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.16e", *(double*) ptr); break;
-    case IOT_DATA_NULL: strcpy (buff, "null"); break;
+    case IOT_DATA_NULL: strncpy (buff, "null", IOT_VAL_BUFF_SIZE); break;
     default: strncpy (buff, (*(bool*) ptr) ? "true" : "false", IOT_VAL_BUFF_SIZE); break;
   }
   iot_data_strcat_escape (holder, buff, false);
