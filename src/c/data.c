@@ -334,7 +334,7 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
-
+/*
   printf ("sizeof (iot_data_t): %zu\n", sizeof (iot_data_t));
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
@@ -345,7 +345,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-
+*/
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
@@ -2100,7 +2100,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
   return ret;
 }
 
-static iot_typecode_t iot_basic_tcs [15] =
+static iot_typecode_t iot_basic_tcs [IOT_DATA_BINARY + 1] =
 {
   { .type = IOT_DATA_INT8, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
   { .type = IOT_DATA_UINT8, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
@@ -2127,7 +2127,7 @@ extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)
 
 extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
 {
-  static iot_typecode_t iot_array_tcs [12] =
+  static iot_typecode_t iot_array_tcs [IOT_DATA_POINTER + 1] =
   {
     { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT8, .key_type = IOT_DATA_TYPE_INVALID },
     { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT8, .key_type = IOT_DATA_TYPE_INVALID },
@@ -2224,20 +2224,19 @@ extern iot_typecode_t * iot_data_typecode (const iot_data_t * data)
 {
   assert (data);
   iot_typecode_t * tc;
-  iot_data_type_t type = data->type;
 
-  if (type < IOT_DATA_ARRAY)
+  if (data->type < IOT_DATA_ARRAY)
   {
-    tc = iot_typecode_alloc_basic (type);
+    tc = iot_typecode_alloc_basic (data->type);
   }
-  else if (type == IOT_DATA_ARRAY)
+  else if (data->type == IOT_DATA_ARRAY)
   {
     tc = iot_typecode_alloc_array (data->element_type);
   }
   else
   {
     tc = iot_data_block_alloc ();
-    tc->type = type;
+    tc->type = data->type;
     tc->element_type = data->element_type;
     tc->key_type = data->key_type;
   }
