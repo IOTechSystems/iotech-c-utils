@@ -1619,20 +1619,20 @@ static void iot_data_dump_ptr (iot_string_holder_t * holder, const void * ptr, c
   char buff[IOT_VAL_BUFF_SIZE];
   switch (type)
   {
-    case IOT_DATA_INT8: sprintf (buff, "%" PRId8 , *(const int8_t *) ptr); break;
-    case IOT_DATA_UINT8: sprintf (buff, "%" PRIu8, *(const uint8_t *) ptr); break;
-    case IOT_DATA_INT16: sprintf (buff, "%" PRId16, *(const int16_t *) ptr); break;
-    case IOT_DATA_UINT16: sprintf (buff, "%" PRIu16, *(const uint16_t *) ptr); break;
-    case IOT_DATA_INT32: sprintf (buff, "%" PRId32, *(const int32_t *) ptr); break;
-    case IOT_DATA_UINT32: sprintf (buff, "%" PRIu32, *(const uint32_t *) ptr); break;
-    case IOT_DATA_INT64: sprintf (buff, "%" PRId64, *(const int64_t *) ptr); break;
-    case IOT_DATA_UINT64: sprintf (buff, "%" PRIu64, *(const uint64_t *) ptr); break;
+    case IOT_DATA_INT8: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRId8 , *(const int8_t *) ptr); break;
+    case IOT_DATA_UINT8: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRIu8, *(const uint8_t *) ptr); break;
+    case IOT_DATA_INT16: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRId16, *(const int16_t *) ptr); break;
+    case IOT_DATA_UINT16: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRIu16, *(const uint16_t *) ptr); break;
+    case IOT_DATA_INT32: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRId32, *(const int32_t *) ptr); break;
+    case IOT_DATA_UINT32: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRIu32, *(const uint32_t *) ptr); break;
+    case IOT_DATA_INT64: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRId64, *(const int64_t *) ptr); break;
+    case IOT_DATA_UINT64: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRIu64, *(const uint64_t *) ptr); break;
     case IOT_DATA_FLOAT32:
       (fpclassify (*(float*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "1e400") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.8e", *(float*) ptr); break;
     case IOT_DATA_FLOAT64:
       (fpclassify (*(double*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "1e800") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.16e", *(double*) ptr); break;
     case IOT_DATA_NULL: strcpy (buff, "null"); break;
-    default: strcpy (buff, (*(bool*) ptr) ? "true" : "false"); break;
+    default: strncpy (buff, IOT_VAL_BUFF_SIZE, (*(bool*) ptr) ? "true" : "false"); break;
   }
   iot_data_strcat_escape (holder, buff, false);
 }
