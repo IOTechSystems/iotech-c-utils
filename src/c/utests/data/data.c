@@ -425,6 +425,7 @@ static void test_data_array_iter_bool (void)
   uint8_t index = 0;
   bool data [4] = { false, true, false, true };
   iot_data_array_iter_t array_iter;
+  bool has_next = true;
 
   iot_data_t * array = iot_data_alloc_array (data, sizeof (data) / sizeof (bool), IOT_DATA_BOOL, IOT_DATA_REF);
   iot_data_array_iter (array, &array_iter);
@@ -434,8 +435,10 @@ static void test_data_array_iter_bool (void)
     CU_ASSERT (iot_data_array_iter_index (&array_iter) == index)
     CU_ASSERT (iot_data_array_iter_value (&array_iter) != NULL)
     CU_ASSERT (*((bool*)iot_data_array_iter_value (&array_iter)) == data[index])
+    has_next = iot_data_array_iter_has_next (&array_iter);
     index++;
   }
+  CU_ASSERT (!has_next)
 
   iot_data_free (array);
 }
@@ -444,6 +447,7 @@ static void test_data_string_vector (void)
 {
   const char * strs [2] = { "Test", "Tube" };
   uint32_t index = 0;
+  bool has_next = true;
   iot_data_vector_iter_t iter;
   iot_data_t * vector = iot_data_alloc_vector (2);
   iot_data_t * str1 = iot_data_alloc_string (strs[0], IOT_DATA_REF);
@@ -456,8 +460,10 @@ static void test_data_string_vector (void)
     CU_ASSERT (iot_data_vector_iter_index (&iter) == index)
     CU_ASSERT (iot_data_vector_iter_value (&iter) != NULL)
     CU_ASSERT (iot_data_vector_iter_string (&iter) == strs[index])
+    has_next = iot_data_vector_iter_has_next (&iter);
     index++;
   }
+  CU_ASSERT (! has_next);
   CU_ASSERT (iot_data_vector_size (vector) == 2)
   CU_ASSERT (iot_data_vector_get (vector, 0) == str1)
   CU_ASSERT (iot_data_vector_get (vector, 1) == str2)
@@ -509,6 +515,10 @@ static void test_data_to_json (void)
     // printf ("JSON: %s\n", json);
     CU_ASSERT (strcmp (json, "{\"Array\":[0,1,2,3],\"Binary\":\"AAECAw==\",\"Boolean\":true,\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"NULL\":null,\"Name\":\"Lilith\",\"UInt32\":1}") == 0)
   }
+  iot_data_free (map);
+
+  map = iot_data_from_json_with_ordering (json, true);
+  CU_ASSERT (json != NULL)
   free (json);
   iot_data_free (map);
 
@@ -2275,6 +2285,7 @@ static void test_list_iter (void)
   iot_data_list_iter_t iter;
   const iot_data_t * value;
   uint32_t counter;
+  bool has_next = true;
 
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (0u));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (1u));
@@ -2290,8 +2301,10 @@ static void test_list_iter (void)
   {
     value = iot_data_list_iter_value (&iter);
     CU_ASSERT (value && iot_data_ui32 (value) == counter)
+    has_next = iot_data_list_iter_has_next (&iter);
     counter--;
   }
+  CU_ASSERT (! has_next)
   counter = 2;
   while (iot_data_list_iter_next (&iter))
   {
