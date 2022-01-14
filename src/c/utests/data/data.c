@@ -3044,6 +3044,8 @@ static void test_data_basic_typecode (void)
   tc = iot_typecode_alloc_basic (IOT_DATA_BINARY);
   CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_BINARY)
   CU_ASSERT (strcmp (iot_typecode_type_name (tc), "Binary") == 0)
+  const iot_typecode_t * et = iot_typecode_element_type (tc);
+  CU_ASSERT (iot_typecode_type (et) == IOT_DATA_UINT8)
   iot_typecode_free (tc);
 }
 
@@ -3338,6 +3340,28 @@ static void test_data_alloc_pointer (void)
   iot_data_free (data3);
 }
 
+static void test_data_binary (void)
+{
+  uint8_t buff[3] = { 1,2,3 };
+  iot_data_t * bin = iot_data_alloc_binary (buff, sizeof (buff), IOT_DATA_REF);
+  iot_data_array_iter_t iter;
+
+  CU_ASSERT (iot_data_address (bin) == buff)
+  CU_ASSERT (iot_data_array_is_of_type (bin, IOT_DATA_UINT8))
+  CU_ASSERT (iot_data_array_length (bin) == 3u)
+  CU_ASSERT (iot_data_array_size (bin) == 3u)
+  iot_data_array_iter (bin, &iter);
+  CU_ASSERT (! iot_data_array_iter_has_next (&iter))
+  iot_data_array_iter_next (&iter);
+  CU_ASSERT (iot_data_array_iter_has_next (&iter))
+  CU_ASSERT (iot_data_array_iter_index (&iter) == 0)
+  CU_ASSERT (iot_data_array_iter_value (&iter) == &buff)
+  char * json = iot_data_to_json (bin);
+  CU_ASSERT (strcmp (json, "\"AQID\"") == 0) // Base64 string encoding
+  free (json);
+  iot_data_free (bin);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -3346,6 +3370,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_name_type", test_data_name_type);
   CU_add_test (suite, "data_type_string", test_data_type_string);
   CU_add_test (suite, "data_array_key", test_data_array_key);
+  CU_add_test (suite, "data_binary", test_data_binary);
   CU_add_test (suite, "data_array_iter_next", test_data_array_iter_next);
   CU_add_test (suite, "data_array_iter_prev", test_data_array_iter_prev);
   CU_add_test (suite, "data_array_iter_uint8", test_data_array_iter_uint8);

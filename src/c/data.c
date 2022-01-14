@@ -1404,7 +1404,7 @@ uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter)
 
 const void * iot_data_array_iter_value (const iot_data_array_iter_t * iter)
 {
-  assert (iter);
+  assert (iter && iter->array);
   return (iter->index < iter->array->length) ? ((char*) (iter->array->data) + (iter->index) * iot_data_type_size[iter->array->base.sub_type]) : NULL;
 }
 
@@ -2094,7 +2094,7 @@ static iot_typecode_t iot_basic_tcs [15] =
   { .type = IOT_DATA_INT8 }, { .type = IOT_DATA_UINT8 }, { .type = IOT_DATA_INT16 }, { .type = IOT_DATA_UINT16 },
   { .type = IOT_DATA_INT32 }, { .type = IOT_DATA_UINT32 }, { .type = IOT_DATA_INT64 }, { .type = IOT_DATA_UINT64 },
   { .type = IOT_DATA_FLOAT32 }, { .type = IOT_DATA_FLOAT64, }, { .type = IOT_DATA_BOOL }, { .type = IOT_DATA_POINTER },
-  { .type = IOT_DATA_STRING }, { .type = IOT_DATA_NULL }, { .type = IOT_DATA_BINARY }
+  { .type = IOT_DATA_STRING }, { .type = IOT_DATA_NULL }, { .type = IOT_DATA_BINARY, .element_type = &iot_basic_tcs[IOT_DATA_UINT8] }
 };
 
 extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)
@@ -2171,7 +2171,7 @@ extern iot_data_type_t iot_typecode_key_type (const iot_typecode_t * typecode)
 
 extern const iot_typecode_t * iot_typecode_element_type (const iot_typecode_t * typecode)
 {
-  assert (typecode && (typecode->type >= IOT_DATA_ARRAY));
+  assert (typecode && (typecode->type >= IOT_DATA_BINARY));
   return typecode->element_type;
 }
 
