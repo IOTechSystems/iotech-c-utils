@@ -137,3 +137,17 @@
 * `iot_data_list_iter_replace`
 * `iot_data_list_iter_next`
 * `iot_data_list_iter_prev`
+
+- Added allocation functions for fixed type map, vector and list:
+
+* `iot_data_alloc_typed_list`
+* `iot_data_alloc_typed_map`
+* `iot_data_alloc_typed_vector`
+
+- Data typecode simplification. Changed functions:
+
+* `iot_typecode_alloc_map`
+* `iot_typecode_alloc_array`
+* `iot_typecode_alloc_vector`
+* `iot_typecode_alloc_list`
+* `iot_typecode_element_type`

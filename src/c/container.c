@@ -226,7 +226,7 @@ iot_container_t * iot_container_alloc (const char * name)
   iot_container_t * cont = malloc (sizeof (*cont));
   cont->name = strdup (name);
   cont->logger = iot_logger_default ();
-  cont->components = iot_data_alloc_list ();
+  cont->components = iot_data_alloc_typed_list (IOT_DATA_POINTER);
   pthread_rwlock_init (&cont->lock, NULL);
   iot_logger_start (cont->logger);
   return cont;
@@ -396,7 +396,7 @@ static void iot_component_info_free (void * val)
 iot_data_t * iot_container_list_components (iot_container_t * cont)
 {
   assert (cont);
-  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * map = iot_data_alloc_typed_map (IOT_DATA_STRING, IOT_DATA_POINTER);
   pthread_rwlock_rdlock (&cont->lock);
   iot_data_list_iter_t iter;
   iot_data_list_iter (cont->components, &iter);

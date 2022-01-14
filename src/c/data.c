@@ -511,6 +511,13 @@ iot_data_t * iot_data_alloc_vector (uint32_t size)
   return (iot_data_t*) vector;
 }
 
+iot_data_t * iot_data_alloc_typed_vector (uint32_t size, iot_data_type_t element_type)
+{
+  iot_data_t * vector = iot_data_alloc_vector (size);
+  vector->element_type = element_type;
+  return vector;
+}
+
 iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn)
 {
   iot_data_pointer_t * pointer = iot_data_factory_alloc (IOT_DATA_POINTER);
@@ -522,6 +529,13 @@ iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn)
 iot_data_t * iot_data_alloc_list (void)
 {
   return (iot_data_t*) iot_data_factory_alloc (IOT_DATA_LIST);
+}
+
+iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type)
+{
+  iot_data_t * list = iot_data_factory_alloc (IOT_DATA_LIST);
+  list->element_type = element_type;
+  return list;
 }
 
 uint32_t iot_data_list_length (const iot_data_t * list)
@@ -612,7 +626,7 @@ const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t * iter)
 
 iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value)
 {
-  assert (iter);
+  assert (iter && iter->list && value && (iter->list->base.element_type == IOT_DATA_MULTI || iter->list->base.element_type == value->type));
   iot_data_t * res = (iter->element) ? iter->element->value : NULL;
   if (res) iter->element->value = value;
   return res;
@@ -620,7 +634,7 @@ iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_
 
 void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value)
 {
-  assert (list && value);
+  assert (list && value && (list->element_type == IOT_DATA_MULTI || list->element_type == value->type)); // Check element type matches for fixed type list
   iot_data_list_t * impl = (iot_data_list_t*) list;
   iot_element_t * element = impl->tail;
   impl->tail = (iot_element_t*) iot_data_block_alloc ();
@@ -663,7 +677,7 @@ iot_data_t * iot_data_list_tail_pop (iot_data_t * list)
 
 void iot_data_list_head_push (iot_data_t * list, iot_data_t * value)
 {
-  assert (list && value);
+  assert (list && value && (list->element_type == IOT_DATA_MULTI || list->element_type == value->type)); // Check element type matches for fixed type list
   iot_data_list_t * impl = (iot_data_list_t*) list;
   iot_element_t * element = impl->head;
   impl->head = (iot_element_t*) iot_data_block_alloc ();
@@ -1275,8 +1289,9 @@ extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t
 void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val)
 {
   iot_data_vector_t * arr = (iot_data_vector_t*) vector;
-  assert (val && vector && (vector->type == IOT_DATA_VECTOR));
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
   assert (index < arr->size);
+  assert (val && (vector->element_type == IOT_DATA_MULTI || vector->element_type == val->type)); // Check element type matches for fixed type vector
   iot_data_t * element = arr->values[index];
   iot_data_free (element);
   arr->values[index] = val;
@@ -1362,7 +1377,7 @@ const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter)
 
 iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t *value)
 {
-  assert (iter);
+  assert (iter && iter->map && value && (iter->map->base.element_type == IOT_DATA_MULTI || iter->map->base.element_type == value->type));
   iot_data_t * res = (iter->node) ? iter->node->value : NULL;
   if (res) iter->node->value = value;
   return res;
@@ -1459,7 +1474,7 @@ const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter_t * it
 
 iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t * value)
 {
-  assert (iter);
+  assert (iter && iter->vector && value && (iter->vector->base.element_type == IOT_DATA_MULTI || iter->vector->base.element_type == value->type));
   iot_data_t * res = NULL;
   if (iter->index < iter->vector->size)
   {

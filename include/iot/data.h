@@ -391,9 +391,19 @@ extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn
  *
  * The function to allocate data for a list
  *
- * @return  Pointer to the allocated data
+ * @return  Pointer to the allocated data list
  */
 extern iot_data_t * iot_data_alloc_list (void);
+
+/**
+ * @brief Allocate data for a list
+ *
+ * The function to allocate data for a list of fixed element type
+ *
+ * @param  element_type Datatype of the list elements
+ * @return              Pointer to the allocated data list
+ */
+extern iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type);
 
 /**
  * @brief Get the list length
@@ -613,8 +623,8 @@ extern uint32_t iot_data_array_size (const iot_data_t * array);
  *
  * The function to allocate a data map with a key type
  *
- * @param key_type  Datatype of the key associated with the map
- * @return          Pointer to the allocated data
+ * @param key_type  Datatype of the map keys
+ * @return          Pointer to the allocated data map
  */
 extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
 
@@ -623,14 +633,14 @@ extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
  *
  * The function to allocate a data map with a key type and element type
  *
- * @param key_type     Datatype of the key associated with the map
- * @param element_type Datatype of the element associated with the map
- * @return             Pointer to the allocated data
+ * @param key_type     Datatype of the map keys
+ * @param element_type Datatype of the map values
+ * @return             Pointer to the allocated data map
  */
 extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t element_type);
 
 /**
- * @brief Allocate memory for an vector
+ * @brief Allocate a data vector
  *
  * The function to allocate memory for an vector type
  *
@@ -638,6 +648,17 @@ extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data
  * @return      Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_vector (uint32_t size);
+
+/**
+ * @brief Allocate a data vector
+ *
+ * The function to allocate a data vector of fixed element type
+ *
+ * @param size         Length of the vector for allocation, could be zero to create zero length vector
+ * @param element_type Datatype of the vector elements
+ * @return             Pointer to the allocated data vector
+ */
+extern iot_data_t * iot_data_alloc_typed_vector (uint32_t size, iot_data_type_t element_type);
 
 /**
  * @brief Allocate memory of data_type type for a string value
