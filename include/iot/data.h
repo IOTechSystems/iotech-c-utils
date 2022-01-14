@@ -475,7 +475,7 @@ extern bool iot_data_list_iter_next (iot_data_list_iter_t * iter);
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
  */
-extern bool iot_data_list_iter_has_next (iot_data_list_iter_t * iter);
+extern bool iot_data_list_iter_has_next (const iot_data_list_iter_t * iter);
 
 /**
  * @brief Update the iterator to point to the previous element in a list
@@ -1105,7 +1105,7 @@ extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
  */
-extern bool iot_data_array_iter_has_next (iot_data_array_iter_t * iter);
+extern bool iot_data_array_iter_has_next (const iot_data_array_iter_t * iter);
 /**
  * @brief Update the iterator to point to the previous element within an array
  *
@@ -1253,7 +1253,7 @@ extern bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter);
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
  */
-extern bool iot_data_vector_iter_has_next (iot_data_vector_iter_t * iter);
+extern bool iot_data_vector_iter_has_next (const iot_data_vector_iter_t * iter);
 
 /**
  * @brief Iterate to previous vector element

@@ -605,7 +605,7 @@ bool iot_data_list_iter_next (iot_data_list_iter_t * iter)
   return (iter->element != NULL);
 }
 
-bool iot_data_list_iter_has_next (iot_data_list_iter_t * iter)
+bool iot_data_list_iter_has_next (const iot_data_list_iter_t * iter)
 {
   assert (iter);
   return (iter->element && iter->element->next);
@@ -735,7 +735,7 @@ void * iot_data_address (const iot_data_t * data)
   if (data)
   {
     if (data->type == IOT_DATA_POINTER) return ((const iot_data_pointer_t *) data)->value;
-    else if (data->type < IOT_DATA_BINARY) return (void *) &(((const iot_data_value_t *) data)->value);
+    else if (data->type < IOT_DATA_BINARY) return (const void *) &(((const iot_data_value_t *) data)->value);
     else if (data->type == IOT_DATA_BINARY || data->type == IOT_DATA_ARRAY) return ((const iot_data_array_t *) data)->data;
   }
   return NULL;
@@ -1409,7 +1409,7 @@ bool iot_data_array_iter_next (iot_data_array_iter_t * iter)
   return (iter->index < iter->array->length);
 }
 
-bool iot_data_array_iter_has_next (iot_data_array_iter_t * iter)
+bool iot_data_array_iter_has_next (const iot_data_array_iter_t * iter)
 {
   assert (iter);
   return (iter->index + 1 < iter->array->length);
@@ -1448,7 +1448,7 @@ bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter)
   return (iter->index < iter->vector->size);
 }
 
-bool iot_data_vector_iter_has_next (iot_data_vector_iter_t * iter)
+bool iot_data_vector_iter_has_next (const iot_data_vector_iter_t * iter)
 {
   return (iter->index + 1 < iter->vector->size);
 }
@@ -1628,11 +1628,11 @@ static void iot_data_dump_ptr (iot_string_holder_t * holder, const void * ptr, c
     case IOT_DATA_INT64: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRId64, *(const int64_t *) ptr); break;
     case IOT_DATA_UINT64: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRIu64, *(const uint64_t *) ptr); break;
     case IOT_DATA_FLOAT32:
-      (fpclassify (*(float*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "1e400") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.8e", *(float*) ptr); break;
+      (fpclassify (*(const float*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "1e400") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.8e", *(const float*) ptr); break;
     case IOT_DATA_FLOAT64:
-      (fpclassify (*(double*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "1e800") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.16e", *(double*) ptr); break;
+      (fpclassify (*(const double*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "1e800") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.16e", *(const double*) ptr); break;
     case IOT_DATA_NULL: strncpy (buff, "null", IOT_VAL_BUFF_SIZE); break;
-    default: strncpy (buff, (*(bool*) ptr) ? "true" : "false", IOT_VAL_BUFF_SIZE); break;
+    default: strncpy (buff, (*(const bool*) ptr) ? "true" : "false", IOT_VAL_BUFF_SIZE); break;
   }
   iot_data_strcat_escape (holder, buff, false);
 }

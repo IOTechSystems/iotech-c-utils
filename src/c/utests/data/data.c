@@ -463,7 +463,7 @@ static void test_data_string_vector (void)
     has_next = iot_data_vector_iter_has_next (&iter);
     index++;
   }
-  CU_ASSERT (! has_next);
+  CU_ASSERT (! has_next)
   CU_ASSERT (iot_data_vector_size (vector) == 2)
   CU_ASSERT (iot_data_vector_get (vector, 0) == str1)
   CU_ASSERT (iot_data_vector_get (vector, 1) == str2)
