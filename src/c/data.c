@@ -83,7 +83,6 @@ struct iot_typecode_t
   iot_data_type_t type;
   iot_data_type_t element_type;
   iot_data_type_t key_type;
-  bool basic;
 };
 
 typedef struct iot_data_value_base_t
@@ -343,6 +342,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_array_t): %zu\n", sizeof (iot_data_array_t));
   printf ("sizeof (iot_data_list_t): %zu\n", sizeof (iot_data_list_t));
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
+  printf ("sizeof (iot_typecode_t): %zu\n", sizeof (iot_typecode_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
 */
