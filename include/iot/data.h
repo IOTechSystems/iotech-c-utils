@@ -46,6 +46,9 @@ typedef enum iot_data_type_t
   IOT_DATA_MULTI = 19    /**< Multiple data types, used for array, map, vector and list contained type */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
+/** For invalid data type value */
+#define IOT_DATA_TYPE_INVALID -1
+
 /**
  * Data ownership enumeration
  */

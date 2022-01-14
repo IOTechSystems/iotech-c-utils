@@ -36,10 +36,10 @@ extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type);
  * to a fixed type element.
  *
  * @param key_type     The type of the map key
- * @param element_type The type of the map element, NULL to indicate any type
+ * @param element_type The type of the map element
  * @return             Pointer to the allocated map typecode
  */
-extern iot_typecode_t * iot_typecode_alloc_map (iot_data_type_t key_type, iot_typecode_t * element_type);
+extern iot_typecode_t * iot_typecode_alloc_map (iot_data_type_t key_type, iot_data_type_t element_type);
 
 /**
  * @brief Allocate an array typecode
@@ -47,7 +47,7 @@ extern iot_typecode_t * iot_typecode_alloc_map (iot_data_type_t key_type, iot_ty
  * The function allocates a typecode for an array, only simple C array types are supported (all basic
  * types except String).
  *
- * @param element_type The type of the array element
+ * @param element_type The type of the array element, IOT_DATA_MULTI to indicate any supported type
  * @return             Pointer to the allocated array typecode
  */
 extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type);
@@ -58,10 +58,10 @@ extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type);
  * The function allocates a typecode for a vector, setting the element type. The element type
  * can be any type or NULL to indicate a variable as opposed to a fixed type element.
  *
- * @param element_type The type of the vector element, NULL to indicate any type
+ * @param element_type The type of the vector element, IOT_DATA_MULTI to indicate any type
  * @return             Pointer to the allocated vector typecode
  */
-extern iot_typecode_t * iot_typecode_alloc_vector (iot_typecode_t * element_type);
+extern iot_typecode_t * iot_typecode_alloc_vector (iot_data_type_t element_type);
 
 /**
  * @brief Allocate a list typecode
@@ -69,10 +69,10 @@ extern iot_typecode_t * iot_typecode_alloc_vector (iot_typecode_t * element_type
  * The function allocates a typecode for a list, setting the element type. The element type
  * can be any type or NULL to indicate a variable as opposed to a fixed type element.
  *
- * @param element_type The type of the list element, NULL to indicate any type
+ * @param element_type The type of the list element,IOT_DATA_MULTI to indicate any type
  * @return             Pointer to the allocated vector typecode
  */
-extern iot_typecode_t * iot_typecode_alloc_list (iot_typecode_t * element_type);
+extern iot_typecode_t * iot_typecode_alloc_list (iot_data_type_t element_type);
 
 /**
  * @brief Free a typecode
@@ -130,13 +130,13 @@ extern iot_data_type_t iot_typecode_key_type (const iot_typecode_t * typecode);
 /**
  * @brief Returns the element type of a map, vector or array typecode
  *
- * The function returns the element type of a map, vector or array typecode. For example a typecode may represent a map of boolean
- * keyed by string, where the element type is boolean.
+ * The function returns the element type of a map, vector, list or array typecode. For example a typecode may represent a
+ * map of boolean keyed by string, where the element type is boolean.
  *
- * @param typecode Pointer to the array, map or vector typecode
- * @return         The element type of the map, array or vector. May be NULL for vectors or maps of varying element type
+ * @param typecode Pointer to the array, map, list or vector typecode
+ * @return         The element type
  */
-extern const iot_typecode_t * iot_typecode_element_type (const iot_typecode_t * typecode);
+extern iot_data_type_t iot_typecode_element_type (const iot_typecode_t * typecode);
 
 #ifdef __cplusplus
 }
