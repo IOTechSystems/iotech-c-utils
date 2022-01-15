@@ -812,7 +812,8 @@ static void test_data_name_type (void)
   CU_ASSERT (iot_data_name_type ("vector") == IOT_DATA_VECTOR)
   CU_ASSERT (iot_data_name_type ("list") == IOT_DATA_LIST)
   CU_ASSERT (iot_data_name_type ("multi") == IOT_DATA_MULTI)
-  CU_ASSERT (iot_data_name_type ("dummy") == (iot_data_type_t) -1)
+  CU_ASSERT (iot_data_name_type ("invalid") == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_name_type ("dummy") == IOT_DATA_INVALID)
 }
 
 static void test_data_type_string (void)

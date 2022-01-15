@@ -33,15 +33,15 @@
 #define IOT_DATA_CACHE
 #endif
 
-#define IOT_DATA_TYPES 20u
+#define IOT_DATA_TYPES (IOT_DATA_INVALID + 1)
 #define IOT_MEMORY_BLOCK_SIZE 4096u
 #define IOT_JSON_BUFF_SIZE 512u
 #define IOT_VAL_BUFF_SIZE 128u
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096u
 #define IOT_JSON_BUFF_INCREMENT 1024u
 
-static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Map","Vector","List","Multi"};
-static const uint8_t iot_data_type_size [IOT_DATA_TYPES] = { 1u,1u,2u,2u,4u,4u,8u,8u,4u,8u,sizeof (bool),sizeof (void*),sizeof (char*),0u,1u, 0u, 0u,0u,0u,0u};
+static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Map","Vector","List","Multi", "Invalid"};
+static const uint8_t iot_data_type_size [IOT_DATA_TYPES] = { 1u,1u,2u,2u,4u,4u,8u,8u,4u,8u,sizeof (bool),sizeof (void*),sizeof (char*),0u,1u, 0u, 0u,0u,0u,0u, 0u};
 static const char * ORDERING_KEY = "ordering";
 
 typedef enum iot_node_colour_t
@@ -365,24 +365,23 @@ iot_data_t * iot_data_add_ref (const iot_data_t * data)
 iot_data_type_t iot_data_name_type (const char * name)
 {
   int type = 0;
-  while (type >= 0)
+  while (type < IOT_DATA_INVALID)
   {
     if (strcasecmp (name, iot_data_type_names[type]) == 0) break;
-    type = (type == IOT_DATA_MULTI) ? IOT_DATA_TYPE_INVALID : (type + 1);
+    type++;
   }
-  return (iot_data_type_t) type;
+  return type;
 }
 
 const char * iot_data_type_string (iot_data_type_t type)
 {
-  assert (type <= IOT_DATA_MULTI);
-  return iot_data_type_names[type];
+  return iot_data_type_names[(type > IOT_DATA_INVALID) ? IOT_DATA_INVALID : type];
 }
 
 const char * iot_data_type_name (const iot_data_t * data)
 {
-  assert (data && (data->type <= IOT_DATA_MULTI));
-  return iot_data_type_names[data->type];
+  assert (data);
+  return iot_data_type_string (data->type);
 }
 
 extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata)
@@ -2119,21 +2118,21 @@ extern iot_typecode_t * iot_typecode_alloc_basic (iot_data_type_t type)
 {
   static iot_typecode_t iot_basic_tcs [IOT_DATA_BINARY + 1] =
   {
-    { .type = IOT_DATA_INT8, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_UINT8, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_INT16, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_UINT16, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_INT32, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_UINT32, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_INT64, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_UINT64, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_FLOAT32, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_FLOAT64, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_BOOL, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_POINTER, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_STRING, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_NULL, .element_type = IOT_DATA_TYPE_INVALID, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_BINARY, .element_type = IOT_DATA_UINT8, .key_type = IOT_DATA_TYPE_INVALID }
+    { .type = IOT_DATA_INT8, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_UINT8, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_INT16, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_UINT16, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_INT32, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_UINT32, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_INT64, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_UINT64, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_FLOAT32, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_FLOAT64, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_BOOL, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_POINTER, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_STRING, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_NULL, .element_type = IOT_DATA_INVALID, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_BINARY, .element_type = IOT_DATA_UINT8, .key_type = IOT_DATA_INVALID }
   };
   assert (type <= IOT_DATA_BINARY);
   return &iot_basic_tcs[type];
@@ -2143,18 +2142,18 @@ extern iot_typecode_t * iot_typecode_alloc_array (iot_data_type_t element_type)
 {
   static iot_typecode_t iot_array_tcs [IOT_DATA_POINTER + 1] =
   {
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT8, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT8, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT16, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT16, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT32, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT32, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT64, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT64, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_FLOAT32, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_FLOAT64, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_BOOL, .key_type = IOT_DATA_TYPE_INVALID },
-    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_POINTER, .key_type = IOT_DATA_TYPE_INVALID }
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT8, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT8, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT16, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT16, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT32, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT32, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT64, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT64, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_FLOAT32, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_FLOAT64, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_BOOL, .key_type = IOT_DATA_INVALID },
+    { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_POINTER, .key_type = IOT_DATA_INVALID }
   };
   assert (element_type <= IOT_DATA_POINTER);
   return &iot_array_tcs[element_type];
@@ -2174,7 +2173,7 @@ extern iot_typecode_t * iot_typecode_alloc_vector (iot_data_type_t element_type)
   iot_typecode_t * tc = iot_data_block_alloc ();
   tc->type = IOT_DATA_VECTOR;
   tc->element_type = element_type;
-  tc->key_type = IOT_DATA_TYPE_INVALID;
+  tc->key_type = IOT_DATA_INVALID;
   return tc;
 }
 
@@ -2183,7 +2182,7 @@ extern iot_typecode_t * iot_typecode_alloc_list (iot_data_type_t element_type)
   iot_typecode_t * tc = iot_data_block_alloc ();
   tc->type = IOT_DATA_LIST;
   tc->element_type = element_type;
-  tc->key_type = IOT_DATA_TYPE_INVALID;
+  tc->key_type = IOT_DATA_INVALID;
   return tc;
 }
 
@@ -2200,7 +2199,7 @@ extern iot_data_type_t iot_typecode_type (const iot_typecode_t * typecode)
 
 const char * iot_typecode_type_name (const iot_typecode_t * typecode)
 {
-  assert (typecode && (typecode->type <= IOT_DATA_MULTI));
+  assert (typecode);
   return iot_data_type_names[typecode->type];
 }
 
