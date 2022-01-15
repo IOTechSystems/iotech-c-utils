@@ -730,7 +730,7 @@ bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type)
   return (data && (data->type == type));
 }
 
-void * iot_data_address (const iot_data_t * data)
+const void * iot_data_address (const iot_data_t * data)
 {
   if (data)
   {

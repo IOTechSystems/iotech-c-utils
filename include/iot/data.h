@@ -215,7 +215,7 @@ extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data);
  * @param data  Pointer to data
  * @return      Pointer that holds the address of data
  */
-extern void * iot_data_address (const iot_data_t * data); /* Not for Maps or Vectors */
+extern const void * iot_data_address (const iot_data_t * data); /* Not for Maps, Vectors or Lists */
 
 /**
  * @brief Allocate memory for data_type int8
