@@ -111,8 +111,8 @@ fi
 # Run examples
 if [ "${EXAMPLES}" = "true" ]
 then
-  cd ${BROOT}/release/c/examples
-  run_examples ${BROOT}/release/c
+  cd ${BROOT}/debug/c/examples
+  run_examples ${BROOT}/debug/c
 
   # Run examples made with makefiles.
   cd ${ROOT}/src/c/examples
