@@ -13,7 +13,6 @@ int main (int argc, char ** argv)
     fprintf (stderr, "Usage: test <profile file>\n");
     exit (-1);
   }
-  iot_init ();
   char * profile = iot_file_read (argv[1]);
   if (profile == NULL)
   {
@@ -26,6 +25,5 @@ int main (int argc, char ** argv)
   iot_data_free (cache);
   iot_data_free (map);
   free (profile);
-  iot_fini ();
   return 0;
 }

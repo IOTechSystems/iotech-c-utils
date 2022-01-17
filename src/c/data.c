@@ -19,9 +19,6 @@
 #include "iot/uuid.h"
 #endif
 
-__attribute__((constructor)) static void _bar (void) { printf ("STEVE\n");}
-__attribute__((destructor)) static void _box (void) { printf ("ROCKS\n");}
-
 #ifdef IOT_HAS_XML
 #include "yxml.h"
 #define YXML_PARSER_BUFF_SIZE 4096

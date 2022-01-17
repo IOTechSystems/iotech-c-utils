@@ -10,7 +10,6 @@ static char * config_loader (const char * name, const char * uri);
 
 int main (void)
 {
-  iot_init ();
   iot_container_config_t config = { .load = config_loader, .uri = NULL, .save = NULL };
   iot_container_t *  container = iot_container_alloc ("main");
 
@@ -53,7 +52,6 @@ int main (void)
   /* Stop everything and clean up */
   iot_container_stop (container);
   iot_container_free (container);
-  iot_fini ();
 
   return 0;
 }

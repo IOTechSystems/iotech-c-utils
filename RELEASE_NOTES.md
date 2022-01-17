@@ -122,6 +122,11 @@
 
 ## Version 1.3.0
 
+- The static library initialisation and finalisation functions are no longer required and have been removed:
+
+* `iot_init`
+* `iot_fini`
+
 - Support added for data list type:
 
 * `iot_data_alloc_list`

@@ -36,7 +36,6 @@ static void testFree4 (void *in)
 
 int main (void)
 {
-  iot_init ();
   iot_logger_t * plogger = iot_logger_alloc ("Scheduler", IOT_LOG_WARN, true);
   iot_logger_t * slogger = iot_logger_alloc ("ThreadPool", IOT_LOG_WARN, true);
   iot_logger_t * mlogger = iot_logger_alloc ("main", IOT_LOG_INFO, true);
@@ -107,6 +106,5 @@ int main (void)
   iot_logger_free (slogger);
   iot_logger_free (plogger);
   iot_logger_free (mlogger);
-  iot_fini ();
   return 0;
 }

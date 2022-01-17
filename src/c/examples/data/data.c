@@ -9,8 +9,6 @@
 
 int main (void)
 {
-  iot_init ();
-
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_INT16);
   iot_data_t * map2 = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * vector = iot_data_alloc_vector (ARRAY_SIZE);
@@ -82,6 +80,5 @@ int main (void)
   printf ("%s\n", json);
   free (json);
   iot_data_free (map);
-
-  iot_fini ();
+  return 0;
 }

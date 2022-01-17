@@ -30,16 +30,6 @@ extern "C" {
 #endif
 
 /**
- * @brief Start IOT / Initialise IOT data
- */
-extern void iot_init (void);
-
-/**
- * @brief Stop IOT / Cleanup IOT data
- */
-extern void iot_fini (void);
-
-/**
  * @brief Load configuration from file
  *
  * The function to load a configuration from a file

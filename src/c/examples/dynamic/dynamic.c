@@ -14,7 +14,6 @@ int main (int argc, char ** argv)
     fprintf (stderr, "Usage: %s <config directory>\n", argv[0]);
     return 1;
   }
-  iot_init ();
 
   /* Create a config to load component configuration data from files */
 
@@ -34,6 +33,5 @@ int main (int argc, char ** argv)
 
   iot_container_stop (container);
   iot_container_free (container);
-  iot_fini ();
   return 0;
 }
