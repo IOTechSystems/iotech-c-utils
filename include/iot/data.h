@@ -24,27 +24,27 @@ extern "C" {
  */
 typedef enum iot_data_type_t
 {
-  IOT_DATA_INT8 = 0,     /**< Signed 8 bit integer */
-  IOT_DATA_UINT8 = 1,    /**< Unsigned 8 bit integer */
-  IOT_DATA_INT16 = 2,    /**< Signed 16 bit integer */
-  IOT_DATA_UINT16 = 3,   /**< Unsigned 16 bit integer */
-  IOT_DATA_INT32 = 4,    /**< Signed 32 bit integer */
-  IOT_DATA_UINT32 = 5,   /**< Unsigned 32 bit integer */
-  IOT_DATA_INT64 = 6,    /**< Signed 64 bit integer */
-  IOT_DATA_UINT64 = 7,   /**< Unsigned 64 bit integer */
-  IOT_DATA_FLOAT32 = 8,  /**< 32 bit float */
-  IOT_DATA_FLOAT64 = 9,  /**< 64 bit float */
-  IOT_DATA_BOOL = 10,    /**< Boolean */
-  IOT_DATA_POINTER = 11, /**< Pointer */
-  IOT_DATA_STRING = 12,  /**< String */
-  IOT_DATA_NULL = 13,    /**< Null */
-  IOT_DATA_BINARY = 14,  /**< Binary */
-  IOT_DATA_ARRAY = 15,   /**< Array of basic type (integer, float, bool or pointer) */
-  IOT_DATA_MAP = 16,     /**< Map */
-  IOT_DATA_VECTOR = 17,  /**< Vector */
-  IOT_DATA_LIST = 18,    /**< List */
-  IOT_DATA_MULTI = 19,   /**< Multiple data types, used for array, map, vector and list contained type */
-  IOT_DATA_INVALID = 20  /**< Invalid data type */
+  IOT_DATA_INT8 = 0u,     /**< Signed 8 bit integer */
+  IOT_DATA_UINT8 = 1u,    /**< Unsigned 8 bit integer */
+  IOT_DATA_INT16 = 2u,    /**< Signed 16 bit integer */
+  IOT_DATA_UINT16 = 3u,   /**< Unsigned 16 bit integer */
+  IOT_DATA_INT32 = 4u,    /**< Signed 32 bit integer */
+  IOT_DATA_UINT32 = 5u,   /**< Unsigned 32 bit integer */
+  IOT_DATA_INT64 = 6u,    /**< Signed 64 bit integer */
+  IOT_DATA_UINT64 = 7u,   /**< Unsigned 64 bit integer */
+  IOT_DATA_FLOAT32 = 8u,  /**< 32 bit float */
+  IOT_DATA_FLOAT64 = 9u,  /**< 64 bit float */
+  IOT_DATA_BOOL = 10u,    /**< Boolean */
+  IOT_DATA_POINTER = 11u, /**< Pointer */
+  IOT_DATA_STRING = 12u,  /**< String */
+  IOT_DATA_NULL = 13u,    /**< Null */
+  IOT_DATA_BINARY = 14u,  /**< Binary */
+  IOT_DATA_ARRAY = 15u,   /**< Array of basic type (integer, float, bool or pointer) */
+  IOT_DATA_MAP = 16u,     /**< Map */
+  IOT_DATA_VECTOR = 17u,  /**< Vector */
+  IOT_DATA_LIST = 18u,    /**< List */
+  IOT_DATA_MULTI = 19u,   /**< Multiple data types, used for array, map, vector and list contained type */
+  IOT_DATA_INVALID = 20u  /**< Invalid data type */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
 /**

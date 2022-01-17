@@ -62,14 +62,17 @@ int main (void)
   key = iot_data_alloc_string ("F64", IOT_DATA_REF);
   value = iot_data_alloc_f64 (666666.6);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("BOOL", IOT_DATA_REF);
+  key = iot_data_alloc_string ("Bool", IOT_DATA_REF);
   value = iot_data_alloc_bool (true);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("STR", IOT_DATA_REF);
+  key = iot_data_alloc_string ("String", IOT_DATA_REF);
   value = iot_data_alloc_string ("Hi", IOT_DATA_REF);
   iot_data_map_add (map2, key, value);
-  key = iot_data_alloc_string ("ARRAY", IOT_DATA_REF);
+  key = iot_data_alloc_string ("Array", IOT_DATA_REF);
   value = iot_data_alloc_array (array, sizeof (array), IOT_DATA_UINT8, IOT_DATA_COPY);
+  iot_data_map_add (map2, key, value);
+  key = iot_data_alloc_string ("Binary", IOT_DATA_REF);
+  value = iot_data_alloc_binary (array, sizeof (array), IOT_DATA_REF);
   iot_data_map_add (map2, key, value);
 
   key = iot_data_alloc_i16 (23);

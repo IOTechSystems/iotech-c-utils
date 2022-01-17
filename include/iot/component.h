@@ -30,11 +30,11 @@ typedef struct iot_component_factory_t iot_component_factory_t;
  */
 typedef enum
 {
-  IOT_COMPONENT_INITIAL = 0U,  /**< Initial component state */
-  IOT_COMPONENT_STOPPED = 1U,  /**< Stopped component state */
-  IOT_COMPONENT_RUNNING = 2U,  /**< Running component state */
-  IOT_COMPONENT_DELETED = 4U,  /**< Deleted component state */
-  IOT_COMPONENT_STARTING = 8U  /**< Starting transient component state */
+  IOT_COMPONENT_INITIAL = 0u,  /**< Initial component state */
+  IOT_COMPONENT_STOPPED = 1u,  /**< Stopped component state */
+  IOT_COMPONENT_RUNNING = 2u,  /**< Running component state */
+  IOT_COMPONENT_DELETED = 4u,  /**< Deleted component state */
+  IOT_COMPONENT_STARTING = 8u  /**< Starting transient component state */
 } iot_component_state_t;
 
 /**
