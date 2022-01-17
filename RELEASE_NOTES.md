@@ -144,6 +144,12 @@
 * `iot_data_alloc_typed_map`
 * `iot_data_alloc_typed_vector`
 
+- Added functions to determine if current list, array or vector iterator has a next element:
+
+* `iot_data_list_iter_has_next`
+* `iot_data_array_iter_has_next`
+* `iot_data_vector_iter_has_next`
+
 - Data typecode simplification. Changed functions:
 
 * `iot_typecode_alloc_map`

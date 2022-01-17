@@ -10,11 +10,9 @@ static char * config_loader (const char * name, const char * uri);
 
 int main (void)
 {
-  iot_container_config_t config = { .load = config_loader, .uri = NULL, .save = NULL };
-  iot_container_t * container = iot_container_alloc ("main");
-  iot_component_t * logger;
-  iot_data_t * reconfig;
   iot_init ();
+  iot_container_config_t config = { .load = config_loader, .uri = NULL, .save = NULL };
+  iot_container_t *  container = iot_container_alloc ("main");
 
   /* Set configuration mechanism */
   iot_container_config (&config);
@@ -45,10 +43,10 @@ int main (void)
   iot_wait_secs (5u);
 
   /* Find instantiated component - the logger */
-  logger = iot_container_find_component (container, "logger");
+  iot_component_t * logger = iot_container_find_component (container, "logger");
 
   /* Update logger configuration (what can be reconfigured depends on component) */
-  reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
+  iot_data_t * reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
   iot_component_reconfig (logger, container, reconfig);
   iot_data_free (reconfig);
 
