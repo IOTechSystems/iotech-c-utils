@@ -79,7 +79,7 @@ make package
 
 mkdir -p ${BROOT}/debug
 cd ${BROOT}/debug
-cmak -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
 make 2>&1 | tee debug.log
 make package
 
@@ -111,8 +111,8 @@ fi
 # Run examples
 if [ "${EXAMPLES}" = "true" ]
 then
-  cd ${BROOT}/debug/c/examples
-  run_examples ${BROOT}/debug/c
+  cd ${BROOT}/release/c/examples
+  run_examples ${BROOT}/release/c
 
   # Run examples made with makefiles.
   cd ${ROOT}/src/c/examples
