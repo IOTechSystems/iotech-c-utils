@@ -14,13 +14,13 @@ int main (int argc, char ** argv)
     fprintf (stderr, "Usage: %s <config directory>\n", argv[0]);
     return 1;
   }
+  iot_init ();
 
   /* Create a config to load component configuration data from files */
 
   iot_container_config_t config = { .load = iot_file_config_loader, .uri = argv[1], .save = NULL };
   iot_container_t * container = iot_container_alloc ("main");
 
-  iot_init ();
   iot_container_config (&config);
   iot_component_factory_add (iot_logger_factory ());
   iot_container_init (container);
