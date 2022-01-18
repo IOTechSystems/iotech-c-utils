@@ -41,7 +41,7 @@
 #define IOT_JSON_BUFF_INCREMENT 1024u
 
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Map","Vector","List","Multi", "Invalid"};
-static const uint8_t iot_data_type_size [IOT_DATA_TYPES] = { 1u,1u,2u,2u,4u,4u,8u,8u,4u,8u,sizeof (bool),sizeof (void*),sizeof (char*),0u,1u, 0u, 0u,0u,0u,0u, 0u};
+static const uint8_t iot_data_type_size [IOT_DATA_BINARY + 1] = { 1u,1u,2u,2u,4u,4u,8u,8u,4u,8u,sizeof (bool),sizeof (void*),sizeof (char*),0u,1u };
 static const char * ORDERING_KEY = "ordering";
 
 typedef enum iot_node_colour_t

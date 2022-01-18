@@ -3098,6 +3098,9 @@ static void test_data_complex_typecode (void)
   CU_ASSERT (iot_typecode_type (tc) == IOT_DATA_MAP)
   CU_ASSERT (iot_typecode_element_type (tc) == IOT_DATA_BOOL)
   CU_ASSERT (iot_typecode_key_type (tc) == IOT_DATA_UINT32)
+  CU_ASSERT (strcmp (iot_typecode_type_name (tc), "Map") == 0)
+  CU_ASSERT (strcmp (iot_typecode_key_type_name (tc), "UInt32") == 0)
+  CU_ASSERT (strcmp (iot_typecode_element_type_name (tc), "Bool") == 0)
   iot_typecode_free (tc);
 
   tc = iot_typecode_alloc_list (IOT_DATA_UINT32);

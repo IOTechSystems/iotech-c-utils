@@ -18,6 +18,10 @@
 extern "C" {
 #endif
 
+#define iot_typecode_type_name(tc) (iot_data_type_string (iot_typecode_type (tc)))
+#define iot_typecode_key_type_name(tc) (iot_data_type_string (iot_typecode_key_type (tc)))
+#define iot_typecode_element_type_name(tc) (iot_data_type_string (iot_typecode_element_type (tc)))
+
 /**
  * @brief Allocate a basic typecode
  *
@@ -126,6 +130,8 @@ extern iot_data_type_t iot_typecode_key_type (const iot_typecode_t * typecode);
  * @return         The element type
  */
 extern iot_data_type_t iot_typecode_element_type (const iot_typecode_t * typecode);
+
+
 
 #ifdef __cplusplus
 }
