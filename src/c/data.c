@@ -364,7 +364,7 @@ iot_data_t * iot_data_add_ref (const iot_data_t * data)
 
 iot_data_type_t iot_data_name_type (const char * name)
 {
-  int type = 0;
+  iot_data_type_t type = 0;
   while (type < IOT_DATA_INVALID)
   {
     if (strcasecmp (name, iot_data_type_names[type]) == 0) break;
