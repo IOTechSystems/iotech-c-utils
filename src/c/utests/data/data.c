@@ -3014,84 +3014,98 @@ static void test_data_basic_typecode (void)
   CU_ASSERT (tc.type == IOT_DATA_INT8)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_ui8 (1u);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_UINT8)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_i16 (0);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_INT16)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_ui16 (1u);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_UINT16)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_i32 (0);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_INT32)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_ui32 (1u);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_UINT32)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_i64 (0);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_INT64)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_ui64 (1u);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_UINT64)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_f32 (0.0);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_FLOAT32)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_f64 (1.0);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_FLOAT64)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_bool (true);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_BOOL)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_pointer (&tc, NULL);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_POINTER)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_string ("Hi", IOT_DATA_REF);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_STRING)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_null ();
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_NULL)
   CU_ASSERT (tc.element_type == IOT_DATA_INVALID)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
 }
 
@@ -3106,48 +3120,56 @@ static void test_data_complex_typecode (void)
   CU_ASSERT (tc.type == IOT_DATA_BINARY)
   CU_ASSERT (tc.element_type == IOT_DATA_UINT8)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_array (&array, sizeof (array), IOT_DATA_INT8, IOT_DATA_REF);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_ARRAY)
   CU_ASSERT (tc.element_type == IOT_DATA_INT8)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_vector (4u);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_VECTOR)
   CU_ASSERT (tc.element_type == IOT_DATA_MULTI)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_typed_vector (4u, IOT_DATA_POINTER);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_VECTOR)
   CU_ASSERT (tc.element_type == IOT_DATA_POINTER)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_list ();
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_LIST)
   CU_ASSERT (tc.element_type == IOT_DATA_MULTI)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_typed_list (IOT_DATA_STRING);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_LIST)
   CU_ASSERT (tc.element_type == IOT_DATA_STRING)
   CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_map (IOT_DATA_FLOAT32);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_MAP)
   CU_ASSERT (tc.element_type == IOT_DATA_MULTI)
   CU_ASSERT (tc.key_type == IOT_DATA_FLOAT32)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   data = iot_data_alloc_typed_map (IOT_DATA_STRING, IOT_DATA_BOOL);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_MAP)
   CU_ASSERT (tc.element_type == IOT_DATA_BOOL)
   CU_ASSERT (tc.key_type == IOT_DATA_STRING)
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
 }
 
@@ -3162,36 +3184,42 @@ static void test_data_equal_typecode (void)
   data = iot_data_alloc_ui32 (1u);
   iot_data_typecode (data, &tcd);
   CU_ASSERT (iot_typecode_equal (&tc, &tcd))
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   tc.type = IOT_DATA_ARRAY;
   tc.element_type = IOT_DATA_INT16;
   data = iot_data_alloc_array (&array, 2u, IOT_DATA_INT16, IOT_DATA_REF);
   iot_data_typecode (data, &tcd);
   CU_ASSERT (iot_typecode_equal (&tc, &tcd))
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   tc.type = IOT_DATA_VECTOR;
   tc.element_type = IOT_DATA_MULTI;
   data = iot_data_alloc_vector (4u);
   iot_data_typecode (data, &tcd);
   CU_ASSERT (iot_typecode_equal (&tc, &tcd))
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   tc.type = IOT_DATA_VECTOR;
   tc.element_type = IOT_DATA_POINTER;
   data = iot_data_alloc_typed_vector (4u, IOT_DATA_POINTER);
   iot_data_typecode (data, &tcd);
   CU_ASSERT (iot_typecode_equal (&tc, &tcd))
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   tc.type = IOT_DATA_LIST;
   tc.element_type = IOT_DATA_MULTI;
   data = iot_data_alloc_list ();
   iot_data_typecode (data, &tcd);
   CU_ASSERT (iot_typecode_equal (&tc, &tcd))
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   tc.type = IOT_DATA_LIST;
   tc.element_type = IOT_DATA_MAP;
   data = iot_data_alloc_typed_list (IOT_DATA_MAP);
   iot_data_typecode (data, &tcd);
   CU_ASSERT (iot_typecode_equal (&tc, &tcd))
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   tc.type = IOT_DATA_MAP;
   tc.element_type = IOT_DATA_MULTI;
@@ -3199,6 +3227,7 @@ static void test_data_equal_typecode (void)
   data = iot_data_alloc_map (IOT_DATA_INT32);
   iot_data_typecode (data, &tcd);
   CU_ASSERT (iot_typecode_equal (&tc, &tcd))
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
   tc.type = IOT_DATA_MAP;
   tc.element_type = IOT_DATA_STRING;
@@ -3206,6 +3235,7 @@ static void test_data_equal_typecode (void)
   data = iot_data_alloc_typed_map (IOT_DATA_FLOAT64, IOT_DATA_STRING);
   iot_data_typecode (data, &tcd);
   CU_ASSERT (iot_typecode_equal (&tc, &tcd))
+  CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
 }
 
