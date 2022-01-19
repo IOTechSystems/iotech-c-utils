@@ -40,9 +40,9 @@ typedef enum iot_data_type_t
   IOT_DATA_NULL = 13u,    /**< Null */
   IOT_DATA_BINARY = 14u,  /**< Binary */
   IOT_DATA_ARRAY = 15u,   /**< Array of basic type (integer, float, bool or pointer) */
-  IOT_DATA_MAP = 16u,     /**< Map */
-  IOT_DATA_VECTOR = 17u,  /**< Vector */
-  IOT_DATA_LIST = 18u,    /**< List */
+  IOT_DATA_VECTOR = 16u,  /**< Vector */
+  IOT_DATA_LIST = 17u,    /**< List */
+  IOT_DATA_MAP = 18u,     /**< Map */
   IOT_DATA_MULTI = 19u,   /**< Multiple data types, used for array, map, vector and list contained type */
   IOT_DATA_INVALID = 20u  /**< Invalid data type */
 } __attribute__ ((__packed__)) iot_data_type_t;
@@ -57,14 +57,21 @@ typedef enum iot_data_ownership_t
   IOT_DATA_REF = 2u    /**< Data is referenced and never freed */
 } iot_data_ownership_t;
 
-/** Alias for iot data structure */
+/** Opaque iot data structure */
 typedef struct iot_data_t iot_data_t;
 
-/** Alias for iot typecode structure */
-typedef struct iot_typecode_t iot_typecode_t;
+/**
+* Type for data typecode structure
+*/
+typedef struct iot_typecode_t
+{
+  iot_data_type_t type;          /**< Core data type */
+  iot_data_type_t element_type;  /**< Element type for Array, Map, Vector and List */
+  iot_data_type_t key_type;      /**< Key type for map */
+} iot_typecode_t;
 
 /**
- * Alias for data map iterator structure
+ * Type for data map iterator structure
  */
 typedef struct iot_data_map_iter_t
 {
@@ -148,12 +155,12 @@ extern bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type);
 /**
  * @brief Get data type code
  *
- * The function to return the type code for the data
+ * Get the type code of data
  *
  * @param data  Pointer to data
- * @return      Creates and returns a type code representing the data type
+ * @param tc    Pointer to type code to be set
  */
-extern iot_typecode_t * iot_data_typecode (const iot_data_t * data);
+extern void iot_data_typecode (const iot_data_t * data, iot_typecode_t * tc);
 
 /**
  * @brief Return data_type for the type name
@@ -1456,6 +1463,17 @@ extern iot_data_t * iot_data_copy (const iot_data_t * src);
  * @return         Whether the data matches the typecode
  */
 extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * typecode);
+
+/**
+ * @brief Returns whether two typecodes are equal
+ *
+ * The function compares whether two typecodes are equal.
+ *
+ * @param tc1 The first typecode to compare
+ * @param tc2 The second typecode to compare
+ * @return    Whether the two typecodes are equal
+ */
+extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t * tc2);
 
 #ifdef __cplusplus
 }

@@ -155,10 +155,12 @@
 * `iot_data_array_iter_has_next`
 * `iot_data_vector_iter_has_next`
 
-- Data typecode simplification. Changed functions:
+- Data typecode simplification. Removed functions:
 
+* `iot_typecode_alloc_basic`
 * `iot_typecode_alloc_map`
 * `iot_typecode_alloc_array`
 * `iot_typecode_alloc_vector`
 * `iot_typecode_alloc_list`
 * `iot_typecode_element_type`
+* `iot_typecode_free`
