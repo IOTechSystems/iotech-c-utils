@@ -1,5 +1,5 @@
 ifeq ($(IOT_INSTALL_DIR),)
-  IOT_INSTALL_DIR=/opt/iotech/iot
+  IOT_INSTALL_DIR=/opt/iotech/iot/1.3
 endif
 IOT_INCLUDE_DIR=${IOT_INSTALL_DIR}/include
 IOT_LIB_DIR=${IOT_INSTALL_DIR}/lib
