@@ -24,23 +24,27 @@ extern "C" {
  */
 typedef enum iot_data_type_t
 {
-  IOT_DATA_INT8 = 0,    /**< Signed 8 bit integer */
-  IOT_DATA_UINT8 = 1,   /**< Unsigned 8 bit integer */
-  IOT_DATA_INT16 = 2,   /**< Signed 16 bit integer */
-  IOT_DATA_UINT16 = 3,  /**< Unsigned 16 bit integer */
-  IOT_DATA_INT32 = 4,   /**< Signed 32 bit integer */
-  IOT_DATA_UINT32 = 5,  /**< Unsigned 32 bit integer */
-  IOT_DATA_INT64 = 6,   /**< Signed 64 bit integer */
-  IOT_DATA_UINT64 = 7,  /**< Unsigned 64 bit integer */
-  IOT_DATA_FLOAT32 = 8, /**< 32 bit float */
-  IOT_DATA_FLOAT64 = 9, /**< 64 bit float */
-  IOT_DATA_BOOL = 10,   /**< Boolean */
-  IOT_DATA_STRING = 11, /**< String */
-  IOT_DATA_NULL = 12,   /**< Null */
-  IOT_DATA_ARRAY = 13,  /**< Array */
-  IOT_DATA_MAP = 14,    /**< Map */
-  IOT_DATA_VECTOR = 15, /**< Vector */
-  IOT_DATA_POINTER = 16 /**< Pointer */
+  IOT_DATA_INT8 = 0u,     /**< Signed 8 bit integer */
+  IOT_DATA_UINT8 = 1u,    /**< Unsigned 8 bit integer */
+  IOT_DATA_INT16 = 2u,    /**< Signed 16 bit integer */
+  IOT_DATA_UINT16 = 3u,   /**< Unsigned 16 bit integer */
+  IOT_DATA_INT32 = 4u,    /**< Signed 32 bit integer */
+  IOT_DATA_UINT32 = 5u,   /**< Unsigned 32 bit integer */
+  IOT_DATA_INT64 = 6u,    /**< Signed 64 bit integer */
+  IOT_DATA_UINT64 = 7u,   /**< Unsigned 64 bit integer */
+  IOT_DATA_FLOAT32 = 8u,  /**< 32 bit float */
+  IOT_DATA_FLOAT64 = 9u,  /**< 64 bit float */
+  IOT_DATA_BOOL = 10u,    /**< Boolean */
+  IOT_DATA_POINTER = 11u, /**< Pointer */
+  IOT_DATA_STRING = 12u,  /**< String */
+  IOT_DATA_NULL = 13u,    /**< Null */
+  IOT_DATA_BINARY = 14u,  /**< Binary */
+  IOT_DATA_ARRAY = 15u,   /**< Array of basic type (integer, float, bool or pointer) */
+  IOT_DATA_VECTOR = 16u,  /**< Vector */
+  IOT_DATA_LIST = 17u,    /**< List */
+  IOT_DATA_MAP = 18u,     /**< Map */
+  IOT_DATA_MULTI = 19u,   /**< Multiple data types, used for array, map, vector and list contained type */
+  IOT_DATA_INVALID = 20u  /**< Invalid data type */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
 /**
@@ -53,29 +57,45 @@ typedef enum iot_data_ownership_t
   IOT_DATA_REF = 2u    /**< Data is referenced and never freed */
 } iot_data_ownership_t;
 
-/** Alias for iot data structure */
+/** Opaque iot data structure */
 typedef struct iot_data_t iot_data_t;
 
-/** Alias for iot typecode structure */
-typedef struct iot_typecode_t iot_typecode_t;
+/**
+* Type for data typecode structure
+*/
+typedef struct iot_typecode_t
+{
+  iot_data_type_t type;          /**< Core data type */
+  iot_data_type_t element_type;  /**< Element type for Array, Map, Vector and List */
+  iot_data_type_t key_type;      /**< Key type for map */
+} iot_typecode_t;
 
 /**
- * Alias for data map iterator structure
+ * Type for data map iterator structure
  */
 typedef struct iot_data_map_iter_t
 {
   const struct iot_data_map_t * map;   /**< Pointer to data map structure */
-  struct iot_node_t * node;            /**< Pointer to data node structure */
+  struct iot_node_t * node;            /**< Pointer to map node structure */
 } iot_data_map_iter_t;
 
 /**
- * Alias for data vector iterator structure
+ * Type for data vector iterator structure
  */
 typedef struct iot_data_vector_iter_t
 {
   const struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
   uint32_t index;                           /**< Index of the given vector */
 } iot_data_vector_iter_t;
+
+/**
+ * Type for data list iterator structure
+ */
+typedef struct iot_data_list_iter_t
+{
+  const struct iot_data_list_t * list;  /**< Pointer to data list structure */
+  struct iot_element_t * element;       /**< Pointer to list element structure */
+} iot_data_list_iter_t;
 
 /**
  * Alias for data array iterator structure
@@ -135,12 +155,12 @@ extern bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type);
 /**
  * @brief Get data type code
  *
- * The function to return the type code for the data
+ * Get the type code of data
  *
  * @param data  Pointer to data
- * @return      Creates and returns a type code representing the data type
+ * @param tc    Pointer to type code to be set
  */
-extern iot_typecode_t * iot_data_typecode (const iot_data_t * data);
+extern void iot_data_typecode (const iot_data_t * data, iot_typecode_t * tc);
 
 /**
  * @brief Return data_type for the type name
@@ -200,7 +220,7 @@ extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data);
  * @param data  Pointer to data
  * @return      Pointer that holds the address of data
  */
-extern void * iot_data_address (const iot_data_t * data); /* Not for Maps or Vectors */
+extern const void * iot_data_address (const iot_data_t * data); /* Not for Maps, Vectors or Lists */
 
 /**
  * @brief Allocate memory for data_type int8
@@ -372,6 +392,182 @@ extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
 extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn);
 
 /**
+ * @brief Allocate data for a list
+ *
+ * The function to allocate data for a list
+ *
+ * @return  Pointer to the allocated data list
+ */
+extern iot_data_t * iot_data_alloc_list (void);
+
+/**
+ * @brief Allocate data for a list
+ *
+ * The function to allocate data for a list of fixed element type
+ *
+ * @param  element_type Datatype of the list elements
+ * @return              Pointer to the allocated data list
+ */
+extern iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type);
+
+/**
+ * @brief Get the list length
+ *
+ * The function to get the length of the input list
+ *
+ * @param list  Input list
+ * @return      Length of the list
+ */
+extern uint32_t iot_data_list_length (const iot_data_t * list);
+
+/**
+ * @brief Find matching element in a list using compare function
+ *
+ * Applies a compare function to each element in a list until the compare
+ * function returns true or the end of the list is reached. The list is searched from tail to head.
+ *
+ * @param list    Input list
+ * @param cmp     A comparison function which takes an element and an argument and returns true or false
+ * @param arg     Pointer to user supplied argument that is passed to the comparison function.
+ * @return        Pointer to the first element for which the comparison function return true, NULL otherwise
+ */
+extern const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
+
+/**
+ * @brief Remove matching element in a list using compare function
+ *
+ * Applies a compare function to each element in a list until the compare
+ * function returns true or the end of the list is reached. The list is searched from tail to head,
+ * and the first matching element is removed and freed.
+ *
+ * @param list    Input list
+ * @param cmp     A comparison function which takes an element and an argument and returns true or false
+ * @param arg     Pointer to user supplied argument that is passed to the comparison function.
+ * @return        Whether an element removed
+ */
+extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
+
+/**
+ * @brief Associate a list iterator with a list
+ *
+ * The function initialises an list iterator asociating it with a list. Note that
+ * the iterator is unsafe in that the list cannot be modified when being iterated, other
+ * than by using the iot_data_list_iter_replace function. The iterator can be moved
+ * from tail to head using the next function or from haed to tail using the prev function.
+ *
+ *
+ * @param list List
+ * @param iter List iterator
+ */
+extern void iot_data_list_iter (const iot_data_t * list, iot_data_list_iter_t * iter);
+
+/**
+ * @brief Update the iterator to point to the next element in a list
+ *
+ * The function to set the iterator to point to the next element of a list, moving from tail to head.
+ * On reaching the head of the list, the iterator is set to the tail of the list.
+ *
+ * @param iter  Input iterator
+ * @return      Returns whether the iterator is still valid (has not passed the head of the list)
+ */
+extern bool iot_data_list_iter_next (iot_data_list_iter_t * iter);
+
+/**
+ * @brief Returns whether a list iterator has a next element
+ *
+ * The function returns whether the iterator is currently valid and has a next element.
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_list_iter_has_next (const iot_data_list_iter_t * iter);
+
+/**
+ * @brief Update the iterator to point to the previous element in a list
+ *
+ * The function to set the iterator to point to the previous element of a list, moving from head to tail.
+ * On reaching the tail of the list, the iterator is set to the head of the list.
+ *
+ * @param iter  Input iterator
+ * @return      Returns whether the iterator is still valid (has not passed the tail of the list)
+ */
+extern bool iot_data_list_iter_prev (iot_data_list_iter_t * iter);
+
+/**
+ * @brief Get the value of the element associated with a list iterator
+ *
+ * The function returns the list element referenced by the list iterator.
+ *
+ * @param iter  Input iterator
+ * @return      Pointer to the current list element
+ */
+extern const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t * iter);
+
+/**
+ * @brief Replace the value associated with a list iterator
+ *
+ * The function to replace a value in a list referenced by the iterator
+ *
+ * @param iter  Input iterator
+ * @param value New value to store in the list
+ * @return      Pointer to the previous value associated with the iterator if valid, NULL otherwise
+ */
+extern iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value);
+
+/**
+ * @brief Push a value onto the tail of a list
+ *
+ * The function to push a value onto the tail of a list
+ *
+ * @param list  Input list
+ * @param value Value to add to tail of the list
+ */
+extern void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value);
+
+/**
+ * @brief Pop a value from the tail of a list
+ *
+ * The function to pop a value from the tail of a list
+ *
+ * @param list  Input list
+ * @return      Value from the list tail or NULL if list empty
+ */
+extern iot_data_t * iot_data_list_tail_pop (iot_data_t * list);
+
+/**
+ * @brief Push a value onto the head of a list
+ *
+ * The function to push a value onto the head of a list
+ *
+ * @param list  Input list
+ * @param value Value to add to head of the list
+ */
+extern void iot_data_list_head_push (iot_data_t * list, iot_data_t * value);
+
+/**
+ * @brief Pop a value from the head of a list
+ *
+ * The function to pop a value from the head of a list
+ *
+ * @param list  Input list
+ * @return      Value from the list head or NULL if list empty
+ */
+extern iot_data_t * iot_data_list_head_pop (iot_data_t * list);
+
+/**
+ * @brief Allocate data for a binary array
+ *
+ * The function to allocate data for a binary array of given size (in bytes)
+ *
+ * @param data       Pointer to an array of bytes
+ * @param length     Lenngth of the byte array
+ * @param ownership  If the ownership is set to IOT_DATA_COPY, a new allocation is made and data is copied to the allocated
+ *                   memory, else the ownership of the data is taken.
+ * @return           Pointer to the allocated data
+ */
+extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_data_ownership_t ownership);
+
+/**
  * @brief Allocate memory for an array
  *
  * The function to allocate memory for an array of given size and type. Note that only basic C integer, boolean and floating
@@ -428,17 +624,28 @@ extern uint32_t iot_data_array_length (const iot_data_t * array);
 extern uint32_t iot_data_array_size (const iot_data_t * array);
 
 /**
- * @brief  Allocate memory for a map
+ * @brief  Allocate map data type
  *
- * The function to allocate memory for a map with a key type
+ * The function to allocate a data map with a key type
  *
- * @param key_type  Datatype of the key associated with the map
- * @return          Pointer to the allocated memory
+ * @param key_type  Datatype of the map keys
+ * @return          Pointer to the allocated data map
  */
 extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
 
 /**
- * @brief Allocate memory for an vector
+ * @brief  Allocate map data type
+ *
+ * The function to allocate a data map with a key type and element type
+ *
+ * @param key_type     Datatype of the map keys
+ * @param element_type Datatype of the map values
+ * @return             Pointer to the allocated data map
+ */
+extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t element_type);
+
+/**
+ * @brief Allocate a data vector
  *
  * The function to allocate memory for an vector type
  *
@@ -446,6 +653,17 @@ extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
  * @return      Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_vector (uint32_t size);
+
+/**
+ * @brief Allocate a data vector
+ *
+ * The function to allocate a data vector of fixed element type
+ *
+ * @param size         Length of the vector for allocation, could be zero to create zero length vector
+ * @param element_type Datatype of the vector elements
+ * @return             Pointer to the allocated data vector
+ */
+extern iot_data_t * iot_data_alloc_typed_vector (uint32_t size, iot_data_type_t element_type);
 
 /**
  * @brief Allocate memory of data_type type for a string value
@@ -885,6 +1103,15 @@ extern void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t
 extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 
 /**
+ * @brief Returns whether an array iterator has a next element
+ *
+ * The function returns whether the iterator is currently valid and has a next element.
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_array_iter_has_next (const iot_data_array_iter_t * iter);
+/**
  * @brief Update the iterator to point to the previous element within an array
  *
  * The function to set the iterator to point to the previous element of an array. On reaching end of the array,
@@ -978,7 +1205,6 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
  * @param value New value to store in the map
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
-
 extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t *value);
 
 /**
@@ -1023,6 +1249,16 @@ extern void iot_data_vector_iter (const iot_data_t * vector, iot_data_vector_ite
  * @return       Returns whether the iterator is still valid (has not passed end of the vector)
  */
 extern bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter);
+
+/**
+ * @brief Returns whether a vector iterator has a next element
+ *
+ * The function returns whether the iterator is currently valid and has a next element.
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_vector_iter_has_next (const iot_data_vector_iter_t * iter);
 
 /**
  * @brief Iterate to previous vector element
@@ -1088,11 +1324,10 @@ extern const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * 
  * pointer to the matching element or NULL.
  *
  * @param vector  Input vector
- * @param cmp     A comparison function which takes an element and an arg and return true or false
+ * @param cmp     A comparison function which takes an element and an argument and returns true or false
  * @param arg     Pointer to user supplied data that is passed to the comparison function.
  * @return        Pointer to the first element for which the comparison function return true, NULL otherwise
  */
-
 extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg);
 
 /**
@@ -1220,14 +1455,25 @@ extern iot_data_t * iot_data_copy (const iot_data_t * src);
 /**
  * @brief Check data type matches typecode
  *
- * The function returns where a data instance matches a given typecode. Not that this will
- * return false for polymorphic data types i.e. maps or vectors of differing type.
+ * The function returns where a data instance matches a given typecode. Note that this will
+ * return false for polymorphic data types i.e. maps, vectors or lists of differing type.
  *
  * @param data     Data to compare
- * @param typecode Typecode to compare dat against
+ * @param typecode Typecode to compare data against
  * @return         Whether the data matches the typecode
  */
 extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * typecode);
+
+/**
+ * @brief Returns whether two typecodes are equal
+ *
+ * The function compares whether two typecodes are equal.
+ *
+ * @param tc1 The first typecode to compare
+ * @param tc2 The second typecode to compare
+ * @return    Whether the two typecodes are equal
+ */
+extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t * tc2);
 
 #ifdef __cplusplus
 }

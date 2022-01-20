@@ -33,6 +33,7 @@ bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont
 
 void iot_component_fini (iot_component_t * component)
 {
+  free (component->name);
   pthread_cond_destroy (&component->cond);
   pthread_mutex_destroy (&component->mutex);
 }
@@ -134,21 +135,4 @@ extern const char * iot_component_state_name (iot_component_state_t state)
     default: break;
   }
   return "Unknown";
-}
-
-extern void iot_component_info_free (iot_component_info_t * info)
-{
-  if (info)
-  {
-    iot_component_data_t * data;
-    while (info->data)
-    {
-      data = info->data;
-      info->data = data->next;
-      free (data->name);
-      free (data->type);
-      free (data);
-    }
-    free (info);
-  }
 }

@@ -62,16 +62,6 @@ extern const iot_container_config_t * iot_container_get_config (void);
 extern iot_container_t * iot_container_alloc (const char * name);
 
 /**
- * @brief Find a named container
- *
- * The function to find a named container
- *
- * @param name  Name of the container
- * @return  Pointer container if found, NULL otherwise
- */
-extern iot_container_t * iot_container_find (const char * name);
-
-/**
  * @brief Initialise the container for a given configuration
  *
  * The function to initialise the container with a configuration provided
@@ -147,16 +137,9 @@ extern void iot_container_delete_component (iot_container_t * cont, const char *
  * @brief List the components within a container
  *
  * @param cont  Pointer to a container
- * @return      Pointer to an array of structure that contain component name, type and state
+ * @return      String map of component info, keyed by component name
  */
-extern iot_component_info_t * iot_container_list_components (iot_container_t * cont);
-
-/**
- * @brief List names of the containers
- *
- * @return  Map containing the names of the containers
- */
-extern iot_data_t * iot_container_list_containers (void);
+extern iot_data_t * iot_container_list_components (iot_container_t * cont);
 
 #ifdef __cplusplus
 }

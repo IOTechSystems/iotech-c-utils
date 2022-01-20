@@ -119,3 +119,48 @@
 * `iot_data_to_json_with_buffer`
 
 - Update to support the JSON representation of infinite floating point values
+
+## Version 1.3.0
+
+- The static library initialisation and finalisation functions are no longer required and have been removed:
+
+* `iot_init`
+* `iot_fini`
+
+- Support added for data list type:
+
+* `iot_data_alloc_list`
+* `iot_data_list_length`
+* `iot_data_list_find`
+* `iot_data_list_remove`
+* `iot_data_list_tail_push`
+* `iot_data_list_head_push`
+* `iot_data_list_tail_pop`
+* `iot_data_list_head_pop`
+* `iot_data_list_iter`
+* `iot_data_list_iter_value`
+* `iot_data_list_iter_replace`
+* `iot_data_list_iter_next`
+* `iot_data_list_iter_prev`
+
+- Added allocation functions for fixed type map, vector and list:
+
+* `iot_data_alloc_typed_list`
+* `iot_data_alloc_typed_map`
+* `iot_data_alloc_typed_vector`
+
+- Added functions to determine if current list, array or vector iterator has a next element:
+
+* `iot_data_list_iter_has_next`
+* `iot_data_array_iter_has_next`
+* `iot_data_vector_iter_has_next`
+
+- Data typecode simplification. Removed functions:
+
+* `iot_typecode_alloc_basic`
+* `iot_typecode_alloc_map`
+* `iot_typecode_alloc_array`
+* `iot_typecode_alloc_vector`
+* `iot_typecode_alloc_list`
+* `iot_typecode_element_type`
+* `iot_typecode_free`

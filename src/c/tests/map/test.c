@@ -238,7 +238,6 @@ static void find_lots (void)
 
 int main (void)
 {
-  iot_init ();
   case_add_3_1 ();
   case_add_3_2_1 ();
   case_add_3_2_2 ();
@@ -251,6 +250,5 @@ int main (void)
   add_lots ();
   del_lots ();
   find_lots ();
-  iot_fini ();
   return 0;
 }

@@ -30,31 +30,21 @@ typedef struct iot_component_factory_t iot_component_factory_t;
  */
 typedef enum
 {
-  IOT_COMPONENT_INITIAL = 0U,  /**< Initial component state */
-  IOT_COMPONENT_STOPPED = 1U,  /**< Stopped component state */
-  IOT_COMPONENT_RUNNING = 2U,  /**< Running component state */
-  IOT_COMPONENT_DELETED = 4U,  /**< Deleted component state */
-  IOT_COMPONENT_STARTING = 8U  /**< Starting transient component state */
+  IOT_COMPONENT_INITIAL = 0u,  /**< Initial component state */
+  IOT_COMPONENT_STOPPED = 1u,  /**< Stopped component state */
+  IOT_COMPONENT_RUNNING = 2u,  /**< Running component state */
+  IOT_COMPONENT_DELETED = 4u,  /**< Deleted component state */
+  IOT_COMPONENT_STARTING = 8u  /**< Starting transient component state */
 } iot_component_state_t;
-
-/**
- * Component data struct
- */
-typedef struct iot_component_data_t
-{
-  struct iot_component_data_t * next; /**< Pointer to next component data struct in list */
-  char * name;                        /**< The component name */
-  char * type;                        /**< The component type name */
-  iot_component_state_t state;        /**< The component state */
-} iot_component_data_t;
 
 /**
  * Component info struct
  */
 typedef struct iot_component_info_t
 {
-  uint32_t count;                 /**< The number of component data elements */
-  iot_component_data_t * data;    /**< List of component data */
+  char * name;                        /**< The component name */
+  char * type;                        /**< The component type name */
+  iot_component_state_t state;        /**< The component state */
 } iot_component_info_t;
 
 /** Alias for component configuration function pointer */
@@ -85,12 +75,13 @@ struct iot_component_factory_t
  */
 struct iot_component_t
 {
+  char * name;                              /**< Component name */
   volatile iot_component_state_t state;     /**< Current state of component */
-  pthread_mutex_t mutex;                    /**< Thread mutex settings of component */
-  pthread_cond_t cond;                      /**< Thread condition settings of component */
+  pthread_mutex_t mutex;                    /**< Synchronisation mutex */
+  pthread_cond_t cond;                      /**< Synchronisation condition */
   iot_component_start_fn_t start_fn;        /**< Pointer to function that handles starting a component */
   iot_component_stop_fn_t stop_fn;          /**< Pointer to function that handles stopping a component */
-  atomic_uint_fast32_t refs;                /**< Current reference count of a given component */
+  atomic_uint_fast32_t refs;                /**< Current reference count */
   const iot_component_factory_t * factory;  /**< Pointer to component factory structure */
 };
 
@@ -258,15 +249,6 @@ extern const iot_component_factory_t * iot_component_factory_find (const char * 
  * @return      Pointer to a constant string representing the state name
  */
 extern const char * iot_component_state_name (iot_component_state_t state);
-
-/**
- * @brief Frees a component info struct
- *
- * The function frees a component info struct
- *
- * @param info Pointer to the struct to be freed
- */
-extern void iot_component_info_free (iot_component_info_t * info);
 
 #ifdef __cplusplus
 }

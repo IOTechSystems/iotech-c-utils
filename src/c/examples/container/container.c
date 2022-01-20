@@ -11,10 +11,7 @@ static char * config_loader (const char * name, const char * uri);
 int main (void)
 {
   iot_container_config_t config = { .load = config_loader, .uri = NULL, .save = NULL };
-  iot_container_t * container = iot_container_alloc ("main");
-  iot_component_t * logger;
-  iot_data_t * reconfig;
-  iot_init ();
+  iot_container_t *  container = iot_container_alloc ("main");
 
   /* Set configuration mechanism */
   iot_container_config (&config);
@@ -32,29 +29,29 @@ int main (void)
   iot_container_start (container);
 
   /* list components state */
-  iot_component_info_t * info = iot_container_list_components (container);
-  iot_component_data_t * data = info->data;
-  while (data)
+  iot_data_t * map = iot_container_list_components (container);
+  iot_data_map_iter_t iter;
+  iot_data_map_iter (map, &iter);
+  while (iot_data_map_iter_next (&iter))
   {
-    printf ("Component: %s type: %s state: %s\n", data->name, data->type, iot_component_state_name (data->state));
-    data = data->next;
+    const iot_component_info_t * info = iot_data_pointer (iot_data_map_iter_value (&iter));
+    printf ("Component: %s type: %s state: %s\n", info->name, info->type, iot_component_state_name (info->state));
   }
-  iot_component_info_free (info);
+  iot_data_free (map);
 
   iot_wait_secs (5u);
 
   /* Find instantiated component - the logger */
-  logger = iot_container_find_component (container, "logger");
+  iot_component_t * logger = iot_container_find_component (container, "logger");
 
   /* Update logger configuration (what can be reconfigured depends on component) */
-  reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
+  iot_data_t * reconfig = iot_data_from_json ("{\"Level\":\"Trace\"}");
   iot_component_reconfig (logger, container, reconfig);
   iot_data_free (reconfig);
 
   /* Stop everything and clean up */
   iot_container_stop (container);
   iot_container_free (container);
-  iot_fini ();
 
   return 0;
 }
@@ -63,8 +60,8 @@ int main (void)
 
 static const char * main_config =
 "{"
-  "\"file_logger\":\"IOT::Logger\","
   "\"logger\":\"IOT::Logger\","
+  "\"file_logger\":\"IOT::Logger\","
   "\"pool\":\"IOT::ThreadPool\","
   "\"scheduler\":\"IOT::Scheduler\","
   "\"mycomp\":\"IOT::MyComponent\""
