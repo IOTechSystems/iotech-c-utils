@@ -1733,6 +1733,21 @@ static void test_data_vector_iter_next (void)
   iot_data_free (vector);
 }
 
+static void test_data_vector_typed_iter (void)
+{
+  const char * str = "xxx";
+  iot_data_t * vector = iot_data_alloc_typed_vector (2, IOT_DATA_MULTI);
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (vector, &iter);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_pointer (vector, NULL));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_string (str, IOT_DATA_REF));
+  CU_ASSERT (iot_data_vector_iter_next (&iter))
+  CU_ASSERT (iot_data_vector_iter_pointer_value (&iter) == vector)
+  CU_ASSERT (iot_data_vector_iter_next (&iter))
+  CU_ASSERT (iot_data_vector_iter_string_value (&iter) == str)
+  iot_data_free (vector);
+}
+
 static void test_data_vector_iter_prev (void)
 {
   iot_data_t * vector = test_populate_vector ();
@@ -2336,6 +2351,21 @@ static void test_list_iter (void)
   iot_data_free (list);
 }
 
+static void test_typed_list_iter (void)
+{
+  static const char * str = "test";
+  iot_data_t * list = iot_data_alloc_typed_list (IOT_DATA_MULTI);
+  iot_data_list_iter_t iter;
+  iot_data_list_tail_push (list, iot_data_alloc_pointer (list, NULL));
+  iot_data_list_tail_push (list, iot_data_alloc_string (str, IOT_DATA_REF));
+  iot_data_list_iter (list, &iter);
+  CU_ASSERT (iot_data_list_iter_next (&iter))
+  CU_ASSERT (iot_data_list_iter_string_value (&iter) == str)
+  CU_ASSERT (iot_data_list_iter_next (&iter))
+  CU_ASSERT (iot_data_list_iter_pointer_value (&iter) == list)
+  iot_data_free (list);
+}
+
 static void test_list_iter_replace (void)
 {
   iot_data_t * list = iot_data_alloc_list ();
@@ -2504,6 +2534,21 @@ static void test_data_map_iter_replace (void)
   CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "1"), "Ace") == 0)
   CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "3"), "Trey") == 0)
 
+  iot_data_free (map);
+}
+
+static void test_data_map_typed_iter (void)
+{
+  const char * str = "xxx";
+  iot_data_t * map = iot_data_alloc_typed_map (IOT_DATA_STRING, IOT_DATA_MULTI);
+  iot_data_map_iter_t iter;
+  iot_data_map_iter (map, &iter);
+  iot_data_string_map_add (map, "A", iot_data_alloc_pointer (map, NULL));
+  iot_data_string_map_add (map, "B", iot_data_alloc_string (str, IOT_DATA_REF));
+  CU_ASSERT (iot_data_map_iter_next (&iter))
+  CU_ASSERT (iot_data_map_iter_pointer_value (&iter) == map)
+  CU_ASSERT (iot_data_map_iter_next (&iter))
+  CU_ASSERT (iot_data_map_iter_string_value (&iter) == str)
   iot_data_free (map);
 }
 
@@ -3406,6 +3451,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_list_size", test_list_size);
   CU_add_test (suite, "data_list_free", test_list_free);
   CU_add_test (suite, "data_list_iter", test_list_iter);
+  CU_add_test (suite, "data_typed_list_iter", test_typed_list_iter);
   CU_add_test (suite, "data_list_iter_replace", test_list_iter_replace);
   CU_add_test (suite, "data_list_remove", test_list_remove);
   CU_add_test (suite, "data_list_find", test_list_find);
@@ -3426,6 +3472,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_increment", test_data_increment);
   CU_add_test (suite, "data_decrement", test_data_decrement);
   CU_add_test (suite, "data_vector_iter_replace", test_data_vector_iter_replace);
+  CU_add_test (suite, "data_map_typed_iter", test_data_map_typed_iter);
   CU_add_test (suite, "data_check_equal_int8", test_data_equal_int8);
   CU_add_test (suite, "data_check_equal_uint16", test_data_equal_uint16);
   CU_add_test (suite, "data_check_equal_float32", test_data_equal_float32);
@@ -3466,6 +3513,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_copy_map_update_value", test_data_copy_map_update_value);
   CU_add_test (suite, "data_copy_vector_map", test_data_copy_vector_map);
   CU_add_test (suite, "data_vector_iter_next", test_data_vector_iter_next);
+  CU_add_test (suite, "data_vector_typed_iter", test_data_vector_typed_iter);
   CU_add_test (suite, "data_vector_iter_prev", test_data_vector_iter_prev);
   CU_add_test (suite, "data_vector_iters", test_data_vector_iters);
   CU_add_test (suite, "data_vector_resize", test_data_vector_resize);

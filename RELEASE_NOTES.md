@@ -164,3 +164,11 @@
 * `iot_typecode_alloc_list`
 * `iot_typecode_element_type`
 * `iot_typecode_free`
+
+- Optimised iterator value functions added for string and pointer for all collection types:
+
+* `iot_data_vector_iter_string_value`
+* `iot_data_vector_iter_pointer_value`
+* `iot_data_list_iter_string_value`
+* `iot_data_list_iter_pointer_value`
+* `iot_data_map_iter_pointer_value`

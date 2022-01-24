@@ -34,7 +34,7 @@ int main (void)
   iot_data_map_iter (map, &iter);
   while (iot_data_map_iter_next (&iter))
   {
-    const iot_component_info_t * info = iot_data_pointer (iot_data_map_iter_value (&iter));
+    const iot_component_info_t * info = iot_data_map_iter_pointer_value (&iter);
     printf ("Component: %s type: %s state: %s\n", info->name, info->type, iot_component_state_name (info->state));
   }
   iot_data_free (map);

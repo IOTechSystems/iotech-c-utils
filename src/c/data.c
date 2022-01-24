@@ -617,6 +617,18 @@ const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t * iter)
   return (iter->element) ? iter->element->value : NULL;
 }
 
+const char * iot_data_list_iter_string_value (const iot_data_list_iter_t * iter)
+{
+  assert (iter);
+  return (iter->element) ? iot_data_string (iter->element->value) : NULL;
+}
+
+const void * iot_data_list_iter_pointer_value (const iot_data_list_iter_t * iter)
+{
+  assert (iter);
+  return (iter->element) ? iot_data_pointer (iter->element->value) : NULL;
+}
+
 iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value)
 {
   assert (iter && iter->list && value && (iter->list->base.element_type == IOT_DATA_MULTI || iter->list->base.element_type == value->type));
@@ -1388,6 +1400,12 @@ const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter)
   return (iter->node) ? iot_data_string (iot_data_map_iter_value (iter)) : NULL;
 }
 
+const void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter)
+{
+  assert (iter);
+  return (iter->node) ? iot_data_pointer (iot_data_map_iter_value (iter)) : NULL;
+}
+
 void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter)
 {
   assert (iter && array && (array->type == IOT_DATA_ARRAY || array->type == IOT_DATA_BINARY));
@@ -1463,6 +1481,20 @@ const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter_t * it
 {
   assert (iter);
   return (iter->index < iter->vector->size) ? iter->vector->values[iter->index] : NULL;
+}
+
+const char * iot_data_vector_iter_string_value (const iot_data_vector_iter_t * iter)
+{
+  assert (iter);
+  const iot_data_t * data = iot_data_vector_iter_value (iter);
+  return (data) ? iot_data_string (data) : NULL;
+}
+
+const void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t * iter)
+{
+  assert (iter);
+  const iot_data_t * data = iot_data_vector_iter_value (iter);
+  return (data) ? iot_data_pointer (data) : NULL;
 }
 
 iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t * value)
