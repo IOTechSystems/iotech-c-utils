@@ -1487,14 +1487,14 @@ const char * iot_data_vector_iter_string_value (const iot_data_vector_iter_t * i
 {
   assert (iter);
   const iot_data_t * data = iot_data_vector_iter_value (iter);
-  return (data) ? iot_data_string (data) : NULL;
+  return data ? iot_data_string (data) : NULL;
 }
 
 const void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t * iter)
 {
   assert (iter);
   const iot_data_t * data = iot_data_vector_iter_value (iter);
-  return (data) ? iot_data_pointer (data) : NULL;
+  return data ? iot_data_pointer (data) : NULL;
 }
 
 iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t * value)
