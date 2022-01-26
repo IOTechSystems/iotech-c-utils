@@ -1,7 +1,7 @@
 # Contributor: IOTech <support@iotechsys.com>
 # Maintainer: IOTech <support@iotechsys.com>
 pkgname=iotech-iot-${PKG_VER}${DEV}
-pkgver="${PKG_VER}"
+pkgver="${VER}"
 pkgrel=0
 pkgdesc="IOT C Framework"
 url="www.iotechsys.com"
@@ -16,7 +16,7 @@ options="!check !strip !tracedeps !fhs"
 
 package() {
   cd ${builddir}
-  dest=${pkgdir}/opt/iotech/iot/${pkgver}
+  dest=${pkgdir}/opt/iotech/iot/${PKG_VER}
   if [ x${DEV} == "x" -o x${DEV} == "x-dbg" ]
   then
     mkdir -p ${dest}/lib
