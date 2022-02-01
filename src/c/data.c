@@ -601,7 +601,7 @@ bool iot_data_list_iter_next (iot_data_list_iter_t * iter)
 bool iot_data_list_iter_has_next (const iot_data_list_iter_t * iter)
 {
   assert (iter);
-  return (iter->element && iter->element->next);
+  return ((iter->element == NULL) ||  iter->element->next);
 }
 
 bool iot_data_list_iter_prev (iot_data_list_iter_t * iter)
@@ -1340,6 +1340,7 @@ void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
   assert (iter && map && map->type == IOT_DATA_MAP);
   iter->map = (const iot_data_map_t*) map;
   iter->node = NULL;
+  iter->count = 0;
 }
 
 static inline iot_node_t * iot_node_start (iot_node_t * node)
@@ -1352,7 +1353,14 @@ bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
 {
   assert (iter);
   iter->node = (iter->node) ? iot_node_next (iter->node) : iot_node_start (iter->map->tree);
+  iter->count = (iter->count < iter->map->size) ? iter->count + 1u : 0u;
   return (iter->node != NULL);
+}
+
+bool iot_data_map_iter_has_next (const iot_data_map_iter_t * iter)
+{
+  assert (iter && iter->map);
+  return (iter->count < iter->map->size);
 }
 
 static inline iot_node_t * iot_node_end (iot_node_t * node)
@@ -1365,6 +1373,7 @@ bool iot_data_map_iter_prev (iot_data_map_iter_t * iter)
 {
   assert (iter);
   iter->node = (iter->node) ? iot_node_prev (iter->node) : iot_node_end (iter->map->tree);
+  if (iter->count > 0) iter->count--;
   return (iter->node != NULL);
 }
 
@@ -1423,7 +1432,7 @@ bool iot_data_array_iter_next (iot_data_array_iter_t * iter)
 bool iot_data_array_iter_has_next (const iot_data_array_iter_t * iter)
 {
   assert (iter);
-  return (iter->index + 1 < iter->array->length);
+  return ((iter->index == iter->array->length) || (iter->index + 1 < iter->array->length));
 }
 
 bool iot_data_array_iter_prev (iot_data_array_iter_t * iter)
@@ -1461,7 +1470,7 @@ bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter)
 
 bool iot_data_vector_iter_has_next (const iot_data_vector_iter_t * iter)
 {
-  return (iter->index + 1 < iter->vector->size);
+  return ((iter->index == iter->vector->size) || (iter->index + 1 < iter->vector->size));
 }
 
 bool iot_data_vector_iter_prev (iot_data_vector_iter_t * iter)

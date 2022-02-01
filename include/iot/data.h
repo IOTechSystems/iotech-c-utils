@@ -77,6 +77,7 @@ typedef struct iot_data_map_iter_t
 {
   const struct iot_data_map_t * map;   /**< Pointer to data map structure */
   struct iot_node_t * node;            /**< Pointer to map node structure */
+  uint32_t count;                      /**< Position counter */
 } iot_data_map_iter_t;
 
 /**
@@ -475,7 +476,7 @@ extern bool iot_data_list_iter_next (iot_data_list_iter_t * iter);
 /**
  * @brief Returns whether a list iterator has a next element
  *
- * The function returns whether the iterator is currently valid and has a next element.
+ * The function returns whether the iterator next function will return a value
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
@@ -1125,7 +1126,7 @@ extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 /**
  * @brief Returns whether an array iterator has a next element
  *
- * The function returns whether the iterator is currently valid and has a next element.
+ * The function returns whether the iterator next function will return a value
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
@@ -1184,6 +1185,16 @@ extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * ite
  * @return      Returns whether the iterator is still valid (has not passed end of the map)
  */
 extern bool iot_data_map_iter_next (iot_data_map_iter_t * iter);
+
+/**
+ * @brief Returns whether a map iterator has a next element
+ *
+ * The function returns whether the iterator next function will return a value
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_map_iter_has_next (const iot_data_map_iter_t * iter);
 
 /**
  * @brief Update the iterator to point to the previous element within a map
@@ -1283,7 +1294,7 @@ extern bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter);
 /**
  * @brief Returns whether a vector iterator has a next element
  *
- * The function returns whether the iterator is currently valid and has a next element.
+ * The function returns whether the iterator next function will return a value
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
