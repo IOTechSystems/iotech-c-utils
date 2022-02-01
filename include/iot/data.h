@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2020 IOTech Ltd
+// Copyright (c) 2019-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -112,6 +112,14 @@ typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 
 /** Type for data free function pointer */
 typedef void (*iot_data_free_fn) (void * ptr);
+
+/**
+ * @brief Set on a per thread basis allocation policy for data (cache or heap)
+ *
+ * @param set   Whether to allocate from heap
+ * @return      Previous allocation policy
+ */
+extern bool iot_data_alloc_heap (bool set);
 
 /**
  * @brief Increment the data reference count
