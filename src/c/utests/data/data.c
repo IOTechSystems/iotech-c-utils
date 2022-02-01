@@ -567,9 +567,7 @@ static void test_data_to_json (void)
   free (json);
 }
 
-static void test_data_from_json (void)
-{
-  static const char * config =
+static const char * test_config =
   "{"
     "\"Interval\":100000,"
     "\"Scheduler\":\"scheduler\","
@@ -582,6 +580,9 @@ static void test_data_from_json (void)
     "\"DB\":0.5,"
     "\"Escaped\":\"Double \\\" Quote\""
   "}";
+
+static void test_data_from_json (void)
+{
   static const char * config2 =
   "{"
     "\"Interval\":100,"
@@ -595,7 +596,7 @@ static void test_data_from_json (void)
   bool found;
   const iot_data_t * data;
 
-  iot_data_t * map = iot_data_from_json (config);
+  iot_data_t * map = iot_data_from_json (test_config);
   CU_ASSERT (map != NULL)
 
   found = iot_config_bool (map, "Boolean", &bval, NULL);
@@ -664,7 +665,7 @@ static void test_data_from_json (void)
   iot_data_free (map);
 
   iot_data_t * cache = iot_data_alloc_map (IOT_DATA_STRING);
-  map = iot_data_from_json_with_cache (config, false, cache);
+  map = iot_data_from_json_with_cache (test_config, false, cache);
   iot_data_t * map3 = iot_data_from_json_with_cache (config2, false, cache);
   iot_data_map_iter_t iter;
   iot_data_map_iter (cache, &iter);
@@ -3453,6 +3454,14 @@ static void test_data_binary (void)
   iot_data_free (bin);
 }
 
+static void test_data_alloc_heap (void)
+{
+  iot_data_alloc_heap (true);
+  iot_data_t * map = iot_data_from_json (test_config);
+  iot_data_free (map);
+  iot_data_alloc_heap (false);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -3573,6 +3582,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_add_ref", test_data_add_ref);
   CU_add_test (suite, "data_alloc_uuid", test_data_alloc_uuid);
   CU_add_test (suite, "data_alloc_pointer", test_data_alloc_pointer);
+  CU_add_test (suite, "data_alloc_heap", test_data_alloc_heap);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif

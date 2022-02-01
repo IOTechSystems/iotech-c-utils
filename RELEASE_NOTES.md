@@ -173,3 +173,7 @@
 * `iot_data_list_iter_string_value`
 * `iot_data_list_iter_pointer_value`
 * `iot_data_map_iter_pointer_value`
+
+- Function added to explicitly enable data allocation from heap:
+
+* `iot_data_alloc_heap`
