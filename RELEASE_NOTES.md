@@ -177,3 +177,7 @@
 - Function added to explicitly enable data allocation from heap:
 
 * `iot_data_alloc_heap`
+
+- Function added to cast data integer, float or boolean types:
+
+* `iot_data_cast`

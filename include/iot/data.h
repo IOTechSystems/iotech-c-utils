@@ -876,6 +876,19 @@ extern const char * iot_data_string (const iot_data_t * data);
 extern const void * iot_data_pointer (const iot_data_t * data);
 
 /**
+ * @brief Return integer, float or boolean data value as integer, float or boolean
+ *
+ * The function returns a data value cast to a given type.
+ * False is returned if type conversion is not possible.
+ *
+ * @param data  Data to be converted
+ * @param type  Type of data value to be returned
+ * @param val   Pointer to returned value, set if data type can be converted
+ * @return      Whether data type could be converted
+ */
+extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val);
+
+/**
  * @brief Add key-value pair to a map
  *
  * The function to add a key-value pair to a map

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2020-2022
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -3462,6 +3462,316 @@ static void test_data_alloc_heap (void)
   iot_data_alloc_heap (false);
 }
 
+static void test_data_cast (void)
+{
+  static const int8_t i8_val = -8;
+  static const uint8_t u8_val = 8;
+  static const int16_t i16_val = -500;
+  static const uint16_t u16_val = 500;
+  static const int32_t i32_val = -90000;
+  static const uint32_t u32_val = 90000;
+  static const int64_t i64_val = -40000000000;
+  static const uint64_t u64_val = 40000000000;
+  static const float f32_val = 7.0e32;
+  static const double f64_val = 3.0e55;
+
+  iot_data_t * data;
+  uint8_t u8 = 0;
+  int8_t i8 = 0;
+  uint16_t u16 = 0;
+  int16_t i16 = 0;
+  uint32_t u32 = 0;
+  int32_t i32 = 0;
+  uint64_t u64 = 0;
+  int64_t i64 = 0;
+  float f32 = 0.0;
+  double f64 = 0.0;
+  bool bv = false;
+
+  data = iot_data_alloc_i8 (i8_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) i8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_ui8 (u8_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) u8_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_i16 (i16_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) i16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_ui16 (u16_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) u16_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_i32 (i32_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) i32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_ui32 (u32_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) u32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_i64 (i64_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) i64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_ui64 (u64_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) u64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_f32 (f32_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) f32_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_f64 (f64_val);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) f64_val)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_bool (true);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT8, &i8))
+  CU_ASSERT (i8 == (int8_t) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (u8 == (uint8_t) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT16, &i16))
+  CU_ASSERT (i16 == (int16_t) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT16, &u16))
+  CU_ASSERT (u16 == (uint16_t) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (i32 == (int32_t) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT32, &u32))
+  CU_ASSERT (u32 == (uint32_t) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (i64 == (int64_t) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &u64))
+  CU_ASSERT (u64 == (uint64_t) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  CU_ASSERT (f32 == (float) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
+  CU_ASSERT (f64 == (double) true)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  CU_ASSERT (bv)
+  iot_data_free (data);
+
+  data = iot_data_alloc_string ("hi", IOT_DATA_REF);
+  CU_ASSERT (! iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  iot_data_free (data);
+
+  data = iot_data_alloc_null ();
+  CU_ASSERT (! iot_data_cast (data, IOT_DATA_BOOL, &bv))
+  iot_data_free (data);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -3583,6 +3893,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_alloc_uuid", test_data_alloc_uuid);
   CU_add_test (suite, "data_alloc_pointer", test_data_alloc_pointer);
   CU_add_test (suite, "data_alloc_heap", test_data_alloc_heap);
+  CU_add_test (suite, "data_cast", test_data_cast);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif
