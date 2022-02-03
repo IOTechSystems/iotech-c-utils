@@ -1150,87 +1150,6 @@ int64_t iot_data_i64 (const iot_data_t * data)
   return ((const iot_data_value_t*) data)->value.i64;
 }
 
-bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
-{
-  assert (data && val);
-  iot_data_type_t dtype = data->type;
-  bool ds = (dtype == IOT_DATA_INT8) || (dtype == IOT_DATA_INT16) || (dtype == IOT_DATA_INT32) || (dtype == IOT_DATA_INT64);
-  bool df = (dtype == IOT_DATA_FLOAT32) || (dtype == IOT_DATA_FLOAT64);
-  iot_data_union_t uval;
-
-  switch (dtype)
-  {
-    case IOT_DATA_INT8: uval.i64 = ((const iot_data_value_t*) data)->value.i8; break;
-    case IOT_DATA_UINT8: uval.ui64 = ((const iot_data_value_t*) data)->value.ui8; break;
-    case IOT_DATA_INT16: uval.i64 = ((const iot_data_value_t*) data)->value.i16; break;
-    case IOT_DATA_UINT16: uval.ui64 = ((const iot_data_value_t*) data)->value.ui16; break;
-    case IOT_DATA_INT32: uval.i64 = ((const iot_data_value_t*) data)->value.i32; break;
-    case IOT_DATA_UINT32: uval.ui64 = ((const iot_data_value_t*) data)->value.ui32; break;
-    case IOT_DATA_INT64: uval.i64 = ((const iot_data_value_t*) data)->value.i64; break;
-    case IOT_DATA_UINT64: uval.ui64 = ((const iot_data_value_t*) data)->value.ui64; break;
-    case IOT_DATA_FLOAT32: uval.f64 = ((const iot_data_value_t*) data)->value.f32; break;
-    case IOT_DATA_FLOAT64: uval.f64 = ((const iot_data_value_t*) data)->value.f64; break;
-    case IOT_DATA_BOOL: uval.ui64 = ((const iot_data_value_t*) data)->value.bl ? 1u : 0u; break;
-    default: return false;
-  }
-  switch (type)
-  {
-    case IOT_DATA_INT8:
-      if (ds) *((int8_t*) val) = (int8_t) uval.i64;
-      else if (df) *((int8_t*) val) = (int8_t) uval.f64;
-      else *((int8_t*) val) = (int8_t) uval.ui64;
-      break;
-    case IOT_DATA_UINT8:
-      if (ds) *((uint8_t*) val) = (uint8_t) uval.i64;
-      else if (df) *((uint8_t*) val) = (uint8_t) uval.f64;
-      else *((uint8_t*) val) = (uint8_t) uval.ui64;
-      break;
-    case IOT_DATA_INT16:
-      if (ds) *((int16_t*) val) = (int16_t) uval.i64;
-      else if (df) *((int16_t*) val) = (int16_t) uval.f64;
-      else *((int16_t*) val) = (int16_t) uval.ui64;
-      break;
-    case IOT_DATA_UINT16:
-      if (ds) *((uint16_t*) val) = (uint16_t) uval.i64;
-      else if (df) *((uint16_t*) val) = (uint16_t) uval.f64;
-      else *((uint16_t*) val) = (uint16_t) uval.ui64;
-      break;
-    case IOT_DATA_INT32:
-      if (ds) *((int32_t*) val) = (int32_t) uval.i64;
-      else if (df) *((int32_t*) val) = (int32_t) uval.f64;
-      else *((int32_t*) val) = (int32_t) uval.ui64;
-      break;
-    case IOT_DATA_UINT32:
-      if (ds) *((uint32_t*) val) = (uint32_t) uval.i64;
-      else if (df) *((uint32_t*) val) = (uint32_t) uval.f64;
-      else *((uint32_t*) val) = (uint32_t) uval.ui64;
-      break;
-    case IOT_DATA_INT64:
-      if (ds) *((int64_t*) val) = (int64_t) uval.i64;
-      else if (df) *((int64_t*) val) = (int64_t) uval.f64;
-      else *((int64_t*) val) = (int64_t) uval.ui64;
-      break;
-    case IOT_DATA_UINT64:
-      if (ds) *((uint64_t*) val) = (uint64_t) uval.i64;
-      else if (df) *((uint64_t*) val) = (uint64_t) uval.f64;
-      else *((uint64_t*) val) = (uint64_t) uval.ui64;
-      break;
-    case IOT_DATA_FLOAT32:
-      if (ds) *((float*) val) = (float) uval.i64;
-      else if (df) *((float*) val) = (float) uval.f64;
-      else *((float*) val) = (float) uval.ui64;
-      break;
-    case IOT_DATA_FLOAT64:
-      if (ds) *((double*) val) = (double) uval.i64;
-      else if (df) *((double*) val) = (double) uval.f64;
-      else *((double*) val) = (double) uval.ui64;
-      break;
-    case IOT_DATA_BOOL: *((bool*) val) = (ds ? uval.i64 : (df ? uval.f64 : uval.ui64)) != 0; break;
-    default: return false;
-  }
-  return true;
-}
-
 uint64_t iot_data_ui64 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_UINT64));
@@ -1247,6 +1166,46 @@ double iot_data_f64 (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_FLOAT64));
   return ((const iot_data_value_t*) data)->value.f64;
+}
+
+bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
+{
+  assert (data && val);
+  iot_data_type_t dtype = data->type;
+  bool sign = (dtype == IOT_DATA_INT8) || (dtype == IOT_DATA_INT16) || (dtype == IOT_DATA_INT32) || (dtype == IOT_DATA_INT64);
+  iot_data_union_t uval;
+
+  if ((data->type <= IOT_DATA_UINT64) != (type <= IOT_DATA_UINT64)) return false; /* No float to int conversion */
+
+  switch (dtype)
+  {
+    case IOT_DATA_INT8: uval.i64 = ((const iot_data_value_t*) data)->value.i8; break;
+    case IOT_DATA_UINT8: uval.ui64 = ((const iot_data_value_t*) data)->value.ui8; break;
+    case IOT_DATA_INT16: uval.i64 = ((const iot_data_value_t*) data)->value.i16; break;
+    case IOT_DATA_UINT16: uval.ui64 = ((const iot_data_value_t*) data)->value.ui16; break;
+    case IOT_DATA_INT32: uval.i64 = ((const iot_data_value_t*) data)->value.i32; break;
+    case IOT_DATA_UINT32: uval.ui64 = ((const iot_data_value_t*) data)->value.ui32; break;
+    case IOT_DATA_INT64: uval.i64 = ((const iot_data_value_t*) data)->value.i64; break;
+    case IOT_DATA_UINT64: uval.ui64 = ((const iot_data_value_t*) data)->value.ui64; break;
+    case IOT_DATA_FLOAT32: uval.f64 = ((const iot_data_value_t*) data)->value.f32; break;
+    case IOT_DATA_FLOAT64: uval.f64 = ((const iot_data_value_t*) data)->value.f64; break;
+    default: return false;
+  }
+  switch (type)
+  {
+    case IOT_DATA_INT8: *((int8_t*) val) = sign ? (int8_t) uval.i64 : (int8_t) uval.ui64; break;
+    case IOT_DATA_UINT8: *((uint8_t*) val) = sign ? (uint8_t) uval.i64 : (uint8_t) uval.ui64; break;
+    case IOT_DATA_INT16: *((int16_t*) val) = sign ? (int16_t) uval.i64 : (int16_t) uval.ui64; break;
+    case IOT_DATA_UINT16: *((uint16_t*) val) = sign ? (uint16_t) uval.i64 : (uint16_t) uval.ui64; break;
+    case IOT_DATA_INT32: *((int32_t*) val) = sign ? (int32_t) uval.i64 : (int32_t) uval.ui64; break;
+    case IOT_DATA_UINT32: *((uint32_t*) val) = sign ? (uint32_t) uval.i64 : (uint32_t) uval.ui64; break;
+    case IOT_DATA_INT64: *((int64_t*) val) = sign ? uval.i64 : (int64_t) uval.ui64; break;
+    case IOT_DATA_UINT64: *((uint64_t*) val) = sign ? (uint64_t) uval.i64 : uval.ui64; break;
+    case IOT_DATA_FLOAT32: *((float*) val) = (float) uval.f64; break;
+    case IOT_DATA_FLOAT64: *((double*) val) = (double) uval.f64; break;
+    default: return false;
+  }
+  return true;
 }
 
 bool iot_data_bool (const iot_data_t * data)

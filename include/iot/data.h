@@ -876,10 +876,10 @@ extern const char * iot_data_string (const iot_data_t * data);
 extern const void * iot_data_pointer (const iot_data_t * data);
 
 /**
- * @brief Return integer, float or boolean data value as integer, float or boolean
+ * @brief Cast integer or float values
  *
  * The function returns a data value cast to a given type.
- * False is returned if type conversion is not possible.
+ * False is returned if type conversion is not possible. Note float to integer or inter to float conversion is not supported.
  *
  * @param data  Data to be converted
  * @param type  Type of data value to be returned
