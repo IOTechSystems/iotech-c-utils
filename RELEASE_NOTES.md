@@ -183,3 +183,4 @@
 * `iot_data_cast`
 
 - Fedora support updated for Fedora 35
+- Support removed for CentOS 8
