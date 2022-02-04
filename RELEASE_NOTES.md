@@ -184,3 +184,4 @@
 
 - Fedora support updated for Fedora 35
 - Support removed for CentOS 8
+- Support removed for Zephyr 1.14
