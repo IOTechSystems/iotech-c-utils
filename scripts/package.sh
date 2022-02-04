@@ -140,7 +140,7 @@ case ${SYSTEM} in
       ;;
       fedora-35)
         RPM_DIST=fc35
-        UUID_DEP=libuuid1
+        UUID_DEP=libuuid
         UUID_DEV_DEP=libuuid-devel
       ;;
       opensuse-15.3)
