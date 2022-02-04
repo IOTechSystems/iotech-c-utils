@@ -138,8 +138,8 @@ case ${SYSTEM} in
         RPM_DIST=ph4
         UUID_DEV_DEP=util-linux-devel
       ;;
-      fedora-34)
-        RPM_DIST=fc34
+      fedora-35)
+        RPM_DIST=fc35
         UUID_DEP=libuuid1
         UUID_DEV_DEP=libuuid-devel
       ;;

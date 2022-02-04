@@ -181,3 +181,5 @@
 - Function added to cast data integer, float or boolean types:
 
 * `iot_data_cast`
+
+- Fedora support updated for Fedora 35
