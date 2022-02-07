@@ -183,6 +183,7 @@
 * `iot_data_cast`
 
 - Fedora support updated for Fedora 35
+- Support removed for Alpine Linux versions 3.12 and 3.13
 - Support removed for CentOS 8
 - Support removed for Zephyr 1.14
 - Support removed for AzureSphere API 8 and 10
