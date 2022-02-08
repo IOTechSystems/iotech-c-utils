@@ -1825,6 +1825,19 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
       iot_data_strcat (holder, "]");
       break;
     }
+    case IOT_DATA_LIST:
+    {
+      iot_data_list_iter_t iter;
+      iot_data_list_iter(data, &iter);
+      iot_data_strcat (holder, "[");
+      while (iot_data_list_iter_next (&iter))
+      {
+        iot_data_dump (holder, iot_data_list_iter_value (&iter));
+        if (iot_data_list_iter_has_next (&iter)) iot_data_strcat (holder, ",");
+      }
+      iot_data_strcat (holder, "]");
+      break;
+    }
     case IOT_DATA_POINTER: break;
     default: iot_data_dump_ptr (holder, iot_data_address (data), data->type); break;
   }
@@ -2204,6 +2217,19 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
       {
         iot_data_t * val = iot_data_copy (iot_data_vector_iter_value (&iter));
         iot_data_vector_add (ret, iter.index, val);
+      }
+      break;
+    }
+    case IOT_DATA_LIST:
+    {
+      iot_data_list_iter_t iter;
+      ret = iot_data_alloc_list();
+
+      iot_data_list_iter (data, &iter);
+      while (iot_data_list_iter_next(&iter))
+      {
+        iot_data_t * val = iot_data_copy (iot_data_list_iter_value (&iter));
+        iot_data_list_head_push (ret, val);
       }
       break;
     }

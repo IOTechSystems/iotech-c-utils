@@ -2357,6 +2357,21 @@ static void test_list_iter (void)
   iot_data_free (list);
 }
 
+static void test_list_copy ()
+{
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (0u));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (1u));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (2u));
+
+  iot_data_t *list_copy = iot_data_copy(list);
+  CU_ASSERT_PTR_NOT_NULL(list_copy);
+  CU_ASSERT_TRUE(iot_data_equal(list, list_copy));
+
+  iot_data_free (list);
+  iot_data_free (list_copy);
+}
+
 static void test_typed_list_iter (void)
 {
   static const char * str = "test";
@@ -3723,6 +3738,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_list_size", test_list_size);
   CU_add_test (suite, "data_list_free", test_list_free);
   CU_add_test (suite, "data_list_iter", test_list_iter);
+  CU_add_test (suite, "data_list_copy", test_list_copy);
   CU_add_test (suite, "data_typed_list_iter", test_typed_list_iter);
   CU_add_test (suite, "data_list_iter_replace", test_list_iter_replace);
   CU_add_test (suite, "data_list_remove", test_list_remove);
