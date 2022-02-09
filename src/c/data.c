@@ -1196,7 +1196,7 @@ bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
     case IOT_DATA_INT64: *((int64_t*) val) = sign ? uval.i64 : (int64_t) uval.ui64; break;
     case IOT_DATA_UINT64: *((uint64_t*) val) = sign ? (uint64_t) uval.i64 : uval.ui64; break;
     case IOT_DATA_FLOAT32: *((float*) val) = (float) uval.f64; break;
-    case IOT_DATA_FLOAT64: *((double*) val) = (double) uval.f64; break;
+    case IOT_DATA_FLOAT64: *((double*) val) = uval.f64; break;
     default: return false;
   }
   return true;

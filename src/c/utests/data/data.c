@@ -2359,14 +2359,19 @@ static void test_list_iter (void)
 
 static void test_list_copy (void)
 {
-  iot_data_t * list = iot_data_alloc_list ();
+  iot_typecode_t tc;
+  iot_data_t * list = iot_data_alloc_typed_list (IOT_DATA_UINT32);
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (0u));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (1u));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (2u));
 
-  iot_data_t *list_copy = iot_data_copy(list);
-  CU_ASSERT_PTR_NOT_NULL(list_copy);
-  CU_ASSERT_TRUE(iot_data_equal(list, list_copy));
+  iot_data_t * list_copy = iot_data_copy (list);
+  CU_ASSERT_PTR_NOT_NULL (list_copy)
+  CU_ASSERT_TRUE (iot_data_equal (list, list_copy))
+  iot_data_typecode (list, &tc);
+  CU_ASSERT (tc.type == IOT_DATA_LIST)
+  CU_ASSERT (tc.element_type == IOT_DATA_UINT32)
+  CU_ASSERT (tc.key_type == IOT_DATA_INVALID)
 
   iot_data_free (list);
   iot_data_free (list_copy);
@@ -3487,7 +3492,7 @@ static void test_data_cast (void)
   static const uint32_t u32_val = 90000;
   static const int64_t i64_val = -40000000000;
   static const uint64_t u64_val = 40000000000;
-  static const float f32_val = 7.0e32;
+  static const float f32_val = 7.0f;
   static const double f64_val = 3.0e55;
 
   iot_data_t * data;
