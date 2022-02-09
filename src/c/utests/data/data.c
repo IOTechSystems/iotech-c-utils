@@ -2357,7 +2357,7 @@ static void test_list_iter (void)
   iot_data_free (list);
 }
 
-static void test_list_copy ()
+static void test_list_copy (void)
 {
   iot_data_t * list = iot_data_alloc_list ();
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (0u));
