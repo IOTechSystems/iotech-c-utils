@@ -149,11 +149,18 @@
 * `iot_data_alloc_typed_map`
 * `iot_data_alloc_typed_vector`
 
-- Added functions to determine if current list, array or vector iterator has a next element:
+- Added element type functions for map, vector and list:
+
+* `iot_data_vector_type`
+* `iot_data_map_type`
+* `iot_data_list_type`
+
+- Added functions to determine if current list, map, array or vector iterator has a next element:
 
 * `iot_data_list_iter_has_next`
 * `iot_data_array_iter_has_next`
 * `iot_data_vector_iter_has_next`
+* `iot_data_map_iter_has_next`
 
 - Data typecode simplification. Removed functions:
 
@@ -164,3 +171,25 @@
 * `iot_typecode_alloc_list`
 * `iot_typecode_element_type`
 * `iot_typecode_free`
+
+- Optimised iterator value functions added for string and pointer for all collection types:
+
+* `iot_data_vector_iter_string_value`
+* `iot_data_vector_iter_pointer_value`
+* `iot_data_list_iter_string_value`
+* `iot_data_list_iter_pointer_value`
+* `iot_data_map_iter_pointer_value`
+
+- Function added to explicitly enable data allocation from heap:
+
+* `iot_data_alloc_heap`
+
+- Function added to cast data integer, float or boolean types:
+
+* `iot_data_cast`
+
+- Fedora support updated for Fedora 35
+- Support removed for Alpine Linux versions 3.12 and 3.13
+- Support removed for CentOS 8
+- Support removed for Zephyr 1.14
+- Support removed for AzureSphere API 8 and 10

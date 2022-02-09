@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2020 IOTech Ltd
+// Copyright (c) 2019-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -71,39 +71,40 @@ typedef struct iot_typecode_t
 } iot_typecode_t;
 
 /**
- * Type for data map iterator structure
+ * Type for data map iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_map_iter_t
 {
-  const struct iot_data_map_t * map;   /**< Pointer to data map structure */
-  struct iot_node_t * node;            /**< Pointer to map node structure */
+  const struct iot_data_map_t * _map;   /**< Pointer to data map structure */
+  struct iot_node_t * _node;            /**< Pointer to map node structure */
+  uint32_t _count;                      /**< Position counter */
 } iot_data_map_iter_t;
 
 /**
- * Type for data vector iterator structure
+ * Type for data vector iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_vector_iter_t
 {
-  const struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
-  uint32_t index;                           /**< Index of the given vector */
+  const struct iot_data_vector_t * _vector;  /**< Pointer to data vector structure */
+  uint32_t _index;                           /**< Index of the given vector */
 } iot_data_vector_iter_t;
 
 /**
- * Type for data list iterator structure
+ * Type for data list iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_list_iter_t
 {
-  const struct iot_data_list_t * list;  /**< Pointer to data list structure */
-  struct iot_element_t * element;       /**< Pointer to list element structure */
+  const struct iot_data_list_t * _list;  /**< Pointer to data list structure */
+  struct iot_element_t * _element;       /**< Pointer to list element structure */
 } iot_data_list_iter_t;
 
 /**
- * Alias for data array iterator structure
+ * Alias for data array iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_array_iter_t
 {
-  const struct iot_data_array_t * array;  /**< Pointer to data array structure */
-  uint32_t index;                         /**< Index of the given data array */
+  const struct iot_data_array_t * _array;  /**< Pointer to data array structure */
+  uint32_t _index;                         /**< Index of the given data array */
 } iot_data_array_iter_t;
 
 /** Type for data comparison function pointer */
@@ -111,6 +112,14 @@ typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 
 /** Type for data free function pointer */
 typedef void (*iot_data_free_fn) (void * ptr);
+
+/**
+ * @brief Set on a per thread basis allocation policy for data (cache or heap)
+ *
+ * @param set   Whether to allocate from heap
+ * @return      Previous allocation policy
+ */
+extern bool iot_data_alloc_heap (bool set);
 
 /**
  * @brief Increment the data reference count
@@ -411,6 +420,16 @@ extern iot_data_t * iot_data_alloc_list (void);
 extern iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type);
 
 /**
+ * @brief Find list element type
+ *
+ * Function to return the element type of a list.
+ *
+ * @param list      List
+ * @return          Type of list elements
+ */
+extern iot_data_type_t iot_data_list_type (const iot_data_t * list);
+
+/**
  * @brief Get the list length
  *
  * The function to get the length of the input list
@@ -475,7 +494,7 @@ extern bool iot_data_list_iter_next (iot_data_list_iter_t * iter);
 /**
  * @brief Returns whether a list iterator has a next element
  *
- * The function returns whether the iterator is currently valid and has a next element.
+ * The function returns whether the iterator next function will return a value
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
@@ -502,6 +521,26 @@ extern bool iot_data_list_iter_prev (iot_data_list_iter_t * iter);
  * @return      Pointer to the current list element
  */
 extern const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t * iter);
+
+/**
+ * @brief Get the string value from the list referenced by an input iterator
+ *
+ * Get string type value from the list referenced by an input iterator
+ *
+ * @param iter  Input iterator
+ * @return      String type value if iter is valid, NULL otherwise
+ */
+extern const char * iot_data_list_iter_string_value (const iot_data_list_iter_t * iter);
+
+/**
+ * @brief Get pointer value from the list referenced by an input iterator
+ *
+ * Get the pointer type value from the list referenced by an input iterator
+ *
+ * @param iter  Input iterator
+ * @return      Pointer type value from the list if iter is valid, NULL otherwise
+ */
+extern const void * iot_data_list_iter_pointer_value (const iot_data_list_iter_t * iter);
 
 /**
  * @brief Replace the value associated with a list iterator
@@ -583,12 +622,12 @@ extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_dat
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership);
 
 /**
- * @brief Find array type
+ * @brief Find array element type
  *
- * Function to return the type of an Array.
+ * Function to return the element type of an Array.
  *
  * @param array      Array
- * @return           Type of array data
+ * @return           Type of array elements
  */
 extern iot_data_type_t iot_data_array_type (const iot_data_t * array);
 
@@ -645,6 +684,16 @@ extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
 extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t element_type);
 
 /**
+ * @brief Find map element type
+ *
+ * Function to return the element type of a map
+ *
+ * @param map    Map
+ * @return       Type of map elements
+ */
+extern iot_data_type_t iot_data_map_type (const iot_data_t * map);
+
+/**
  * @brief Allocate a data vector
  *
  * The function to allocate memory for an vector type
@@ -665,6 +714,15 @@ extern iot_data_t * iot_data_alloc_vector (uint32_t size);
  */
 extern iot_data_t * iot_data_alloc_typed_vector (uint32_t size, iot_data_type_t element_type);
 
+/**
+ * @brief Find vector element type
+ *
+ * Function to return the element type of a vector
+ *
+ * @param vector    Vector
+ * @return          Type of vector elements
+ */
+extern iot_data_type_t iot_data_vector_type (const iot_data_t * vector);
 /**
  * @brief Allocate memory of data_type type for a string value
  *
@@ -845,6 +903,19 @@ extern const char * iot_data_string (const iot_data_t * data);
  * @return      Returned pointer or NULL if date not of type POINTER
  */
 extern const void * iot_data_pointer (const iot_data_t * data);
+
+/**
+ * @brief Cast integer or float values
+ *
+ * The function returns a data value cast to a given type.
+ * False is returned if type conversion is not possible. Note float to integer or inter to float conversion is not supported.
+ *
+ * @param data  Data to be converted
+ * @param type  Type of data value to be returned
+ * @param val   Pointer to returned value, set if data type can be converted
+ * @return      Whether data type could be converted
+ */
+extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val);
 
 /**
  * @brief Add key-value pair to a map
@@ -1105,7 +1176,7 @@ extern bool iot_data_array_iter_next (iot_data_array_iter_t * iter);
 /**
  * @brief Returns whether an array iterator has a next element
  *
- * The function returns whether the iterator is currently valid and has a next element.
+ * The function returns whether the iterator next function will return a value
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
@@ -1166,6 +1237,16 @@ extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * ite
 extern bool iot_data_map_iter_next (iot_data_map_iter_t * iter);
 
 /**
+ * @brief Returns whether a map iterator has a next element
+ *
+ * The function returns whether the iterator next function will return a value
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_map_iter_has_next (const iot_data_map_iter_t * iter);
+
+/**
  * @brief Update the iterator to point to the previous element within a map
  *
  * The function to set the iterator to point to the previous element within a map. On reaching start of the map,
@@ -1218,7 +1299,7 @@ extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t *
 extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Value from the map referenced by an input iterator
+ * @brief Get string value from the map referenced by an input iterator
  *
  * The function to get the string type value from the map referenced by an input iterator
  *
@@ -1226,6 +1307,16 @@ extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * it
  * @return      String type value from the map if iter is valid, NULL otherwise
  */
 extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter);
+
+/**
+ * @brief Get pointer value from the map referenced by an input iterator
+ *
+ * The function to get the pointer type value from the map referenced by an input iterator
+ *
+ * @param iter  Input iterator
+ * @return      Pointer type value from the map if iter is valid, NULL otherwise
+ */
+extern const void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter);
 
 /**
  * @brief Initialise iterator to the start of a vector
@@ -1253,7 +1344,7 @@ extern bool iot_data_vector_iter_next (iot_data_vector_iter_t * iter);
 /**
  * @brief Returns whether a vector iterator has a next element
  *
- * The function returns whether the iterator is currently valid and has a next element.
+ * The function returns whether the iterator next function will return a value
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
@@ -1291,6 +1382,26 @@ extern uint32_t iot_data_vector_iter_index (const iot_data_vector_iter_t * iter)
  * @return       Pointer to a data value from the vector index pointed by iterator if valid, NULL otherwise
  */
 extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter_t * iter);
+
+/**
+ * @brief Get the string value from the vector referenced by an input iterator
+ *
+ * Get string type value from the vector referenced by an input iterator
+ *
+ * @param iter  Input iterator
+ * @return      String type value if iter is valid, NULL otherwise
+ */
+extern const char * iot_data_vector_iter_string_value (const iot_data_vector_iter_t * iter);
+
+/**
+ * @brief Get pointer value from the vector referenced by an input iterator
+ *
+ * Get the pointer type value from the vector referenced by an input iterator
+ *
+ * @param iter  Input iterator
+ * @return      Pointer type value from the vector if iter is valid, NULL otherwise
+ */
+extern const void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t * iter);
 
 /**
  * @brief Replace Value from the vector at the index referenced by iterator

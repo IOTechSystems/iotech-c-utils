@@ -16,7 +16,7 @@ options="!check !strip !tracedeps !fhs"
 
 package() {
   cd ${builddir}
-  dest=${pkgdir}/opt/iotech/iot
+  dest=${pkgdir}/opt/iotech/iot/${PKG_VER}
   if [ x${DEV} == "x" -o x${DEV} == "x-dbg" ]
   then
     mkdir -p ${dest}/lib

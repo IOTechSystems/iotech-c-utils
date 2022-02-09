@@ -3,7 +3,7 @@ export LD_LIBRARY_PATH=/usr/local/lib
 ROOT=$(dirname $(dirname $0))
 BROOT=$2
 VERSION=$(cat ${ROOT}/VERSION)
-INSTALL_DIR=install/opt/iotech/iot
+INSTALL_DIR=install/opt/iotech/iot/1.3
 LIB_DIR=${INSTALL_DIR}/lib
 
 mkinstall()
