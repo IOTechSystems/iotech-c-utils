@@ -420,6 +420,16 @@ extern iot_data_t * iot_data_alloc_list (void);
 extern iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type);
 
 /**
+ * @brief Find list element type
+ *
+ * Function to return the element type of a list.
+ *
+ * @param list      List
+ * @return          Type of list elements
+ */
+extern iot_data_type_t iot_data_list_type (const iot_data_t * list);
+
+/**
  * @brief Get the list length
  *
  * The function to get the length of the input list
@@ -612,12 +622,12 @@ extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_dat
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership);
 
 /**
- * @brief Find array type
+ * @brief Find array element type
  *
- * Function to return the type of an Array.
+ * Function to return the element type of an Array.
  *
  * @param array      Array
- * @return           Type of array data
+ * @return           Type of array elements
  */
 extern iot_data_type_t iot_data_array_type (const iot_data_t * array);
 
@@ -674,6 +684,16 @@ extern iot_data_t * iot_data_alloc_map (iot_data_type_t key_type);
 extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t element_type);
 
 /**
+ * @brief Find map element type
+ *
+ * Function to return the element type of a map
+ *
+ * @param map    Map
+ * @return       Type of map elements
+ */
+extern iot_data_type_t iot_data_map_type (const iot_data_t * map);
+
+/**
  * @brief Allocate a data vector
  *
  * The function to allocate memory for an vector type
@@ -694,6 +714,15 @@ extern iot_data_t * iot_data_alloc_vector (uint32_t size);
  */
 extern iot_data_t * iot_data_alloc_typed_vector (uint32_t size, iot_data_type_t element_type);
 
+/**
+ * @brief Find vector element type
+ *
+ * Function to return the element type of a vector
+ *
+ * @param vector    Vector
+ * @return          Type of vector elements
+ */
+extern iot_data_type_t iot_data_vector_type (const iot_data_t * vector);
 /**
  * @brief Allocate memory of data_type type for a string value
  *

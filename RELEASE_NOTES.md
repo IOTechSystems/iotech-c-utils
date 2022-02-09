@@ -149,6 +149,12 @@
 * `iot_data_alloc_typed_map`
 * `iot_data_alloc_typed_vector`
 
+- Added element type functions for map, vector and list:
+
+* `iot_data_vector_type`
+* `iot_data_map_type`
+* `iot_data_list_type`
+
 - Added functions to determine if current list, map, array or vector iterator has a next element:
 
 * `iot_data_list_iter_has_next`

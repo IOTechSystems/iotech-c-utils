@@ -518,11 +518,17 @@ iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)
   return (iot_data_t*) map;
 }
 
-extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t element_type)
+iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t element_type)
 {
   iot_data_t * map = iot_data_alloc_map (key_type);
   map->element_type = element_type;
   return map;
+}
+
+iot_data_type_t iot_data_map_type (const iot_data_t * map)
+{
+  assert (map);
+  return map->element_type;
 }
 
 iot_data_t * iot_data_alloc_vector (uint32_t size)
@@ -538,6 +544,12 @@ iot_data_t * iot_data_alloc_typed_vector (uint32_t size, iot_data_type_t element
   iot_data_t * vector = iot_data_alloc_vector (size);
   vector->element_type = element_type;
   return vector;
+}
+
+iot_data_type_t iot_data_vector_type (const iot_data_t * vector)
+{
+  assert (vector);
+  return vector->element_type;
 }
 
 iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn)
@@ -558,6 +570,12 @@ iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type)
   iot_data_t * list = iot_data_block_alloc_data (IOT_DATA_LIST);
   list->element_type = element_type;
   return list;
+}
+
+iot_data_type_t iot_data_list_type (const iot_data_t * list)
+{
+  assert (list);
+  return list->element_type;
 }
 
 uint32_t iot_data_list_length (const iot_data_t * list)
