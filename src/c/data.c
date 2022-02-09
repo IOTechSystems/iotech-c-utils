@@ -1828,7 +1828,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     case IOT_DATA_LIST:
     {
       iot_data_list_iter_t iter;
-      iot_data_list_iter(data, &iter);
+      iot_data_list_iter (data, &iter);
       iot_data_strcat (holder, "[");
       while (iot_data_list_iter_next (&iter))
       {
@@ -2196,8 +2196,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
     case IOT_DATA_MAP:
     {
       iot_data_map_iter_t iter;
-      ret = iot_data_alloc_map (iot_data_map_key_type (data));
-
+      ret = iot_data_alloc_typed_map (data->key_type, data->element_type);
       iot_data_map_iter (data, &iter);
       while (iot_data_map_iter_next (&iter))
       {
@@ -2210,8 +2209,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
     case IOT_DATA_VECTOR:
     {
       iot_data_vector_iter_t iter;
-      ret = iot_data_alloc_vector (iot_data_vector_size (data));
-
+      ret = iot_data_alloc_typed_vector (iot_data_vector_size (data), data->element_type);
       iot_data_vector_iter (data, &iter);
       while (iot_data_vector_iter_next (&iter))
       {
@@ -2223,10 +2221,9 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
     case IOT_DATA_LIST:
     {
       iot_data_list_iter_t iter;
-      ret = iot_data_alloc_list();
-
+      ret = iot_data_alloc_typed_list (data->element_type);
       iot_data_list_iter (data, &iter);
-      while (iot_data_list_iter_next(&iter))
+      while (iot_data_list_iter_next (&iter))
       {
         iot_data_t * val = iot_data_copy (iot_data_list_iter_value (&iter));
         iot_data_list_head_push (ret, val);
