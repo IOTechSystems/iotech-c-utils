@@ -285,14 +285,6 @@ static void * iot_data_block_alloc (void)
   return data;
 }
 
-static iot_data_t * iot_data_block_alloc_data (void)
-{
-  bool heap = iot_data_alloc_from_heap;
-  iot_data_t * data = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
-  data->heap = heap;
-  return data;
-}
-
 static inline void iot_data_block_free (iot_block_t * block)
 {
 #ifdef IOT_DATA_CACHE
@@ -325,9 +317,11 @@ static inline void iot_data_block_free_data (iot_data_t * data)
   (data->heap) ? free (data) : iot_data_block_free ((iot_block_t*) data);
 }
 
-static void * iot_data_factory_alloc (iot_data_type_t type)
+static void * iot_data_block_alloc_data (iot_data_type_t type)
 {
-  iot_data_t * data = iot_data_block_alloc_data ();
+  bool heap = iot_data_alloc_from_heap;
+  iot_data_t * data = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
+  data->heap = heap;
   atomic_store (&data->refs, 1);
   data->type = type;
   data->element_type = (type >= IOT_DATA_ARRAY && type <= IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
@@ -337,7 +331,7 @@ static void * iot_data_factory_alloc (iot_data_type_t type)
 
 static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot_data_ownership_t own)
 {
-  iot_data_value_t * val = iot_data_factory_alloc (type);
+  iot_data_value_t * val = iot_data_block_alloc_data (type);
   val->base.release = (own != IOT_DATA_REF);
   return val;
 }
@@ -519,7 +513,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)
 {
   assert (key_type < IOT_DATA_MAP && key_type != IOT_DATA_NULL);
-  iot_data_map_t * map = iot_data_factory_alloc (IOT_DATA_MAP);
+  iot_data_map_t * map = iot_data_block_alloc_data (IOT_DATA_MAP);
   map->base.key_type = key_type;
   return (iot_data_t*) map;
 }
@@ -533,7 +527,7 @@ extern iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data
 
 iot_data_t * iot_data_alloc_vector (uint32_t size)
 {
-  iot_data_vector_t * vector = iot_data_factory_alloc (IOT_DATA_VECTOR);
+  iot_data_vector_t * vector = iot_data_block_alloc_data (IOT_DATA_VECTOR);
   vector->size = size;
   vector->values = calloc (size, sizeof (iot_data_t*));
   return (iot_data_t*) vector;
@@ -548,7 +542,7 @@ iot_data_t * iot_data_alloc_typed_vector (uint32_t size, iot_data_type_t element
 
 iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn)
 {
-  iot_data_pointer_t * pointer = iot_data_factory_alloc (IOT_DATA_POINTER);
+  iot_data_pointer_t * pointer = iot_data_block_alloc_data (IOT_DATA_POINTER);
   pointer->free_fn = free_fn;
   pointer->value = ptr;
   return (iot_data_t*) pointer;
@@ -556,12 +550,12 @@ iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn)
 
 iot_data_t * iot_data_alloc_list (void)
 {
-  return (iot_data_t*) iot_data_factory_alloc (IOT_DATA_LIST);
+  return (iot_data_t*) iot_data_block_alloc_data (IOT_DATA_LIST);
 }
 
 iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type)
 {
-  iot_data_t * list = iot_data_factory_alloc (IOT_DATA_LIST);
+  iot_data_t * list = iot_data_block_alloc_data (IOT_DATA_LIST);
   list->element_type = element_type;
   return list;
 }
@@ -1051,7 +1045,7 @@ extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_dat
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)
 {
   assert ((type < IOT_DATA_STRING) && ((length > 0 && data != NULL) || length == 0));
-  iot_data_array_t * array = iot_data_factory_alloc (IOT_DATA_ARRAY);
+  iot_data_array_t * array = iot_data_block_alloc_data (IOT_DATA_ARRAY);
   size_t size = iot_data_type_size[type] * length;
   array->base.element_type = type;
   array->data = length ? data : NULL;
