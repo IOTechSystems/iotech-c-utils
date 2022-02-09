@@ -71,40 +71,40 @@ typedef struct iot_typecode_t
 } iot_typecode_t;
 
 /**
- * Type for data map iterator structure
+ * Type for data map iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_map_iter_t
 {
-  const struct iot_data_map_t * map;   /**< Pointer to data map structure */
-  struct iot_node_t * node;            /**< Pointer to map node structure */
-  uint32_t count;                      /**< Position counter */
+  const struct iot_data_map_t * _map;   /**< Pointer to data map structure */
+  struct iot_node_t * _node;            /**< Pointer to map node structure */
+  uint32_t _count;                      /**< Position counter */
 } iot_data_map_iter_t;
 
 /**
- * Type for data vector iterator structure
+ * Type for data vector iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_vector_iter_t
 {
-  const struct iot_data_vector_t * vector;  /**< Pointer to data vector structure */
-  uint32_t index;                           /**< Index of the given vector */
+  const struct iot_data_vector_t * _vector;  /**< Pointer to data vector structure */
+  uint32_t _index;                           /**< Index of the given vector */
 } iot_data_vector_iter_t;
 
 /**
- * Type for data list iterator structure
+ * Type for data list iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_list_iter_t
 {
-  const struct iot_data_list_t * list;  /**< Pointer to data list structure */
-  struct iot_element_t * element;       /**< Pointer to list element structure */
+  const struct iot_data_list_t * _list;  /**< Pointer to data list structure */
+  struct iot_element_t * _element;       /**< Pointer to list element structure */
 } iot_data_list_iter_t;
 
 /**
- * Alias for data array iterator structure
+ * Alias for data array iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_array_iter_t
 {
-  const struct iot_data_array_t * array;  /**< Pointer to data array structure */
-  uint32_t index;                         /**< Index of the given data array */
+  const struct iot_data_array_t * _array;  /**< Pointer to data array structure */
+  uint32_t _index;                         /**< Index of the given data array */
 } iot_data_array_iter_t;
 
 /** Type for data comparison function pointer */
