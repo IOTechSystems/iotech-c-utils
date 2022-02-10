@@ -126,6 +126,7 @@ typedef struct iot_node_t
   iot_data_t * key;
   iot_data_t * value;
   iot_node_colour_t colour;
+  bool heap : 1;
 } iot_node_t;
 
 typedef struct iot_data_map_t
@@ -142,6 +143,7 @@ typedef struct iot_element_t
   iot_data_t * value;
   uint32_t priority;
   uint32_t length;
+  bool heap : 1;
 } iot_element_t;
 
 /* Note: Due to size constraints, list length is carried by head element */
@@ -312,6 +314,19 @@ static inline void iot_data_block_free (iot_block_t * block)
 #endif
 }
 
+static inline void iot_element_free (iot_element_t * element)
+{
+  (element->heap) ? free (element) : iot_data_block_free ((iot_block_t*) element);
+}
+
+static iot_element_t * iot_element_alloc (void)
+{
+  bool heap = iot_data_alloc_from_heap;
+  iot_element_t * element = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
+  element->heap = heap;
+  return element;
+}
+
 static inline void iot_data_block_free_data (iot_data_t * data)
 {
   (data->heap) ? free (data) : iot_data_block_free ((iot_block_t*) data);
@@ -354,7 +369,7 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
-/*
+
   printf ("sizeof (iot_data_t): %zu\n", sizeof (iot_data_t));
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
@@ -367,7 +382,7 @@ void iot_data_init (void)
   printf ("sizeof (iot_typecode_t): %zu\n", sizeof (iot_typecode_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-*/
+
 
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
@@ -624,7 +639,7 @@ extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const 
       element->next->prev = element->prev;
       element->prev->next = element->next;
       impl->head->length--;
-      iot_data_block_free ((iot_block_t*) element);
+      iot_element_free (element);
     }
     iot_data_free (value);
   }
@@ -689,7 +704,7 @@ void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value)
   assert (list && value && (list->element_type == IOT_DATA_MULTI || list->element_type == value->type)); // Check element type matches for fixed type list
   iot_data_list_t * impl = (iot_data_list_t*) list;
   iot_element_t * element = impl->tail;
-  impl->tail = (iot_element_t*) iot_data_block_alloc ();
+  impl->tail = iot_element_alloc ();
   impl->tail->value = value;
   impl->tail->next = element;
   if (element)
@@ -722,7 +737,7 @@ iot_data_t * iot_data_list_tail_pop (iot_data_t * list)
     {
       impl->head = NULL;
     }
-    iot_data_block_free ((iot_block_t*) element);
+    iot_element_free (element);
   }
   return value;
 }
@@ -732,7 +747,7 @@ void iot_data_list_head_push (iot_data_t * list, iot_data_t * value)
   assert (list && value && (list->element_type == IOT_DATA_MULTI || list->element_type == value->type)); // Check element type matches for fixed type list
   iot_data_list_t * impl = (iot_data_list_t*) list;
   iot_element_t * element = impl->head;
-  impl->head = (iot_element_t*) iot_data_block_alloc ();
+  impl->head = iot_element_alloc ();
   impl->head->value = value;
   impl->head->prev = element;
   if (element)
@@ -766,7 +781,7 @@ iot_data_t * iot_data_list_head_pop (iot_data_t * list)
     {
       impl->tail = NULL;
     }
-    iot_data_block_free ((iot_block_t*) element);
+    iot_element_free (element);
   }
   return value;
 }
@@ -845,7 +860,7 @@ void iot_data_free (iot_data_t * data)
           iot_element_t * element = iter;
           iter = iter->next;
           iot_data_free (element->value);
-          iot_data_block_free ((iot_block_t*) element);
+          iot_element_free (element);
         }
         break;
       }
@@ -2327,19 +2342,21 @@ static inline iot_node_t * iot_node_sibling (const iot_node_t * node)
 
 static inline iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key, iot_data_t * value)
 {
-  iot_node_t * nn = (iot_node_t*) iot_data_block_alloc ();
-  nn->value = value;
-  nn->key = key;
-  nn->parent = parent;
-  nn->colour = IOT_NODE_RED;
-  return nn;
+  bool heap = iot_data_alloc_from_heap;
+  iot_node_t * node = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
+  node->heap = heap;
+  node->value = value;
+  node->key = key;
+  node->parent = parent;
+  node->colour = IOT_NODE_RED;
+  return node;
 }
 
 static void iot_node_delete (iot_node_t * node)
 {
   iot_data_free (node->key);
   iot_data_free (node->value);
-  iot_data_block_free ((iot_block_t*) node);
+  (node->heap) ? free (node) : iot_data_block_free ((iot_block_t*) node);
 }
 
 static inline iot_node_t * iot_node_minimum (iot_node_t * node)
