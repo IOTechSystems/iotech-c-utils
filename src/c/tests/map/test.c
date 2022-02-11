@@ -221,6 +221,7 @@ static void del_lots (void)
   }
   check (map, 0);
 }
+
 static void find_lots (void)
 {
   uint32_t count = 0;
