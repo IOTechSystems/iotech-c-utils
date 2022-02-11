@@ -2223,10 +2223,10 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
     case IOT_DATA_LIST:
     {
       iot_data_list_iter_t iter;
-      ret = iot_data_alloc_list();
+      ret = iot_data_alloc_list ();
 
       iot_data_list_iter (data, &iter);
-      while (iot_data_list_iter_next(&iter))
+      while (iot_data_list_iter_next (&iter))
       {
         iot_data_t * val = iot_data_copy (iot_data_list_iter_value (&iter));
         iot_data_list_head_push (ret, val);
