@@ -70,6 +70,8 @@ typedef struct iot_typecode_t
   iot_data_type_t key_type;      /**< Key type for map */
 } iot_typecode_t;
 
+typedef void * iot_data_static_t [4];
+
 /**
  * Type for data map iterator structure. Do not use struct members directly.
  */
@@ -375,6 +377,18 @@ extern iot_data_t * iot_data_alloc_uuid (void);
  * @return           Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership);
+
+/**
+ * @brief Allocate constant string data
+ *
+ * The function to allocate data for a constant string, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param str        Constant string value.
+ * @return           Pointer to the allocated data (same address as static storge)
+ */
+extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str);
 
 /**
  * @brief Allocate memory for a formatted string

@@ -188,6 +188,10 @@
 
 * `iot_data_cast`
 
+- Function added for the creation of static const data string values:
+
+* `iot_data_alloc_const_string`
+
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13
 - Support removed for CentOS 8

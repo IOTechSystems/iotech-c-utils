@@ -89,6 +89,7 @@ struct iot_data_t
   bool release : 1;
   bool release_block : 1;
   bool heap : 1;
+  bool constant : 1;
 };
 
 typedef struct iot_data_value_base_t
@@ -201,6 +202,7 @@ _Static_assert (sizeof (iot_data_array_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_ar
 _Static_assert (sizeof (iot_data_list_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_list bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_node_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_node bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bigger than IOT_MEMORY_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -332,15 +334,20 @@ static inline void iot_data_block_free_data (iot_data_t * data)
   (data->heap) ? free (data) : iot_data_block_free ((iot_block_t*) data);
 }
 
+static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
+{
+  atomic_store (&data->refs, 1);
+  data->type = type;
+  data->element_type = (type >= IOT_DATA_ARRAY && type <= IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
+  data->key_type = (type == IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
+}
+
 static void * iot_data_block_alloc_data (iot_data_type_t type)
 {
   bool heap = iot_data_alloc_from_heap;
   iot_data_t * data = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
   data->heap = heap;
-  atomic_store (&data->refs, 1);
-  data->type = type;
-  data->element_type = (type >= IOT_DATA_ARRAY && type <= IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
-  data->key_type = (type == IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
+  iot_data_block_init (data, type);
   return data;
 }
 
@@ -369,7 +376,6 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
-/*
   printf ("sizeof (iot_data_t): %zu\n", sizeof (iot_data_t));
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
@@ -380,9 +386,10 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_list_t): %zu\n", sizeof (iot_data_list_t));
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
   printf ("sizeof (iot_typecode_t): %zu\n", sizeof (iot_typecode_t));
+  printf ("sizeof (iot_data_static_t): %zu\n", sizeof (iot_data_static_t));
+  printf ("sizeof (iot_data_value_base_t): %zu\n", sizeof (iot_data_value_base_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-*/
 
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
@@ -810,7 +817,7 @@ const void * iot_data_address (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && (atomic_fetch_add (&data->refs, -1) <= 1))
+  if (data && !data->constant && (atomic_fetch_add (&data->refs, -1) <= 1))
   {
     if (data->base.meta) iot_data_free (data->base.meta);
     switch (data->type)
@@ -1023,6 +1030,17 @@ iot_data_t * iot_data_alloc_uuid (void)
   uuid_t uuid;
   uuid_generate (uuid);
   return iot_data_alloc_array (uuid, sizeof (uuid_t), IOT_DATA_UINT8, IOT_DATA_COPY);
+}
+
+iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str)
+{
+  iot_data_value_base_t * val = (iot_data_value_base_t*) data;
+  memset (data, 0, sizeof (*data));
+  iot_data_block_init (&val->base, IOT_DATA_STRING);
+  val->value.str = (char*) str;
+  val->base.hash = iot_hash (str);
+  val->base.constant = true;
+  return (iot_data_t*) val;
 }
 
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
@@ -1284,6 +1302,25 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
     iot_data_free (k);
   }
   return ret;
+}
+
+void iot_data_string_map_cached_add (iot_data_t * map, iot_data_t * cache, const char * key, iot_data_t * val)
+{
+  assert (map && (map->type == IOT_DATA_MAP) && (map->key_type == IOT_DATA_STRING));
+  assert (cache && (cache->type == IOT_DATA_MAP) && (cache->key_type == IOT_DATA_STRING));
+  iot_data_t * existing_key = (iot_data_t*) iot_data_string_map_get (cache, key);
+  iot_data_t * existing_val = (iot_data_t*) ((val->type == IOT_DATA_STRING) ? iot_data_map_get (cache, val) : NULL);
+  if (existing_val)
+  {
+    iot_data_free (val);
+    iot_data_add_ref (existing_val);
+    val = existing_val;
+  }
+  if (existing_key == NULL)
+  {
+    existing_key = iot_data_alloc_string (key, IOT_DATA_REF);
+  }
+  iot_data_map_add (map, existing_key, val);
 }
 
 void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
