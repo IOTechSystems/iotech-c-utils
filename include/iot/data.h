@@ -168,6 +168,16 @@ extern iot_data_type_t iot_data_type (const iot_data_t * data);
 extern bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type);
 
 /**
+ * @brief Check if data instance is static (const)
+ *
+ * The function to returns whether a data instance is static
+ *
+ * @param data  Pointer to data (can be NULL)
+ * @return      Whether the data is statically allocated
+ */
+extern bool iot_data_is_static (const iot_data_t * data);
+
+/**
  * @brief Get data type code
  *
  * Get the type code of data

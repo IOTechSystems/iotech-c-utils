@@ -3755,6 +3755,7 @@ static void test_data_cast (void)
 
   data = iot_data_alloc_bool (true);
   CU_ASSERT (! iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (! iot_data_is_static (data))
   iot_data_free (data);
 }
 
@@ -3765,6 +3766,7 @@ static void test_data_const_string (void)
   iot_data_t * data = iot_data_alloc_const_string (&block, str);
   CU_ASSERT (iot_data_string (data) == str)
   CU_ASSERT (data == IOT_DATA_STATIC (block))
+  CU_ASSERT (iot_data_is_static (data))
   iot_data_free (data);
   iot_data_free (data);
 }

@@ -191,7 +191,7 @@
 * `iot_data_list_iter_pointer_value`
 * `iot_data_map_iter_pointer_value`
 
-- Function added to explicitly enable data allocation from heap:
+- Functions added to explicitly enable data allocation from heap
 
 * `iot_data_alloc_heap`
 
@@ -199,9 +199,10 @@
 
 * `iot_data_cast`
 
-- Function added for the creation of static const data string values:
+- Functions added for the creation of static const data string values and to determine if statically allocated.
 
 * `iot_data_alloc_const_string`
+* `iot_data_is_static`
 
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13
