@@ -376,6 +376,7 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
+/*
   printf ("sizeof (iot_data_t): %zu\n", sizeof (iot_data_t));
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
@@ -386,10 +387,11 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_list_t): %zu\n", sizeof (iot_data_list_t));
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
   printf ("sizeof (iot_typecode_t): %zu\n", sizeof (iot_typecode_t));
-  printf ("sizeof (iot_data_static_t): %zu\n", sizeof (iot_data_static_t));
   printf ("sizeof (iot_data_value_base_t): %zu\n", sizeof (iot_data_value_base_t));
+  printf ("sizeof (iot_data_static_t): %zu\n", sizeof (iot_data_static_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
+*/
 
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
@@ -1304,6 +1306,7 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
   return ret;
 }
 
+/* WIP - Steve
 void iot_data_string_map_cached_add (iot_data_t * map, iot_data_t * cache, const char * key, iot_data_t * val)
 {
   assert (map && (map->type == IOT_DATA_MAP) && (map->key_type == IOT_DATA_STRING));
@@ -1322,6 +1325,7 @@ void iot_data_string_map_cached_add (iot_data_t * map, iot_data_t * cache, const
   }
   iot_data_map_add (map, existing_key, val);
 }
+*/
 
 void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
 {
