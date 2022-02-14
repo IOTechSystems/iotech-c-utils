@@ -595,6 +595,7 @@ static void test_data_from_json (void)
   int32_t ival32 = 0;
   bool found;
   const iot_data_t * data;
+  iot_data_t * key;
 
   iot_data_t * map = iot_data_from_json (test_config);
   CU_ASSERT (map != NULL)
@@ -604,6 +605,10 @@ static void test_data_from_json (void)
   CU_ASSERT (bval)
   found = iot_config_bool (map, "Bolean", &bval, NULL);
   CU_ASSERT (! found)
+  key = iot_data_alloc_string ("Boolean", IOT_DATA_REF);
+  bval = iot_data_map_get_bool(map, key, false);
+  CU_ASSERT (bval)
+  iot_data_free (key);
 
   sval = iot_config_string (map, "Scheduler", false,NULL);
   CU_ASSERT (sval != NULL)
@@ -642,10 +647,18 @@ static void test_data_from_json (void)
   found = iot_config_i32 (map, "Interval", &ival32, NULL);
   CU_ASSERT (found)
   CU_ASSERT (ival32 == 100000)
+  key = iot_data_alloc_string ("Interval", IOT_DATA_REF);
+  ival64 = iot_data_map_get_i64 (map, key, 666);
+  CU_ASSERT (ival64 == 100000)
+  iot_data_free (key);
 
   dval = 7.7;
   dval = iot_data_string_map_get_f64 (map, "DB", 1.0);
   CU_ASSERT (dval < 1.0)
+  key = iot_data_alloc_string ("DB", IOT_DATA_REF);
+  dval = iot_data_map_get_f64 (map, key, 1.0);
+  CU_ASSERT (dval < 1.0)
+  iot_data_free (key);
 
   const iot_data_t * vector = iot_config_vector (map, "Topics", NULL);
   CU_ASSERT (vector != NULL)
@@ -658,9 +671,17 @@ static void test_data_from_json (void)
   CU_ASSERT (map2 == NULL)
   map2 = iot_data_string_map_get_map (map, "Numbers");
   CU_ASSERT (map2 != NULL)
+  key = iot_data_alloc_string ("Numbers", IOT_DATA_REF);
+  map2 = iot_data_map_get_map (map, key);
+  CU_ASSERT (map2 != NULL)
+  iot_data_free (key);
 
   const iot_data_t * vec = iot_data_string_map_get_vector (map, "Vector");
   CU_ASSERT (vec != NULL)
+  key = iot_data_alloc_string ("Vector", IOT_DATA_REF);
+  vec = iot_data_map_get_vector (map, key);
+  CU_ASSERT (vec!= NULL)
+  iot_data_free (key);
 
   iot_data_free (map);
 
@@ -2541,6 +2562,9 @@ static void test_data_map_iter_replace (void)
   CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "1"), "One") == 0)
   CU_ASSERT (strcmp (iot_data_string_map_get_string (map, "3"), "Three") == 0)
   CU_ASSERT (iot_data_string_map_get_string (map, "4") == NULL)
+  iot_data_t * key = iot_data_alloc_string ("2", IOT_DATA_REF);
+  CU_ASSERT (strcmp (iot_data_map_get_string (map, key), "Two") == 0)
+  iot_data_free (key);
 
   // char * json = iot_data_to_json (map);
   // printf ("JSON: %s\n", json);
@@ -3261,13 +3285,21 @@ static void test_data_complex_typecode (void)
   CU_ASSERT (iot_data_map_type (data) == IOT_DATA_MULTI)
   CU_ASSERT (iot_data_matches (data, &tc))
   iot_data_free (data);
-  data = iot_data_alloc_typed_map (IOT_DATA_STRING, IOT_DATA_BOOL);
+  data = iot_data_alloc_typed_map (IOT_DATA_STRING, IOT_DATA_LIST);
   iot_data_typecode (data, &tc);
   CU_ASSERT (tc.type == IOT_DATA_MAP)
-  CU_ASSERT (tc.element_type == IOT_DATA_BOOL)
+  CU_ASSERT (tc.element_type == IOT_DATA_LIST)
   CU_ASSERT (tc.key_type == IOT_DATA_STRING)
-  CU_ASSERT (iot_data_map_type (data) == IOT_DATA_BOOL)
+  CU_ASSERT (iot_data_map_type (data) == IOT_DATA_LIST)
   CU_ASSERT (iot_data_matches (data, &tc))
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_string_map_add (data, "List", list);
+  const iot_data_t * found = iot_data_string_map_get (data, "List");
+  CU_ASSERT (found == list)
+  iot_data_t * key = iot_data_alloc_string ("List", IOT_DATA_REF);
+  found = iot_data_map_get (data, key);
+  CU_ASSERT (found == list)
+  iot_data_free (key);
   iot_data_free (data);
 }
 
@@ -3451,6 +3483,9 @@ static void test_data_alloc_pointer (void)
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_string_map_add (map, "Pointer", iot_data_alloc_pointer (dummy, NULL));
   CU_ASSERT (iot_data_string_map_get_pointer (map, "Pointer") == dummy)
+  iot_data_t * key = iot_data_alloc_string ("Pointer", IOT_DATA_REF);
+  CU_ASSERT (iot_data_map_get_pointer (map, key) == dummy)
+  iot_data_free (key);
   iot_data_free (map);
   iot_data_free (data);
   iot_data_free (data2);

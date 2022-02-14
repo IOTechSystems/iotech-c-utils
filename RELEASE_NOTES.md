@@ -155,6 +155,17 @@
 * `iot_data_map_type`
 * `iot_data_list_type`
 
+- Added typed map lookup functions:
+
+* `iot_data_map_get_string`
+* `iot_data_map_get_i64`
+* `iot_data_map_get_bool`
+* `iot_data_map_get_f64`
+* `iot_data_map_get_vector`
+* `iot_data_map_get_map`
+* `iot_data_map_get_list`
+* `iot_data_map_get_pointer`
+
 - Added functions to determine if current list, map, array or vector iterator has a next element:
 
 * `iot_data_list_iter_has_next`
