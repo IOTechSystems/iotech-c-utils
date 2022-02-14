@@ -70,7 +70,11 @@ typedef struct iot_typecode_t
   iot_data_type_t key_type;      /**< Key type for map */
 } iot_typecode_t;
 
+/**
+* Type for simple data type static allocation
+*/
 typedef void * iot_data_static_t [2 + 16 / sizeof (void*)];
+#define IOT_DATA_STATIC(s) ((iot_data_t*) (s))
 
 /**
  * Type for data map iterator structure. Do not use struct members directly.

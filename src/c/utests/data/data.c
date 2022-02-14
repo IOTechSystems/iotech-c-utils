@@ -3764,7 +3764,7 @@ static void test_data_const_string (void)
   static const char * str = "Hello";
   iot_data_t * data = iot_data_alloc_const_string (&block, str);
   CU_ASSERT (iot_data_string (data) == str)
-  CU_ASSERT ((void*) data == (void*) block)
+  CU_ASSERT (data == IOT_DATA_STATIC (block))
   iot_data_free (data);
   iot_data_free (data);
 }
