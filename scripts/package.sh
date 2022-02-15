@@ -115,7 +115,7 @@ case ${SYSTEM} in
 
     rm *.tar.gz
     ;;
-  photon*|centos*|fedora*|opensuse*)
+  photon*|fedora*|opensuse*)
     case ${BARCH} in
       arm64)
         OS_ARCH=aarch64
@@ -141,11 +141,6 @@ case ${SYSTEM} in
       fedora-34)
         RPM_DIST=fc34
         UUID_DEP=libuuid1
-        UUID_DEV_DEP=libuuid-devel
-      ;;
-      centos-8)
-        RPM_DIST=el8
-        UUID_DEP=libuuid
         UUID_DEV_DEP=libuuid-devel
       ;;
       opensuse-15.3)
