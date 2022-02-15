@@ -119,3 +119,6 @@
 * `iot_data_to_json_with_buffer`
 
 - Update to support the JSON representation of infinite floating point values
+- Function added for the creation of static const data string values
+
+* `iot_data_alloc_const_string`

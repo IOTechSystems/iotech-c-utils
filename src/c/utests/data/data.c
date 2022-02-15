@@ -3059,6 +3059,17 @@ static void test_data_alloc_pointer (void)
   iot_data_free (data3);
 }
 
+static void test_data_const_string (void)
+{
+  static iot_data_static_t block;
+  static const char * str = "Hello";
+  iot_data_t * data = iot_data_alloc_const_string (&block, str);
+  CU_ASSERT (iot_data_string (data) == str)
+  CU_ASSERT (data == IOT_DATA_STATIC (block))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -3169,6 +3180,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_add_ref", test_data_add_ref);
   CU_add_test (suite, "data_alloc_uuid", test_data_alloc_uuid);
   CU_add_test (suite, "data_alloc_pointer", test_data_alloc_pointer);
+  CU_add_test (suite, "data_const_string", test_data_const_string);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif

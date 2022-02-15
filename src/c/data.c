@@ -74,6 +74,7 @@ struct iot_data_t
   iot_data_type_t sub_type;
   bool release : 1;
   bool release_block : 1;
+  bool constant : 1;
 };
 
 struct iot_typecode_t
@@ -171,7 +172,7 @@ _Static_assert (sizeof (iot_data_vector_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_v
 _Static_assert (sizeof (iot_data_map_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_map bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_array_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_array bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_node_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_node bigger than IOT_MEMORY_BLOCK_SIZE");
-
+_Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -501,7 +502,7 @@ void * iot_data_address (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && (atomic_fetch_add (&data->refs, -1) <= 1))
+  if (data && !data->constant && (atomic_fetch_add (&data->refs, -1) <= 1))
   {
     if (data->next_or_meta) iot_data_free (data->next_or_meta);
     switch (data->type)
@@ -701,6 +702,18 @@ iot_data_t * iot_data_alloc_uuid (void)
   uuid_t uuid;
   uuid_generate (uuid);
   return iot_data_alloc_array (uuid, sizeof (uuid_t), IOT_DATA_UINT8, IOT_DATA_COPY);
+}
+
+iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str)
+{
+  iot_data_value_base_t * val = (iot_data_value_base_t*) data;
+  memset (data, 0, sizeof (*data));
+  atomic_store (&val->base.refs, 1);
+  val->base.type = IOT_DATA_STRING;
+  val->value.str = (char*) str;
+  val->base.hash = iot_hash (str);
+  val->base.constant = true;
+  return (iot_data_t*) val;
 }
 
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
