@@ -1904,6 +1904,7 @@ extern void iot_typecode_free (iot_typecode_t * typecode)
 {
   if (typecode && (typecode->type > IOT_DATA_ARRAY) && (typecode->type != IOT_DATA_POINTER))
   {
+    iot_typecode_free (typecode->element_type);
     iot_data_block_free ((iot_data_t*) typecode);
   }
 }
