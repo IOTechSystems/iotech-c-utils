@@ -74,6 +74,10 @@ typedef struct iot_typecode_t
 * Type for simple data type static allocation
 */
 typedef void * iot_data_static_t [2 + 16 / sizeof (void*)];
+
+/**
+* Macro to cast static data instance (iot_data_static_t) to a iot_data_t pointer
+*/
 #define IOT_DATA_STATIC(s) ((iot_data_t*) (s))
 
 /**
