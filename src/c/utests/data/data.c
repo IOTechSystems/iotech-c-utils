@@ -3747,15 +3747,17 @@ static void test_data_cast (void)
 
   data = iot_data_alloc_string ("hi", IOT_DATA_REF);
   CU_ASSERT (! iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (! iot_data_is_static (data))
   iot_data_free (data);
 
   data = iot_data_alloc_null ();
   CU_ASSERT (! iot_data_cast (data, IOT_DATA_UINT8, &u8))
+  CU_ASSERT (iot_data_is_static (data))
   iot_data_free (data);
 
   data = iot_data_alloc_bool (true);
   CU_ASSERT (! iot_data_cast (data, IOT_DATA_UINT8, &u8))
-  CU_ASSERT (! iot_data_is_static (data))
+  CU_ASSERT (iot_data_is_static (data))
   iot_data_free (data);
 }
 

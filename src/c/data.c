@@ -215,6 +215,12 @@ static pthread_spinlock_t iot_data_slock;
 static pthread_mutex_t iot_data_mutex;
 #endif
 
+/* Static values for boolean and null types */
+
+static iot_data_value_base_t iot_data_bool_true = { .value.bl = true, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+static iot_data_value_base_t iot_data_bool_false = { .value.bl = false, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+static iot_data_value_base_t iot_data_null = { .base.type = IOT_DATA_NULL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+
 extern void iot_data_init (void);
 extern void iot_data_map_dump (iot_data_t * map);
 static iot_data_t * iot_data_value_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered, iot_data_t * cache);
@@ -1012,15 +1018,12 @@ iot_data_t * iot_data_alloc_f64 (double val)
 
 iot_data_t * iot_data_alloc_bool (bool val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_BOOL, false);
-  data->value.bl = val;
-  return (iot_data_t*) data;
+  return val ? &iot_data_bool_true.base : &iot_data_bool_false.base;
 }
 
 iot_data_t * iot_data_alloc_null (void)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_NULL, false);
-  return (iot_data_t*) data;
+  return &iot_data_null.base;
 }
 
 iot_data_t * iot_data_alloc_uuid_string (void)
@@ -2303,6 +2306,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
   iot_data_t * ret = NULL;
 
   if (data == NULL) return ret;
+  if (data->constant) return (iot_data_t*) data;
 
   switch (data->type)
   {
