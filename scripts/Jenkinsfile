@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
-systems_x86_64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.13','alpine-3.14','debian-11','debian-10','debian-9','fedora-34','opensuse-15.3','photon-40','zephyr-2.3','zephyr-1.14','clearlinux','azuresphere-8','azuresphere-10','azuresphere-11'] as String[]
-systems_arm64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.13','alpine-3.14','debian-11','debian-10','debian-9','fedora-34','opensuse-15.3','photon-40'] as String[]
+systems_x86_64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.13','alpine-3.14','debian-11','debian-10','debian-9','opensuse-15.3','photon-40','zephyr-2.3','clearlinux','azuresphere-8','azuresphere-10','azuresphere-11'] as String[]
+systems_arm64 = ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.13','alpine-3.14','debian-11','debian-10','debian-9','opensuse-15.3','photon-40'] as String[]
 systems_arm32 = ['ubuntu-18.04','ubuntu-16.04','alpine-3.12','alpine-3.13','alpine-3.14','debian-11','debian-10','debian-9','opensuse-15.3'] as String[]
 systems_i586 = ['seawolf']
 systems_x86 = ['alpine-3.12','alpine-3.13','alpine-3.14','debian-11','debian-10']
@@ -232,8 +232,8 @@ def publishApks (arch)
 
 def publishRpms (arch)
 {
-  def rpms_x86_64 = ['fedora-34','opensuse-15.3','photon-40']
-  def rpms_arm64 = ['fedora-34','opensuse-15.3','photon-40']
+  def rpms_x86_64 = ['opensuse-15.3','photon-40']
+  def rpms_arm64 = ['opensuse-15.3','photon-40']
   def rpms_arm32 = ['opensuse-15.3']
   def rpms_i586 = []
   def rpms_x86 = []
@@ -266,7 +266,7 @@ def publishRpms (arch)
 
 def publishTars (arch)
 {
-  def tars_x86_64 = ['zephyr-2.3','zephyr-1.14','clearlinux']
+  def tars_x86_64 = ['zephyr-2.3','clearlinux']
   def tars_i586 = ['seawolf']
   def tars_arm64 = []
   def tars_arm32 = []
@@ -407,7 +407,7 @@ pipeline
   parameters
   {
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
-    choice (name: 'System', choices: ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.14','alpine-3.13','alpine-3.12','debian-11','debian-10','debian-9','fedora-34','opensuse-15.3','photon-40','zephyr-2.3','zephyr-1.14','clearlinux','seawolf','azuresphere-8','azuresphere-10','azuresphere-11','all'], description: 'System to Build')
+    choice (name: 'System', choices: ['ubuntu-20.04','ubuntu-18.04','ubuntu-16.04','alpine-3.14','alpine-3.13','alpine-3.12','debian-11','debian-10','debian-9','opensuse-15.3','photon-40','zephyr-2.3','clearlinux','seawolf','azuresphere-8','azuresphere-10','azuresphere-11','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','x86','arm64','arm32', 'i586', 'all'], description: 'Build Host Architecture')
     choice (name: 'Board', choices: ['None','frdm_k64f','qemu_x86','acrn','all'], description: 'Target Board')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')

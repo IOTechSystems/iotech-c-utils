@@ -115,7 +115,7 @@ case ${SYSTEM} in
 
     rm *.tar.gz
     ;;
-  photon*|fedora*|opensuse*)
+  photon*|opensuse*)
     case ${BARCH} in
       arm64)
         OS_ARCH=aarch64
@@ -137,11 +137,6 @@ case ${SYSTEM} in
       photon-40)
         RPM_DIST=ph4
         UUID_DEV_DEP=util-linux-devel
-      ;;
-      fedora-34)
-        RPM_DIST=fc34
-        UUID_DEP=libuuid1
-        UUID_DEV_DEP=libuuid-devel
       ;;
       opensuse-15.3)
         FPM=fpm.ruby2.5
