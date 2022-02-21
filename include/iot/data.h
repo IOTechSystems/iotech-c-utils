@@ -99,6 +99,14 @@ typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 typedef void (*iot_data_free_fn) (void * ptr);
 
 /**
+ * @brief Return the hash of a String or Array data type
+ *
+ * @param data  The data (can be NULL)
+ * @return      The hash value or zero if data is NULL or not a String or Array type
+ */
+extern uint32_t iot_data_hash (const iot_data_t * data);
+
+/**
  * @brief Increment the data reference count
  *
  * The function to increment reference count of data by 1

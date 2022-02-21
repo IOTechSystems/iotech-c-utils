@@ -122,3 +122,8 @@
 - Function added for the creation of static const data string values
 
 * `iot_data_alloc_const_string`
+
+- Function added to return data hash value:
+
+* `iot_data_hash`
+

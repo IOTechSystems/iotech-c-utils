@@ -283,6 +283,11 @@ static inline void iot_data_block_free (iot_data_t * data)
 #endif
 }
 
+uint32_t iot_data_hash (const iot_data_t * data)
+{
+  return data ? data->hash : 0u;
+}
+
 static void * iot_data_factory_alloc (iot_data_type_t type)
 {
   iot_data_t * data = iot_data_block_alloc ();
