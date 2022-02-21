@@ -199,10 +199,14 @@
 
 * `iot_data_cast`
 
-- Functions added for the creation of static const data string values and to determine if statically allocated.
+- Functions added for the creation of static const data string values and to determine if statically allocated:
 
 * `iot_data_alloc_const_string`
 * `iot_data_is_static`
+
+- Function added to return data hash value:
+
+* `iot_data_hash`
 
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13

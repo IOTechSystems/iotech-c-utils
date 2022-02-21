@@ -3791,6 +3791,23 @@ static void test_data_const_types (void)
   /* No data free as are static - so should be no memory leak */
 }
 
+static void test_data_hash (void)
+{
+  iot_data_t * data = iot_data_alloc_bool (true);
+  CU_ASSERT (iot_data_hash (data) == 0u)
+  iot_data_free (data);
+  CU_ASSERT (iot_data_hash (NULL) == 0u)
+  data = iot_data_alloc_string ("Dummy", IOT_DATA_REF);
+  CU_ASSERT (iot_data_hash (data) == 3802084562u)
+  iot_data_free (data);
+  data = iot_data_alloc_array ((uint8_t*) "binary", strlen ("binary"), IOT_DATA_UINT8, IOT_DATA_REF);
+  CU_ASSERT (iot_data_hash (data) == 2016023253u)
+  iot_data_free (data);
+  data = iot_data_alloc_binary ((uint8_t*) "bool", strlen ("bool"), IOT_DATA_REF);
+  CU_ASSERT (iot_data_hash (data) == 636838452u)
+  iot_data_free (data);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -3916,6 +3933,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_cast", test_data_cast);
   CU_add_test (suite, "data_const_string", test_data_const_string);
   CU_add_test (suite, "data_const_types", test_data_const_types);
+  CU_add_test (suite, "data_hash", test_data_hash);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif

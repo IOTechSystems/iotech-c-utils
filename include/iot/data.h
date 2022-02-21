@@ -132,6 +132,14 @@ typedef void (*iot_data_free_fn) (void * ptr);
 extern bool iot_data_alloc_heap (bool set);
 
 /**
+ * @brief Return the hash of a String, Array or Binary data type
+ *
+ * @param data  The data (can be NULL)
+ * @return      The hash value or zero if data is NULL or not a String, Array or Binary type
+ */
+extern uint32_t iot_data_hash (const iot_data_t * data);
+
+/**
  * @brief Increment the data reference count
  *
  * The function to increment reference count of data by 1
