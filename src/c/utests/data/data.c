@@ -3775,12 +3775,12 @@ static void test_data_const_string (void)
 
 static void test_data_const_types (void)
 {
-  iot_data_t * b1 = iot_data_alloc_bool (true);
-  iot_data_t * b2 = iot_data_alloc_bool (true);
-  iot_data_t * b3 = iot_data_alloc_bool (false);
-  iot_data_t * b4 = iot_data_alloc_bool (false);
-  iot_data_t * n1 = iot_data_alloc_null ();
-  iot_data_t * n2 = iot_data_alloc_null ();
+  const iot_data_t * b1 = iot_data_alloc_bool (true);
+  const iot_data_t * b2 = iot_data_alloc_bool (true);
+  const iot_data_t * b3 = iot_data_alloc_bool (false);
+  const iot_data_t * b4 = iot_data_alloc_bool (false);
+  const iot_data_t * n1 = iot_data_alloc_null ();
+  const iot_data_t * n2 = iot_data_alloc_null ();
   CU_ASSERT (iot_data_equal (b1, b2))
   CU_ASSERT (b1 == b2)
   CU_ASSERT (iot_data_equal (b3, b4))
