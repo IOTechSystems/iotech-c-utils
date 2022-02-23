@@ -1326,27 +1326,6 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
   return ret;
 }
 
-/* WIP - Steve
-void iot_data_string_map_cached_add (iot_data_t * map, iot_data_t * cache, const char * key, iot_data_t * val)
-{
-  assert (map && (map->type == IOT_DATA_MAP) && (map->key_type == IOT_DATA_STRING));
-  assert (cache && (cache->type == IOT_DATA_MAP) && (cache->key_type == IOT_DATA_STRING));
-  iot_data_t * existing_key = (iot_data_t*) iot_data_string_map_get (cache, key);
-  iot_data_t * existing_val = (iot_data_t*) ((val->type == IOT_DATA_STRING) ? iot_data_map_get (cache, val) : NULL);
-  if (existing_val)
-  {
-    iot_data_free (val);
-    iot_data_add_ref (existing_val);
-    val = existing_val;
-  }
-  if (existing_key == NULL)
-  {
-    existing_key = iot_data_alloc_string (key, IOT_DATA_REF);
-  }
-  iot_data_map_add (map, existing_key, val);
-}
-*/
-
 void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
 {
   assert (map && (map->type == IOT_DATA_MAP));

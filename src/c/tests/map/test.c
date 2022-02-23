@@ -237,6 +237,51 @@ static void find_lots (void)
   check (map, LOTS);
 }
 
+static void iot_data_string_map_cached_add (iot_data_t * map, iot_data_t * cache, iot_data_t * key, iot_data_t * val)
+{
+  assert (map && cache && key && val);
+
+  if (iot_data_type (val) == IOT_DATA_STRING)
+  {
+    iot_data_t * existing = (iot_data_t *) iot_data_map_get (cache, val);
+    if (existing)
+    {
+      printf ("Existing: %s\n", iot_data_string (val));
+      iot_data_free (val);
+      iot_data_add_ref (existing);
+      val = existing;
+    }
+    else
+    {
+      iot_data_map_add (cache, iot_data_add_ref (val), iot_data_add_ref (val));
+    }
+  }
+  iot_data_map_add (map, key, val);
+}
+
+static void cache_data (void)
+{
+  static const char * keys [10] = { "1","2","3","4","5","6","7","8","9", NULL };
+  static const char * values [10] = { "a","b","c","a","b","c","a","b","c", NULL };
+  const char ** key_ptr = keys;
+  const char ** val_ptr = values;
+  iot_data_t * cache = iot_data_alloc_typed_map (IOT_DATA_STRING, IOT_DATA_STRING);
+  iot_data_t * map =  iot_data_alloc_typed_map (IOT_DATA_STRING, IOT_DATA_STRING);
+  iot_data_t * key;
+  iot_data_t * value;
+
+  while (*key_ptr)
+  {
+    key = iot_data_alloc_string (*key_ptr++, IOT_DATA_REF);
+    value = iot_data_alloc_string (*val_ptr++, IOT_DATA_REF);
+    iot_data_string_map_cached_add (map, cache, key, value);
+  }
+  printf ("Cache size: %u\n", iot_data_map_size (cache));
+  printf ("Map size: %u\n", iot_data_map_size (map));
+  iot_data_free (map);
+  iot_data_free (cache);
+}
+
 int main (void)
 {
   case_add_3_1 ();
@@ -251,5 +296,6 @@ int main (void)
   add_lots ();
   del_lots ();
   find_lots ();
+  cache_data ();
   return 0;
 }
