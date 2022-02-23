@@ -980,6 +980,12 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   return node ? node->value : NULL;
 }
 
+const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
+}
+
 const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key)
 {
   assert (map && key);

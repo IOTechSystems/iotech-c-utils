@@ -722,6 +722,17 @@ extern bool iot_data_string_map_remove (iot_data_t * map, const char * key);
 extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key);
 
 /**
+ * @brief Get string value corresponding to key from a map
+ *
+ * Function to get a string value from a map
+ *
+ * @param map  Map from which get a value
+ * @param key  Key for the value
+ * @return     String value corresponding to the key, or NULL if not found
+ */
+extern const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key);
+
+/**
  * @brief  Get value from the map for a key provided
  *
  * The function to get the value from the map for an input key provided as a string
