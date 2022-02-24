@@ -733,6 +733,18 @@ extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_da
 extern const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key);
 
 /**
+ * @brief Get bool value corresponding to key from a map
+ *
+ * Get bool value corresponding to key from the map, if the value type is IOT_DATA_BOOL, else return default_val
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default bool value
+ * @return             Bool value corresponding to the key, or default_val if not found
+ */
+extern bool iot_data_map_get_bool (const iot_data_t * map, const iot_data_t * key, bool default_val);
+
+/**
  * @brief Get map corresponding to key from a map
  *
  * The function to get a map corresponding to key from the map, if the type value is not IOT_DATA_MAP then NULL is returned

@@ -986,6 +986,12 @@ const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t *
   return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
 }
 
+bool iot_data_map_get_bool (const iot_data_t * map, const iot_data_t * key, bool default_val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_BOOL)) ? iot_data_bool (data) : default_val;
+}
+
 const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_t * key)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
