@@ -745,6 +745,41 @@ extern const char * iot_data_map_get_string (const iot_data_t * map, const iot_d
 extern bool iot_data_map_get_bool (const iot_data_t * map, const iot_data_t * key, bool default_val);
 
 /**
+ * @brief Get double value corresponding to key from a map
+ *
+ * The function to get double value corresponding to key from the map, if the value type is IOT_DATA_FLOAT64, else return default_val
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default double value
+ * @return             Double value corresponding to the key, else default_val
+ */
+extern double iot_data_map_get_f64 (const iot_data_t * map, const iot_data_t * key, double default_val);
+
+/**
+ * @brief Get int64_t value corresponding to key from a map
+ *
+ * Function to get a string value from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default int64 value
+ * @return             int64_t value corresponding to the key, or default_val if not found
+ */
+extern int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, int64_t default_val);
+
+/**
+ * @brief Get vector corresponding to key from a map
+ *
+ * The function to get a vector corresponding to key from the map, if the type value is not IOT_DATA_VECTOR then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             Vector found by key in the map. NULL if not found or not a vector.
+ */
+extern const iot_data_t * iot_data_map_get_vector (const iot_data_t * map, const iot_data_t * key);
+
+/**
  * @brief Get map corresponding to key from a map
  *
  * The function to get a map corresponding to key from the map, if the type value is not IOT_DATA_MAP then NULL is returned
@@ -754,6 +789,20 @@ extern bool iot_data_map_get_bool (const iot_data_t * map, const iot_data_t * ke
  * @return             Map found by key in the map. NULL if not found or not a Map
  */
 extern const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief Get pointer corresponding to key from a map
+ *
+ * The function to get a pointer corresponding to key from the map, if the type value is not IOT_DATA_POINTER then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             Pointer found by key in the map. NULL if not found or not a pointer
+ */
+extern const void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key);
+
+
+
 
 /**
  * @brief  Get value from the map for a key provided
