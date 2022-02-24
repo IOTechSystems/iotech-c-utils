@@ -733,6 +733,17 @@ extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_da
 extern const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key);
 
 /**
+ * @brief Get map corresponding to key from a map
+ *
+ * The function to get a map corresponding to key from the map, if the type value is not IOT_DATA_MAP then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             Map found by key in the map. NULL if not found or not a Map
+ */
+extern const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_t * key);
+
+/**
  * @brief  Get value from the map for a key provided
  *
  * The function to get the value from the map for an input key provided as a string
