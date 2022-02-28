@@ -104,6 +104,24 @@ static void test_hash (void)
   CU_ASSERT ( iot_hash ("string") == 1386610095)
   CU_ASSERT ( iot_hash ("binary") == 2016023253)
   CU_ASSERT ( iot_hash_data ((uint8_t*) "binary", strlen ("binary")) == 2016023253)
+  uint32_t ha = iot_hash ("Dummy");
+  ha += iot_hash ("int32array");
+  ha += iot_hash ("float64array");
+  ha += iot_hash ("binary");
+  uint32_t har = iot_hash ("binary");
+  har += iot_hash ("float64array");;
+  har += iot_hash ("int32array");
+  har += iot_hash ("Dummy");
+  printf ("Additive Hash: %" PRIu32 " Reversed: %" PRIu32 "\n", ha, har);
+  ha = iot_hash ("Dummy");
+  ha ^= iot_hash ("int32array");
+  ha ^= iot_hash ("float64array");
+  ha ^= iot_hash ("binary");
+  har = iot_hash ("binary");
+  har ^= iot_hash ("float64array");;
+  har ^= iot_hash ("int32array");
+  har ^= iot_hash ("Dummy");
+  printf ("XOR Hash: %" PRIu32 " Reversed: %" PRIu32 "\n", ha, har);
 }
 
 #ifdef IOT_HAS_FILE

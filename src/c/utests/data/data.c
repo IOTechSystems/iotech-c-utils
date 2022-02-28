@@ -3808,6 +3808,30 @@ static void test_data_hash (void)
   iot_data_free (data);
 }
 
+static void test_data_multi_key_map (void)
+{
+  iot_data_t * map = iot_data_alloc_typed_map (IOT_DATA_MULTI, IOT_DATA_UINT32);
+  uint32_t i = 0;
+  while (i < 10)
+  {
+    iot_data_map_add (map, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
+    i++;
+  }
+  iot_data_map_add (map, iot_data_alloc_string ("A", IOT_DATA_REF),iot_data_alloc_ui32 (i++));
+  iot_data_map_add (map, iot_data_alloc_string ("B", IOT_DATA_REF),iot_data_alloc_ui32 (i++));
+  iot_data_map_add (map, iot_data_alloc_string ("C", IOT_DATA_REF),iot_data_alloc_ui32 (i++));
+  CU_ASSERT (iot_data_map_size (map) == 13u)
+  iot_data_t * key = iot_data_alloc_ui32 (4u);
+  const iot_data_t * val = iot_data_map_get (map, key);
+  CU_ASSERT (iot_data_ui32 (val) == 4u)
+  iot_data_free (key);
+  key = iot_data_alloc_string ("B", IOT_DATA_REF);
+  val = iot_data_map_get (map, key);
+  CU_ASSERT (iot_data_ui32 (val) == 11u)
+  iot_data_free (key);
+  iot_data_free (map);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -3934,6 +3958,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_const_string", test_data_const_string);
   CU_add_test (suite, "data_const_types", test_data_const_types);
   CU_add_test (suite, "data_hash", test_data_hash);
+  CU_add_test (suite, "data_multi_key_map", test_data_multi_key_map);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif
