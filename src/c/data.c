@@ -896,7 +896,7 @@ bool iot_data_is_static (const iot_data_t * data)
   return (data && data->constant);
 }
 
-static void iot_data_cache (iot_data_t * cache, iot_data_t ** data)
+static void iot_data_cache_add (iot_data_t * cache, iot_data_t ** data)
 {
   if (IOT_DATA_IS_KEY_TYPE ((*data)->type))
   {
@@ -929,7 +929,7 @@ void iot_data_compress_with_cache (iot_data_t * data, iot_data_t * cache)
       iot_data_vector_iter (data, &iter);
       while (iot_data_vector_iter_next (&iter))
       {
-        iot_data_cache (cache, &(iter._vector->values[iter._index]));
+        iot_data_cache_add (cache, &(iter._vector->values[iter._index]));
       }
     }
     else if (data->type == IOT_DATA_LIST)
@@ -938,7 +938,7 @@ void iot_data_compress_with_cache (iot_data_t * data, iot_data_t * cache)
       iot_data_list_iter (data, &iter);
       while (iot_data_list_iter_next (&iter))
       {
-        iot_data_cache (cache,&(iter._element->value));
+        iot_data_cache_add (cache, &(iter._element->value));
       }
     }
     else // Map
@@ -947,8 +947,8 @@ void iot_data_compress_with_cache (iot_data_t * data, iot_data_t * cache)
       iot_data_map_iter (data, &iter);
       while (iot_data_map_iter_next (&iter))
       {
-        iot_data_cache (cache,&(iter._node->value));
-        iot_data_cache (cache,&(iter._node->key));
+        iot_data_cache_add (cache, &(iter._node->value));
+        iot_data_cache_add (cache, &(iter._node->key));
       }
     }
   }

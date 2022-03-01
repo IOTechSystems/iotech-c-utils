@@ -208,6 +208,7 @@
 
 * `iot_data_hash`
 
+- Map data type updated to support all key types
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13
 - Support removed for CentOS 8
