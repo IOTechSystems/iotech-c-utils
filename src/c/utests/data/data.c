@@ -775,8 +775,8 @@ static void test_data_from_xml (void)
   CU_ASSERT (xml != NULL)
   json = iot_data_to_json (xml);
   CU_ASSERT (json != NULL)
-  // printf ("\nXML: %s\n", json);
-  // printf ("\nEXP: %s\n", expected);
+//  printf ("\nXML: %s\n", json);
+//  printf ("\nEXP: %s\n", expected);
   CU_ASSERT (strcmp (json, expected) == 0)
   free (json);
   iot_data_free (xml);
@@ -3832,6 +3832,93 @@ static void test_data_multi_key_map (void)
   iot_data_free (map);
 }
 
+static void test_data_map_struct_key (void)
+{
+  iot_data_t * map = iot_data_alloc_typed_map (IOT_DATA_MAP, IOT_DATA_UINT32);
+  iot_data_t * key1 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * key2 = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * val1 = iot_data_alloc_ui32 (11u);
+  iot_data_t * val2 =  iot_data_alloc_ui32 (22u);
+  const iot_data_t * ret;
+
+  iot_data_string_map_add (key1, "Ten", iot_data_alloc_ui32 (10u));
+  iot_data_string_map_add (key1, "Two", iot_data_alloc_ui32 (2u));
+  iot_data_string_map_add (key2, "Two", iot_data_alloc_ui32 (2u));
+  iot_data_string_map_add (key2, "Four", iot_data_alloc_ui32 (4u));
+  iot_data_string_map_add (key2, "Ten", iot_data_alloc_ui32 (10u));
+
+  uint32_t hash1 = iot_data_hash (key1);
+  uint32_t hash2 = iot_data_hash (key2);
+  CU_ASSERT (hash1 != hash2)
+
+  iot_data_map_add (map, key1, val1);
+  iot_data_map_add (map, key2, val2);
+
+  ret = iot_data_map_get (map, key1);
+  CU_ASSERT (ret != NULL)
+  CU_ASSERT (ret == val1);
+  ret = iot_data_map_get (map, key2);
+  CU_ASSERT (ret == val2);
+
+  iot_data_string_map_remove (key2, "Four");
+  hash2 = iot_data_hash (key2);
+  CU_ASSERT (hash1 == hash2)
+
+  iot_data_free (map);
+}
+
+static void test_data_list_hash (void)
+{
+  iot_data_t * list = iot_data_alloc_list ();
+  uint32_t hash1 = iot_data_hash (list);
+  CU_ASSERT (hash1 == 0)
+  iot_data_list_tail_push (list, iot_data_alloc_i32 (1));
+  uint32_t hash2 = iot_data_hash (list);
+  CU_ASSERT (hash2 != hash1)
+  iot_data_list_tail_push (list, iot_data_alloc_i32 (2));
+  uint32_t hash3 = iot_data_hash (list);
+  CU_ASSERT (hash3 != hash2)
+  iot_data_list_tail_push (list, iot_data_alloc_i32 (3));
+  uint32_t hash = iot_data_hash (list);
+  CU_ASSERT (hash != hash3)
+  iot_data_free (iot_data_list_tail_pop (list));
+  hash = iot_data_hash (list);
+  CU_ASSERT (hash == hash3)
+  iot_data_free (iot_data_list_tail_pop (list));
+  hash = iot_data_hash (list);
+  CU_ASSERT (hash == hash2)
+  iot_data_free (iot_data_list_tail_pop (list));
+  hash = iot_data_hash (list);
+  CU_ASSERT (hash == hash1)
+  iot_data_free (list);
+}
+
+static void test_data_vector_hash (void)
+{
+  iot_data_t * vec = iot_data_alloc_vector (3);
+  uint32_t hash1 = iot_data_hash (vec);
+  CU_ASSERT (hash1 == 0)
+  iot_data_vector_add (vec, 0u,iot_data_alloc_i32 (1));
+  uint32_t hash2 = iot_data_hash (vec);
+  CU_ASSERT (hash2 != hash1)
+  iot_data_vector_add (vec, 1u, iot_data_alloc_i32 (2));
+  uint32_t hash3 = iot_data_hash (vec);
+  CU_ASSERT (hash3 != hash2)
+  iot_data_vector_add (vec, 2u,iot_data_alloc_i32 (3));
+  uint32_t hash = iot_data_hash (vec);
+  CU_ASSERT (hash != hash3)
+  iot_data_vector_add (vec, 2u,NULL);
+  hash = iot_data_hash (vec);
+  CU_ASSERT (hash == hash3)
+  iot_data_vector_add (vec, 1u,NULL);
+  hash = iot_data_hash (vec);
+  CU_ASSERT (hash == hash2)
+  iot_data_vector_add (vec, 0u,NULL);
+  hash = iot_data_hash (vec);
+  CU_ASSERT (hash == hash1)
+  iot_data_free (vec);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -3959,6 +4046,9 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_const_types", test_data_const_types);
   CU_add_test (suite, "data_hash", test_data_hash);
   CU_add_test (suite, "data_multi_key_map", test_data_multi_key_map);
+  CU_add_test (suite, "data_map_struct_key", test_data_map_struct_key);
+  CU_add_test (suite, "data_list_hash", test_data_list_hash);
+  CU_add_test (suite, "data_vector_hash", test_data_vector_hash);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif

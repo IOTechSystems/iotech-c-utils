@@ -135,7 +135,7 @@ extern bool iot_data_alloc_heap (bool set);
  * @brief Return the hash of a String, Array or Binary data type
  *
  * @param data  The data (can be NULL)
- * @return      The hash value or zero if data is NULL or not a String, Array or Binary type
+ * @return      The hash value or zero if data is NULL
  */
 extern uint32_t iot_data_hash (const iot_data_t * data);
 
@@ -1278,7 +1278,7 @@ extern bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data
  *
  * @param vector  Input vector to add an element
  * @param index  Index in an vector
- * @param val    Pointer to a value of type iot_data to add
+ * @param val    Pointer to a value of type iot_data to add, can be NULL
  * Note: The ownership of the value passed is owned by the vector and cannot be reused, unless reference counted
  */
 extern void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val);
