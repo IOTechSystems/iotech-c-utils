@@ -19,12 +19,11 @@
  * Null               N        N         Y
  * Binary             Y        N         N
  * Array              Y        N         N
- * Vector             N        Y         N
- * List               N        Y         N
- * Map                N        Y         N
+ * Vector             Y        Y         N
+ * List               Y        Y         N
+ * Map                Y        Y         N
 */
 
-#define IOT_DATA_IS_KEY_TYPE(t) ((t) <= IOT_DATA_ARRAY && (t) != IOT_DATA_NULL)
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
 
 #ifdef IOT_HAS_UUID
@@ -898,23 +897,20 @@ bool iot_data_is_static (const iot_data_t * data)
 
 static void iot_data_cache_add (iot_data_t * cache, iot_data_t ** data)
 {
-  if (IOT_DATA_IS_KEY_TYPE ((*data)->type))
+  iot_data_t * cached = (iot_data_t*) iot_data_map_get (cache, *data);
+  if (cached)
   {
-    iot_data_t * cached = (iot_data_t*) iot_data_map_get (cache, *data);
-    if (cached)
-    {
-      iot_data_free (*data);
-      iot_data_add_ref (cached);
-      *data = cached;
-    }
-    else
-    {
-      iot_data_map_add (cache, iot_data_add_ref (*data), iot_data_add_ref (*data));
-    }
+    iot_data_free (*data);
+    iot_data_add_ref (cached);
+    *data = cached;
   }
-  else if ((*data)->composed)
+  else
   {
-    iot_data_compress_with_cache (*data, cache);
+    iot_data_map_add (cache, iot_data_add_ref (*data), iot_data_add_ref (*data));
+    if ((*data)->composed)
+    {
+      iot_data_compress_with_cache (*data, cache);
+    }
   }
 }
 
