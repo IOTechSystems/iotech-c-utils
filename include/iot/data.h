@@ -24,23 +24,24 @@ extern "C" {
  */
 typedef enum iot_data_type_t
 {
-  IOT_DATA_INT8 = 0,    /**< Signed 8 bit integer */
-  IOT_DATA_UINT8 = 1,   /**< Unsigned 8 bit integer */
-  IOT_DATA_INT16 = 2,   /**< Signed 16 bit integer */
-  IOT_DATA_UINT16 = 3,  /**< Unsigned 16 bit integer */
-  IOT_DATA_INT32 = 4,   /**< Signed 32 bit integer */
-  IOT_DATA_UINT32 = 5,  /**< Unsigned 32 bit integer */
-  IOT_DATA_INT64 = 6,   /**< Signed 64 bit integer */
-  IOT_DATA_UINT64 = 7,  /**< Unsigned 64 bit integer */
-  IOT_DATA_FLOAT32 = 8, /**< 32 bit float */
-  IOT_DATA_FLOAT64 = 9, /**< 64 bit float */
-  IOT_DATA_BOOL = 10,   /**< Boolean */
-  IOT_DATA_STRING = 11, /**< String */
-  IOT_DATA_NULL = 12,   /**< Null */
-  IOT_DATA_ARRAY = 13,  /**< Array */
-  IOT_DATA_MAP = 14,    /**< Map */
-  IOT_DATA_VECTOR = 15, /**< Vector */
-  IOT_DATA_POINTER = 16 /**< Pointer */
+  IOT_DATA_INT8 = 0,     /**< Signed 8 bit integer */
+  IOT_DATA_UINT8 = 1,    /**< Unsigned 8 bit integer */
+  IOT_DATA_INT16 = 2,    /**< Signed 16 bit integer */
+  IOT_DATA_UINT16 = 3,   /**< Unsigned 16 bit integer */
+  IOT_DATA_INT32 = 4,    /**< Signed 32 bit integer */
+  IOT_DATA_UINT32 = 5,   /**< Unsigned 32 bit integer */
+  IOT_DATA_INT64 = 6,    /**< Signed 64 bit integer */
+  IOT_DATA_UINT64 = 7,   /**< Unsigned 64 bit integer */
+  IOT_DATA_FLOAT32 = 8,  /**< 32 bit float */
+  IOT_DATA_FLOAT64 = 9,  /**< 64 bit float */
+  IOT_DATA_BOOL = 10,    /**< Boolean */
+  IOT_DATA_STRING = 11,  /**< String */
+  IOT_DATA_NULL = 12,    /**< Null */
+  IOT_DATA_ARRAY = 13,   /**< Array */
+  IOT_DATA_MAP = 14,     /**< Map */
+  IOT_DATA_VECTOR = 15,  /**< Vector */
+  IOT_DATA_POINTER = 16, /**< Pointer */
+  IOT_DATA_MULTI = 17    /**< Multiple data types */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
 /**
@@ -102,9 +103,25 @@ typedef void (*iot_data_free_fn) (void * ptr);
  * @brief Return the hash of a String or Array data type
  *
  * @param data  The data (can be NULL)
- * @return      The hash value or zero if data is NULL or not a String or Array type
+ * @return      The hash value or zero if data is NULL
  */
 extern uint32_t iot_data_hash (const iot_data_t * data);
+
+/**
+ * @brief Compress a composed data type (Vector, List or Map) by eliminating duplicate data values
+ *
+ * @param data  The data to be compressed.
+ */
+extern void iot_data_compress (iot_data_t * data);
+
+/**
+ * @brief Compress a composed data type (Vector, List or Map) by eliminating duplicate data values
+ *        using a supplied Map cache
+ *
+ * @param data  The data to be compressed.
+ * @param cache The map used to eliminate duplicate values (must be a generic map with key type IOT_DATA_MULTI)
+ */
+extern void iot_data_compress_with_cache (iot_data_t * data, iot_data_t * cache);
 
 /**
  * @brief Increment the data reference count
@@ -115,6 +132,13 @@ extern uint32_t iot_data_hash (const iot_data_t * data);
  * @return      Returned pointer to data
  */
 extern iot_data_t * iot_data_add_ref (const iot_data_t * data);
+
+/**
+ * @brief Return the data reference count
+ * @param data  Pointer to data (can be NULL)
+ * @return      Data reference count or zero if data NULL
+ */
+extern uint32_t iot_data_ref_count (const iot_data_t * data);
 
 /**
  * @brief Free memory allocated to data
