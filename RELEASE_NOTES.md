@@ -208,6 +208,11 @@
 
 * `iot_data_hash`
 
+- Functions added to compress composed data values (Map, Vector and List):
+
+* `iot_data_compress`
+* `iot_data_compress_with_cache`
+
 - Map data type updated to support all key types
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13
