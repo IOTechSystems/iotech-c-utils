@@ -1,5 +1,23 @@
 #include "iot/iot.h"
 
+static void cache_purge (iot_data_t ** cache)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_MULTI);
+  iot_data_map_iter_t iter;
+
+  iot_data_map_iter (*cache, &iter);
+  while (iot_data_map_iter_next (&iter))
+  {
+    const iot_data_t *  key = iot_data_map_iter_key (&iter);
+    if (iot_data_ref_count (key) > 3u)
+    {
+      iot_data_map_add (map, iot_data_add_ref (key), iot_data_add_ref (key));
+    }
+  }
+  iot_data_free (*cache);
+  *cache = map;
+}
+
 int main (int argc, char ** argv)
 {
   iot_data_t * map;
@@ -24,6 +42,8 @@ int main (int argc, char ** argv)
     map = iot_data_from_json (json);
     free (json);
     iot_data_compress_with_cache (map, cache);
+    cache_purge (&cache);
+//    iot_data_free (map);
   }
 
   iot_data_map_iter_t iter;
@@ -33,19 +53,19 @@ int main (int argc, char ** argv)
     const iot_data_t * key = iot_data_map_iter_key (&iter);
     if (iot_data_type (key) == IOT_DATA_STRING)
     {
-      if (iot_data_ref_count (key) > 1) dup_strings++;
+      dup_strings++;
     }
     if (iot_data_type (key) == IOT_DATA_INT64)
     {
-      if (iot_data_ref_count (key) > 1) dup_ints++;
+      dup_ints++;
     }
     if (iot_data_type (key) == IOT_DATA_MAP)
     {
-      if (iot_data_ref_count (key) > 1) dup_maps++;
+      dup_maps++;
     }
     if (iot_data_type (key) == IOT_DATA_VECTOR)
     {
-      if (iot_data_ref_count (key) > 1) dup_vectors++;
+      dup_vectors++;
     }
   }
   printf ("Cache size: %d\n", iot_data_map_size (cache));
@@ -54,7 +74,7 @@ int main (int argc, char ** argv)
   printf ("Cached Ints: # %" PRIu32 "\n", dup_ints);
   printf ("Cached Vectors: # %" PRIu32 "\n", dup_vectors);
 
-  iot_data_free (cache);
+  //iot_data_free (cache);
   /*
   json = iot_data_to_json (map);
   iot_file_write ("/tmp/test.json", json);
