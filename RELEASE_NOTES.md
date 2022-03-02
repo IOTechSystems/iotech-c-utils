@@ -219,4 +219,5 @@
 - Support removed for CentOS 8
 - Support removed for Zephyr 1.14
 - Support removed for Ubuntu 16.04
+- Support removed for Debian 9
 - Support removed for AzureSphere API 8 and 10
