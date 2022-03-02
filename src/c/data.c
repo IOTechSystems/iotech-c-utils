@@ -390,7 +390,7 @@ uint32_t iot_data_hash (const iot_data_t * data)
       }
     }
   }
-  return data ? data->hash : 0u;
+  return da ? da->hash : 0u;
 }
 
 static inline void iot_element_free (iot_element_t * element)
