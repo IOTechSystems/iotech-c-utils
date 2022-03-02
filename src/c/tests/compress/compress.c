@@ -42,7 +42,7 @@ int main (int argc, char ** argv)
     free (json);
     iot_data_compress_with_cache (map, cache);
     cache_purge (&cache);
-//    iot_data_free (map);
+ //   iot_data_free (map);
   }
 
   iot_data_map_iter_t iter;
@@ -73,7 +73,7 @@ int main (int argc, char ** argv)
   printf ("Cached Ints: # %" PRIu32 "\n", dup_ints);
   printf ("Cached Vectors: # %" PRIu32 "\n", dup_vectors);
 
-  //iot_data_free (cache);
+//  iot_data_free (cache);
   /*
   json = iot_data_to_json (map);
   iot_file_write ("/tmp/test.json", json);
