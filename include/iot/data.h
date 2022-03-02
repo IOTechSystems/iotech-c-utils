@@ -135,19 +135,39 @@ extern bool iot_data_alloc_heap (bool set);
  * @brief Return the hash of a String, Array or Binary data type
  *
  * @param data  The data (can be NULL)
- * @return      The hash value or zero if data is NULL or not a String, Array or Binary type
+ * @return      The hash value or zero if data is NULL
  */
 extern uint32_t iot_data_hash (const iot_data_t * data);
 
 /**
+ * @brief Compress a composed data type (Vector, List or Map) by eliminating duplicate data values
+ *
+ * @param data  The data to be compressed.
+ */
+extern void iot_data_compress (iot_data_t * data);
+
+/**
+ * @brief Compress a composed data type (Vector, List or Map) by eliminating duplicate data values
+ *        using a supplied Map cache
+ *
+ * @param data  The data to be compressed.
+ * @param cache The map used to eliminate duplicate values (must be a generic map with key type IOT_DATA_MULTI)
+ */
+extern void iot_data_compress_with_cache (iot_data_t * data, iot_data_t * cache);
+
+/**
  * @brief Increment the data reference count
- *
- * The function to increment reference count of data by 1
- *
  * @param data  Pointer to data
  * @return      Returned pointer to data
  */
 extern iot_data_t * iot_data_add_ref (const iot_data_t * data);
+
+/**
+ * @brief Return the data reference count
+ * @param data  Pointer to data
+ * @return      Returned pointer to data
+ */
+extern uint32_t iot_data_ref_count (const iot_data_t * data);
 
 /**
  * @brief Free memory allocated to data
@@ -1258,7 +1278,7 @@ extern bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data
  *
  * @param vector  Input vector to add an element
  * @param index  Index in an vector
- * @param val    Pointer to a value of type iot_data to add
+ * @param val    Pointer to a value of type iot_data to add, can be NULL
  * Note: The ownership of the value passed is owned by the vector and cannot be reused, unless reference counted
  */
 extern void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val);
