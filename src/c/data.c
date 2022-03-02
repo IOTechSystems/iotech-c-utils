@@ -529,15 +529,12 @@ extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data)
 
 static int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
 {
-  if (v1->type == v2->type)
-  {
-    if (v1->type == IOT_DATA_STRING)
-    {
-      return strcmp (((const iot_data_value_t *) v1)->value.str, ((const iot_data_value_t *) v2)->value.str);
-    }
-    return (iot_data_equal (v1, v2)) ? 0 : ((iot_data_hash (v1) < iot_data_hash (v2)) ? -1 : 1);
-  }
-  return (v1->type < v2->type) ? -1 : 1;
+  if (iot_data_equal (v1, v2)) return 0;
+  if (v1->type != v2->type) return (v1->type < v2->type) ? -1 : 1;
+  if (v1->type == IOT_DATA_STRING) return strcmp (((const iot_data_value_t*) v1)->value.str, ((const iot_data_value_t*) v2)->value.str);
+  if (v1->type == IOT_DATA_FLOAT32) return (((const iot_data_value_t*) v1)->value.f32 < ((const iot_data_value_t*) v2)->value.f32) ? -1 : 1;
+  if (v1->type == IOT_DATA_FLOAT64) return (((const iot_data_value_t*) v1)->value.f64 < ((const iot_data_value_t*) v2)->value.f64) ? -1 : 1;
+  return (iot_data_hash (v1) < iot_data_hash (v2)) ? -1 : 1;
 }
 
 bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
