@@ -3856,9 +3856,9 @@ static void test_data_map_struct_key (void)
 
   ret = iot_data_map_get (map, key1);
   CU_ASSERT (ret != NULL)
-  CU_ASSERT (ret == val1);
+  CU_ASSERT (ret == val1)
   ret = iot_data_map_get (map, key2);
-  CU_ASSERT (ret == val2);
+  CU_ASSERT (ret == val2)
 
   iot_data_string_map_remove (key2, "Four");
   hash2 = iot_data_hash (key2);

@@ -2862,7 +2862,6 @@ static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * v
     iot_data_free (key);
     iot_data_free (node->value);
     node->value = value;
-    key = node->key;
   }
   else
   {
