@@ -652,6 +652,7 @@ iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn)
   iot_data_pointer_t * pointer = iot_data_block_alloc_data (IOT_DATA_POINTER);
   pointer->free_fn = free_fn;
   pointer->value = ptr;
+  pointer->base.hash = (uint32_t) (intptr_t) ptr;
   return (iot_data_t*) pointer;
 }
 
