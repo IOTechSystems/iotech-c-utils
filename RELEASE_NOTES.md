@@ -127,3 +127,9 @@
 
 * `iot_data_hash`
 
+- Map data type updated to support all key types
+- Functions added to compress composed data values (Map, Vector and List):
+
+* `iot_data_compress`
+* `iot_data_compress_with_cache`
+
