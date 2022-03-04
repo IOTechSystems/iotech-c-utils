@@ -1489,7 +1489,7 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
 void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
 {
   assert (map && key && val);
-  assert (map->type == IOT_DATA_MAP && key->type != IOT_DATA_NULL);
+  assert (map->type == IOT_DATA_MAP);
   assert (key->type == map->key_type || map->key_type == IOT_DATA_MULTI);
   assert (map->element_type == val->type || map->element_type == IOT_DATA_MULTI);
   if (iot_node_add ((iot_data_map_t*) map, key, val))
