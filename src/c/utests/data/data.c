@@ -709,6 +709,18 @@ static void test_data_from_json (void)
   iot_data_free (nd);
 }
 
+static void test_data_compress (void)
+{
+  iot_data_t * cache = iot_data_alloc_map (IOT_DATA_MULTI);
+  iot_data_t * map1 = iot_data_from_json (test_config);
+  iot_data_t * map2 = iot_data_from_json (test_config);
+  iot_data_compress_with_cache (map1, cache);
+  iot_data_compress_with_cache (map2, cache);
+  iot_data_free (map1);
+  iot_data_free (map2);
+  iot_data_free (cache);
+}
+
 static void test_data_from_json2 (void)
 {
   static const char * config =
@@ -4108,6 +4120,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_list_hash", test_data_list_hash);
   CU_add_test (suite, "data_vector_hash", test_data_vector_hash);
   CU_add_test (suite, "data_compare", test_data_compare);
+  CU_add_test (suite, "data_compress", test_data_compress);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif
