@@ -572,7 +572,7 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
         iot_data_vector_iter (v2, &iter2);
         while (equal && (iot_data_vector_iter_next (&iter1)) && (iot_data_vector_iter_next (&iter2)))
         {
-          equal = iot_data_equal (iot_data_vector_iter_value (&iter1), iot_data_vector_iter_value (&iter2));
+          equal = (iot_data_compare (iot_data_vector_iter_value (&iter1), iot_data_vector_iter_value (&iter2)) == 0);
         }
       }
       return equal ? 0 : ((size1 == size2) ? (iot_data_hash (v1) < iot_data_hash (v2) ? -1 : 1) : (size1 < size2) ? -1 : 1);
@@ -590,7 +590,7 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
         iot_data_list_iter (v2, &iter2);
         while (equal && iot_data_list_iter_next (&iter1) && iot_data_list_iter_next (&iter2))
         {
-          equal = iot_data_equal (iot_data_list_iter_value (&iter1), iot_data_list_iter_value (&iter2));
+          equal = (iot_data_compare (iot_data_list_iter_value (&iter1), iot_data_list_iter_value (&iter2)) == 0);
         }
       }
       return equal ? 0 : ((len1 == len2) ? (iot_data_hash (v1) < iot_data_hash (v2) ? -1 : 1) : (len1 < len2) ? -1 : 1);
@@ -612,7 +612,7 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
           const iot_data_t *value1 = iot_data_map_iter_value (&iter1);
           const iot_data_t *key2 = iot_data_map_iter_key (&iter2);
           const iot_data_t *value2 = iot_data_map_iter_value (&iter2);
-          equal = iot_data_equal (key1, key2) && iot_data_equal (value1, value2);
+          equal = ((iot_data_compare (key1, key2) == 0) && (iot_data_compare (value1, value2) == 0));
         }
       }
       return equal ? 0 : ((size1 == size2) ? (iot_data_hash (v1) < iot_data_hash (v2) ? -1 : 1) : (size1 < size2) ? -1 : 1);
