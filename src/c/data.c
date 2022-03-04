@@ -536,13 +536,13 @@ static int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
   switch (v1->type)
   {
     case IOT_DATA_FLOAT32:
-      return ((((const iot_data_value_t*) v1)->value.f32 == ((const iot_data_value_t*) v2)->value.f32)) ? 0 :
+      return (((const iot_data_value_t*) v1)->value.f32 == ((const iot_data_value_t*) v2)->value.f32) ? 0 :
         ((((const iot_data_value_t*) v1)->value.f32 < ((const iot_data_value_t*) v2)->value.f32)) ? -1 : 1;
     case IOT_DATA_FLOAT64:
-      return ((((const iot_data_value_t*) v1)->value.f64 == ((const iot_data_value_t*) v2)->value.f64)) ? 0 :
+      return (((const iot_data_value_t*) v1)->value.f64 == ((const iot_data_value_t*) v2)->value.f64) ? 0 :
         ((((const iot_data_value_t*) v1)->value.f64 < ((const iot_data_value_t*) v2)->value.f64)) ? -1 : 1;
     case IOT_DATA_BOOL:
-      return ((((const iot_data_value_t*) v1)->value.bl == ((const iot_data_value_t*) v2)->value.bl)) ? 0 :
+      return (((const iot_data_value_t*) v1)->value.bl == ((const iot_data_value_t*) v2)->value.bl) ? 0 :
         (((const iot_data_value_t*) v1)->value.bl) ? 1 : -1;
     case IOT_DATA_POINTER:
       return (((const iot_data_pointer_t*) v1)->value == ((const iot_data_pointer_t*) v2)->value) ? 0 :
