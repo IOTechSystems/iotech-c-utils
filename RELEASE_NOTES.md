@@ -208,6 +208,10 @@
 
 * `iot_data_hash`
 
+- Function added to compare data values:
+
+* `iot_data_compare`
+
 - Functions added to compress composed data values (Map, Vector and List):
 
 * `iot_data_compress`
