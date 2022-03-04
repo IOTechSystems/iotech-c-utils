@@ -714,9 +714,13 @@ static void test_data_compress (void)
   iot_data_t * cache = iot_data_alloc_map (IOT_DATA_MULTI);
   iot_data_t * map1 = iot_data_from_json (test_config);
   iot_data_t * map2 = iot_data_from_json (test_config);
+  iot_data_t * l1 = iot_data_alloc_list ();
+  iot_data_list_head_push (l1, iot_data_alloc_string ("Interval", IOT_DATA_REF));
+  iot_data_string_map_add (map2, "list", l1);
   iot_data_compress_with_cache (map1, cache);
   iot_data_compress_with_cache (map2, cache);
   iot_data_free (map1);
+  iot_data_compress (map2);
   iot_data_free (map2);
   iot_data_free (cache);
 }
@@ -3963,6 +3967,7 @@ static void test_data_compare (void)
   data_compare_check (iot_data_alloc_pointer ((void*) 0, NULL), iot_data_alloc_pointer ((void*) 0, NULL),iot_data_alloc_pointer ((void*) 2, NULL));
   data_compare_check (iot_data_alloc_string ("a", IOT_DATA_COPY), iot_data_alloc_string ("a", IOT_DATA_COPY),iot_data_alloc_string ("b", IOT_DATA_COPY));
   CU_ASSERT (iot_data_compare (NULL, NULL) == 0)
+  CU_ASSERT (iot_data_compare (iot_data_alloc_null (), iot_data_alloc_null ()) == 0)
   data_compare_check (NULL, NULL, iot_data_alloc_null ());
   data_compare_check (iot_data_alloc_binary (bin1, sizeof (bin1), IOT_DATA_REF), iot_data_alloc_binary (bin1b, sizeof (bin1b), IOT_DATA_REF), iot_data_alloc_binary (bin2, sizeof (bin2), IOT_DATA_REF));
   v1 = iot_data_alloc_vector (1u);
