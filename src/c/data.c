@@ -10,6 +10,22 @@
 #include <stdarg.h>
 #include <math.h>
 
+/* IOT Data Type      Key      Composed  Constant
+ *
+ * Integer Types      Y        N         N
+ * Boolean            Y        N         Y
+ * Pointer            Y        N         N
+ * String             Y        N         Can be
+ * Null               N        N         Y
+ * Binary             Y        N         N
+ * Array              Y        N         N
+ * Vector             Y        Y         N
+ * List               Y        Y         N
+ * Map                Y        Y         N
+*/
+
+#define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
+
 #ifdef IOT_HAS_UUID
 #include <uuid/uuid.h>
 #ifndef UUID_STR_LEN
@@ -89,6 +105,9 @@ struct iot_data_t
   bool release : 1;
   bool release_block : 1;
   bool heap : 1;
+  bool constant : 1;
+  bool composed : 1;
+  bool rehash : 1;
 };
 
 typedef struct iot_data_value_base_t
@@ -126,6 +145,7 @@ typedef struct iot_node_t
   iot_data_t * key;
   iot_data_t * value;
   iot_node_colour_t colour;
+  bool heap : 1;
 } iot_node_t;
 
 typedef struct iot_data_map_t
@@ -142,6 +162,7 @@ typedef struct iot_element_t
   iot_data_t * value;
   uint32_t priority;
   uint32_t length;
+  bool heap : 1;
 } iot_element_t;
 
 /* Note: Due to size constraints, list length is carried by head element */
@@ -183,6 +204,12 @@ typedef struct iot_memory_block_t
   struct iot_memory_block_t * next;
 } iot_memory_block_t;
 
+typedef struct iot_data_struct_dummy_t
+{
+  iot_data_static_t s1;
+  iot_data_static_t s2;
+} iot_data_struct_dummy_t;
+
 // Data size and alignment sanity checks
 
 _Static_assert ((IOT_DATA_BLOCK_SIZE % 8) == 0, "IOT_DATA_BLOCK_SIZE not 8 byte multiple");
@@ -199,6 +226,8 @@ _Static_assert (sizeof (iot_data_array_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_ar
 _Static_assert (sizeof (iot_data_list_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_list bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_node_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_node bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bigger than IOT_MEMORY_BLOCK_SIZE");
+_Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
+_Static_assert (sizeof (iot_data_struct_dummy_t) == 2 * sizeof (iot_data_static_t), "iot_data_static_t structs not aligned for iot_data_static_t");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -211,10 +240,16 @@ static pthread_spinlock_t iot_data_slock;
 static pthread_mutex_t iot_data_mutex;
 #endif
 
+/* Static values for boolean and null types */
+
+static iot_data_value_base_t iot_data_bool_true = { .value.bl = true, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+static iot_data_value_base_t iot_data_bool_false = { .value.bl = false, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+static iot_data_value_base_t iot_data_null = { .base.type = IOT_DATA_NULL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+
 extern void iot_data_init (void);
 extern void iot_data_map_dump (iot_data_t * map);
 static iot_data_t * iot_data_value_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered, iot_data_t * cache);
-static void iot_node_free (iot_node_t * node);
+static void iot_node_free (iot_data_map_t * map, iot_node_t * node);
 static iot_node_t * iot_node_next (iot_node_t * iter);
 static iot_node_t * iot_node_prev (iot_node_t * iter);
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
@@ -312,9 +347,76 @@ static inline void iot_data_block_free (iot_block_t * block)
 #endif
 }
 
+static inline void iot_data_map_hash (iot_data_t * map, const iot_data_t * key, const iot_data_t * value)
+{
+  uint32_t key_hash = iot_data_hash (key);
+  uint32_t val_hash = iot_data_hash (value);
+  map->hash ^= key_hash;
+  if (val_hash != key_hash) map->hash ^= val_hash; // Only apply value hash if different from key hash or hashes cancel out
+}
+
+uint32_t iot_data_hash (const iot_data_t * data)
+{
+  iot_data_t * da = (iot_data_t*) data;
+  if (da && da->rehash)
+  {
+    da->hash = 0;
+    da->rehash = false;
+    if (da->type == IOT_DATA_VECTOR)
+    {
+      iot_data_vector_iter_t iter;
+      iot_data_vector_iter (da, &iter);
+      while (iot_data_vector_iter_next (&iter))
+      {
+        da->hash ^= iot_data_hash (iot_data_vector_iter_value (&iter));
+      }
+    }
+    else if (da->type == IOT_DATA_LIST)
+    {
+      iot_data_list_iter_t iter;
+      iot_data_list_iter (da, &iter);
+      while (iot_data_list_iter_next (&iter))
+      {
+        da->hash ^= iot_data_hash (iot_data_list_iter_value (&iter));
+      }
+    }
+    else // IOT_DATA_MAP
+    {
+      iot_data_map_iter_t iter;
+      iot_data_map_iter (da, &iter);
+      while (iot_data_map_iter_next (&iter))
+      {
+        iot_data_map_hash (da, iot_data_map_iter_key (&iter), iot_data_map_iter_value (&iter));
+      }
+    }
+  }
+  return da ? da->hash : 0u;
+}
+
+static inline void iot_element_free (iot_element_t * element)
+{
+  (element->heap) ? free (element) : iot_data_block_free ((iot_block_t*) element);
+}
+
+static iot_element_t * iot_element_alloc (void)
+{
+  bool heap = iot_data_alloc_from_heap;
+  iot_element_t * element = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
+  element->heap = heap;
+  return element;
+}
+
 static inline void iot_data_block_free_data (iot_data_t * data)
 {
   (data->heap) ? free (data) : iot_data_block_free ((iot_block_t*) data);
+}
+
+static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
+{
+  atomic_store (&data->refs, 1);
+  data->type = type;
+  data->element_type = (type >= IOT_DATA_ARRAY && type <= IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
+  data->key_type = (type == IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
 }
 
 static void * iot_data_block_alloc_data (iot_data_type_t type)
@@ -322,10 +424,8 @@ static void * iot_data_block_alloc_data (iot_data_type_t type)
   bool heap = iot_data_alloc_from_heap;
   iot_data_t * data = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
   data->heap = heap;
-  atomic_store (&data->refs, 1);
-  data->type = type;
-  data->element_type = (type >= IOT_DATA_ARRAY && type <= IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
-  data->key_type = (type == IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
+  data->composed = IOT_DATA_IS_COMPOSED_TYPE (type);
+  iot_data_block_init (data, type);
   return data;
 }
 
@@ -365,6 +465,8 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_list_t): %zu\n", sizeof (iot_data_list_t));
   printf ("sizeof (iot_data_pointer_t): %zu\n", sizeof (iot_data_pointer_t));
   printf ("sizeof (iot_typecode_t): %zu\n", sizeof (iot_typecode_t));
+  printf ("sizeof (iot_data_value_base_t): %zu\n", sizeof (iot_data_value_base_t));
+  printf ("sizeof (iot_data_static_t): %zu\n", sizeof (iot_data_static_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
 */
@@ -383,6 +485,11 @@ iot_data_t * iot_data_add_ref (const iot_data_t * data)
 {
   if (data) atomic_fetch_add (&((iot_data_t*) data)->refs, 1);
   return (iot_data_t*) data;
+}
+
+uint32_t iot_data_ref_count (const iot_data_t * data)
+{
+  return data ? atomic_load (&data->refs) : 0;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)
@@ -420,99 +527,110 @@ extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data)
   return data ? data->base.meta : NULL;
 }
 
-static int iot_data_key_cmp (const iot_data_t * v1, const iot_data_t * v2)
+int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
 {
-  if (v1->type == v2->type)
-  {
-    switch (v1->type)
-    {
-      case IOT_DATA_STRING:
-        return strcmp (((const iot_data_value_t *) v1)->value.str, ((const iot_data_value_t *) v2)->value.str);
-      case IOT_DATA_BINARY:
-      case IOT_DATA_ARRAY:
-        return (iot_data_equal (v1, v2)) ? 0 : ((v1->hash < v2->hash) ? -1 : 1);
-      default:
-      {
-        uint64_t ui1 = ((const iot_data_value_t *) v1)->value.ui64;
-        uint64_t ui2 = ((const iot_data_value_t *) v2)->value.ui64;
-        return (ui1 == ui2) ? 0 : ((ui1 < ui2) ? -1 : 1);
-      }
-    }
-  }
-  return (v1->type < v2->type) ? -1 : 1;
-}
+  if (v1 == v2) return 0;
+  if (v1 == NULL || v2 == NULL) return (v1 == NULL) ? -1 : 1;
+  if (v1->type != v2->type) return (v1->type < v2->type) ? -1 : 1;
 
-bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
-{
-  if (v1 == v2) return true;
-  if (v1 == NULL || v2 == NULL) return false;
-  if (v1->type == v2->type)
+  switch (v1->type)
   {
-    switch (v1->type)
+    case IOT_DATA_FLOAT32:
+      return (((const iot_data_value_t*) v1)->value.f32 == ((const iot_data_value_t*) v2)->value.f32) ? 0 :
+        (((const iot_data_value_t*) v1)->value.f32 < ((const iot_data_value_t*) v2)->value.f32) ? -1 : 1;
+    case IOT_DATA_FLOAT64:
+      return (((const iot_data_value_t*) v1)->value.f64 == ((const iot_data_value_t*) v2)->value.f64) ? 0 :
+        (((const iot_data_value_t*) v1)->value.f64 < ((const iot_data_value_t*) v2)->value.f64) ? -1 : 1;
+    case IOT_DATA_BOOL:
+      return (((const iot_data_value_t*) v1)->value.bl == ((const iot_data_value_t*) v2)->value.bl) ? 0 :
+        (((const iot_data_value_t*) v1)->value.bl) ? 1 : -1;
+    case IOT_DATA_POINTER:
+      return (((const iot_data_pointer_t*) v1)->value == ((const iot_data_pointer_t*) v2)->value) ? 0 :
+        (((const iot_data_pointer_t*) v1)->value < ((const iot_data_pointer_t*) v2)->value) ? -1 : 1;
+    case IOT_DATA_STRING:
+      return (((const iot_data_value_t*) v1)->value.str == ((const iot_data_value_t*) v2)->value.str) ? 0 :
+        strcmp (((const iot_data_value_t*) v1)->value.str, ((const iot_data_value_t*) v2)->value.str);
+    case IOT_DATA_NULL: return 0;
+    case IOT_DATA_BINARY:
+    case IOT_DATA_ARRAY:
     {
-      case IOT_DATA_STRING:
-        return ((const iot_data_value_t*) v1)->value.str == ((const iot_data_value_t*) v2)->value.str || ((v1->hash == v2->hash) && (strcmp (((const iot_data_value_t*) v1)->value.str, ((const iot_data_value_t*) v2)->value.str) == 0));
-      case IOT_DATA_NULL: return true;
-      case IOT_DATA_BINARY:
-      case IOT_DATA_ARRAY:
+      const iot_data_array_t * a1 = (const iot_data_array_t*) v1;
+      const iot_data_array_t * a2 = (const iot_data_array_t*) v2;
+      return ((a1->length == a2->length) && (v1->element_type == v2->element_type)) ? memcmp (a1->data, a2->data, a1->length * iot_data_type_size[a1->base.element_type]) :
+        (v1->hash < v2->hash ? -1 : 1);
+    }
+    case IOT_DATA_VECTOR:
+    {
+      uint32_t size1 = ((const iot_data_vector_t*) v1)->size;
+      uint32_t size2 = ((const iot_data_vector_t*) v2)->size;
+      bool equal = (size1 == size2);
+      if (equal)
       {
-        const iot_data_array_t * a1 = (const iot_data_array_t*) v1;
-        const iot_data_array_t * a2 = (const iot_data_array_t*) v2;
-        return  ((a1->length == a2->length) && (v1->element_type == v2->element_type) && ((a1->data == a2->data) || ((v1->hash == v2->hash) && (memcmp (a1->data, a2->data, a1->length * iot_data_type_size[a1->base.element_type]) == 0))));
-      }
-      case IOT_DATA_VECTOR:
-      {
-        if (iot_data_vector_size (v1) != iot_data_vector_size (v2)) return false;
         iot_data_vector_iter_t iter1;
         iot_data_vector_iter_t iter2;
         iot_data_vector_iter (v1, &iter1);
         iot_data_vector_iter (v2, &iter2);
-        while ((iot_data_vector_iter_next (&iter1)) && (iot_data_vector_iter_next (&iter2)))
+        while (equal && (iot_data_vector_iter_next (&iter1)) && (iot_data_vector_iter_next (&iter2)))
         {
-          if (!iot_data_equal (iot_data_vector_iter_value (&iter1), iot_data_vector_iter_value (&iter2))) return false;
+          equal = iot_data_equal (iot_data_vector_iter_value (&iter1), iot_data_vector_iter_value (&iter2));
         }
-        return true;
       }
-      case IOT_DATA_MAP:
+      return equal ? 0 : ((size1 == size2) ? (iot_data_hash (v1) < iot_data_hash (v2) ? -1 : 1) : (size1 < size2) ? -1 : 1);
+    }
+    case IOT_DATA_LIST:
+    {
+      uint32_t len1 = iot_data_list_length (v1);
+      uint32_t len2 = iot_data_list_length (v2);
+      bool equal = (len1 == len2);
+      if (equal)
       {
-        if (iot_data_map_size (v1) != iot_data_map_size (v2)) return false;
-        iot_data_map_iter_t iter1;
-        iot_data_map_iter_t iter2;
-        iot_data_map_iter (v1, &iter1);
-        iot_data_map_iter (v2, &iter2);
-        while ((iot_data_map_iter_next (&iter1)) && (iot_data_map_iter_next (&iter2)))
-        {
-          const iot_data_t * key1 = iot_data_map_iter_key (&iter1);
-          const iot_data_t * value1 = iot_data_map_iter_value (&iter1);
-          const iot_data_t * key2 = iot_data_map_iter_key (&iter2);
-          const iot_data_t * value2 = iot_data_map_iter_value (&iter2);
-          if (!iot_data_equal (key1, key2) || !iot_data_equal (value1, value2)) return false;
-        }
-        return true;
-      }
-      case IOT_DATA_POINTER: return (((const iot_data_pointer_t*) v1)->value == ((const iot_data_pointer_t*) v2)->value);
-      case IOT_DATA_LIST:
-      {
-        if (iot_data_list_length (v1) != iot_data_list_length (v2)) return false;
         iot_data_list_iter_t iter1;
         iot_data_list_iter_t iter2;
         iot_data_list_iter (v1, &iter1);
         iot_data_list_iter (v2, &iter2);
-        while ((iot_data_list_iter_next (&iter1)) && (iot_data_list_iter_next (&iter2)))
+        while (equal && iot_data_list_iter_next (&iter1) && iot_data_list_iter_next (&iter2))
         {
-          if (!iot_data_equal (iot_data_list_iter_value (&iter1), iot_data_list_iter_value (&iter2))) return false;
+          equal = iot_data_equal (iot_data_list_iter_value (&iter1), iot_data_list_iter_value (&iter2));
         }
-        return true;
       }
-      default: return (((const iot_data_value_t*) v1)->value.ui64 == ((const iot_data_value_t*) v2)->value.ui64);
+      return equal ? 0 : ((len1 == len2) ? (iot_data_hash (v1) < iot_data_hash (v2) ? -1 : 1) : (len1 < len2) ? -1 : 1);
     }
+    case IOT_DATA_MAP:
+    {
+      uint32_t size1 = ((const iot_data_map_t*) v1)->size;
+      uint32_t size2 =((const iot_data_map_t*) v2)->size;
+      bool equal = (size1 == size2);
+      if (equal)
+      {
+        iot_data_map_iter_t iter1;
+        iot_data_map_iter_t iter2;
+        iot_data_map_iter (v1, &iter1);
+        iot_data_map_iter (v2, &iter2);
+        while (equal && (iot_data_map_iter_next (&iter1)) && (iot_data_map_iter_next (&iter2)))
+        {
+          const iot_data_t *key1 = iot_data_map_iter_key (&iter1);
+          const iot_data_t *value1 = iot_data_map_iter_value (&iter1);
+          const iot_data_t *key2 = iot_data_map_iter_key (&iter2);
+          const iot_data_t *value2 = iot_data_map_iter_value (&iter2);
+          equal = iot_data_equal (key1, key2) && iot_data_equal (value1, value2);
+        }
+      }
+      return equal ? 0 : ((size1 == size2) ? (iot_data_hash (v1) < iot_data_hash (v2) ? -1 : 1) : (size1 < size2) ? -1 : 1);
+    }
+    default: break;
   }
-  return false;
+  return (((const iot_data_value_t*) v1)->value.ui64 == ((const iot_data_value_t*) v2)->value.ui64) ? 0 :
+    (((const iot_data_value_t*) v1)->value.ui64 < ((const iot_data_value_t*) v2)->value.ui64) ? -1 : 1;
+}
+
+bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
+{
+  return (iot_data_compare (v1, v2) == 0);
 }
 
 iot_data_t * iot_data_alloc_map (iot_data_type_t key_type)
 {
-  assert (key_type < IOT_DATA_MAP && key_type != IOT_DATA_NULL);
+  assert (key_type != IOT_DATA_NULL);
   iot_data_map_t * map = iot_data_block_alloc_data (IOT_DATA_MAP);
   map->base.key_type = key_type;
   return (iot_data_t*) map;
@@ -557,6 +675,7 @@ iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn)
   iot_data_pointer_t * pointer = iot_data_block_alloc_data (IOT_DATA_POINTER);
   pointer->free_fn = free_fn;
   pointer->value = ptr;
+  pointer->base.hash = (uint32_t) (intptr_t) ptr;
   return (iot_data_t*) pointer;
 }
 
@@ -624,7 +743,8 @@ extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const 
       element->next->prev = element->prev;
       element->prev->next = element->next;
       impl->head->length--;
-      iot_data_block_free ((iot_block_t*) element);
+      iot_element_free (element);
+      list->rehash = true;
     }
     iot_data_free (value);
   }
@@ -680,7 +800,12 @@ iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_
 {
   assert (iter && iter->_list && value && (iter->_list->base.element_type == IOT_DATA_MULTI || iter->_list->base.element_type == value->type));
   iot_data_t * res = (iter->_element) ? iter->_element->value : NULL;
-  if (res) iter->_element->value = value;
+  if (res)
+  {
+    iot_data_t * base = (iot_data_t*) &iter->_list->base;
+    base->rehash = true;
+    iter->_element->value = value;
+  }
   return res;
 }
 
@@ -689,7 +814,7 @@ void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value)
   assert (list && value && (list->element_type == IOT_DATA_MULTI || list->element_type == value->type)); // Check element type matches for fixed type list
   iot_data_list_t * impl = (iot_data_list_t*) list;
   iot_element_t * element = impl->tail;
-  impl->tail = (iot_element_t*) iot_data_block_alloc ();
+  impl->tail = iot_element_alloc ();
   impl->tail->value = value;
   impl->tail->next = element;
   if (element)
@@ -701,6 +826,7 @@ void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value)
     impl->head = impl->tail;
   }
   impl->head->length++;
+  list->hash ^= iot_data_hash (value);
 }
 
 iot_data_t * iot_data_list_tail_pop (iot_data_t * list)
@@ -722,7 +848,8 @@ iot_data_t * iot_data_list_tail_pop (iot_data_t * list)
     {
       impl->head = NULL;
     }
-    iot_data_block_free ((iot_block_t*) element);
+    list->rehash = true;
+    iot_element_free (element);
   }
   return value;
 }
@@ -732,7 +859,7 @@ void iot_data_list_head_push (iot_data_t * list, iot_data_t * value)
   assert (list && value && (list->element_type == IOT_DATA_MULTI || list->element_type == value->type)); // Check element type matches for fixed type list
   iot_data_list_t * impl = (iot_data_list_t*) list;
   iot_element_t * element = impl->head;
-  impl->head = (iot_element_t*) iot_data_block_alloc ();
+  impl->head = iot_element_alloc ();
   impl->head->value = value;
   impl->head->prev = element;
   if (element)
@@ -745,6 +872,7 @@ void iot_data_list_head_push (iot_data_t * list, iot_data_t * value)
     impl->tail = impl->head;
     impl->head->length = 1;
   }
+  list->hash ^= iot_data_hash (value);
 }
 
 iot_data_t * iot_data_list_head_pop (iot_data_t * list)
@@ -766,7 +894,8 @@ iot_data_t * iot_data_list_head_pop (iot_data_t * list)
     {
       impl->tail = NULL;
     }
-    iot_data_block_free ((iot_block_t*) element);
+    list->rehash = true;
+    iot_element_free (element);
   }
   return value;
 }
@@ -782,6 +911,73 @@ bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type)
   return (data && (data->type == type));
 }
 
+bool iot_data_is_static (const iot_data_t * data)
+{
+  return (data && data->constant);
+}
+
+static void iot_data_cache_add (iot_data_t * cache, iot_data_t ** data)
+{
+  iot_data_t * cached = (iot_data_t*) iot_data_map_get (cache, *data);
+  if (cached)
+  {
+    iot_data_free (*data);
+    iot_data_add_ref (cached);
+    *data = cached;
+  }
+  else
+  {
+    iot_data_map_add (cache, iot_data_add_ref (*data), iot_data_add_ref (*data));
+    if ((*data)->composed)
+    {
+      iot_data_compress_with_cache (*data, cache);
+    }
+  }
+}
+
+void iot_data_compress_with_cache (iot_data_t * data, iot_data_t * cache)
+{
+  assert (data && cache && (cache->key_type == IOT_DATA_MULTI) && (cache->element_type == IOT_DATA_MULTI));
+  if (data->composed)
+  {
+    if (data->type == IOT_DATA_VECTOR)
+    {
+      iot_data_vector_iter_t iter;
+      iot_data_vector_iter (data, &iter);
+      while (iot_data_vector_iter_next (&iter))
+      {
+        iot_data_cache_add (cache, &(iter._vector->values[iter._index]));
+      }
+    }
+    else if (data->type == IOT_DATA_LIST)
+    {
+      iot_data_list_iter_t iter;
+      iot_data_list_iter (data, &iter);
+      while (iot_data_list_iter_next (&iter))
+      {
+        iot_data_cache_add (cache, &(iter._element->value));
+      }
+    }
+    else // Map
+    {
+      iot_data_map_iter_t iter;
+      iot_data_map_iter (data, &iter);
+      while (iot_data_map_iter_next (&iter))
+      {
+        iot_data_cache_add (cache, &(iter._node->value));
+        iot_data_cache_add (cache, &(iter._node->key));
+      }
+    }
+  }
+}
+
+void iot_data_compress (iot_data_t * data)
+{
+  iot_data_t * cache = iot_data_alloc_typed_map (IOT_DATA_MULTI, IOT_DATA_MULTI);
+  iot_data_compress_with_cache (data, cache);
+  iot_data_free (cache);
+}
+
 const void * iot_data_address (const iot_data_t * data)
 {
   if (data)
@@ -795,7 +991,7 @@ const void * iot_data_address (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && (atomic_fetch_add (&data->refs, -1) <= 1))
+  if (data && !data->constant && (atomic_fetch_add (&data->refs, -1) <= 1))
   {
     if (data->base.meta) iot_data_free (data->base.meta);
     switch (data->type)
@@ -817,7 +1013,7 @@ void iot_data_free (iot_data_t * data)
       }
       case IOT_DATA_MAP:
       {
-        iot_node_free (((iot_data_map_t*) data)->tree);
+        iot_node_free ((iot_data_map_t*) data, ((iot_data_map_t*) data)->tree);
         break;
       }
       case IOT_DATA_VECTOR:
@@ -845,7 +1041,7 @@ void iot_data_free (iot_data_t * data)
           iot_element_t * element = iter;
           iter = iter->next;
           iot_data_free (element->value);
-          iot_data_block_free ((iot_block_t*) element);
+          iot_element_free (element);
         }
         break;
       }
@@ -915,6 +1111,7 @@ iot_data_t * iot_data_alloc_i8 (int8_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT8, false);
   data->value.i8 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
@@ -922,6 +1119,7 @@ iot_data_t * iot_data_alloc_ui8 (uint8_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT8, false);
   data->value.ui8 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
@@ -929,6 +1127,7 @@ iot_data_t * iot_data_alloc_i16 (int16_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT16, false);
   data->value.i16 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
@@ -936,6 +1135,7 @@ iot_data_t * iot_data_alloc_ui16 (uint16_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT16, false);
   data->value.ui16 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
@@ -943,6 +1143,7 @@ iot_data_t * iot_data_alloc_i32 (int32_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT32, false);
   data->value.i32 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
@@ -950,6 +1151,7 @@ iot_data_t * iot_data_alloc_ui32 (uint32_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT32, false);
   data->value.ui32 = val;
+  data->base.hash = val;
   return (iot_data_t*) data;
 }
 
@@ -957,6 +1159,7 @@ iot_data_t * iot_data_alloc_i64 (int64_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_INT64, false);
   data->value.i64 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
@@ -964,6 +1167,7 @@ iot_data_t * iot_data_alloc_ui64 (uint64_t val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_UINT64, false);
   data->value.ui64 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
@@ -971,6 +1175,7 @@ iot_data_t * iot_data_alloc_f32 (float val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT32, false);
   data->value.f32 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
@@ -978,20 +1183,18 @@ iot_data_t * iot_data_alloc_f64 (double val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT64, false);
   data->value.f64 = val;
+  data->base.hash = (uint32_t) val;
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_bool (bool val)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_BOOL, false);
-  data->value.bl = val;
-  return (iot_data_t*) data;
+  return val ? &iot_data_bool_true.base : &iot_data_bool_false.base;
 }
 
 iot_data_t * iot_data_alloc_null (void)
 {
-  iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_NULL, false);
-  return (iot_data_t*) data;
+  return &iot_data_null.base;
 }
 
 iot_data_t * iot_data_alloc_uuid_string (void)
@@ -1008,6 +1211,17 @@ iot_data_t * iot_data_alloc_uuid (void)
   uuid_t uuid;
   uuid_generate (uuid);
   return iot_data_alloc_array (uuid, sizeof (uuid_t), IOT_DATA_UINT8, IOT_DATA_COPY);
+}
+
+iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str)
+{
+  iot_data_value_base_t * val = (iot_data_value_base_t*) data;
+  memset (data, 0, sizeof (*data));
+  iot_data_block_init (&val->base, IOT_DATA_STRING);
+  val->value.str = (char*) str;
+  val->base.hash = iot_hash (str);
+  val->base.constant = true;
+  return (iot_data_t*) val;
 }
 
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
@@ -1247,6 +1461,7 @@ bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key)
     iot_data_map_t * mp = (iot_data_map_t*) map;
     if ((ret = iot_node_remove (mp, key)))
     {
+      mp->base.rehash = true;
       mp->size--;
     }
   }
@@ -1273,9 +1488,10 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
 
 void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
 {
-  assert (map && (map->type == IOT_DATA_MAP));
-  assert (key && key->type == map->key_type);
-  assert (val && (map->element_type == IOT_DATA_MULTI || map->element_type == val->type)); // Check value type matches for fixed type map
+  assert (map && key && val);
+  assert (map->type == IOT_DATA_MAP);
+  assert (key->type == map->key_type || map->key_type == IOT_DATA_MULTI);
+  assert (map->element_type == val->type || map->element_type == IOT_DATA_MULTI);
   if (iot_node_add ((iot_data_map_t*) map, key, val))
   {
     ((iot_data_map_t*) map)->size++;
@@ -1325,6 +1541,54 @@ const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char *
   return value;
 }
 
+const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
+}
+
+int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, int64_t default_val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_INT64)) ? iot_data_i64 (data) : default_val;
+}
+
+bool iot_data_map_get_bool (const iot_data_t * map, const iot_data_t * key, bool default_val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_BOOL)) ? iot_data_bool (data) : default_val;
+}
+
+double iot_data_map_get_f64 (const iot_data_t * map, const iot_data_t * key, double default_val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_FLOAT64)) ? iot_data_f64 (data) : default_val;
+}
+
+const void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_POINTER)) ? iot_data_pointer (data) : NULL);
+}
+
+const iot_data_t * iot_data_map_get_vector (const iot_data_t * map, const iot_data_t * key)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_VECTOR)) ? data : NULL);
+}
+
+const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_t * key)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_MAP)) ? data : NULL);
+}
+
+const iot_data_t * iot_data_map_get_list (const iot_data_t * map, const iot_data_t * key)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_LIST)) ? data : NULL);
+}
+
 const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
@@ -1349,6 +1613,12 @@ double iot_data_string_map_get_f64 (const iot_data_t * map, const char * key, do
   return (data && (iot_data_type (data) == IOT_DATA_FLOAT64)) ? iot_data_f64 (data) : default_val;
 }
 
+const void * iot_data_string_map_get_pointer (const iot_data_t * map, const char * key)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_POINTER)) ? iot_data_pointer (data) : NULL);
+}
+
 const iot_data_t * iot_data_string_map_get_vector (const iot_data_t * map, const char * key)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
@@ -1361,10 +1631,10 @@ const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, const ch
   return ((data && (iot_data_type (data) == IOT_DATA_MAP)) ? data : NULL);
 }
 
-const void * iot_data_string_map_get_pointer (const iot_data_t * map, const char * key)
+const iot_data_t * iot_data_string_map_get_list (const iot_data_t * map, const char * key)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_POINTER)) ? iot_data_pointer (data) : NULL);
+  return ((data && (iot_data_type (data) == IOT_DATA_LIST)) ? data : NULL);
 }
 
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
@@ -1383,9 +1653,17 @@ void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val)
   iot_data_vector_t * arr = (iot_data_vector_t*) vector;
   assert (vector && (vector->type == IOT_DATA_VECTOR));
   assert (index < arr->size);
-  assert (val && (vector->element_type == IOT_DATA_MULTI || vector->element_type == val->type)); // Check element type matches for fixed type vector
+  assert ((val == NULL) || (val && (vector->element_type == IOT_DATA_MULTI || vector->element_type == val->type))); // Check element type matches for fixed type vector
   iot_data_t * element = arr->values[index];
-  iot_data_free (element);
+  if (element)
+  {
+    vector->rehash = true;
+    iot_data_free (element);
+  }
+  else
+  {
+    vector->hash ^= iot_data_hash (val);
+  }
   arr->values[index] = val;
 }
 
@@ -1597,10 +1875,19 @@ iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * 
 {
   assert (iter && iter->_vector && value && (iter->_vector->base.element_type == IOT_DATA_MULTI || iter->_vector->base.element_type == value->type));
   iot_data_t * res = NULL;
-  if (iter->_index < iter->_vector->size)
+  iot_data_vector_t * vector = (iot_data_vector_t*) iter->_vector;
+  if (iter->_index < vector->size)
   {
-    res = iter->_vector->values[iter->_index];
-    iter->_vector->values[iter->_index] = value;
+    res = vector->values[iter->_index];
+    if (res)
+    {
+      vector->base.rehash = true;
+    }
+    else
+    {
+      if (value) vector->base.hash ^= iot_data_hash (value);
+    }
+    vector->values[iter->_index] = value;
   }
   return res;
 }
@@ -2188,6 +2475,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
   iot_data_t * ret = NULL;
 
   if (data == NULL) return ret;
+  if (data->constant) return (iot_data_t*) data;
 
   switch (data->type)
   {
@@ -2327,19 +2615,21 @@ static inline iot_node_t * iot_node_sibling (const iot_node_t * node)
 
 static inline iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key, iot_data_t * value)
 {
-  iot_node_t * nn = (iot_node_t*) iot_data_block_alloc ();
-  nn->value = value;
-  nn->key = key;
-  nn->parent = parent;
-  nn->colour = IOT_NODE_RED;
-  return nn;
+  bool heap = iot_data_alloc_from_heap;
+  iot_node_t * node = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
+  node->heap = heap;
+  node->value = value;
+  node->key = key;
+  node->parent = parent;
+  node->colour = IOT_NODE_RED;
+  return node;
 }
 
 static void iot_node_delete (iot_node_t * node)
 {
   iot_data_free (node->key);
   iot_data_free (node->value);
-  iot_data_block_free ((iot_block_t*) node);
+  (node->heap) ? free (node) : iot_data_block_free ((iot_block_t*) node);
 }
 
 static inline iot_node_t * iot_node_minimum (iot_node_t * node)
@@ -2503,7 +2793,7 @@ static inline iot_node_t * iot_node_find (const iot_node_t * node, const iot_dat
 {
   while (node)
   {
-    int cmp = iot_data_key_cmp (node->key, key);
+    int cmp = iot_data_compare (node->key, key);
     if (cmp == 0) break;
     node = (cmp > 0) ? node->left : node->right;
   }
@@ -2518,11 +2808,11 @@ static void iot_node_insert (iot_data_map_t * map, iot_data_t * key, iot_data_t 
   while (x)
   {
     y = x;
-    x = (iot_data_key_cmp (key, x->key) < 0) ? x->left : x->right;
+    x = (iot_data_compare (key, x->key) < 0) ? x->left : x->right;
   }
   node->parent = y;
   if (y == NULL) map->tree = node;
-  else if (iot_data_key_cmp (key, y->key) < 0) y->left = node;
+  else if (iot_data_compare (key, y->key) < 0) y->left = node;
   else y->right = node;
 
   if (node->parent)
@@ -2592,6 +2882,7 @@ static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * v
   iot_node_t * node = iot_node_find (map->tree, key);
   if (node)
   {
+    map->base.rehash = true;
     iot_data_free (key);
     iot_data_free (node->value);
     node->value = value;
@@ -2599,16 +2890,17 @@ static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * v
   else
   {
     iot_node_insert (map, key, value);
+    iot_data_map_hash (&map->base, key, value);
   }
   return (node == NULL);
 }
 
-static void iot_node_free (iot_node_t * node)
+static void iot_node_free (iot_data_map_t * map, iot_node_t * node)
 {
   if (node)
   {
-    iot_node_free (node->left);
-    iot_node_free (node->right);
+    iot_node_free (map, node->left);
+    iot_node_free (map, node->right);
     iot_node_delete (node);
   }
 }

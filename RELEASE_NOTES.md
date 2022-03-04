@@ -155,6 +155,17 @@
 * `iot_data_map_type`
 * `iot_data_list_type`
 
+- Added typed map lookup functions:
+
+* `iot_data_map_get_string`
+* `iot_data_map_get_i64`
+* `iot_data_map_get_bool`
+* `iot_data_map_get_f64`
+* `iot_data_map_get_vector`
+* `iot_data_map_get_map`
+* `iot_data_map_get_list`
+* `iot_data_map_get_pointer`
+
 - Added functions to determine if current list, map, array or vector iterator has a next element:
 
 * `iot_data_list_iter_has_next`
@@ -180,7 +191,7 @@
 * `iot_data_list_iter_pointer_value`
 * `iot_data_map_iter_pointer_value`
 
-- Function added to explicitly enable data allocation from heap:
+- Functions added to explicitly enable data allocation from heap
 
 * `iot_data_alloc_heap`
 
@@ -188,8 +199,29 @@
 
 * `iot_data_cast`
 
+- Functions added for the creation of static const data string values and to determine if statically allocated:
+
+* `iot_data_alloc_const_string`
+* `iot_data_is_static`
+
+- Function added to return data hash value:
+
+* `iot_data_hash`
+
+- Function added to compare data values:
+
+* `iot_data_compare`
+
+- Functions added to compress composed data values (Map, Vector and List):
+
+* `iot_data_compress`
+* `iot_data_compress_with_cache`
+
+- Map data type updated to support all key types
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13
 - Support removed for CentOS 8
 - Support removed for Zephyr 1.14
+- Support removed for Ubuntu 16.04
+- Support removed for Debian 9
 - Support removed for AzureSphere API 8 and 10

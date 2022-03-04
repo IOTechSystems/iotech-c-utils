@@ -71,6 +71,16 @@ typedef struct iot_typecode_t
 } iot_typecode_t;
 
 /**
+* Type for simple data type static allocation
+*/
+typedef void * iot_data_static_t [2 + 16 / sizeof (void*)];
+
+/**
+* Macro to cast static data instance (iot_data_static_t) to a iot_data_t pointer
+*/
+#define IOT_DATA_STATIC(s) ((iot_data_t*) (s))
+
+/**
  * Type for data map iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_map_iter_t
@@ -122,14 +132,42 @@ typedef void (*iot_data_free_fn) (void * ptr);
 extern bool iot_data_alloc_heap (bool set);
 
 /**
+ * @brief Return the hash of a String, Array or Binary data type
+ *
+ * @param data  The data (can be NULL)
+ * @return      The hash value or zero if data is NULL
+ */
+extern uint32_t iot_data_hash (const iot_data_t * data);
+
+/**
+ * @brief Compress a composed data type (Vector, List or Map) by eliminating duplicate data values
+ *
+ * @param data  The data to be compressed.
+ */
+extern void iot_data_compress (iot_data_t * data);
+
+/**
+ * @brief Compress a composed data type (Vector, List or Map) by eliminating duplicate data values
+ *        using a supplied Map cache
+ *
+ * @param data  The data to be compressed.
+ * @param cache The map used to eliminate duplicate values (must be a generic map with key type IOT_DATA_MULTI)
+ */
+extern void iot_data_compress_with_cache (iot_data_t * data, iot_data_t * cache);
+
+/**
  * @brief Increment the data reference count
- *
- * The function to increment reference count of data by 1
- *
  * @param data  Pointer to data
  * @return      Returned pointer to data
  */
 extern iot_data_t * iot_data_add_ref (const iot_data_t * data);
+
+/**
+ * @brief Return the data reference count
+ * @param data  Pointer to data
+ * @return      Returned pointer to data
+ */
+extern uint32_t iot_data_ref_count (const iot_data_t * data);
 
 /**
  * @brief Free memory allocated to data
@@ -160,6 +198,16 @@ extern iot_data_type_t iot_data_type (const iot_data_t * data);
  * @return      Whether the data is of the given type. Returns false is data is NULL.
  */
 extern bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type);
+
+/**
+ * @brief Check if data instance is static (const)
+ *
+ * The function to returns whether a data instance is static
+ *
+ * @param data  Pointer to data (can be NULL)
+ * @return      Whether the data is statically allocated
+ */
+extern bool iot_data_is_static (const iot_data_t * data);
 
 /**
  * @brief Get data type code
@@ -205,6 +253,8 @@ extern const char * iot_data_type_string (iot_data_type_t type);
  * @brief Set metadata for data
  *
  * Set metadata on a data item. Meta data elements are reference counted by the associated data element.
+ * This function should not be used with null or boolean data types as these are implemented as shared
+ * constant instances.
  *
  * @param  data  Pointer to data
  * @param  metadata  Pointer to metadata
@@ -375,6 +425,18 @@ extern iot_data_t * iot_data_alloc_uuid (void);
  * @return           Pointer to the allocated memory
  */
 extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership);
+
+/**
+ * @brief Allocate constant string data
+ *
+ * The function to allocate data for a constant string, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param str        Constant string value.
+ * @return           Pointer to the allocated data (same address as static storge)
+ */
+extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str);
 
 /**
  * @brief Allocate memory for a formatted string
@@ -985,6 +1047,97 @@ extern bool iot_data_string_map_remove (iot_data_t * map, const char * key);
 extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key);
 
 /**
+ * @brief Get string value corresponding to key from a map
+ *
+ * Function to get a string value from a map
+ *
+ * @param map  Map from which get a value
+ * @param key  Key for the value
+ * @return     String value corresponding to the key, or NULL if not found
+ */
+extern const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief Get int64_t value corresponding to key from a map
+ *
+ * Function to get a string value from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default int64 value
+ * @return             int64_t value corresponding to the key, or default_val if not found
+ */
+extern int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, int64_t default_val);
+
+/**
+ * @brief Get bool value corresponding to key from a map
+ *
+ * Get bool value corresponding to key from the map, if the value type is IOT_DATA_BOOL, else return default_val
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default bool value
+ * @return             Bool value corresponding to the key, or default_val if not found
+ */
+extern bool iot_data_map_get_bool (const iot_data_t * map, const iot_data_t * key, bool default_val);
+
+/**
+ * @brief Get double value corresponding to key from a map
+ *
+ * The function to get double value corresponding to key from the map, if the value type is IOT_DATA_FLOAT64, else return default_val
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default double value
+ * @return             Double value corresponding to the key, else default_val
+ */
+extern double iot_data_map_get_f64 (const iot_data_t * map, const iot_data_t * key, double default_val);
+
+/**
+ * @brief Get vector corresponding to key from a map
+ *
+ * The function to get a vector corresponding to key from the map, if the type value is not IOT_DATA_VECTOR then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             Vector found by key in the map. NULL if not found or not a vector.
+ */
+extern const iot_data_t * iot_data_map_get_vector (const iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief Get map corresponding to key from a string map
+ *
+ * The function to get a map corresponding to key from the map, if the type value is not IOT_DATA_MAP then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             Map found by key in the map. NULL if not found or not a Map
+ */
+extern const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief Get list corresponding to key from a map
+ *
+ * The function to get a list corresponding to key from the map, if the type value is not IOT_DATA_LIST then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             List found by key in the map. NULL if not found or not a list
+ */
+extern const iot_data_t * iot_data_map_get_list (const iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief Get pointer corresponding to key from a map
+ *
+ * The function to get a pointer corresponding to key from the map, if the type value is not IOT_DATA_POINTER then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             Pointer found by key in the map. NULL if not found or not a pointer
+ */
+extern const void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key);
+
+/**
  * @brief  Get value from the map for a key provided
  *
  * The function to get the value from the map for an input key provided as a string
@@ -1049,7 +1202,7 @@ extern double iot_data_string_map_get_f64 (const iot_data_t * map, const char * 
  *
  * @param map          Map from which get a value
  * @param key          String key for the value
- * @return             Vector found by key in the map. NULL if not found or not a vector.
+ * @return             Vector found by key in the map. NULL if not found or element not a vector.
  */
 extern const iot_data_t * iot_data_string_map_get_vector (const iot_data_t * map, const char * key);
 
@@ -1060,9 +1213,20 @@ extern const iot_data_t * iot_data_string_map_get_vector (const iot_data_t * map
  *
  * @param map          Map from which get a value
  * @param key          String key for the value
- * @return             Map found by key in the map. NULL if not found or not a map.
+ * @return             Map found by key in the map. NULL if not found or element not a map.
  */
 extern const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, const char * key);
+
+/**
+ * @brief Get list corresponding to key from a string map
+ *
+ * The function to get a list corresponding to key from the map, if the type value is not IOT_DATA_LIST then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          String key for the value
+ * @return             List found by key in the map. NULL if not found or element not a list.
+ */
+extern const iot_data_t * iot_data_string_map_get_list (const iot_data_t * map, const char * key);
 
 /**
  * @brief Get pointer corresponding to key from a string map
@@ -1114,7 +1278,7 @@ extern bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data
  *
  * @param vector  Input vector to add an element
  * @param index  Index in an vector
- * @param val    Pointer to a value of type iot_data to add
+ * @param val    Pointer to a value of type iot_data to add, can be NULL
  * Note: The ownership of the value passed is owned by the vector and cannot be reused, unless reference counted
  */
 extern void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t * val);
@@ -1550,6 +1714,15 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
  * @return       'true' if data1 & data2 are equal, 'false' otherwise
  */
 extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
+
+/**
+ * @brief Compare two data instances, returning whether the fist is less than, equal to or greater than the second
+ *
+ * @param  data1 Input data1 (can be NULL)
+ * @param  data2 Input data2 (can be NULL)
+ * @return       Returns zero if data1 equals data2, a value less than zero data1 less than data2, a value greater than zero if data1 greater than data2
+ */
+extern int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2);
 
 /**
  * @brief Copy data
