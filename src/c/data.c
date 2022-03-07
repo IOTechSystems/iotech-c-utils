@@ -2011,6 +2011,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
     {
       iot_data_value_t * val = iot_data_value_alloc (data->type, false);
       val->value.ui64 = (((const iot_data_value_t*) data)->value.ui64);
+      val->base.hash = data->hash;
       ret = (iot_data_t*) val;
     }
   }
