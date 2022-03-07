@@ -133,3 +133,7 @@
 * `iot_data_compress`
 * `iot_data_compress_with_cache`
 
+- New callbacks added to scheduler to improve schedule life cycle feedback
+
+* `iot_schedule_add_run_callback`
+* `iot_schedule_add_abort_callback`
