@@ -541,21 +541,21 @@ static void test_data_to_json (void)
   free (json);
 }
 
+static const char * test_config =
+  "{"
+  "\"Interval\":100000,"
+  "\"Scheduler\":\"scheduler\","
+  "\"ThreadPool\":\"pool\","
+  "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10,\"Retain\":true}],"
+  "\"Null\": null,"
+  "\"Boolean\":true,"
+  "\"Numbers\":{ \"One\":1, \"Two\":2, \"Three\":3 },"
+  "\"Vector\":[ \"A\",\"B\"],"
+  "\"DB\":0.5,"
+  "\"Escaped\":\"Double \\\" Quote\""
+  "}";
 static void test_data_from_json (void)
 {
-  static const char * config =
-  "{"
-    "\"Interval\":100000,"
-    "\"Scheduler\":\"scheduler\","
-    "\"ThreadPool\":\"pool\","
-    "\"Topics\": [{\"Topic\":\"test/tube\",\"Priority\":10,\"Retain\":true}],"
-    "\"Null\": null,"
-    "\"Boolean\":true,"
-    "\"Numbers\":{ \"One\":1, \"Two\":2, \"Three\":3 },"
-    "\"Vector\":[ \"A\",\"B\"],"
-    "\"DB\":0.5,"
-    "\"Escaped\":\"Double \\\" Quote\""
-  "}";
   static const char * config2 =
   "{"
     "\"Interval\":100,"
@@ -569,7 +569,7 @@ static void test_data_from_json (void)
   bool found;
   const iot_data_t * data;
 
-  iot_data_t * map = iot_data_from_json (config);
+  iot_data_t * map = iot_data_from_json (test_config);
   CU_ASSERT (map != NULL)
 
   found = iot_config_bool (map, "Boolean", &bval, NULL);
@@ -638,7 +638,7 @@ static void test_data_from_json (void)
   iot_data_free (map);
 
   iot_data_t * cache = iot_data_alloc_map (IOT_DATA_STRING);
-  map = iot_data_from_json_with_cache (config, false, cache);
+  map = iot_data_from_json_with_cache (test_config, false, cache);
   iot_data_t * map3 = iot_data_from_json_with_cache (config2, false, cache);
   iot_data_map_iter_t iter;
   iot_data_map_iter (cache, &iter);
@@ -3187,6 +3187,18 @@ static void test_data_vector_hash (void)
   iot_data_free (vec);
 }
 
+static void test_data_compress (void)
+{
+  iot_data_t * cache = iot_data_alloc_map (IOT_DATA_MULTI);
+  iot_data_t * map1 = iot_data_from_json (test_config);
+  iot_data_t * map2 = iot_data_from_json (test_config);
+  iot_data_compress_with_cache (map1, cache);
+  iot_data_compress_with_cache (map2, cache);
+  iot_data_free (map1);
+  iot_data_free (map2);
+  iot_data_free (cache);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -3303,6 +3315,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_multi_key_map", test_data_multi_key_map);
   CU_add_test (suite, "data_map_struct_key", test_data_map_struct_key);
   CU_add_test (suite, "data_vector_hash", test_data_vector_hash);
+  CU_add_test (suite, "data_compress", test_data_compress);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "test_data_from_xml", test_data_from_xml);
 #endif
