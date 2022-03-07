@@ -561,6 +561,7 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
     }
     case IOT_DATA_VECTOR:
     {
+      int ret = 0;
       uint32_t size1 = ((const iot_data_vector_t*) v1)->size;
       uint32_t size2 = ((const iot_data_vector_t*) v2)->size;
       if (size1 != size2) return size1 < size2 ? -1 : 1;
@@ -573,50 +574,52 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
       iot_data_vector_iter (v2, &iter2);
       while (iot_data_vector_iter_next (&iter1) && iot_data_vector_iter_next (&iter2))
       {
-        int ret = iot_data_compare (iot_data_vector_iter_value (&iter1), iot_data_vector_iter_value (&iter2));
-        if (ret != 0) return ret;
+        ret = iot_data_compare (iot_data_vector_iter_value (&iter1), iot_data_vector_iter_value (&iter2));
+        if (ret != 0) break;
       }
-      return 0;
+      return ret;
     }
     case IOT_DATA_LIST:
     {
+      int ret = 0;
       uint32_t len1 = iot_data_list_length (v1);
       uint32_t len2 = iot_data_list_length (v2);
-      bool equal = (len1 == len2);
-      if (equal)
+      if (len1 != len2) return len1 < len2 ? -1 : 1;
+      uint32_t hash1 = iot_data_hash (v1);
+      uint32_t hash2 = iot_data_hash (v2);
+      if (hash1 != hash2) return hash1 < hash2 ? -1 : 1;
+      iot_data_list_iter_t iter1;
+      iot_data_list_iter_t iter2;
+      iot_data_list_iter (v1, &iter1);
+      iot_data_list_iter (v2, &iter2);
+      while (iot_data_list_iter_next (&iter1) && iot_data_list_iter_next (&iter2))
       {
-        iot_data_list_iter_t iter1;
-        iot_data_list_iter_t iter2;
-        iot_data_list_iter (v1, &iter1);
-        iot_data_list_iter (v2, &iter2);
-        while (equal && iot_data_list_iter_next (&iter1) && iot_data_list_iter_next (&iter2))
-        {
-          equal = (iot_data_compare (iot_data_list_iter_value (&iter1), iot_data_list_iter_value (&iter2)) == 0);
-        }
+        ret = iot_data_compare (iot_data_list_iter_value (&iter1), iot_data_list_iter_value (&iter2));
+        if (ret != 0) break;
       }
-      return equal ? 0 : ((len1 == len2) ? (iot_data_hash (v1) < iot_data_hash (v2) ? -1 : 1) : (len1 < len2) ? -1 : 1);
+      return ret;
     }
     case IOT_DATA_MAP:
     {
+      int ret = 0;
       uint32_t size1 = ((const iot_data_map_t*) v1)->size;
       uint32_t size2 =((const iot_data_map_t*) v2)->size;
-      bool equal = (size1 == size2);
-      if (equal)
+      if (size1 != size2) return size1 < size2 ? -1 : 1;
+      uint32_t hash1 = iot_data_hash (v1);
+      uint32_t hash2 = iot_data_hash (v2);
+      if (hash1 != hash2) return hash1 < hash2 ? -1 : 1;
+      iot_data_map_iter_t iter1;
+      iot_data_map_iter_t iter2;
+      iot_data_map_iter (v1, &iter1);
+      iot_data_map_iter (v2, &iter2);
+      while (iot_data_map_iter_next (&iter1) && iot_data_map_iter_next (&iter2))
       {
-        iot_data_map_iter_t iter1;
-        iot_data_map_iter_t iter2;
-        iot_data_map_iter (v1, &iter1);
-        iot_data_map_iter (v2, &iter2);
-        while (equal && (iot_data_map_iter_next (&iter1)) && (iot_data_map_iter_next (&iter2)))
-        {
-          const iot_data_t *key1 = iot_data_map_iter_key (&iter1);
-          const iot_data_t *value1 = iot_data_map_iter_value (&iter1);
-          const iot_data_t *key2 = iot_data_map_iter_key (&iter2);
-          const iot_data_t *value2 = iot_data_map_iter_value (&iter2);
-          equal = ((iot_data_compare (key1, key2) == 0) && (iot_data_compare (value1, value2) == 0));
-        }
+        ret = iot_data_compare (iot_data_map_iter_key (&iter1), iot_data_map_iter_key (&iter2));
+        if (ret != 0) break;
+        ret = iot_data_compare (iot_data_map_iter_value (&iter1), iot_data_map_iter_value (&iter2));
+        if (ret != 0) break;
       }
-      return equal ? 0 : ((size1 == size2) ? (iot_data_hash (v1) < iot_data_hash (v2) ? -1 : 1) : (size1 < size2) ? -1 : 1);
+      return ret;
     }
     default: break;
   }
