@@ -682,7 +682,6 @@ static void test_data_from_json (void)
   vec = iot_data_map_get_vector (map, key);
   CU_ASSERT (vec!= NULL)
   iot_data_free (key);
-
   iot_data_free (map);
 
   iot_data_t * cache = iot_data_alloc_map (IOT_DATA_STRING);
@@ -2169,7 +2168,6 @@ static void test_data_copy_map_update_value (void)
 static void test_data_copy_nested_vector (void)
 {
   iot_data_t *vector1 = iot_data_alloc_vector (2);
-
   iot_data_t *vector3 = iot_data_alloc_vector (2);
   iot_data_t *vector4 = iot_data_alloc_vector (2);
 
@@ -2183,6 +2181,7 @@ static void test_data_copy_nested_vector (void)
 
   iot_data_t *vector2 = iot_data_copy (vector1);
 
+  CU_ASSERT (iot_data_hash (vector1) == iot_data_hash (vector2))
   CU_ASSERT (iot_data_equal (vector1, vector2))
 
   iot_data_free (vector1);
