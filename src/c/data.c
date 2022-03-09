@@ -556,8 +556,9 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
     {
       const iot_data_array_t * a1 = (const iot_data_array_t*) v1;
       const iot_data_array_t * a2 = (const iot_data_array_t*) v2;
-      return ((a1->length == a2->length) && (v1->element_type == v2->element_type)) ? memcmp (a1->data, a2->data, a1->length * iot_data_type_size[a1->base.element_type]) :
-        (v1->hash < v2->hash ? -1 : 1);
+      if (a1->length != a2->length) return a1->length < a2->length ? -1 : 1;
+      if (v1->element_type != v2->element_type) return v1->element_type < v2->element_type ? -1 : 1;
+      return memcmp (a1->data, a2->data, a1->length * iot_data_type_size[a1->base.element_type]);
     }
     case IOT_DATA_VECTOR:
     {
