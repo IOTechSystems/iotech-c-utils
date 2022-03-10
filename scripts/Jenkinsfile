@@ -150,7 +150,10 @@ def publishAdvancedMetrics (system, arch)
 {
   fileOperations ([fileCopyOperation (includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/', flattenFiles: true),
     fileCopyOperation (includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/', flattenFiles: true)])
-  publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-iot/src:src')
+  if ("${arch}" == 'x86_64')
+  {
+    publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-iot/src:src')
+  }
   junit (testResults: "${arch}/${system}/release/junit-Results.xml")
   cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
   archiveArtifacts (artifacts: "${arch}/${system}/lcov/cobertura.xml")
