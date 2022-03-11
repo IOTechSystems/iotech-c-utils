@@ -1078,33 +1078,34 @@ iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * valu
   return NULL;
 }
 
-static void iot_data_inc_dec (iot_data_t * data, int8_t val)
+static void iot_data_inc_dec (iot_data_t * data, bool inc)
 {
   assert (data);
+  iot_data_union_t * val = &((iot_data_value_t*) data)->value;
   switch (data->type)
   {
-    case IOT_DATA_INT8: ((iot_data_value_t*) data)->value.i8 += val; break;
-    case IOT_DATA_UINT8: ((iot_data_value_t*) data)->value.ui8 += val; break;
-    case IOT_DATA_INT16: ((iot_data_value_t*) data)->value.i16 += val; break;
-    case IOT_DATA_UINT16: ((iot_data_value_t*) data)->value.ui16 += val; break;
-    case IOT_DATA_INT32: ((iot_data_value_t*) data)->value.i32 += val; break;
-    case IOT_DATA_UINT32: ((iot_data_value_t*) data)->value.ui32 += val; break;
-    case IOT_DATA_INT64: ((iot_data_value_t*) data)->value.i64 += val; break;
-    case IOT_DATA_UINT64: ((iot_data_value_t*) data)->value.ui64 += val; break;
-    case IOT_DATA_FLOAT32: ((iot_data_value_t*) data)->value.f32 += val; break;
-    case IOT_DATA_FLOAT64: ((iot_data_value_t*) data)->value.f64 += val; break;
+    case IOT_DATA_INT8: inc ? val->i8++ : val->i8--; break;
+    case IOT_DATA_UINT8: inc ? val->ui8++ : val->ui8--; break;
+    case IOT_DATA_INT16: inc ? val->i16++ : val->i16--; break;
+    case IOT_DATA_UINT16: inc ? val->ui16++ : val->ui16--; break;
+    case IOT_DATA_INT32: inc ? val->i32++ : val->i32--; break;
+    case IOT_DATA_UINT32: inc ? val->ui32++ : val->ui32--; break;
+    case IOT_DATA_INT64: inc ? val->i64++ : val->i64--; break;
+    case IOT_DATA_UINT64: inc ? val->ui64++ : val->ui64--; break;
+    case IOT_DATA_FLOAT32: inc ? val->f32++ : val->f32--; break;
+    case IOT_DATA_FLOAT64: inc ? val->f64++ : val->f64--; break;
     default: break;
   }
 }
 
 void iot_data_increment (iot_data_t * data)
 {
-  iot_data_inc_dec (data, 1);
+  iot_data_inc_dec (data, true);
 }
 
 void iot_data_decrement (iot_data_t * data)
 {
-  iot_data_inc_dec (data, -1);
+  iot_data_inc_dec (data, false);
 }
 
 iot_data_t * iot_data_alloc_from_strings (const char * type, const char * value)
@@ -1262,7 +1263,7 @@ iot_data_t * iot_data_alloc_string_fmt (const char *format, ...)
   va_list args;
 
   va_start (args, format);
-  size_t n = 1 + vsnprintf (NULL, 0, format, args);
+  size_t n = 1u + (size_t) vsnprintf (NULL, 0, format, args);
   va_end (args);
 
   char * str = malloc (n);
