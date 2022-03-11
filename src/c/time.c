@@ -14,7 +14,7 @@ static inline uint64_t iot_time_nanosecs (void)
 {
   struct timespec ts = { 0 };
   clock_gettime (CLOCK_REALTIME, &ts);
-  return ((uint64_t) ts.tv_sec * IOT_TIME_NANOS_PER_SEC) + ts.tv_nsec;
+  return ((uint64_t) ts.tv_sec * IOT_TIME_NANOS_PER_SEC) + (uint64_t) ts.tv_nsec;
 }
 
 uint64_t iot_time_msecs (void)
@@ -31,7 +31,7 @@ extern uint64_t iot_time_secs (void)
 {
   struct timespec ts = { 0 };
   clock_gettime (CLOCK_REALTIME, &ts);
-  return ts.tv_sec;
+  return (uint64_t) ts.tv_sec;
 }
 
 uint64_t iot_time_nsecs (void)
@@ -56,18 +56,18 @@ static void iot_wait (struct timespec * tm)
 
 void iot_wait_secs (uint64_t interval)
 {
-  struct timespec tm = { .tv_sec = interval, .tv_nsec = 0 };
+  struct timespec tm = { .tv_sec = (time_t)interval, .tv_nsec = 0 };
   iot_wait (&tm);
 }
 
 void iot_wait_msecs (uint64_t interval)
 {
-  struct timespec tm = { .tv_sec = interval / 1000, .tv_nsec = 1000000 * (interval % 1000)};
+  struct timespec tm = { .tv_sec = (time_t) (interval / 1000), .tv_nsec = (long) (1000000 * (interval % 1000)) };
   iot_wait (&tm);
 }
 
 void iot_wait_usecs (uint64_t interval)
 {
-  struct timespec tm = { .tv_sec = interval / 1000000, .tv_nsec = 1000 * (interval % 1000000)};
+  struct timespec tm = { .tv_sec = (time_t) (interval / 1000000), .tv_nsec = (long) (1000 * (interval % 1000000)) };
   iot_wait (&tm);
 }
