@@ -217,6 +217,10 @@
 * `iot_data_compress`
 * `iot_data_compress_with_cache`
 
+- Function added to convert a vector to an array
+
+* `iot_data_vector_to_array`
+
 - Map data type updated to support all key types
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13

@@ -967,10 +967,10 @@ extern const char * iot_data_string (const iot_data_t * data);
 extern const void * iot_data_pointer (const iot_data_t * data);
 
 /**
- * @brief Cast integer or float values
+ * @brief Cast integer, float or boolean values
  *
  * The function returns a data value cast to a given type.
- * False is returned if type conversion is not possible. Note float to integer or inter to float conversion is not supported.
+ * False is returned if type conversion is not possible.
  *
  * @param data  Data to be converted
  * @param type  Type of data value to be returned
@@ -1758,6 +1758,16 @@ extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * ty
  * @return    Whether the two typecodes are equal
  */
 extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t * tc2);
+
+/**
+ * @brief Converts a vector to an array, vector elements must be castable to the target array type, vector elements
+ * that cannot be cast are ignored. If no vector elements can be cast to the required type NULL is returned.
+ *
+ * @param vector The vector to transform
+ * @param type   The data element type for the array
+ * @return       The newly created array containing the vector elements, or NULL if vector could not be converted
+ */
+extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type);
 
 #ifdef __cplusplus
 }
