@@ -4083,6 +4083,17 @@ static void test_data_vector_to_array (void)
   iot_data_free (array);
 }
 
+static void test_data_ref_count (void)
+{
+  iot_data_t * data = iot_data_alloc_ui32 (0u);
+  CU_ASSERT (iot_data_ref_count (data) == 1u)
+  iot_data_add_ref (data);
+  CU_ASSERT (iot_data_ref_count (data) == 2u)
+  iot_data_free (data);
+  CU_ASSERT (iot_data_ref_count (data) == 1u)
+  iot_data_free (data);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -4216,6 +4227,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_compare", test_data_compare);
   CU_add_test (suite, "data_compress", test_data_compress);
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
+  CU_add_test (suite, "data_ref_count", test_data_ref_count);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif
