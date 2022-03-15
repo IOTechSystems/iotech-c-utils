@@ -3771,7 +3771,7 @@ static void test_data_cast (void)
   CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
   CU_ASSERT (f64 == (double) f32_val)
   CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bl))
-  CU_ASSERT (bl);
+  CU_ASSERT (bl)
   iot_data_free (data);
 
   data = iot_data_alloc_f64 (f64_val);
@@ -3796,7 +3796,7 @@ static void test_data_cast (void)
   CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT64, &f64))
   CU_ASSERT (f64 == (double) f64_val)
   CU_ASSERT (iot_data_cast (data, IOT_DATA_BOOL, &bl))
-  CU_ASSERT (bl);
+  CU_ASSERT (bl)
   iot_data_free (data);
 
   data = iot_data_alloc_bool (bl_val);
