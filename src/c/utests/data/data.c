@@ -4057,6 +4057,9 @@ static void test_data_compare (void)
   iot_data_list_tail_push (v2, iot_data_alloc_ui32 (1u));
   iot_data_list_tail_push (v2, iot_data_alloc_ui32 (1u));
   data_compare_check (v1, v1b, v2);
+  v1 = iot_data_alloc_null ();
+  v1b = iot_data_alloc_null ();
+  CU_ASSERT (iot_data_compare (v1, v1b) == 0)
 }
 
 static void test_data_vector_to_array (void)
