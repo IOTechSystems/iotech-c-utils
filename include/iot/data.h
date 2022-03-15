@@ -1769,6 +1769,14 @@ extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t
  */
 extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type);
 
+/**
+ * @brief Returns the size of the contained data type in bytes.
+ *
+ * @param type   The data type
+ * @return       The size of the contained type in bytes (e.g. 4 for IOT_DATA_UINT32)
+ */
+extern uint32_t iot_data_type_size (iot_data_type_t type);
+
 #ifdef __cplusplus
 }
 #endif

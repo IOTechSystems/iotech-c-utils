@@ -221,6 +221,10 @@
 
 * `iot_data_vector_to_array`
 
+- Function added to return size of encapsulated C data type
+
+* `iot_data_type_size`
+
 - Map data type updated to support all key types
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13

@@ -9,20 +9,7 @@
 #include "iot/hash.h"
 #include <stdarg.h>
 #include <math.h>
-
-/* IOT Data Type      Key      Composed  Constant
- *
- * Integer Types      Y        N         N
- * Boolean            Y        N         Y
- * Pointer            Y        N         N
- * String             Y        N         Can be
- * Null               N        N         Y
- * Binary             Y        N         N
- * Array              Y        N         N
- * Vector             Y        Y         N
- * List               Y        Y         N
- * Map                Y        Y         N
-*/
+#include <float.h>
 
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
 
@@ -57,7 +44,7 @@
 #define IOT_JSON_BUFF_INCREMENT 1024u
 
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
-static const uint8_t iot_data_type_size [IOT_DATA_BINARY + 1] = { 1u,1u,2u,2u,4u,4u,8u,8u,4u,8u,sizeof (bool),sizeof (void*),sizeof (char*),0u,1u };
+static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
 static const char * ORDERING_KEY = "ordering";
 static _Thread_local bool iot_data_alloc_from_heap = false; /* Thread specific memory allocation policy */
 
@@ -255,6 +242,11 @@ static iot_node_t * iot_node_prev (iot_node_t * iter);
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
 static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
 static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key);
+
+uint32_t iot_data_type_size (iot_data_type_t type)
+{
+  return (type <= IOT_DATA_BINARY) ? iot_data_type_sizes[type] : 0u;
+}
 
 bool iot_data_alloc_heap (bool set)
 {
@@ -558,7 +550,7 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
       const iot_data_array_t * a2 = (const iot_data_array_t*) v2;
       if (a1->length != a2->length) return a1->length < a2->length ? -1 : 1;
       if (v1->element_type != v2->element_type) return v1->element_type < v2->element_type ? -1 : 1;
-      return memcmp (a1->data, a2->data, a1->length * iot_data_type_size[a1->base.element_type]);
+      return memcmp (a1->data, a2->data, a1->length * iot_data_type_sizes[a1->base.element_type]);
     }
     case IOT_DATA_VECTOR:
     {
@@ -642,7 +634,7 @@ iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_
   if (vsize)
   {
     uint32_t asize = 0u;
-    uint32_t esize = iot_data_type_size[type];
+    uint32_t esize = iot_data_type_sizes[type];
     void * data = calloc (vsize, esize);
     uint8_t * ptr = (uint8_t*) data;
     iot_data_vector_iter_t iter;
@@ -1319,7 +1311,7 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
 {
   assert ((type <= IOT_DATA_BOOL) && ((length > 0 && data != NULL) || length == 0));
   iot_data_array_t * array = iot_data_block_alloc_data (IOT_DATA_ARRAY);
-  size_t size = iot_data_type_size[type] * length;
+  size_t size = iot_data_type_sizes[type] * length;
   array->base.element_type = type;
   array->data = length ? data : NULL;
   array->length = length;
@@ -1348,7 +1340,7 @@ extern uint32_t iot_data_array_size (const iot_data_t * array)
 {
   assert (array && (array->type == IOT_DATA_ARRAY || array->type == IOT_DATA_BINARY));
   const iot_data_array_t * arr = (const iot_data_array_t *) array;
-  return (arr->length * iot_data_type_size[arr->base.element_type]);
+  return (arr->length * iot_data_type_sizes[arr->base.element_type]);
 }
 
 extern uint32_t iot_data_array_length (const iot_data_t * array)
@@ -1437,22 +1429,30 @@ double iot_data_f64 (const iot_data_t * data)
 
 bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
 {
+#define VALUE() (dfloat ? uval.f64 : (usign ? (double) uval.ui64 : (double) uval.i64))
+#define CAST(T) (*((T*) val) = dfloat ? (T) uval.f64 : (usign ? (T) uval.ui64 : (T) uval.i64))
+
+  static const double max_vals[IOT_DATA_FLOAT64] = { INT8_MAX, UINT8_MAX, INT16_MAX, UINT16_MAX, INT32_MAX, UINT32_MAX, INT64_MAX, UINT64_MAX, FLT_MAX };
+  static const double min_vals[IOT_DATA_FLOAT64] = { INT8_MIN, 0.0f, INT16_MIN, 0.0f, INT32_MIN, 0.0f, INT64_MIN, 0.0f , -FLT_MAX };
+
   assert (data && val);
   iot_data_type_t dtype = data->type;
-  bool usign = (dtype == IOT_DATA_UINT8) || (dtype == IOT_DATA_UINT16) || (dtype == IOT_DATA_UINT32) || (dtype == IOT_DATA_UINT64) || (dtype == IOT_DATA_BOOL);
-  bool dfloat = (dtype == IOT_DATA_FLOAT32) || (dtype == IOT_DATA_FLOAT64);
+  bool usign = (dtype == IOT_DATA_UINT64) || (dtype == IOT_DATA_BOOL);
+  bool dfloat = (dtype <= IOT_DATA_UINT32) || (dtype == IOT_DATA_FLOAT32) || (dtype == IOT_DATA_FLOAT64);
   iot_data_union_t uval;
 
+  // Check valid to/from types
   if ((dtype > IOT_DATA_BOOL) || (type > IOT_DATA_BOOL)) return false;
 
+  // Cast up data value, note all integer types apart from 64 bit integers can be represented completely as a double
   switch (dtype)
   {
-    case IOT_DATA_INT8: uval.i64 = ((const iot_data_value_t*) data)->value.i8; break;
-    case IOT_DATA_UINT8: uval.ui64 = ((const iot_data_value_t*) data)->value.ui8; break;
-    case IOT_DATA_INT16: uval.i64 = ((const iot_data_value_t*) data)->value.i16; break;
-    case IOT_DATA_UINT16: uval.ui64 = ((const iot_data_value_t*) data)->value.ui16; break;
-    case IOT_DATA_INT32: uval.i64 = ((const iot_data_value_t*) data)->value.i32; break;
-    case IOT_DATA_UINT32: uval.ui64 = ((const iot_data_value_t*) data)->value.ui32; break;
+    case IOT_DATA_INT8: uval.f64 = ((const iot_data_value_t*) data)->value.i8; break;
+    case IOT_DATA_UINT8: uval.f64 = ((const iot_data_value_t*) data)->value.ui8; break;
+    case IOT_DATA_INT16: uval.f64 = ((const iot_data_value_t*) data)->value.i16; break;
+    case IOT_DATA_UINT16: uval.f64 = ((const iot_data_value_t*) data)->value.ui16; break;
+    case IOT_DATA_INT32: uval.f64 = ((const iot_data_value_t*) data)->value.i32; break;
+    case IOT_DATA_UINT32: uval.f64 = ((const iot_data_value_t*) data)->value.ui32; break;
     case IOT_DATA_INT64: uval.i64 = ((const iot_data_value_t*) data)->value.i64; break;
     case IOT_DATA_UINT64: uval.ui64 = ((const iot_data_value_t*) data)->value.ui64; break;
     case IOT_DATA_FLOAT32: uval.f64 = ((const iot_data_value_t*) data)->value.f32; break;
@@ -1460,7 +1460,10 @@ bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
     default: uval.ui64 = ((const iot_data_value_t*) data)->value.bl ? 1u : 0u; break;
   }
 
-#define CAST(T) (*((T*) val) = usign ? (T) uval.ui64 : (dfloat ? (T) uval.f64 : (T) uval.i64))
+  // Check value within max/min for target type
+  if ((type < IOT_DATA_FLOAT64) && (VALUE () > max_vals[type] || VALUE () < min_vals[type])) return false;
+
+  // Cast to target type
   switch (type)
   {
     case IOT_DATA_INT8: CAST (int8_t); break;
@@ -1475,8 +1478,10 @@ bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
     case IOT_DATA_FLOAT64: CAST (double); break;
     default: CAST (bool); break;
   }
-#undef CAST
   return true;
+
+#undef CAST
+#undef VALUE
 }
 
 bool iot_data_bool (const iot_data_t * data)
@@ -1861,7 +1866,7 @@ uint32_t iot_data_array_iter_index (const iot_data_array_iter_t * iter)
 const void * iot_data_array_iter_value (const iot_data_array_iter_t * iter)
 {
   assert (iter && iter->_array);
-  return (iter->_index < iter->_array->length) ? ((uint8_t*) (iter->_array->data) + (iter->_index) * iot_data_type_size[iter->_array->base.element_type]) : NULL;
+  return (iter->_index < iter->_array->length) ? ((uint8_t*) (iter->_array->data) + (iter->_index) * iot_data_type_sizes[iter->_array->base.element_type]) : NULL;
 }
 
 void iot_data_vector_iter (const iot_data_t * vector, iot_data_vector_iter_t * iter)
