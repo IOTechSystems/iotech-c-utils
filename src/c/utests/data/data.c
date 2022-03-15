@@ -3548,7 +3548,7 @@ static void test_data_cast (void)
   static const int64_t i64_val = -40000000000;
   static const uint64_t u64_val = 40000000000;
   static const float f32_val = 7.0f;
-  static const double f64_val = 3.0e55;
+  static const double f64_val = 123.456;
   static const bool bl_val = true;
 
   iot_data_t * data;
