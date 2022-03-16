@@ -30,8 +30,8 @@ PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 
 MAINT_EMAIL="IOTech Support <support@iotechsys.com>"
 DESC_MAIN="IOT C Framework"
-DESC_DEV="IOT C Framework development"
-DESC_DBG="IOT C Framework (debug enabled)"
+DESC_DEV="IOT C Framework (dev)"
+DESC_DBG="IOT C Framework (debug)"
 FPM=fpm
 
 build_apk()
