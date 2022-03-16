@@ -4081,6 +4081,14 @@ static void test_data_vector_to_array (void)
 
   iot_data_free (vector);
   iot_data_free (array);
+
+  vector = iot_data_alloc_vector (1u);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_ui32 (666u));
+  array = iot_data_vector_to_array (vector, IOT_DATA_UINT8);
+  CU_ASSERT (iot_data_array_size (array) == 0u)
+
+  iot_data_free (vector);
+  iot_data_free (array);
 }
 
 static void test_data_ref_count (void)
@@ -4092,6 +4100,26 @@ static void test_data_ref_count (void)
   iot_data_free (data);
   CU_ASSERT (iot_data_ref_count (data) == 1u)
   iot_data_free (data);
+}
+
+static void test_data_array_transform (void)
+{
+  uint32_t array [4] = { 0u, 400u, 2u , 500u };
+  uint8_t * val;
+  iot_data_t * data = iot_data_alloc_array (array, 4u, IOT_DATA_UINT32, IOT_DATA_REF);
+  iot_data_t * data2 = iot_data_array_transform (data, IOT_DATA_UINT8);
+  CU_ASSERT (data2 != NULL)
+  CU_ASSERT (iot_data_array_size (data2) == 2u)
+  iot_data_array_iter_t iter;
+  iot_data_array_iter (data2, &iter);
+  iot_data_array_iter_next (&iter);
+  val = (uint8_t*) iot_data_array_iter_value (&iter);
+  CU_ASSERT (*val == 0u)
+  iot_data_array_iter_next (&iter);
+  val = (uint8_t*) iot_data_array_iter_value (&iter);
+  CU_ASSERT (*val == 2u)
+  iot_data_free (data);
+  iot_data_free (data2);
 }
 
 void cunit_data_test_init (void)
@@ -4228,6 +4256,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_compress", test_data_compress);
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
   CU_add_test (suite, "data_ref_count", test_data_ref_count);
+  CU_add_test (suite, "data_array_transform", test_data_array_transform);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif
