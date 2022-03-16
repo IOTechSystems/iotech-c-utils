@@ -217,10 +217,11 @@
 * `iot_data_compress`
 * `iot_data_compress_with_cache`
 
-- Functions added to convert a vector to an array and convert an array to another element type:
+- Data transform function added:
 
 * `iot_data_vector_to_array`
 * `iot_data_array_transform`
+* `iot_data_transform`
 
 - Function added to return size of encapsulated C data type
 

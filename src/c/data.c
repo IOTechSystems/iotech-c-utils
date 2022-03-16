@@ -637,6 +637,8 @@ static bool iot_data_cast_val (const iot_data_union_t * in, void * out, iot_data
   bool dfloat = (in_type <= IOT_DATA_UINT32) || (in_type == IOT_DATA_FLOAT32) || (in_type == IOT_DATA_FLOAT64);
   iot_data_union_t uval;
 
+  if ((in_type > IOT_DATA_BOOL) || (out_type > IOT_DATA_BOOL)) return false;
+
   // Cast up data value, note all integer types apart from 64 bit integers can be represented completely as a double
   switch (in_type)
   {
@@ -678,8 +680,32 @@ static bool iot_data_cast_val (const iot_data_union_t * in, void * out, iot_data
 bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
 {
   assert (data && val);
-  if ((data->type > IOT_DATA_BOOL) || (type > IOT_DATA_BOOL)) return false;
   return iot_data_cast_val (&((const iot_data_value_t *) data)->value, val, data->type, type);
+}
+
+iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
+{
+  assert (data);
+  iot_data_union_t out;
+  if (iot_data_cast_val (&((const iot_data_value_t*) data)->value, &out, data->type, type))
+  {
+    switch (type)
+    {
+      case IOT_DATA_INT8: return iot_data_alloc_i8 (out.i8);
+      case IOT_DATA_UINT8: return iot_data_alloc_ui8 (out.ui8);
+      case IOT_DATA_INT16: return iot_data_alloc_i16 (out.i16);
+      case IOT_DATA_UINT16: return iot_data_alloc_ui16 (out.ui16);
+      case IOT_DATA_INT32: return iot_data_alloc_i32 (out.i32);
+      case IOT_DATA_UINT32: return iot_data_alloc_ui32 (out.ui32);
+      case IOT_DATA_INT64: return iot_data_alloc_i64 (out.i64);
+      case IOT_DATA_UINT64: return iot_data_alloc_ui64 (out.ui64);
+      case IOT_DATA_FLOAT32: return iot_data_alloc_f32 (out.f32);
+      case IOT_DATA_FLOAT64: return iot_data_alloc_f64 (out.f64);
+      case IOT_DATA_BOOL: return iot_data_alloc_f64 (out.bl);
+      default: break;
+    }
+  }
+  return NULL;
 }
 
 iot_data_t * iot_data_array_transform (const iot_data_t * array, iot_data_type_t type)

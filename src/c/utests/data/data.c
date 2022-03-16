@@ -4122,6 +4122,32 @@ static void test_data_array_transform (void)
   iot_data_free (data2);
 }
 
+static void test_data_transform (void)
+{
+  iot_data_t * data = iot_data_alloc_i8 (1);
+  iot_data_t * xform = iot_data_transform (data, IOT_DATA_UINT8);
+  CU_ASSERT (xform && iot_data_type (xform) == IOT_DATA_UINT8)
+  CU_ASSERT (iot_data_ui8 (xform) == 1u)
+  iot_data_free (xform);
+  xform = iot_data_transform (data, IOT_DATA_INT16);
+  CU_ASSERT (xform && iot_data_type (xform) == IOT_DATA_INT16)
+  CU_ASSERT (iot_data_i16 (xform) == 1)
+  iot_data_free (xform);
+  iot_data_free (data);
+  data = iot_data_alloc_i8 (-1);
+  xform = iot_data_transform (data, IOT_DATA_UINT8);
+  CU_ASSERT (xform == NULL)
+  xform = iot_data_transform (data, IOT_DATA_INT16);
+  CU_ASSERT (xform && iot_data_type (xform) == IOT_DATA_INT16)
+  CU_ASSERT (iot_data_i16 (xform) == -1)
+  iot_data_free (data);
+  iot_data_free (xform);
+  data = iot_data_alloc_ui32 (1234u);
+  xform = iot_data_transform (data, IOT_DATA_UINT8);
+  CU_ASSERT (xform == NULL)
+  iot_data_free (data);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -4257,6 +4283,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
   CU_add_test (suite, "data_ref_count", test_data_ref_count);
   CU_add_test (suite, "data_array_transform", test_data_array_transform);
+  CU_add_test (suite, "data_transform", test_data_transform);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif

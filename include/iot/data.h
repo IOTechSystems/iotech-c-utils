@@ -1770,6 +1770,15 @@ extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t
 extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type);
 
 /**
+ * @brief Transforms one basic data type to another, if value is castable.
+ *
+ * @param data   The data to transform
+ * @param type   The type for the transformed data
+ * @return       The newly created data or NULL if type/value could not be cast
+ */
+iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type);
+
+/**
  * @brief Transforms an array of one type to an array of another. Array element values must be castable from one type/value
  * to another, or the array element is ignored. An empty array is returned if no array elements can be transformed.
  *
