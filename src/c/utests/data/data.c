@@ -4105,7 +4105,7 @@ static void test_data_ref_count (void)
 static void test_data_array_transform (void)
 {
   uint32_t array [4] = { 0u, 400u, 2u , 500u };
-  uint8_t * val;
+  const uint8_t * val;
   iot_data_t * data = iot_data_alloc_array (array, 4u, IOT_DATA_UINT32, IOT_DATA_REF);
   iot_data_t * data2 = iot_data_array_transform (data, IOT_DATA_UINT8);
   CU_ASSERT (data2 != NULL)
@@ -4113,10 +4113,10 @@ static void test_data_array_transform (void)
   iot_data_array_iter_t iter;
   iot_data_array_iter (data2, &iter);
   iot_data_array_iter_next (&iter);
-  val = (uint8_t*) iot_data_array_iter_value (&iter);
+  val = (const uint8_t*) iot_data_array_iter_value (&iter);
   CU_ASSERT (*val == 0u)
   iot_data_array_iter_next (&iter);
-  val = (uint8_t*) iot_data_array_iter_value (&iter);
+  val = (const uint8_t*) iot_data_array_iter_value (&iter);
   CU_ASSERT (*val == 2u)
   iot_data_free (data);
   iot_data_free (data2);
