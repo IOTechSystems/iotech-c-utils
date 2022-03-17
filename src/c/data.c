@@ -701,7 +701,7 @@ iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
       case IOT_DATA_UINT64: return iot_data_alloc_ui64 (out.ui64);
       case IOT_DATA_FLOAT32: return iot_data_alloc_f32 (out.f32);
       case IOT_DATA_FLOAT64: return iot_data_alloc_f64 (out.f64);
-      case IOT_DATA_BOOL: return iot_data_alloc_f64 (out.bl);
+      case IOT_DATA_BOOL: return iot_data_alloc_bool (out.bl);
       default: break;
     }
   }
