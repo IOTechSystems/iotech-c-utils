@@ -683,6 +683,19 @@ extern const char * iot_data_string (const iot_data_t * data);
 extern const void * iot_data_pointer (const iot_data_t * data);
 
 /**
+ * @brief Cast integer, float or boolean values
+ *
+ * The function returns a data value cast to a given type.
+ * False is returned if type conversion is not possible.
+ *
+ * @param data  Data to be converted
+ * @param type  Type of data value to be returned
+ * @param val   Pointer to returned value, set if data type can be converted
+ * @return      Whether data type could be converted
+ */
+extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val);
+
+/**
  * @brief Add key-value pair to a map
  *
  * The function to add a key-value pair to a map
@@ -828,9 +841,6 @@ extern const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const io
  * @return             Pointer found by key in the map. NULL if not found or not a pointer
  */
 extern const void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key);
-
-
-
 
 /**
  * @brief  Get value from the map for a key provided
@@ -1365,6 +1375,43 @@ extern iot_data_t * iot_data_copy (const iot_data_t * src);
  * @return         Whether the data matches the typecode
  */
 extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * typecode);
+
+/**
+ * @brief Converts a vector to an array, vector elements must be castable to the target array type, vector elements
+ * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty array is returned.
+ *
+ * @param vector The vector to transform
+ * @param type   The data element type for the array
+ * @return       The newly created array containing the vector elements, may be empty
+ */
+extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type);
+
+/**
+ * @brief Transforms one basic data type to another, if value is castable.
+ *
+ * @param data   The data to transform
+ * @param type   The type for the transformed data
+ * @return       The newly created data or NULL if type/value could not be cast
+ */
+iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type);
+
+/**
+ * @brief Transforms an array of one type to an array of another. Array element values must be castable from one type/value
+ * to another, or the array element is ignored. An empty array is returned if no array elements can be transformed.
+ *
+ * @param vector The array to transform
+ * @param type   The data element type for the transformed array
+ * @return       The newly created array containing the transformed array elements, may be empty
+ */
+extern iot_data_t * iot_data_array_transform (const iot_data_t * array, iot_data_type_t type);
+
+/**
+ * @brief Returns the size of the contained data type in bytes.
+ *
+ * @param type   The data type
+ * @return       The size of the contained type in bytes (e.g. 4 for IOT_DATA_UINT32)
+ */
+extern uint32_t iot_data_type_size (iot_data_type_t type);
 
 #ifdef __cplusplus
 }

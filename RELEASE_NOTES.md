@@ -137,3 +137,15 @@
 
 * `iot_schedule_add_run_callback`
 * `iot_schedule_add_abort_callback`
+
+## Version 1.2.4
+
+- Data transform functions added:
+
+* `iot_data_vector_to_array`
+* `iot_data_array_transform`
+* `iot_data_transform`
+
+- Function added to return size of encapsulated C data type
+
+* `iot_data_type_size`
