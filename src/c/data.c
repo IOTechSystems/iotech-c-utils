@@ -1888,7 +1888,11 @@ iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_
     data = calloc (vsize, esize);
     uint8_t * ptr = data;
     asize = iot_data_vector_copy_to_array (vector, type, &ptr, esize);
-    if (asize == 0) free (data);
+    if (asize == 0)
+    {
+      free (data);
+      data = NULL;
+    }
   }
   return iot_data_alloc_array (data, asize, type, IOT_DATA_TAKE);
 }
