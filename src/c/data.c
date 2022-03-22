@@ -213,7 +213,7 @@ _Static_assert (sizeof (iot_data_array_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_ar
 _Static_assert (sizeof (iot_data_list_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_list bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_node_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_node bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bigger than IOT_MEMORY_BLOCK_SIZE");
-_Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
+ _Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
 _Static_assert (sizeof (iot_data_struct_dummy_t) == 2 * sizeof (iot_data_static_t), "iot_data_static_t structs not aligned for iot_data_static_t");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
@@ -259,7 +259,6 @@ static void * iot_data_block_alloc (void)
 {
   iot_block_t * data;
 #ifdef IOT_DATA_CACHE
-
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
@@ -726,38 +725,6 @@ iot_data_t * iot_data_array_transform (const iot_data_t * array, iot_data_type_t
     {
       const iot_data_union_t * element = iot_data_array_iter_value (&iter);
       if (iot_data_cast_val (element, ptr, array->element_type, type))
-      {
-        ptr += esize;
-        asize++;
-      }
-    }
-    if (asize == 0)
-    {
-      free (data);
-      data = NULL;
-    }
-  }
-  return iot_data_alloc_array (data, asize, type, IOT_DATA_TAKE);
-}
-
-iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type)
-{
-  assert (vector && (vector->type == IOT_DATA_VECTOR) && (type <= IOT_DATA_BOOL));
-  uint32_t vsize = iot_data_vector_size (vector);
-  void * data = NULL;
-  uint32_t asize = 0u;
-
-  if (vsize)
-  {
-    uint32_t esize = iot_data_type_sizes[type];
-    data = calloc (vsize, esize);
-    uint8_t * ptr = (uint8_t*) data;
-    iot_data_vector_iter_t iter;
-    iot_data_vector_iter (vector, &iter);
-    while (iot_data_vector_iter_next (&iter))
-    {
-      const iot_data_t * element = iot_data_vector_iter_value (&iter);
-      if (iot_data_cast (element, type, ptr))
       {
         ptr += esize;
         asize++;
@@ -1803,6 +1770,127 @@ uint32_t iot_data_vector_size (const iot_data_t * vector)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR));
   return ((const iot_data_vector_t*) vector)->size;
+}
+
+static inline uint32_t iot_data_vector_dimension (const iot_data_t * vector)
+{
+  // Only regard as mult-dimensional vector if all elements also vectors
+  uint32_t size = iot_data_vector_size (vector);
+  return (size == iot_data_vector_element_count (vector, IOT_DATA_VECTOR, false)) ? size : 0u;
+}
+
+static uint32_t iot_data_vector_depth (const iot_data_t * vector)
+{
+  uint32_t depth = 0u;
+  if (iot_data_vector_dimension (vector))
+  {
+    iot_data_vector_iter_t iter;
+    iot_data_vector_iter (vector, &iter);
+    while (iot_data_vector_iter_next (&iter))
+    {
+      uint32_t dp = iot_data_vector_depth (iot_data_vector_iter_value (&iter));
+      if (depth == 0) depth = dp;
+      if (dp != depth) // All vector sub-dimensions must be the same depth
+      {
+        depth = 0;
+        break;
+      }
+    }
+  }
+  return depth + 1u;
+}
+
+static bool iot_data_vector_dims (const iot_data_t * vector, uint32_t * dims)
+{
+  uint32_t size = iot_data_vector_size (vector);
+  uint32_t vecs = iot_data_vector_element_count (vector, IOT_DATA_VECTOR, false);
+  if (*dims == 0) *dims = size;
+  bool ok = (*dims == size);
+  if (ok && (size == vecs)) // Only regard as mult-dimensional vector if all elements also vectors
+  {
+    dims++;
+    iot_data_vector_iter_t iter;
+    iot_data_vector_iter (vector, &iter);
+    while (ok && iot_data_vector_iter_next (&iter))
+    {
+      ok = iot_data_vector_dims (iot_data_vector_iter_value (&iter), dims);
+    }
+  }
+  return ok;
+}
+
+iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector)
+{
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  uint32_t depth = iot_data_vector_depth (vector);
+  uint32_t * dims = calloc (depth, sizeof (uint32_t));
+  if (! iot_data_vector_dims (vector, dims))
+  {
+    free (dims);
+    dims = NULL;
+    depth = 0u;
+  }
+  return iot_data_alloc_array (dims, depth, IOT_DATA_UINT32, IOT_DATA_TAKE);
+}
+
+static uint32_t iot_data_vector_element_count_castable (const iot_data_t * vector, iot_data_type_t type, bool recurse, bool castable)
+{
+  uint32_t count = 0;
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (vector, &iter);
+  while (iot_data_vector_iter_next (&iter))
+  {
+    const iot_data_t * element = iot_data_vector_iter_value (&iter);
+    iot_data_type_t etype = iot_data_type (element);
+    if ((castable && type <= IOT_DATA_BOOL) || (!castable &&  (type == IOT_DATA_MULTI || etype == type))) count++;
+    if (recurse && (etype == IOT_DATA_VECTOR)) count += iot_data_vector_element_count_castable (element, type, true, castable);
+  }
+  return count;
+}
+
+uint32_t iot_data_vector_element_count (const iot_data_t * vector, iot_data_type_t type, bool recurse)
+{
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  return iot_data_vector_element_count_castable (vector, type, recurse, false);
+}
+
+static uint32_t iot_data_vector_copy_to_array (const iot_data_t * vector, iot_data_type_t type, uint8_t ** ptr, uint32_t esize)
+{
+   uint32_t copied = 0u;
+   iot_data_vector_iter_t iter;
+   iot_data_vector_iter (vector, &iter);
+   while (iot_data_vector_iter_next (&iter))
+   {
+     const iot_data_t * element = iot_data_vector_iter_value (&iter);
+     if (element->type == IOT_DATA_VECTOR)
+     {
+       copied += iot_data_vector_copy_to_array (element, type, ptr, esize);
+     }
+     else if (iot_data_cast (element, type, *ptr))
+     {
+       *ptr += esize;
+       copied++;
+     }
+   }
+   return copied;
+}
+
+iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse)
+{
+  assert (vector && (vector->type == IOT_DATA_VECTOR) && (type <= IOT_DATA_BOOL));
+  uint32_t vsize = iot_data_vector_element_count_castable (vector, type, recurse, true);
+  void * data = NULL;
+  uint32_t asize = 0u;
+
+  if (vsize)
+  {
+    uint32_t esize = iot_data_type_sizes[type];
+    data = calloc (vsize, esize);
+    uint8_t * ptr = data;
+    asize = iot_data_vector_copy_to_array (vector, type, &ptr, esize);
+    if (asize == 0) free (data);
+  }
+  return iot_data_alloc_array (data, asize, type, IOT_DATA_TAKE);
 }
 
 void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)

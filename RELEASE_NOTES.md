@@ -217,11 +217,13 @@
 * `iot_data_compress`
 * `iot_data_compress_with_cache`
 
-- Data transform function added:
+- Data transform and helper functions added:
 
 * `iot_data_vector_to_array`
 * `iot_data_array_transform`
 * `iot_data_transform`
+* `iot_data_vector_element_count`
+* `iot_data_vector_dimensions`
 
 - Function added to return size of encapsulated C data type
 

@@ -4069,7 +4069,7 @@ static void test_data_vector_to_array (void)
   iot_data_vector_add (vector, 1u, iot_data_alloc_null ());
   iot_data_vector_add (vector, 2u, iot_data_alloc_ui16 (2u));
   CU_ASSERT (iot_data_vector_size (vector) == 3u)
-  iot_data_t * array = iot_data_vector_to_array (vector, IOT_DATA_UINT8);
+  iot_data_t * array = iot_data_vector_to_array (vector, IOT_DATA_UINT8, false);
   CU_ASSERT (iot_data_array_size (array) == 2u)
   CU_ASSERT (iot_data_array_type (array) == IOT_DATA_UINT8)
   iot_data_array_iter_t iter;
@@ -4084,9 +4084,36 @@ static void test_data_vector_to_array (void)
 
   vector = iot_data_alloc_vector (1u);
   iot_data_vector_add (vector, 0u, iot_data_alloc_ui32 (666u));
-  array = iot_data_vector_to_array (vector, IOT_DATA_UINT8);
+  array = iot_data_vector_to_array (vector, IOT_DATA_UINT8, false);
   CU_ASSERT (iot_data_array_size (array) == 0u)
 
+  iot_data_free (vector);
+  iot_data_free (array);
+}
+
+static void test_data_nested_vector_to_array (void)
+{
+  iot_data_t * vector = iot_data_alloc_vector (3u);
+  iot_data_t * vector2 = iot_data_alloc_vector (3u);
+  iot_data_vector_add (vector2, 0, iot_data_alloc_ui32 (20u));
+  iot_data_vector_add (vector2, 1u, iot_data_alloc_null ());
+  iot_data_vector_add (vector2, 2u, iot_data_alloc_ui16 (22u));
+  iot_data_vector_add (vector, 0, iot_data_alloc_ui32 (0u));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_null ());
+  iot_data_vector_add (vector, 2u, vector2);
+  CU_ASSERT (iot_data_vector_size (vector) == 3u)
+  CU_ASSERT (iot_data_vector_size (vector2) == 3u)
+  iot_data_t * array = iot_data_vector_to_array (vector, IOT_DATA_UINT8, true);
+  CU_ASSERT (iot_data_array_size (array) == 3u)
+  CU_ASSERT (iot_data_array_type (array) == IOT_DATA_UINT8)
+  iot_data_array_iter_t iter;
+  iot_data_array_iter (array, &iter);
+  iot_data_array_iter_next (&iter);
+  CU_ASSERT (*((uint8_t*) iot_data_array_iter_value (&iter)) == 0u)
+  iot_data_array_iter_next (&iter);
+  CU_ASSERT (*((uint8_t*) iot_data_array_iter_value (&iter)) == 20u)
+  iot_data_array_iter_next (&iter);
+  CU_ASSERT (*((uint8_t*) iot_data_array_iter_value (&iter)) == 22u)
   iot_data_free (vector);
   iot_data_free (array);
 }
@@ -4146,6 +4173,145 @@ static void test_data_transform (void)
   xform = iot_data_transform (data, IOT_DATA_UINT8);
   CU_ASSERT (xform == NULL)
   iot_data_free (data);
+}
+
+static void test_vector_elements (void)
+{
+  iot_data_t * vector = iot_data_alloc_vector (4u);
+  iot_data_t * vector2 = iot_data_alloc_vector (2u);
+  iot_data_vector_add (vector2, 0u, iot_data_alloc_null ());
+  iot_data_vector_add (vector2,1u, iot_data_alloc_ui32 (1u));
+  iot_data_vector_add (vector, 0u, iot_data_alloc_ui32 (0u));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_ui32 (1u));
+  iot_data_vector_add (vector, 2u, vector2);
+  iot_data_vector_add (vector, 3u, iot_data_alloc_ui16 (3u));
+  CU_ASSERT (iot_data_vector_element_count (vector2, IOT_DATA_MULTI, false) == 2u)
+  CU_ASSERT (iot_data_vector_element_count (vector2, IOT_DATA_NULL, false) == 1u)
+  CU_ASSERT (iot_data_vector_element_count (vector2, IOT_DATA_UINT32, false) == 1u)
+  CU_ASSERT (iot_data_vector_element_count (vector2, IOT_DATA_INT32, false) == 0u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_MULTI, false) == 4u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_MULTI, true) == 6u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_UINT32, true) == 3u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_UINT32, false) == 2u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_NULL, false) == 0u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_NULL, true) == 1u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_UINT16, true) == 1u)
+
+  uint32_t depth;
+  const uint32_t * vals;
+  iot_data_t * dims;
+  dims = iot_data_vector_dimensions (vector);
+  depth = iot_data_array_length (dims);
+  vals = iot_data_address (dims);
+  CU_ASSERT (depth == 1u)
+  CU_ASSERT (vals[0] == 4u)
+  iot_data_free (dims);
+
+  dims = iot_data_vector_dimensions (vector2);
+  depth = iot_data_array_length (dims);
+  vals = iot_data_address (dims);
+  CU_ASSERT (depth == 1u)
+  CU_ASSERT (vals[0] == 2u)
+  iot_data_free (dims);
+
+  iot_data_free (vector);
+}
+
+static void test_vector_dimensions (void)
+{
+  static const char * json1 = "[[1,2],[2,3],[3,4]]";               // 3 by 2
+  static const char * json2 = "[[1,2,3,4]]";                       // 1 by 4
+  static const char * json3 = "[1,2,3,4]";                         // 4 by 1
+  static const char * json4 = "[[1],2,[3],[4]]";                   // 4 by 1
+  static const char * json5 = "[[[1,0]],[[2,0]],[[3,0]],[[4,0]]]"; // 4 by 1 by 2
+  static const char * json6 = "[[1,2],[3],[3,4]]";                 // Invalid array
+
+  uint32_t depth;
+  const uint32_t * vals;
+  iot_data_t * dims;
+  iot_data_t * vector;
+  iot_data_t * array;
+
+  vector = iot_data_from_json (json1);
+  dims = iot_data_vector_dimensions (vector);
+  depth = iot_data_array_length (dims);
+  vals = iot_data_address (dims);
+  array = iot_data_vector_to_array (vector, IOT_DATA_UINT32, true);
+  CU_ASSERT (iot_data_array_length (array) == 6u)
+  CU_ASSERT (depth == 2u)
+  CU_ASSERT (dims != NULL)
+  CU_ASSERT (vals[0u] == 3u)
+  CU_ASSERT (vals[1u] == 2u)
+  iot_data_free (dims);
+  iot_data_free (vector);
+  iot_data_free (array);
+
+  vector = iot_data_from_json (json2);
+  dims = iot_data_vector_dimensions (vector);
+  depth = iot_data_array_length (dims);
+  vals = iot_data_address (dims);
+  array = iot_data_vector_to_array (vector, IOT_DATA_UINT32, true);
+  CU_ASSERT (iot_data_array_length (array) == 4u)
+  CU_ASSERT (depth == 2u)
+  CU_ASSERT (dims != NULL)
+  CU_ASSERT (vals[0u] == 1u)
+  CU_ASSERT (vals[1u] == 4u)
+  iot_data_free (dims);
+  iot_data_free (vector);
+  iot_data_free (array);
+
+  vector = iot_data_from_json (json3);
+  dims = iot_data_vector_dimensions (vector);
+  depth = iot_data_array_length (dims);
+  vals = iot_data_address (dims);
+  array = iot_data_vector_to_array (vector, IOT_DATA_UINT32, true);
+  CU_ASSERT (iot_data_array_length (array) == 4u)
+  CU_ASSERT (depth == 1u)
+  CU_ASSERT (vals != NULL)
+  CU_ASSERT (vals[0u] == 4u)
+  iot_data_free (dims);
+  iot_data_free (vector);
+  iot_data_free (array);
+
+  vector = iot_data_from_json (json4);
+  dims = iot_data_vector_dimensions (vector);
+  depth = iot_data_array_length (dims);
+  vals = iot_data_address (dims);
+  array = iot_data_vector_to_array (vector, IOT_DATA_UINT32, true);
+  CU_ASSERT (iot_data_array_length (array) == 4u)
+  CU_ASSERT (depth == 1u)
+  CU_ASSERT (vals != NULL)
+  CU_ASSERT (vals[0u] == 4u)
+  iot_data_free (dims);
+  iot_data_free (vector);
+  iot_data_free (array);
+
+  vector = iot_data_from_json (json5);
+  dims = iot_data_vector_dimensions (vector);
+  depth = iot_data_array_length (dims);
+  vals = iot_data_address (dims);
+  array = iot_data_vector_to_array (vector, IOT_DATA_UINT32, true);
+  CU_ASSERT (iot_data_array_length (array) == 8u)
+  CU_ASSERT (depth == 3u)
+  CU_ASSERT (vals != NULL)
+  CU_ASSERT (vals[0u] == 4u)
+  CU_ASSERT (vals[1u] == 1u)
+  CU_ASSERT (vals[2u] == 2u)
+  iot_data_free (dims);
+  iot_data_free (vector);
+  iot_data_free (array);
+
+  vector = iot_data_from_json (json6);
+  dims = iot_data_vector_dimensions (vector);
+  depth = iot_data_array_length (dims);
+  vals = iot_data_address (dims);
+  array = iot_data_vector_to_array (vector, IOT_DATA_UINT32, true);
+  CU_ASSERT (iot_data_array_length (array) == 5u)
+  CU_ASSERT (depth == 0u)
+  CU_ASSERT (vals == NULL)
+  iot_data_free (dims);
+  iot_data_free (vector);
+  iot_data_free (array);
 }
 
 void cunit_data_test_init (void)
@@ -4281,9 +4447,12 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_compare", test_data_compare);
   CU_add_test (suite, "data_compress", test_data_compress);
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
+  CU_add_test (suite, "data_nested_vector_to_array", test_data_nested_vector_to_array);
   CU_add_test (suite, "data_ref_count", test_data_ref_count);
   CU_add_test (suite, "data_array_transform", test_data_array_transform);
   CU_add_test (suite, "data_transform", test_data_transform);
+  CU_add_test (suite, "vector_elements", test_vector_elements);
+  CU_add_test (suite, "vector_dimensions", test_vector_dimensions);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif
