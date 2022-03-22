@@ -1316,7 +1316,7 @@ extern uint32_t iot_data_vector_size (const iot_data_t * vector);
  * @brief Get the number of elements of a given type in a vector
  * @param vector  Input vector
  * @param type    Type of elements to count (IOT_DATA_MULTI to count all types)
- * @param recurse Whether to recurse to contained vectors
+ * @param recurse Whether to recurse to contained vectors or count them as an element
  * @return        Number of contained elements of given type
  */
 extern uint32_t iot_data_vector_element_count (const iot_data_t * vector, iot_data_type_t type, bool recurse);
@@ -1766,15 +1766,26 @@ extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * ty
 extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t * tc2);
 
 /**
- * @brief Converts a vector to an array, vector elements must be castable to the target array type, vector elements
+ * @brief Converts a vector to an array, vector elements must be castable to the target type, vector elements
  * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty array is returned.
  *
  * @param vector  The vector to transform
- * @param type    The data element type for the array
+ * @param type    The data element type for the created array
  * @param recurse Whether to recurse to contained vectors
  * @return        The newly created array containing the vector elements, may be empty
  */
 extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse);
+
+/**
+ * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements
+ * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty vector is returned.
+ *
+ * @param vector  The vector to transform
+ * @param type    The data element type for the created vector
+ * @param recurse Whether to recurse to contained vectors
+ * @return        The newly created vector, may be empty
+ */
+extern iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type_t type, bool recurse);
 
 /**
  * @brief Returns the dimensions of a vector representing a multi dimensional array.
@@ -1787,7 +1798,9 @@ extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_dat
 extern iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector);
 
 /**
- * @brief Transforms one basic data type to another, if value is castable.
+ * @brief Transforms one data type to another. Tf the data type is already of the required
+ *        type then the data is copied, otherwise if the data is castable to the target type
+ *        a new instance of the required type is returned.
  *
  * @param data   The data to transform
  * @param type   The type for the transformed data

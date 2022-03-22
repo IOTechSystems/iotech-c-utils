@@ -686,6 +686,7 @@ iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
 {
   assert (data);
   iot_data_union_t out;
+  if (data->type == type) return iot_data_copy (data);
   if (iot_data_cast_val (&((const iot_data_value_t*) data)->value, &out, data->type, type))
   {
     switch (type)
@@ -1833,7 +1834,7 @@ iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector)
   return iot_data_alloc_array (dims, depth, IOT_DATA_UINT32, IOT_DATA_TAKE);
 }
 
-static uint32_t iot_data_vector_element_count_castable (const iot_data_t * vector, iot_data_type_t type, bool recurse, bool castable)
+static uint32_t iot_data_vector_elements (const iot_data_t * vector, iot_data_type_t type, bool recurse, bool castable)
 {
   uint32_t count = 0;
   iot_data_vector_iter_t iter;
@@ -1841,9 +1842,18 @@ static uint32_t iot_data_vector_element_count_castable (const iot_data_t * vecto
   while (iot_data_vector_iter_next (&iter))
   {
     const iot_data_t * element = iot_data_vector_iter_value (&iter);
-    iot_data_type_t etype = iot_data_type (element);
-    if ((castable && type <= IOT_DATA_BOOL) || (!castable &&  (type == IOT_DATA_MULTI || etype == type))) count++;
-    if (recurse && (etype == IOT_DATA_VECTOR)) count += iot_data_vector_element_count_castable (element, type, true, castable);
+    if (element)
+    {
+      iot_data_type_t etype = element->type;
+      if (recurse && (etype == IOT_DATA_VECTOR))
+      {
+        count += iot_data_vector_elements (element, type, true, castable);
+      }
+      else if ((etype == type) || (!castable && (type == IOT_DATA_MULTI)) || (castable && (etype <= IOT_DATA_BOOL)))
+      {
+        count++;
+      }
+    }
   }
   return count;
 }
@@ -1851,34 +1861,59 @@ static uint32_t iot_data_vector_element_count_castable (const iot_data_t * vecto
 uint32_t iot_data_vector_element_count (const iot_data_t * vector, iot_data_type_t type, bool recurse)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR));
-  return iot_data_vector_element_count_castable (vector, type, recurse, false);
+  return iot_data_vector_elements (vector, type, recurse, false);
 }
 
-static uint32_t iot_data_vector_copy_to_array (const iot_data_t * vector, iot_data_type_t type, uint8_t ** ptr, uint32_t esize)
+static uint32_t iot_data_vector_copy_to_array (const iot_data_t * vector, iot_data_type_t type, uint8_t ** ptr, uint32_t esize, bool recurse)
 {
-   uint32_t copied = 0u;
-   iot_data_vector_iter_t iter;
-   iot_data_vector_iter (vector, &iter);
-   while (iot_data_vector_iter_next (&iter))
-   {
-     const iot_data_t * element = iot_data_vector_iter_value (&iter);
-     if (element->type == IOT_DATA_VECTOR)
-     {
-       copied += iot_data_vector_copy_to_array (element, type, ptr, esize);
-     }
-     else if (iot_data_cast (element, type, *ptr))
-     {
-       *ptr += esize;
-       copied++;
-     }
-   }
-   return copied;
+  uint32_t copied = 0u;
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (vector, &iter);
+  while (iot_data_vector_iter_next (&iter))
+  {
+    const iot_data_t * element = iot_data_vector_iter_value (&iter);
+    if (element)
+    {
+      if (recurse && (element->type == IOT_DATA_VECTOR))
+      {
+        copied += iot_data_vector_copy_to_array (element, type, ptr, esize, true);
+      }
+      else if (iot_data_cast (element, type, *ptr))
+      {
+        *ptr += esize;
+        copied++;
+      }
+    }
+  }
+  return copied;
+}
+
+static void iot_data_vector_copy_to_vector (const iot_data_t * from, iot_data_t * to, uint32_t * index, bool recurse)
+{
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (from, &iter);
+  while (iot_data_vector_iter_next (&iter))
+  {
+    const iot_data_t * element = iot_data_vector_iter_value (&iter);
+    if (element)
+    {
+      if (recurse && (element->type == IOT_DATA_VECTOR))
+      {
+        iot_data_vector_copy_to_vector (element, to, index, true);
+      }
+      else
+      {
+        iot_data_t * val = iot_data_transform (element, to->element_type);
+        if (val) iot_data_vector_add (to, (*index)++, val);
+      }
+    }
+  }
 }
 
 iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR) && (type <= IOT_DATA_BOOL));
-  uint32_t vsize = iot_data_vector_element_count_castable (vector, type, recurse, true);
+  uint32_t vsize = iot_data_vector_elements (vector, type, recurse, true);
   void * data = NULL;
   uint32_t asize = 0u;
 
@@ -1887,7 +1922,7 @@ iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_
     uint32_t esize = iot_data_type_sizes[type];
     data = calloc (vsize, esize);
     uint8_t * ptr = data;
-    asize = iot_data_vector_copy_to_array (vector, type, &ptr, esize);
+    asize = iot_data_vector_copy_to_array (vector, type, &ptr, esize, recurse);
     if (asize == 0)
     {
       free (data);
@@ -1895,6 +1930,21 @@ iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_
     }
   }
   return iot_data_alloc_array (data, asize, type, IOT_DATA_TAKE);
+}
+
+iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type_t type, bool recurse)
+{
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  uint32_t size = iot_data_vector_elements (vector, type, recurse, true);
+  void * to = iot_data_alloc_typed_vector (size, type);
+
+  if (size)
+  {
+    uint32_t index = 0u;
+    iot_data_vector_copy_to_vector (vector, to, &index, recurse);
+    ((iot_data_vector_t*) to)->size = index;
+  }
+  return to;
 }
 
 void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
