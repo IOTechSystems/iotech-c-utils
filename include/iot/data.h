@@ -1813,7 +1813,7 @@ iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type);
  * @brief Transforms an array of one type to an array of another. Array element values must be castable from one type/value
  * to another, or the array element is ignored. An empty array is returned if no array elements can be transformed.
  *
- * @param vector The array to transform
+ * @param array  The array to transform
  * @param type   The data element type for the transformed array
  * @return       The newly created array containing the transformed array elements, may be empty
  */
