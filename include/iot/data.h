@@ -1793,9 +1793,10 @@ extern iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_da
  *        and each non vector element, must contain the same number of elements.
  *
  * @param vector  The vector
+ * @param total   Pointer to an integer set to the total number of elements in the array (multiplication of dimensions)
  * @return        An array of IOT_DATA_UINT32 containing the array dimensions
  */
-extern iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector);
+extern iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total);
 
 /**
  * @brief Transforms one data type to another. Tf the data type is already of the required

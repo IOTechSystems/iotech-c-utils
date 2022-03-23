@@ -1801,11 +1801,15 @@ static uint32_t iot_data_vector_depth (const iot_data_t * vector)
   return depth + 1u;
 }
 
-static bool iot_data_vector_dims (const iot_data_t * vector, uint32_t * dims)
+static bool iot_data_vector_dims (const iot_data_t * vector, uint32_t * dims, uint32_t * total)
 {
   uint32_t size = iot_data_vector_size (vector);
   uint32_t vecs = iot_data_vector_element_count (vector, IOT_DATA_VECTOR, false);
-  if (*dims == 0) *dims = size;
+  if (*dims == 0)
+  {
+    *dims = size;
+    *total = *total ? *total * size : size;
+  }
   bool ok = (*dims == size);
   if (ok && (size == vecs)) // Only regard as mult-dimensional vector if all elements also vectors
   {
@@ -1814,22 +1818,24 @@ static bool iot_data_vector_dims (const iot_data_t * vector, uint32_t * dims)
     iot_data_vector_iter (vector, &iter);
     while (ok && iot_data_vector_iter_next (&iter))
     {
-      ok = iot_data_vector_dims (iot_data_vector_iter_value (&iter), dims);
+      ok = iot_data_vector_dims (iot_data_vector_iter_value (&iter), dims, total);
     }
   }
   return ok;
 }
 
-iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector)
+iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total)
 {
-  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  assert (total && vector && (vector->type == IOT_DATA_VECTOR));
   uint32_t depth = iot_data_vector_depth (vector);
   uint32_t * dims = calloc (depth, sizeof (uint32_t));
-  if (! iot_data_vector_dims (vector, dims))
+  *total = 0u;
+  if (! iot_data_vector_dims (vector, dims, total))
   {
     free (dims);
     dims = NULL;
     depth = 0u;
+    *total = 0u;
   }
   return iot_data_alloc_array (dims, depth, IOT_DATA_UINT32, IOT_DATA_TAKE);
 }
