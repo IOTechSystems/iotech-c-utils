@@ -1827,17 +1827,20 @@ static bool iot_data_vector_dims (const iot_data_t * vector, uint32_t * dims, ui
 iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total)
 {
   assert (total && vector && (vector->type == IOT_DATA_VECTOR));
+  iot_data_t * dimarray = NULL;
   uint32_t depth = iot_data_vector_depth (vector);
   uint32_t * dims = calloc (depth, sizeof (uint32_t));
   *total = 0u;
-  if (! iot_data_vector_dims (vector, dims, total))
+  if (iot_data_vector_dims (vector, dims, total))
+  {
+    dimarray = iot_data_alloc_array (dims, depth, IOT_DATA_UINT32, IOT_DATA_TAKE);
+  }
+  else
   {
     free (dims);
-    dims = NULL;
-    depth = 0u;
     *total = 0u;
   }
-  return iot_data_alloc_array (dims, depth, IOT_DATA_UINT32, IOT_DATA_TAKE);
+  return dimarray;
 }
 
 static uint32_t iot_data_vector_elements (const iot_data_t * vector, iot_data_type_t type, bool recurse, bool castable)
