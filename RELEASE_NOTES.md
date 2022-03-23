@@ -220,6 +220,7 @@
 - Data transform and helper functions added:
 
 * `iot_data_vector_to_array`
+* `iot_data_vector_to_vector`
 * `iot_data_array_transform`
 * `iot_data_transform`
 * `iot_data_vector_element_count`
