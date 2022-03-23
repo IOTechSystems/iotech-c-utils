@@ -1799,8 +1799,8 @@ extern iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_da
 extern iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total);
 
 /**
- * @brief Transforms one data type to another. Tf the data type is already of the required
- *        type then the data is copied, otherwise if the data is castable to the target type
+ * @brief Transforms one data type to another. Tf the data type is already of the required type then the same
+ *        data is returned with an incremented reference count, otherwise if the data is castable to the target type
  *        a new instance of the required type is returned.
  *
  * @param data   The data to transform
