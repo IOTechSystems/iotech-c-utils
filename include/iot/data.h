@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2020 IOTech Ltd
+// Copyright (c) 2019-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -1010,6 +1010,15 @@ extern void iot_data_vector_resize (iot_data_t * vector, uint32_t size);
 extern uint32_t iot_data_vector_size (const iot_data_t * vector);
 
 /**
+ * @brief Get the number of elements of a given type in a vector
+ * @param vector  Input vector
+ * @param type    Type of elements to count (IOT_DATA_MULTI to count all types)
+ * @param recurse Whether to recurse to contained vectors or count them as an element
+ * @return        Number of contained elements of given type
+ */
+extern uint32_t iot_data_vector_element_count (const iot_data_t * vector, iot_data_type_t type, bool recurse);
+
+/**
  * @brief Initialise iterator for an array
  *
  * The function initialises an iterator to point to the beginning of an array. Note that
@@ -1377,17 +1386,42 @@ extern iot_data_t * iot_data_copy (const iot_data_t * src);
 extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * typecode);
 
 /**
- * @brief Converts a vector to an array, vector elements must be castable to the target array type, vector elements
+ * @brief Converts a vector to an array, vector elements must be castable to the target type, vector elements
  * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty array is returned.
  *
- * @param vector The vector to transform
- * @param type   The data element type for the array
- * @return       The newly created array containing the vector elements, may be empty
+ * @param vector  The vector to transform
+ * @param type    The data element type for the created array
+ * @param recurse Whether to recurse to contained vectors
+ * @return        The newly created array containing the vector elements, may be empty
  */
-extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type);
+extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse);
 
 /**
- * @brief Transforms one basic data type to another, if value is castable.
+ * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements
+ * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty vector is returned.
+ *
+ * @param vector  The vector to transform
+ * @param type    The data element type for the created vector
+ * @param recurse Whether to recurse to contained vectors
+ * @return        The newly created vector, may be empty
+ */
+extern iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type_t type, bool recurse);
+
+/**
+ * @brief Returns the dimensions of a vector representing a multi dimensional array.
+ *        Note that a vector must contain only other vectors to be considered an array slice
+ *        and each non vector element, must contain the same number of elements.
+ *
+ * @param vector  The vector
+ * @param total   Pointer to an integer set to the total number of elements in the array (multiplication of dimensions). Set to zero if vector structure invalid
+ * @return        An array of IOT_DATA_UINT32 containing the array dimensions, or NULL if vector structure invalid
+ */
+extern iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total);
+
+/**
+ * @brief Transforms one data type to another. Tf the data type is already of the required type then the same
+ *        data is returned with an incremented reference count, otherwise if the data is castable to the target type
+ *        a new instance of the required type is returned.
  *
  * @param data   The data to transform
  * @param type   The type for the transformed data
@@ -1399,7 +1433,7 @@ iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type);
  * @brief Transforms an array of one type to an array of another. Array element values must be castable from one type/value
  * to another, or the array element is ignored. An empty array is returned if no array elements can be transformed.
  *
- * @param vector The array to transform
+ * @param array  The array to transform
  * @param type   The data element type for the transformed array
  * @return       The newly created array containing the transformed array elements, may be empty
  */
