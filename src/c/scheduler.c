@@ -321,6 +321,8 @@ void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule
   }
   iot_component_unlock (&scheduler->component);
   iot_threadpool_free (schedule->threadpool);
+  iot_data_free (schedule->id);
+  iot_data_free (schedule->self);
   (schedule->freefn) ? schedule->freefn (schedule->arg) : 0;
   free (schedule);
 }
