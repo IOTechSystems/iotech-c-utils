@@ -69,12 +69,12 @@ static inline void iot_schedule_idle_add (iot_scheduler_t * scheduler, iot_sched
   schedule->scheduled = false;
 }
 
-static inline void iot_schedule_idle_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
+static inline void iot_schedule_idle_remove (iot_scheduler_t * scheduler, const iot_schedule_t * schedule)
 {
   iot_data_map_remove (scheduler->idle, schedule->id_key);
 }
 
-static inline void iot_schedule_queue_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
+static inline void iot_schedule_queue_remove (iot_scheduler_t * scheduler, const iot_schedule_t * schedule)
 {
   iot_data_map_remove (scheduler->queue, schedule->start_key);
 }
@@ -84,7 +84,7 @@ static inline iot_schedule_t * iot_schedule_queue_next (iot_data_t * map)
   return (iot_schedule_t*) iot_data_map_start_pointer (map);
 }
 
-static inline bool iot_schedule_is_next (iot_data_t * map, iot_schedule_t * schedule)
+static inline bool iot_schedule_is_next (iot_data_t * map, const iot_schedule_t * schedule)
 {
   return (iot_schedule_queue_next (map) == schedule);
 }
@@ -131,7 +131,7 @@ static void * iot_scheduler_thread (void * arg)
     iot_schedule_t * current = iot_schedule_queue_next (queue);
     if (ret == 0)
     {
-      ns = (current) ? current->start : (iot_time_nsecs () + IOT_SCHEDULER_DEFAULT_WAKE);
+      ns = current ? current->start : (iot_time_nsecs () + IOT_SCHEDULER_DEFAULT_WAKE);
     }
     else
     {
@@ -180,7 +180,7 @@ static void * iot_scheduler_thread (void * arg)
           iot_schedule_queue_update (scheduler, current, next);
         }
         current = iot_schedule_queue_next (queue);
-        ns = (current) ? current->start : (iot_time_nsecs () + IOT_SCHEDULER_DEFAULT_WAKE);
+        ns = current ? current->start : (iot_time_nsecs () + IOT_SCHEDULER_DEFAULT_WAKE);
       }
       else
       {
