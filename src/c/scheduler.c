@@ -19,7 +19,6 @@
 #define IOT_SCHEDULER_FACTORY NULL
 #endif
 
-/* Schedule */
 struct iot_schedule_t
 {
   iot_schedule_fn_t function;        /* The function called by the schedule */
@@ -39,7 +38,6 @@ struct iot_schedule_t
   iot_data_static_t self_static;     /* Block for constant pointer IOT data */
 };
 
-/* Scheduler */
 struct iot_scheduler_t
 {
   iot_component_t component;      /* Component base type */
@@ -98,7 +96,6 @@ static void iot_schedule_queue_update (iot_scheduler_t * scheduler, iot_schedule
   iot_schedule_queue_add (scheduler, schedule);
 }
 
-/* Convert time in ns to timespec */
 static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
 {
   ts->tv_sec = (time_t) IOT_NS_TO_SEC (ns);
@@ -199,7 +196,6 @@ static void * iot_scheduler_thread (void * arg)
   return NULL;
 }
 
-/* Initialise the schedule queue and processing thread */
 iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t * logger)
 {
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1u, sizeof (*scheduler));
@@ -218,7 +214,6 @@ void iot_scheduler_add_ref (iot_scheduler_t * scheduler)
   if (scheduler) iot_component_add_ref (&scheduler->component);
 }
 
-/* Start the scheduler thread */
 void iot_scheduler_start (iot_scheduler_t * scheduler)
 {
   assert (scheduler);
@@ -226,7 +221,6 @@ void iot_scheduler_start (iot_scheduler_t * scheduler)
   iot_component_set_running (&scheduler->component);
 }
 
-/* Stop the scheduler thread */
 void iot_scheduler_stop (iot_scheduler_t * scheduler)
 {
   assert (scheduler);
@@ -243,7 +237,7 @@ static void iot_schedule_free (iot_schedule_t * schedule)
   free (schedule);
 }
 
-/* Create a schedule and insert it into the queue */
+/* Create a schedule and insert it into the idle queue */
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
   static atomic_uint_fast64_t schedule_id_counter = 0;
@@ -333,20 +327,12 @@ void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
   iot_component_unlock (&scheduler->component);
 }
 
-/* Delete a schedule */
 void iot_schedule_delete (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 {
   assert (scheduler && schedule);
   iot_log_trace (scheduler->logger, "iot_schedule_delete #%" PRIu64, schedule->id);
   iot_component_lock (&scheduler->component);
-  if (schedule->scheduled)
-  {
-    iot_schedule_queue_remove (scheduler, schedule);
-  }
-  else
-  {
-    iot_schedule_idle_remove (scheduler, schedule);
-  }
+  (schedule->scheduled) ? iot_schedule_queue_remove (scheduler, schedule) : iot_schedule_idle_remove (scheduler, schedule);
   iot_component_unlock (&scheduler->component);
   iot_schedule_free (schedule);
 }
@@ -371,13 +357,12 @@ static void iot_scheduler_free_schedules (iot_data_t * map)
   while (iot_data_map_iter_next (&iter))
   {
     iot_schedule_t * schedule = (iot_schedule_t*) iot_data_map_iter_pointer_value (&iter);
-    iot_data_map_iter_replace_value (&iter, null_val);
+    iot_data_map_iter_replace_value (&iter, null_val); // To prevent map deletion from re-freeing schedule
     iot_schedule_free (schedule);
   }
   iot_data_free (map);
 }
 
-/* Delete all remaining scheduler resources */
 void iot_scheduler_free (iot_scheduler_t * scheduler)
 {
   if (scheduler && iot_component_dec_ref (&scheduler->component))
