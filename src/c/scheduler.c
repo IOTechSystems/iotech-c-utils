@@ -374,6 +374,7 @@ static void iot_scheduler_free_schedules (iot_data_t * map)
     iot_data_map_iter_replace_value (&iter, null_val);
     iot_schedule_free (schedule);
   }
+  iot_data_free (map);
 }
 
 /* Delete all remaining scheduler resources */
@@ -390,8 +391,6 @@ void iot_scheduler_free (iot_scheduler_t * scheduler)
     iot_wait_secs (1u);
     iot_scheduler_free_schedules (scheduler->queue);
     iot_scheduler_free_schedules (scheduler->idle);
-    iot_data_free (scheduler->queue);
-    iot_data_free (scheduler->idle);
     iot_logger_free (scheduler->logger);
     iot_component_fini (&scheduler->component);
     free (scheduler);
