@@ -3854,6 +3854,18 @@ static void test_data_const_string (void)
   iot_data_free (data);
 }
 
+static void test_data_const_pointer (void)
+{
+  static iot_data_static_t block;
+  static const void * ptr = &block;
+  iot_data_t * data = iot_data_alloc_const_pointer (&block, ptr);
+  CU_ASSERT (iot_data_pointer (data) == ptr)
+  CU_ASSERT (data == IOT_DATA_STATIC (block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
 static void test_data_const_types (void)
 {
   const iot_data_t * b1 = iot_data_alloc_bool (true);
@@ -4623,6 +4635,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_alloc_heap", test_data_alloc_heap);
   CU_add_test (suite, "data_cast", test_data_cast);
   CU_add_test (suite, "data_const_string", test_data_const_string);
+  CU_add_test (suite, "data_const_pointer", test_data_const_pointer);
   CU_add_test (suite, "data_const_types", test_data_const_types);
   CU_add_test (suite, "data_hash", test_data_hash);
   CU_add_test (suite, "data_multi_key_map", test_data_multi_key_map);

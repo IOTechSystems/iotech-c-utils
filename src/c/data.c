@@ -1337,6 +1337,17 @@ iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char *
   return (iot_data_t*) val;
 }
 
+iot_data_t * iot_data_alloc_const_pointer (iot_data_static_t * data, const void * ptr)
+{
+  iot_data_pointer_t * val = (iot_data_pointer_t*) data;
+  memset (data, 0, sizeof (*data));
+  iot_data_block_init (&val->base, IOT_DATA_POINTER);
+  val->value = (void*) ptr;
+  val->base.hash =  (uint32_t) (intptr_t) ptr;
+  val->base.constant = true;
+  return (iot_data_t*) val;
+}
+
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
 {
   assert (val);

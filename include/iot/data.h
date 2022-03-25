@@ -434,7 +434,7 @@ extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_
  *
  * @param data       Address of static storage for data
  * @param str        Constant string value.
- * @return           Pointer to the allocated data (same address as static storge)
+ * @return           Pointer to the allocated data (same address as the static storge)
  */
 extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str);
 
@@ -461,6 +461,18 @@ extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
  * @return           Pointer to the allocated data
  */
 extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn);
+
+/**
+ * @brief Allocate constant pointer data
+ *
+ * The function to allocate data for a constant pointer, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param ptr        Constant pointer value.
+ * @return           Pointer to the allocated data (same address as the static storge)
+ */
+extern iot_data_t * iot_data_alloc_const_pointer (iot_data_static_t * data, const void * ptr);
 
 /**
  * @brief Allocate data for a list
