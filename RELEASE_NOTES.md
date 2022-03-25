@@ -230,6 +230,10 @@
 
 * `iot_data_type_size`
 
+- Scheduler implementation scalability rework, plus function added to return schedule id:
+
+* `iot_schedule_id`
+
 - Map data type updated to support all key types
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13
