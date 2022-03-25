@@ -81,17 +81,9 @@ static inline void iot_schedule_queue_remove (iot_scheduler_t * scheduler, iot_s
   iot_data_map_remove (scheduler->queue, schedule->start_key);
 }
 
-static iot_schedule_t * iot_schedule_queue_next (iot_data_t * map)
+static inline iot_schedule_t * iot_schedule_queue_next (iot_data_t * map)
 {
-  iot_schedule_t * schedule = NULL;
-  if (iot_data_map_size (map))
-  {
-    iot_data_map_iter_t iter;
-    iot_data_map_iter (map, &iter);
-    iot_data_map_iter_next (&iter);
-    schedule = (iot_schedule_t*) iot_data_map_iter_pointer_value (&iter);
-  }
-  return schedule;
+  return (iot_schedule_t*) iot_data_map_start_pointer (map);
 }
 
 static inline bool iot_schedule_is_next (iot_data_t * map, iot_schedule_t * schedule)

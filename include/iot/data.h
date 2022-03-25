@@ -1408,6 +1408,38 @@ extern const void * iot_data_array_iter_value (const iot_data_array_iter_t * ite
 extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter);
 
 /**
+ * @brief Return first element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       First element in the map
+ */
+extern const iot_data_t * iot_data_map_start (iot_data_t * map);
+
+/**
+ * @brief Return the value of the first pointer element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Pointer from the first element in the map
+ */
+extern const void * iot_data_map_start_pointer (iot_data_t * map);
+
+/**
+ * @brief Return last element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Last element in the map
+ */
+extern const iot_data_t * iot_data_map_end (iot_data_t * map);
+
+/**
+ * @brief Return the value of the last pointer element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Pointer from the last element in the map
+ */
+extern const void * iot_data_map_end_pointer (iot_data_t * map);
+
+/**
  * @brief Update the iterator to point to the next element within a map
  *
  * The function to set the iterator to point to the next element within a map. On reaching end of the map,
