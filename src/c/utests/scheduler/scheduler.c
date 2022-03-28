@@ -112,8 +112,10 @@ static void cunit_scheduler_start (void)
   CU_ASSERT (sched1 != NULL)
   iot_schedule_t *sched2 = iot_schedule_create (scheduler, do_work2, NULL, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (sched2 != NULL)
+  CU_ASSERT (iot_schedule_id (sched1) != iot_schedule_id (sched2))
   const iot_schedule_t *sched3 = iot_schedule_create (scheduler, do_work3, NULL, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (sched3 != NULL)
+  CU_ASSERT (iot_schedule_id (sched3) != iot_schedule_id (sched2))
 
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
   CU_ASSERT (iot_schedule_add (scheduler, sched2))
