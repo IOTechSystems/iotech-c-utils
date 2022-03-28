@@ -22,6 +22,8 @@
 struct iot_schedule_t
 {
   iot_schedule_fn_t function;        /* The function called by the schedule */
+  iot_schedule_fn_t run_cb;          /* The function called when schedule is run */
+  iot_schedule_fn_t abort_cb;        /* The function called when schedule run is aborted */
   iot_schedule_free_fn_t freefn;     /* The function to clear the arguments when schedule is deleted */
   void * arg;                        /* Function input arg */
   iot_threadpool_t * threadpool;     /* Thread pool used to run scheduled function */
@@ -130,12 +132,16 @@ static void * iot_scheduler_thread (void * arg)
     iot_schedule_t * current = iot_schedule_queue_next (queue);
     if (current && current->start < iot_time_nsecs ()) // If a schedule and ready to run
     {
+      /* Notify that the schedule is about to run */
+      if (current->run_cb) current->run_cb (current->arg);
       /* Post the work to the thread pool or run as thread */
       if (current->threadpool)
       {
         iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " from threadpool", current->id);
         if (! iot_threadpool_try_work (current->threadpool, current->function, current->arg, current->priority))
         {
+          /* Notify that the run is aborted */
+          if (current->abort_cb) current->abort_cb (current->arg);
           if (atomic_fetch_add (&current->dropped, 1u) == 0)
           {
             iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
@@ -307,6 +313,24 @@ void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
   {
     iot_schedule_update_start (schedule, next);
   }
+  iot_component_unlock (&scheduler->component);
+}
+
+void iot_schedule_add_run_callback (iot_scheduler_t * scheduler, iot_schedule_t * schedule, iot_schedule_fn_t func)
+{
+  assert (scheduler && schedule);
+  iot_log_trace (scheduler->logger, "iot_schedule_reset()");
+  iot_component_lock (&scheduler->component);
+  schedule->run_cb = func;
+  iot_component_unlock (&scheduler->component);
+}
+
+void iot_schedule_add_abort_callback (iot_scheduler_t * scheduler, iot_schedule_t * schedule, iot_schedule_fn_t func)
+{
+  assert (scheduler && schedule);
+  iot_log_trace (scheduler->logger, "iot_schedule_reset()");
+  iot_component_lock (&scheduler->component);
+  schedule->abort_cb = func;
   iot_component_unlock (&scheduler->component);
 }
 
