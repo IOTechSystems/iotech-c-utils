@@ -240,6 +240,14 @@ extern void iot_scheduler_free (iot_scheduler_t * scheduler);
  */
  extern uint64_t iot_schedule_dropped (const iot_schedule_t * schedule);
 
+ /**
+ * @brief  Return unique schedule id
+ *
+ * @param  schedule  Pointer to a schedule
+ * @return           The schedule id
+ */
+extern uint64_t iot_schedule_id (const iot_schedule_t * schedule);
+
 /**
  * @brief  Create Scheduler component factory
  *

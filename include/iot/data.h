@@ -426,6 +426,18 @@ extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
 extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn);
 
 /**
+ * @brief Allocate constant pointer data
+ *
+ * The function to allocate data for a constant pointer, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param ptr        Constant pointer value.
+ * @return           Pointer to the allocated data (same address as the static storge)
+ */
+extern iot_data_t * iot_data_alloc_const_pointer (iot_data_static_t * data, const void * ptr);
+
+/**
  * @brief Allocate memory for an array
  *
  * The function to allocate memory for an array of given size and type. Note that only basic C integer, boolean and floating
@@ -1084,6 +1096,38 @@ extern const void * iot_data_array_iter_value (const iot_data_array_iter_t * ite
 extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter);
 
 /**
+ * @brief Return first element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       First element in the map
+ */
+extern const iot_data_t * iot_data_map_start (iot_data_t * map);
+
+/**
+ * @brief Return the value of the first pointer element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Pointer from the first element in the map
+ */
+extern const void * iot_data_map_start_pointer (iot_data_t * map);
+
+/**
+ * @brief Return last element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Last element in the map
+ */
+extern const iot_data_t * iot_data_map_end (iot_data_t * map);
+
+/**
+ * @brief Return the value of the last pointer element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Pointer from the last element in the map
+ */
+extern const void * iot_data_map_end_pointer (iot_data_t * map);
+
+/**
  * @brief Update the iterator to point to the next element within a map
  *
  * The function to set the iterator to point to the next element within a map. On reaching end of the map,
@@ -1156,6 +1200,16 @@ extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * it
  * @return      String type value from the map if iter is valid, NULL otherwise
  */
 extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter);
+
+/**
+ * @brief Get pointer value from the map referenced by an input iterator
+ *
+ * The function to get the pointer type value from the map referenced by an input iterator
+ *
+ * @param iter  Input iterator
+ * @return      Pointer type value from the map if iter is valid, NULL otherwise
+ */
+extern const void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter);
 
 /**
  * @brief Initialise iterator to the start of a vector

@@ -101,7 +101,7 @@ static int suite_clean (void)
 
 static void cunit_scheduler_start (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (1u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
 
   reset_counters ();
@@ -112,8 +112,10 @@ static void cunit_scheduler_start (void)
   CU_ASSERT (sched1 != NULL)
   iot_schedule_t *sched2 = iot_schedule_create (scheduler, do_work2, NULL, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (sched2 != NULL)
+  CU_ASSERT (iot_schedule_id (sched1) != iot_schedule_id (sched2))
   const iot_schedule_t *sched3 = iot_schedule_create (scheduler, do_work3, NULL, NULL, IOT_SEC_TO_NS (1), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (sched3 != NULL)
+  CU_ASSERT (iot_schedule_id (sched3) != iot_schedule_id (sched2))
 
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
   CU_ASSERT (iot_schedule_add (scheduler, sched2))
@@ -130,7 +132,7 @@ static void cunit_scheduler_start (void)
 
 static void cunit_scheduler_stop (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (1u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
 
   reset_counters ();
@@ -179,7 +181,7 @@ static void cunit_scheduler_create (void)
 
 static void cunit_scheduler_remove (void)
 {
-  iot_threadpool_t *pool = iot_threadpool_alloc (4u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_t *pool = iot_threadpool_alloc (1u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
 
   iot_threadpool_start (pool);
