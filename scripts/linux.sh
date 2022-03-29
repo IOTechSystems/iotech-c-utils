@@ -144,7 +144,7 @@ then
   lcov --remove lcov.tmp2 "*/c/utests/runner/*" -o lcov.tmp3
   lcov --remove lcov.tmp3 "*/c/tests/map/*" -o lcov.tmp4
   genhtml -o html lcov.tmp4
-  gcovr -r ${ROOT}/src --object-directory . -e "${ROOT}/src/c/cunit/*" -e "${ROOT}/src/c/utests/runner/*" -e "${ROOT}/src/c/tests/map/*" --cobertura -o cobertura.xml
+  gcovr -r ${ROOT}/src --object-directory . -e "${ROOT}/src/c/cunit/*" -e "${ROOT}/src/c/utests/runner/*" -e "${ROOT}/src/c/tests/map/*" --xml -o cobertura.xml
 
   if [ "${SONAR}" = "true" ]
   then
