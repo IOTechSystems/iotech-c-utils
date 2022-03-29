@@ -12,7 +12,7 @@ case "${SYS}" in
     if [ "${SQ}" = "true" ]
     then
       curl -fsSL https://sonarqube.iotechsys.com/static/cpp/build-wrapper-linux-x86.zip > scripts/sonar-wrapper.zip
-      curl -fsSL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip > scripts/sonar-scanner.zip
+      curl -fsSL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip > scripts/sonar-scanner.zip
     fi
   ;;
 esac
