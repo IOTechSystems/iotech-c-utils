@@ -73,7 +73,7 @@ typedef struct iot_typecode_t
 /**
 * Type for simple data type static allocation
 */
-typedef void * iot_data_static_t [2 + 16 / sizeof (void*)];
+typedef void * iot_data_static_t [2u + 16u/sizeof (void*)];
 
 /**
 * Macro to cast static data instance (iot_data_static_t) to a iot_data_t pointer
@@ -434,7 +434,7 @@ extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_
  *
  * @param data       Address of static storage for data
  * @param str        Constant string value.
- * @return           Pointer to the allocated data (same address as static storge)
+ * @return           Pointer to the allocated data (same address as the static storge)
  */
 extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str);
 
@@ -461,6 +461,18 @@ extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
  * @return           Pointer to the allocated data
  */
 extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn);
+
+/**
+ * @brief Allocate constant pointer data
+ *
+ * The function to allocate data for a constant pointer, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param ptr        Constant pointer value.
+ * @return           Pointer to the allocated data (same address as the static storge)
+ */
+extern iot_data_t * iot_data_alloc_const_pointer (iot_data_static_t * data, const void * ptr);
 
 /**
  * @brief Allocate data for a list
@@ -967,10 +979,10 @@ extern const char * iot_data_string (const iot_data_t * data);
 extern const void * iot_data_pointer (const iot_data_t * data);
 
 /**
- * @brief Cast integer or float values
+ * @brief Cast integer, float or boolean values
  *
  * The function returns a data value cast to a given type.
- * False is returned if type conversion is not possible. Note float to integer or inter to float conversion is not supported.
+ * False is returned if type conversion is not possible.
  *
  * @param data  Data to be converted
  * @param type  Type of data value to be returned
@@ -1307,13 +1319,19 @@ extern void iot_data_vector_resize (iot_data_t * vector, uint32_t size);
 
 /**
  * @brief Get the vector size
- *
- * The function to get the length of the input vector
- *
  * @param vector  Input vector
  * @return       Size of an vector
  */
 extern uint32_t iot_data_vector_size (const iot_data_t * vector);
+
+/**
+ * @brief Get the number of elements of a given type in a vector
+ * @param vector  Input vector
+ * @param type    Type of elements to count (IOT_DATA_MULTI to count all types)
+ * @param recurse Whether to recurse to contained vectors or count them as an element
+ * @return        Number of contained elements of given type
+ */
+extern uint32_t iot_data_vector_element_count (const iot_data_t * vector, iot_data_type_t type, bool recurse);
 
 /**
  * @brief Initialise iterator for an array
@@ -1388,6 +1406,38 @@ extern const void * iot_data_array_iter_value (const iot_data_array_iter_t * ite
  * @param iter  Iterator to initialise
  */
 extern void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter);
+
+/**
+ * @brief Return first element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       First element in the map
+ */
+extern const iot_data_t * iot_data_map_start (iot_data_t * map);
+
+/**
+ * @brief Return the value of the first pointer element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Pointer from the first element in the map
+ */
+extern const void * iot_data_map_start_pointer (iot_data_t * map);
+
+/**
+ * @brief Return last element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Last element in the map
+ */
+extern const iot_data_t * iot_data_map_end (iot_data_t * map);
+
+/**
+ * @brief Return the value of the last pointer element in a map or NULL if map empty
+ *
+ * @param  map   Input map
+ * @return       Pointer from the last element in the map
+ */
+extern const void * iot_data_map_end_pointer (iot_data_t * map);
 
 /**
  * @brief Update the iterator to point to the next element within a map
@@ -1758,6 +1808,68 @@ extern bool iot_data_matches (const iot_data_t * data, const iot_typecode_t * ty
  * @return    Whether the two typecodes are equal
  */
 extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t * tc2);
+
+/**
+ * @brief Converts a vector to an array, vector elements must be castable to the target type, vector elements
+ * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty array is returned.
+ *
+ * @param vector  The vector to transform
+ * @param type    The data element type for the created array
+ * @param recurse Whether to recurse to contained vectors
+ * @return        The newly created array containing the vector elements, may be empty
+ */
+extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse);
+
+/**
+ * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements
+ * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty vector is returned.
+ *
+ * @param vector  The vector to transform
+ * @param type    The data element type for the created vector
+ * @param recurse Whether to recurse to contained vectors
+ * @return        The newly created vector, may be empty
+ */
+extern iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type_t type, bool recurse);
+
+/**
+ * @brief Returns the dimensions of a vector representing a multi dimensional array.
+ *        Note that a vector must contain only other vectors to be considered an array slice
+ *        and each non vector element, must contain the same number of elements.
+ *
+ * @param vector  The vector
+ * @param total   Pointer to an integer set to the total number of elements in the array (multiplication of dimensions). Set to zero if vector structure invalid
+ * @return        An array of IOT_DATA_UINT32 containing the array dimensions, or NULL if vector structure invalid
+ */
+extern iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total);
+
+/**
+ * @brief Transforms one data type to another. Tf the data type is already of the required type then the same
+ *        data is returned with an incremented reference count, otherwise if the data is castable to the target type
+ *        a new instance of the required type is returned.
+ *
+ * @param data   The data to transform
+ * @param type   The type for the transformed data
+ * @return       The newly created data or NULL if type/value could not be cast
+ */
+iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type);
+
+/**
+ * @brief Transforms an array of one type to an array of another. Array element values must be castable from one type/value
+ * to another, or the array element is ignored. An empty array is returned if no array elements can be transformed.
+ *
+ * @param array  The array to transform
+ * @param type   The data element type for the transformed array
+ * @return       The newly created array containing the transformed array elements, may be empty
+ */
+extern iot_data_t * iot_data_array_transform (const iot_data_t * array, iot_data_type_t type);
+
+/**
+ * @brief Returns the size of the contained data type in bytes.
+ *
+ * @param type   The data type
+ * @return       The size of the contained type in bytes (e.g. 4 for IOT_DATA_UINT32)
+ */
+extern uint32_t iot_data_type_size (iot_data_type_t type);
 
 #ifdef __cplusplus
 }

@@ -217,6 +217,27 @@
 * `iot_data_compress`
 * `iot_data_compress_with_cache`
 
+- Data transform and helper functions added:
+
+* `iot_data_vector_to_array`
+* `iot_data_vector_to_vector`
+* `iot_data_array_transform`
+* `iot_data_transform`
+* `iot_data_vector_element_count`
+* `iot_data_vector_dimensions`
+* `iot_data_map_start`
+* `iot_data_map_start_pointer`
+* `iot_data_map_end`
+* `iot_data_map_end_pointer`
+* 
+- Function added to return size of encapsulated C data type
+
+* `iot_data_type_size`
+
+- Scheduler implementation scalability rework, plus function added to return schedule id:
+
+* `iot_schedule_id`
+
 - Map data type updated to support all key types
 - Fedora support updated for Fedora 35
 - Support removed for Alpine Linux versions 3.12 and 3.13
