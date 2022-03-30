@@ -1337,6 +1337,17 @@ iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char *
   return (iot_data_t*) val;
 }
 
+iot_data_t * iot_data_alloc_const_pointer (iot_data_static_t * data, const void * ptr)
+{
+  iot_data_pointer_t * val = (iot_data_pointer_t*) data;
+  memset (data, 0, sizeof (*data));
+  iot_data_block_init (&val->base, IOT_DATA_POINTER);
+  val->value = (void*) ptr;
+  val->base.hash =  (uint32_t) (intptr_t) ptr;
+  val->base.constant = true;
+  return (iot_data_t*) val;
+}
+
 iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t ownership)
 {
   assert (val);
@@ -1988,6 +1999,32 @@ static inline iot_node_t * iot_node_end (iot_node_t * node)
 {
   if (node) while (node->right) node = node->right;
   return node;
+}
+
+const iot_data_t * iot_data_map_start (iot_data_t * map)
+{
+  assert (map);
+  iot_node_t * node = iot_node_start (((iot_data_map_t*) map)->tree);
+  return node ? node->value : NULL;
+}
+
+const void * iot_data_map_start_pointer (iot_data_t * map)
+{
+  const iot_data_t * value = iot_data_map_start (map);
+  return value ? iot_data_pointer (value) : NULL;
+}
+
+const iot_data_t * iot_data_map_end (iot_data_t * map)
+{
+  assert (map);
+  iot_node_t * node = iot_node_end (((iot_data_map_t*) map)->tree);
+  return node ? node->value : NULL;
+}
+
+const void * iot_data_map_end_pointer (iot_data_t * map)
+{
+  const iot_data_t * value = iot_data_map_end (map);
+  return value ? iot_data_pointer (value) : NULL;
 }
 
 bool iot_data_map_iter_prev (iot_data_map_iter_t * iter)

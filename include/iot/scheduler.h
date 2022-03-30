@@ -155,6 +155,35 @@ extern bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * s
  * @param  schedule   Pointer to the schedule to be reset
  */
 extern void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
+/**
+ * @brief  Add callback function to be invoked when a schedule is run
+ *
+ * @code
+ *
+ *    iot_schedule_add_run_callback (myScheduler, mySchedule, myFunc);
+ *
+ * @endcode
+ *
+ * @param   scheduler  Pointer to a scheduler
+ * @param   schedule   Pointer to the run callback function
+ * @param   func       Function to be invoked. A NULL value implies no callback.
+ */
+extern void iot_schedule_add_run_callback (iot_scheduler_t * scheduler, iot_schedule_t * schedule, iot_schedule_fn_t func);
+
+/**
+ * @brief  Add callback function to be invoked when a schedule run is aborted
+ *
+ * @code
+ *
+ *    iot_schedule_add_abort_callback (myScheduler, mySchedule, myFunc);
+ *
+ * @endcode
+ *
+ * @param   scheduler  Pointer to a scheduler
+ * @param   schedule   Pointer to the abort callback function
+ * @param   func       Function to be invoked. A NULL value implies no callback.
+ */
+extern void iot_schedule_add_abort_callback (iot_scheduler_t * scheduler, iot_schedule_t * schedule, iot_schedule_fn_t func);
 
 /**
  * @brief  Delete a schedule
@@ -209,6 +238,14 @@ extern void iot_scheduler_free (iot_scheduler_t * scheduler);
  * @return Number of events dropped
  */
  extern uint64_t iot_schedule_dropped (const iot_schedule_t * schedule);
+
+ /**
+ * @brief  Return unique schedule id
+ *
+ * @param  schedule  Pointer to a schedule
+ * @return           The schedule id
+ */
+extern uint64_t iot_schedule_id (const iot_schedule_t * schedule);
 
 /**
  * @brief  Create Scheduler component factory

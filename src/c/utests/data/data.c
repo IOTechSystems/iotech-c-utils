@@ -2632,6 +2632,29 @@ static void test_data_map_iter_replace (void)
   iot_data_free (map);
 }
 
+static void test_data_map_iter_start_end (void)
+{
+  iot_data_t * map = iot_data_alloc_typed_map (IOT_DATA_UINT32, IOT_DATA_POINTER);
+  iot_data_t * p1 = iot_data_alloc_pointer (&map, NULL);
+  iot_data_t * p2 = iot_data_alloc_pointer (&p1, NULL);
+  iot_data_t * p3 = iot_data_alloc_pointer (&p2, NULL);
+
+  iot_data_map_add (map, iot_data_alloc_ui32 (1u), p1);
+  iot_data_map_add (map, iot_data_alloc_ui32 (2u), p2);
+  iot_data_map_add (map, iot_data_alloc_ui32 (3u), p3);
+
+  const iot_data_t * val = iot_data_map_start (map);
+  const void * ptr = iot_data_map_start_pointer (map);
+  CU_ASSERT (val == p1)
+  CU_ASSERT (ptr == &map)
+  val = iot_data_map_end (map);
+  ptr = iot_data_map_end_pointer (map);
+  CU_ASSERT (val == p3)
+  CU_ASSERT (ptr == &p2)
+
+  iot_data_free (map);
+}
+
 static void test_data_map_typed_iter (void)
 {
   const char * str = "xxx";
@@ -3854,6 +3877,18 @@ static void test_data_const_string (void)
   iot_data_free (data);
 }
 
+static void test_data_const_pointer (void)
+{
+  static iot_data_static_t block;
+  static const void * ptr = &block;
+  iot_data_t * data = iot_data_alloc_const_pointer (&block, ptr);
+  CU_ASSERT (iot_data_pointer (data) == ptr)
+  CU_ASSERT (data == IOT_DATA_STATIC (block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
 static void test_data_const_types (void)
 {
   const iot_data_t * b1 = iot_data_alloc_bool (true);
@@ -4623,6 +4658,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_alloc_heap", test_data_alloc_heap);
   CU_add_test (suite, "data_cast", test_data_cast);
   CU_add_test (suite, "data_const_string", test_data_const_string);
+  CU_add_test (suite, "data_const_pointer", test_data_const_pointer);
   CU_add_test (suite, "data_const_types", test_data_const_types);
   CU_add_test (suite, "data_hash", test_data_hash);
   CU_add_test (suite, "data_multi_key_map", test_data_multi_key_map);
@@ -4640,6 +4676,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "vector_elements", test_vector_elements);
   CU_add_test (suite, "array_dimensions", test_array_dimensions);
   CU_add_test (suite, "vector_dimensions", test_vector_dimensions);
+  CU_add_test (suite, "data_map_iter_start_end", test_data_map_iter_start_end);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif

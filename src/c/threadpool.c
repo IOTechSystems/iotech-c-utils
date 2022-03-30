@@ -255,7 +255,7 @@ DONE:
 bool iot_threadpool_try_work (iot_threadpool_t * pool, void * (*func) (void*), void * arg, int prio)
 {
   assert (pool && func);
-  iot_log_trace (pool->logger, "iot_threadpool_try_work()");
+  iot_log_trace (pool->logger, "iot_threadpool_try_work");
   bool ret = false;
   iot_component_lock (&pool->component);
   if (pool->jobs < pool->max_jobs)
@@ -270,7 +270,7 @@ bool iot_threadpool_try_work (iot_threadpool_t * pool, void * (*func) (void*), v
 void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*func) (void*), void * arg, int prio)
 {
   assert (pool && func);
-  iot_log_trace (pool->logger, "iot_threadpool_add_work()");
+  iot_log_trace (pool->logger, "iot_threadpool_add_work");
   iot_component_lock (&pool->component);
   while (pool->jobs == pool->max_jobs)
   {
@@ -285,7 +285,7 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*func) (void*), v
 void iot_threadpool_wait (iot_threadpool_t * pool)
 {
   assert (pool);
-  iot_log_trace (pool->logger, "iot_threadpool_wait()");
+  iot_log_trace (pool->logger, "iot_threadpool_wait");
   iot_component_lock (&pool->component);
   while (pool->jobs || pool->working)
   {
@@ -298,7 +298,7 @@ void iot_threadpool_wait (iot_threadpool_t * pool)
 void iot_threadpool_stop (iot_threadpool_t * pool)
 {
   assert (pool);
-  iot_log_trace (pool->logger, "iot_threadpool_stop()");
+  iot_log_trace (pool->logger, "iot_threadpool_stop");
   iot_component_set_stopped (&pool->component);
   iot_component_lock (&pool->component);
   pthread_cond_broadcast (&pool->job_cond);
@@ -308,7 +308,7 @@ void iot_threadpool_stop (iot_threadpool_t * pool)
 void iot_threadpool_start (iot_threadpool_t * pool)
 {
   assert (pool);
-  iot_log_trace (pool->logger, "iot_threadpool_start()");
+  iot_log_trace (pool->logger, "iot_threadpool_start");
   iot_component_set_running (&pool->component);
   iot_component_lock (&pool->component);
   pthread_cond_broadcast (&pool->job_cond);
@@ -322,7 +322,7 @@ void iot_threadpool_free (iot_threadpool_t * pool)
     iot_job_t * job;
     bool self_delete = false;
     pthread_t self = pthread_self ();
-    iot_log_trace (pool->logger, "iot_threadpool_free()");
+    iot_log_trace (pool->logger, "iot_threadpool_free");
     iot_component_lock (&pool->component);
     for (uint16_t i = 0; i < pool->threads; i++)
     {
