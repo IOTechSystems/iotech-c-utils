@@ -156,3 +156,5 @@
 - Function added to return size of encapsulated C data type
 
 * `iot_data_type_size`
+
+- Scheduler performance update
