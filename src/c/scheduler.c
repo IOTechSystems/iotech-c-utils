@@ -30,7 +30,7 @@ struct iot_schedule_t
   int priority;                      /* Schedule priority (pool override) */
   uint64_t period;                   /* The period of the schedule, in ns */
   uint64_t start;                    /* The start time of the schedule, in ns, */
-  uint64_t repeat;                   /* The number of repetitions, 0 = infinite */
+  uint64_t repeat;                   /* The number of repetitions, 0 == infinite */
   uint64_t id;                       /* Schedule unique id */
   iot_data_t * id_key;               /* Data wrapper for schedule id used as key for idle map */
   iot_data_t * start_key;            /* Data wrapper for schedule start time used as key for queue map */
@@ -43,8 +43,8 @@ struct iot_schedule_t
 struct iot_scheduler_t
 {
   iot_component_t component;      /* Component base type */
-  iot_data_t * queue;             /* Map of schedule lists, keyed by schedule time */
-  iot_data_t * idle;              /* Map of idle schedules keyed by unique id */
+  iot_data_t * queue;             /* Map of schedule lists, keyed by unique schedule time */
+  iot_data_t * idle;              /* Map of idle schedules keyed by unique schedule id */
   iot_logger_t * logger;          /* Optional logger */
   struct timespec schd_time;      /* Time for next schedule */
 };
