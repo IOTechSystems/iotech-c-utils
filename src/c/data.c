@@ -2004,7 +2004,7 @@ static inline iot_node_t * iot_node_end (iot_node_t * node)
 const iot_data_t * iot_data_map_start (iot_data_t * map)
 {
   assert (map);
-  iot_node_t * node = iot_node_start (((iot_data_map_t*) map)->tree);
+  const iot_node_t * node = iot_node_start (((iot_data_map_t*) map)->tree);
   return node ? node->value : NULL;
 }
 
@@ -2017,7 +2017,7 @@ const void * iot_data_map_start_pointer (iot_data_t * map)
 const iot_data_t * iot_data_map_end (iot_data_t * map)
 {
   assert (map);
-  iot_node_t * node = iot_node_end (((iot_data_map_t*) map)->tree);
+  const iot_node_t * node = iot_node_end (((iot_data_map_t*) map)->tree);
   return node ? node->value : NULL;
 }
 

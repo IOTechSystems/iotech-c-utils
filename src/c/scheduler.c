@@ -120,11 +120,11 @@ static void * iot_scheduler_thread (void * arg)
     if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
     pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time); // Schedule wait
     state = scheduler->component.state;
-    if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
-    if (state == IOT_COMPONENT_STOPPED)
+    if (state != IOT_COMPONENT_RUNNING)
     {
-      iot_log_debug (scheduler->logger, "Scheduler thread stopping");
       iot_component_unlock (&scheduler->component);
+      iot_log_debug (scheduler->logger, "Scheduler thread %s", (state == IOT_COMPONENT_DELETED) ? "terminating" : "stopping");
+      if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
       continue; // Wait for thread to be restarted or deleted
     }
 
@@ -156,10 +156,9 @@ static void * iot_scheduler_thread (void * arg)
 
       /* Recalculate the next start time for the schedule */
       next = current->period + iot_time_nsecs ();
-      if (current->repeat != 0) // Repetitive schedule
+      if (current->repeat > 0u) // Repetitive schedule
       {
-        current->repeat--;
-        if (current->repeat == 0) // Last repetition
+        if (--(current->repeat) == 0u) // Last repetition
         {
           iot_log_trace (scheduler->logger, "Schedule #%" PRIu64 " now idle", current->id);
           iot_schedule_queue_remove (scheduler, current);
@@ -182,8 +181,6 @@ static void * iot_scheduler_thread (void * arg)
     nsToTimespec (next, &scheduler->schd_time); /* Calculate next execution time */
     iot_component_unlock (&scheduler->component);
   }
-  iot_log_debug (scheduler->logger, "Scheduler thread terminating");
-  iot_component_unlock (&scheduler->component);
   return NULL;
 }
 
