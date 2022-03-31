@@ -508,8 +508,7 @@ const char * iot_data_type_name (const iot_data_t * data)
 extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata)
 {
   assert (data);
-  if (data->base.meta) iot_data_free (data->base.meta);
-  if (metadata) iot_data_add_ref (metadata);
+  iot_data_free (data->base.meta);
   data->base.meta = metadata;
 }
 
@@ -2565,7 +2564,6 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
     iot_data_t * metadata = iot_data_alloc_map (IOT_DATA_STRING);
     iot_data_string_map_add (metadata, ORDERING_KEY, ordering);
     iot_data_set_metadata (map, metadata);
-    iot_data_free (metadata);
   }
   return map;
 }
@@ -2837,7 +2835,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
       ret = (iot_data_t*) val;
     }
   }
-  iot_data_set_metadata (ret, data->base.meta);
+  iot_data_set_metadata (ret, iot_data_add_ref (data->base.meta));
   return ret;
 }
 

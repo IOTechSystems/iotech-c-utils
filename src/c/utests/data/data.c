@@ -1700,9 +1700,7 @@ static void test_data_metadata (void)
   CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_STRING)
   CU_ASSERT (iot_data_equal (data2, metadata1))
   CU_ASSERT (iot_data_get_metadata (NULL) == NULL)
-
   iot_data_free (data1);
-  iot_data_free (data2);
 
   data1 = iot_data_alloc_ui64 (9999999999);
   CU_ASSERT (data1 != NULL)
@@ -1716,9 +1714,7 @@ static void test_data_metadata (void)
   CU_ASSERT (metadata1 != NULL)
   CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_INT32)
   CU_ASSERT (iot_data_equal (data2, metadata1))
-
   iot_data_free (data1);
-  iot_data_free (data2);
 
   data1 = iot_data_alloc_f32 (1.299999f);
   CU_ASSERT (data1 != NULL)
@@ -1726,8 +1722,8 @@ static void test_data_metadata (void)
   data2 = iot_data_alloc_string ("qwertyQWERTY", IOT_DATA_REF);
   CU_ASSERT (data2 != NULL)
 
-  iot_data_set_metadata (data1, data2);
-  iot_data_set_metadata (data1, data2);
+  iot_data_set_metadata (data1, iot_data_add_ref (data2));
+  iot_data_set_metadata (data1, iot_data_add_ref (data2));
   metadata1 = iot_data_get_metadata (data1);
 
   CU_ASSERT (metadata1 != NULL)
