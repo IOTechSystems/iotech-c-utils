@@ -6,6 +6,7 @@
  */
 
 #include "iot/iot.h"
+#include <limits.h>
 #ifdef _AZURESPHERE_
 #include <applibs/log.h>
 #include <applibs/storage.h>
@@ -158,11 +159,15 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
 bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
 {
   bool ok = false;
-  FILE * fd = fopen (path, "w");
+  char tmp_path[PATH_MAX];
+  strncpy (tmp_path, path, PATH_MAX);
+  strcat (tmp_path, ".new");
+  FILE * fd = fopen (tmp_path, "w");
   if (fd)
   {
     ok = (fwrite (binary, len, 1u, fd) == 1u);
     fclose (fd);
+    if (ok) rename (tmp_path, path);
   }
   return ok;
 }
