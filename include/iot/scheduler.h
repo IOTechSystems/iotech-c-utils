@@ -166,7 +166,7 @@ extern void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * sc
  *
  * @param   scheduler  Pointer to a scheduler
  * @param   schedule   Pointer to the run callback function
- * @pointer func       Function to be invoked. A NULL value implies no callback.
+ * @param   func       Function to be invoked. A NULL value implies no callback.
  */
 extern void iot_schedule_add_run_callback (iot_scheduler_t * scheduler, iot_schedule_t * schedule, iot_schedule_fn_t func);
 
@@ -181,7 +181,7 @@ extern void iot_schedule_add_run_callback (iot_scheduler_t * scheduler, iot_sche
  *
  * @param   scheduler  Pointer to a scheduler
  * @param   schedule   Pointer to the abort callback function
- * @pointer func       Function to be invoked. A NULL value implies no callback.
+ * @param   func       Function to be invoked. A NULL value implies no callback.
  */
 extern void iot_schedule_add_abort_callback (iot_scheduler_t * scheduler, iot_schedule_t * schedule, iot_schedule_fn_t func);
 
