@@ -35,7 +35,7 @@ static void snippet3 (void)
 // CUT
 #define BASE64_SRC_LEN 16
 
-char input[BASE64_SRC_LEN];
+char input[BASE64_SRC_LEN] = { 0 };
 char encoded[BASE64_SRC_LEN * 2];
 char decoded[BASE64_SRC_LEN];
 size_t outlen;
