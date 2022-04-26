@@ -480,7 +480,7 @@ iot_data_t * iot_data_add_ref (const iot_data_t * data)
 
 uint32_t iot_data_ref_count (const iot_data_t * data)
 {
-  return data ? (uint32_t) atomic_load (&((iot_data_t*) data)->refs) : (uint32_t) 0u;
+  return data ? atomic_load (&((iot_data_t*) data)->refs) : 0u;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)
@@ -1102,7 +1102,7 @@ const void * iot_data_address (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && !data->constant && ((uint32_t) atomic_fetch_sub (&data->refs, 1u) <= (uint32_t) 1u))
+  if (data && !data->constant && ((uint32_t) atomic_fetch_sub (&data->refs, 1u) <= 1u))
   {
     if (data->base.meta) iot_data_free (data->base.meta);
     switch (data->type)
