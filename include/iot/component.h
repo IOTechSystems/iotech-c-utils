@@ -81,7 +81,7 @@ struct iot_component_t
   pthread_cond_t cond;                      /**< Synchronisation condition */
   iot_component_start_fn_t start_fn;        /**< Pointer to function that handles starting a component */
   iot_component_stop_fn_t stop_fn;          /**< Pointer to function that handles stopping a component */
-  _Atomic uint32_t refs;                    /**< Current reference count */
+  atomic_int_fast32_t refs;                 /**< Current reference count */
   const iot_component_factory_t * factory;  /**< Pointer to component factory structure */
 };
 
