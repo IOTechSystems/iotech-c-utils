@@ -10,9 +10,9 @@
 #include <CUnit.h>
 #include "scheduler.h"
 
-static atomic_uint_fast32_t sum_test;
-static atomic_uint_fast32_t sum_work1, sum_work2, sum_work3, sum_work5;
-static atomic_uint_fast32_t counter;
+static _Atomic uint32_t sum_test;
+static _Atomic uint32_t sum_work1, sum_work2, sum_work3, sum_work5;
+static _Atomic uint32_t counter;
 static iot_logger_t *logger = NULL;
 
 static void reset_counters (void)

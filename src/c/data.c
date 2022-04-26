@@ -84,7 +84,7 @@ typedef union iot_data_base_t
 struct iot_data_t
 {
   iot_data_base_t base;
-  atomic_uint_fast32_t refs;
+  _Atomic uint32_t refs;
   uint32_t hash;
   iot_data_type_t type;
   iot_data_type_t element_type;
@@ -404,7 +404,7 @@ static inline void iot_data_block_free_data (iot_data_t * data)
 
 static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
 {
-  atomic_store (&data->refs, 1);
+  atomic_store (&data->refs, 1u);
   data->type = type;
   data->element_type = (type >= IOT_DATA_ARRAY && type <= IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
   data->key_type = (type == IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
@@ -474,13 +474,13 @@ void iot_data_init (void)
 
 iot_data_t * iot_data_add_ref (const iot_data_t * data)
 {
-  if (data) atomic_fetch_add (&((iot_data_t*) data)->refs, 1);
+  if (data) atomic_fetch_add (&((iot_data_t*) data)->refs, 1u);
   return (iot_data_t*) data;
 }
 
 uint32_t iot_data_ref_count (const iot_data_t * data)
 {
-  return data ? atomic_load (&data->refs) : 0;
+  return data ? (uint32_t) atomic_load (&((iot_data_t*) data)->refs) : (uint32_t) 0u;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)
@@ -1102,7 +1102,7 @@ const void * iot_data_address (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && !data->constant && (atomic_fetch_add (&data->refs, -1) <= 1))
+  if (data && !data->constant && ((uint32_t) atomic_fetch_sub (&data->refs, 1u) <= (uint32_t) 1u))
   {
     if (data->base.meta) iot_data_free (data->base.meta);
     switch (data->type)

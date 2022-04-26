@@ -414,7 +414,7 @@ pipeline
     choice (name: 'Arch', choices: ['x86_64','x86','arm64','arm32', 'i586', 'all'], description: 'Build Host Architecture')
     choice (name: 'Board', choices: ['None','frdm_k64f','qemu_x86','acrn','all'], description: 'Target Board')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
-    booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-20.04 x86_64)')
+    booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-22.04 x86_64)')
   }
   stages { stage ('All') { steps { script { parallel buildMap }}}}
 }

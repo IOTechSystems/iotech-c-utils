@@ -35,7 +35,7 @@ struct iot_schedule_t
   iot_data_t * id_key;               /* Data wrapper for schedule id used as key for idle map */
   iot_data_t * start_key;            /* Data wrapper for schedule start time used as key for queue map */
   iot_data_t * self;                 /* Data pointer wrapper for schedule */
-  atomic_uint_fast64_t dropped;      /* Number of events dropped */
+  _Atomic uint64_t dropped;          /* Number of events dropped */
   bool scheduled;                    /* A flag to indicate schedule status */
   iot_data_static_t self_static;     /* Block for constant pointer IOT data */
 };
@@ -142,7 +142,7 @@ static void * iot_scheduler_thread (void * arg)
         {
           /* Notify that the run is aborted */
           if (current->abort_cb) current->abort_cb (current->arg);
-          if (atomic_fetch_add (&current->dropped, 1u) == 0)
+          if (atomic_fetch_add (&current->dropped, 1u) == 0u)
           {
             iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
           }
@@ -228,7 +228,7 @@ static void iot_schedule_free (iot_schedule_t * schedule)
 /* Create a schedule and insert it into the idle queue */
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
-  static atomic_uint_fast64_t schedule_id_counter = 0;
+  static _Atomic uint64_t schedule_id_counter = 0;
 
   assert (scheduler && func);
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));
