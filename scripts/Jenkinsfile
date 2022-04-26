@@ -24,7 +24,7 @@ def buildStage (systems, arch)
   def sq = getSonarQubeParam ()
   def sonar = 'false'
 
-  if (("${sq}" == 'true' || env.BRANCH_NAME.startsWith ('PR')) && ("${sys}" == 'ubuntu-20.04') && ("${arch}" == 'x86_64'))
+  if (("${sq}" == 'true' || env.BRANCH_NAME.startsWith ('PR')) && ("${sys}" == 'ubuntu-22.04') && ("${arch}" == 'x86_64'))
   {
     sonar = 'true'
   }
