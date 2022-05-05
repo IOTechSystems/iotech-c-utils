@@ -24,6 +24,11 @@ extern "C" {
 #define IOT_BILLION 1000000000ULL
 /** Object-like macro - Defines 1,000,000 */
 #define IOT_MILLION 1000000ULL
+/** Object-like macro - Defines 1,000 */
+#define IOT_THOUSAND 1000ULL
+
+/** Function-like macro - Conversion from microseconds to nanoseconds */
+#define IOT_US_TO_NS(m) ((m) * IOT_THOUSAND)
 /** Function-like macro - Conversion from milliseconds to nanoseconds */
 #define IOT_MS_TO_NS(m) ((m) * IOT_MILLION)
 /** Function-like macro - Conversion from seconds to nanoseconds */

@@ -140,7 +140,7 @@ static void cunit_scheduler_stop (void)
   iot_scheduler_start (scheduler);
   sum_test = 0;
 
-  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_MS_TO_NS (1), 0, 1, pool, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_US_TO_NS (1000u), 0, 1, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (sched1 != NULL)
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
 
