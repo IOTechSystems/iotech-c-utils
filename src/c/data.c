@@ -686,7 +686,7 @@ iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
   assert (data);
   iot_data_union_t out;
   if (data->type == type) return iot_data_add_ref (data);
-  if (iot_data_cast_val (((const iot_data_value_t*) data)->value, &out, data->type, type))
+  if (iot_data_cast_val (((iot_data_value_t*) data)->value, &out, data->type, type))
   {
     switch (type)
     {
