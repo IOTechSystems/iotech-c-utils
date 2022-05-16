@@ -84,7 +84,7 @@ typedef union iot_data_base_t
 struct iot_data_t
 {
   iot_data_base_t base;
-  atomic_uint_fast32_t refs;
+  _Atomic uint32_t refs;
   uint32_t hash;
   iot_data_type_t type;
   iot_data_type_t element_type;
@@ -404,7 +404,7 @@ static inline void iot_data_block_free_data (iot_data_t * data)
 
 static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
 {
-  atomic_store (&data->refs, 1);
+  atomic_store (&data->refs, 1u);
   data->type = type;
   data->element_type = (type >= IOT_DATA_ARRAY && type <= IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
   data->key_type = (type == IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
@@ -474,13 +474,13 @@ void iot_data_init (void)
 
 iot_data_t * iot_data_add_ref (const iot_data_t * data)
 {
-  if (data) atomic_fetch_add (&((iot_data_t*) data)->refs, 1);
+  if (data) atomic_fetch_add (&((iot_data_t*) data)->refs, 1u);
   return (iot_data_t*) data;
 }
 
 uint32_t iot_data_ref_count (const iot_data_t * data)
 {
-  return data ? atomic_load (&data->refs) : 0;
+  return data ? atomic_load (&((iot_data_t*) data)->refs) : 0u;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)
@@ -508,8 +508,7 @@ const char * iot_data_type_name (const iot_data_t * data)
 extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata)
 {
   assert (data);
-  if (data->base.meta) iot_data_free (data->base.meta);
-  if (metadata) iot_data_add_ref (metadata);
+  iot_data_free (data->base.meta);
   data->base.meta = metadata;
 }
 
@@ -624,7 +623,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
   return (iot_data_compare (v1, v2) == 0);
 }
 
-static bool iot_data_cast_val (const iot_data_union_t * in, void * out, iot_data_type_t in_type, iot_data_type_t out_type)
+static bool iot_data_cast_val (const iot_data_union_t in, void * out, iot_data_type_t in_type, iot_data_type_t out_type)
 {
 #define VALUE() (dfloat ? uval.f64 : (usign ? (double) uval.ui64 : (double) uval.i64))
 #define CAST(T) (*((T*) out) = dfloat ? (T) uval.f64 : (usign ? (T) uval.ui64 : (T) uval.i64))
@@ -641,17 +640,17 @@ static bool iot_data_cast_val (const iot_data_union_t * in, void * out, iot_data
   // Cast up data value, note all integer types apart from 64 bit integers can be represented completely as a double
   switch (in_type)
   {
-    case IOT_DATA_INT8: uval.f64 = in->i8; break;
-    case IOT_DATA_UINT8: uval.f64 = in->ui8; break;
-    case IOT_DATA_INT16: uval.f64 = in->i16; break;
-    case IOT_DATA_UINT16: uval.f64 = in->ui16; break;
-    case IOT_DATA_INT32: uval.f64 = in->i32; break;
-    case IOT_DATA_UINT32: uval.f64 = in->ui32; break;
-    case IOT_DATA_INT64: uval.i64 = in->i64; break;
-    case IOT_DATA_UINT64: uval.ui64 = in->ui64; break;
-    case IOT_DATA_FLOAT32: uval.f64 = in->f32; break;
-    case IOT_DATA_FLOAT64: uval.f64 = in->f64; break;
-    default: uval.ui64 = in->bl ? 1u : 0u; break;
+    case IOT_DATA_INT8: uval.f64 = in.i8; break;
+    case IOT_DATA_UINT8: uval.f64 = in.ui8; break;
+    case IOT_DATA_INT16: uval.f64 = in.i16; break;
+    case IOT_DATA_UINT16: uval.f64 = in.ui16; break;
+    case IOT_DATA_INT32: uval.f64 = in.i32; break;
+    case IOT_DATA_UINT32: uval.f64 = in.ui32; break;
+    case IOT_DATA_INT64: uval.i64 = in.i64; break;
+    case IOT_DATA_UINT64: uval.ui64 = in.ui64; break;
+    case IOT_DATA_FLOAT32: uval.f64 = in.f32; break;
+    case IOT_DATA_FLOAT64: uval.f64 = in.f64; break;
+    default: uval.ui64 = in.bl ? 1u : 0u; break;
   }
   // Check value within max/min for target type
   if ((out_type < IOT_DATA_FLOAT64) && (VALUE () > max_vals[out_type] || VALUE () < min_vals[out_type])) return false;
@@ -679,7 +678,7 @@ static bool iot_data_cast_val (const iot_data_union_t * in, void * out, iot_data
 bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
 {
   assert (data && val);
-  return iot_data_cast_val (&((const iot_data_value_t *) data)->value, val, data->type, type);
+  return iot_data_cast_val (((const iot_data_value_t *) data)->value, val, data->type, type);
 }
 
 iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
@@ -687,7 +686,7 @@ iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
   assert (data);
   iot_data_union_t out;
   if (data->type == type) return iot_data_add_ref (data);
-  if (iot_data_cast_val (&((const iot_data_value_t*) data)->value, &out, data->type, type))
+  if (iot_data_cast_val (((iot_data_value_t*) data)->value, &out, data->type, type))
   {
     switch (type)
     {
@@ -725,7 +724,7 @@ iot_data_t * iot_data_array_transform (const iot_data_t * array, iot_data_type_t
     while (iot_data_array_iter_next (&iter))
     {
       const iot_data_union_t * element = iot_data_array_iter_value (&iter);
-      if (iot_data_cast_val (element, ptr, array->element_type, type))
+      if (iot_data_cast_val (*element, ptr, array->element_type, type))
       {
         ptr += esize;
         asize++;
@@ -1103,7 +1102,7 @@ const void * iot_data_address (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && !data->constant && (atomic_fetch_add (&data->refs, -1) <= 1))
+  if (data && !data->constant && ((uint32_t) atomic_fetch_sub (&data->refs, 1u) <= 1u))
   {
     if (data->base.meta) iot_data_free (data->base.meta);
     switch (data->type)
@@ -1165,7 +1164,7 @@ void iot_data_free (iot_data_t * data)
 
 iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value)
 {
-  assert (value && strlen (value));
+  assert (value && ((type == IOT_DATA_STRING) || strlen (value)));
   switch (type)
   {
     case IOT_DATA_INT8: return iot_data_alloc_i8 ((int8_t) atoi (value));
@@ -2565,7 +2564,6 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
     iot_data_t * metadata = iot_data_alloc_map (IOT_DATA_STRING);
     iot_data_string_map_add (metadata, ORDERING_KEY, ordering);
     iot_data_set_metadata (map, metadata);
-    iot_data_free (metadata);
   }
   return map;
 }
@@ -2837,7 +2835,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
       ret = (iot_data_t*) val;
     }
   }
-  iot_data_set_metadata (ret, data->base.meta);
+  iot_data_set_metadata (ret, iot_data_add_ref (data->base.meta));
   return ret;
 }
 

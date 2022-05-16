@@ -10,9 +10,9 @@
 #include <CUnit.h>
 #include "scheduler.h"
 
-static atomic_uint_fast32_t sum_test;
-static atomic_uint_fast32_t sum_work1, sum_work2, sum_work3, sum_work5;
-static atomic_uint_fast32_t counter;
+static _Atomic uint32_t sum_test;
+static _Atomic uint32_t sum_work1, sum_work2, sum_work3, sum_work5;
+static _Atomic uint32_t counter;
 static iot_logger_t *logger = NULL;
 
 static void reset_counters (void)
@@ -140,7 +140,7 @@ static void cunit_scheduler_stop (void)
   iot_scheduler_start (scheduler);
   sum_test = 0;
 
-  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_MS_TO_NS (1), 0, 1, pool, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_US_TO_NS (1000u), 0, 1, pool, IOT_THREAD_NO_PRIORITY);
   CU_ASSERT (sched1 != NULL)
   CU_ASSERT (iot_schedule_add (scheduler, sched1))
 

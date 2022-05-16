@@ -22,7 +22,7 @@ void iot_component_init (iot_component_t * component, const iot_component_factor
   component->factory = factory;
   iot_mutex_init (&component->mutex);
   pthread_cond_init (&component->cond, NULL);
-  atomic_store (&component->refs, 1);
+  atomic_store (&component->refs, 1u);
 }
 
 bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont, const iot_data_t * map)
@@ -40,12 +40,12 @@ void iot_component_fini (iot_component_t * component)
 
 void iot_component_add_ref (iot_component_t * component)
 {
-  atomic_fetch_add (&component->refs, 1);
+  atomic_fetch_add (&component->refs, 1u);
 }
 
 bool iot_component_dec_ref (iot_component_t * component)
 {
-  return (atomic_fetch_add (&component->refs, -1) <= 1);
+  return (atomic_fetch_sub (&component->refs, 1u) <= 1);
 }
 
 static bool iot_component_set_state (iot_component_t * component, uint32_t state)

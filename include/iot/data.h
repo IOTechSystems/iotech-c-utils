@@ -252,7 +252,7 @@ extern const char * iot_data_type_string (iot_data_type_t type);
 /**
  * @brief Set metadata for data
  *
- * Set metadata on a data item. Meta data elements are reference counted by the associated data element.
+ * Set metadata on a data item. Meta data is freed when the containing data is freed.
  * This function should not be used with null or boolean data types as these are implemented as shared
  * constant instances.
  *

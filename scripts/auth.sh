@@ -8,7 +8,7 @@ case "${SYS}" in
   alpine*)
     cp "${AlpinePackagerRSAPrivateKey}" scripts/apk.key
   ;;
-  ubuntu-20.04)
+  ubuntu-22.04)
     if [ "${SQ}" = "true" ]
     then
       curl -fsSL https://sonarqube.iotechsys.com/static/cpp/build-wrapper-linux-x86.zip > scripts/sonar-wrapper.zip
