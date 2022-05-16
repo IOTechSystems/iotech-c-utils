@@ -899,6 +899,11 @@ static void test_data_from_string (void)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
   CU_ASSERT (strcmp (iot_data_string (data), "Wibble") == 0)
   iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_STRING, "");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
+  CU_ASSERT (strcmp (iot_data_string (data), "") == 0)
+  iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_ARRAY, "XXX");
   CU_ASSERT (data == NULL)
   data = iot_data_alloc_from_string (IOT_DATA_MAP, "XXX");

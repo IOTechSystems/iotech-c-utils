@@ -964,7 +964,7 @@ iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type
 
 iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value)
 {
-  assert (value && strlen (value));
+  assert (value && ((type == IOT_DATA_STRING) || strlen (value)));
   switch (type)
   {
     case IOT_DATA_INT8: return iot_data_alloc_i8 ((int8_t) atoi (value));
