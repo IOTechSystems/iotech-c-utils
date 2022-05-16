@@ -1164,7 +1164,7 @@ void iot_data_free (iot_data_t * data)
 
 iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value)
 {
-  assert (value && strlen (value));
+  assert (value && ((type == IOT_DATA_STRING) || strlen (value)));
   switch (type)
   {
     case IOT_DATA_INT8: return iot_data_alloc_i8 ((int8_t) atoi (value));
