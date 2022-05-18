@@ -162,3 +162,4 @@
 ## Version 1.2.5
 
 - Alpine Linux version 3.15 support added
+- #216 Fix for calling `iot_data_alloc_from_string` with empty string
