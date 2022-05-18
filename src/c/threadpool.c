@@ -108,7 +108,7 @@ static void * iot_threadpool_thread (void * arg)
     if (first) // Pull job from queue
     {
       iot_job_t job = *first;
-      iot_log_trace (pool->logger, "Thread processing job #%u", job.id);
+      iot_log_trace (pool->logger, "Thread %" PRIu16 " processing job %" PRIu32, th->id, job.id);
       pool->front = first->prev;
       first->prev = pool->cache;
       pool->cache = first;
@@ -132,7 +132,7 @@ static void * iot_threadpool_thread (void * arg)
         }
       }
       (job.function) (job.arg); // Run job
-      iot_log_trace (pool->logger, "Thread completed job #%u", job.id);
+      iot_log_trace (pool->logger, "Thread %" PRIu16 " completed job %" PRIu32, th->id, job.id);
       iot_component_lock (comp);
       if (--pool->working == 0)
       {
@@ -141,12 +141,12 @@ static void * iot_threadpool_thread (void * arg)
     }
     else
     {
-      iot_log_trace (pool->logger, "Thread waiting for new job");
+      iot_log_trace (pool->logger, "Thread %" PRIu16 " waiting for new job", th->id);
       pthread_cond_wait (&pool->job_cond, &comp->mutex); // Wait for new job
     }
     iot_component_unlock (comp);
   }
-  iot_log_debug (pool->logger, "Thread exiting", name);
+  iot_log_debug (pool->logger, "Thread %" PRIu16 " exiting", th->id);
   atomic_fetch_sub (&pool->created, 1u);
   if (pending_delete) iot_threadpool_final_free (pool);
   return NULL;
