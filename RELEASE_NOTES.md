@@ -158,3 +158,7 @@
 * `iot_data_type_size`
 
 - Scheduler performance update
+- 
+## Version 1.2.5
+
+- Alpine Linux version 3.15 support added

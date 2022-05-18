@@ -160,7 +160,7 @@ bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t le
 {
   bool ok = false;
   char tmp_path[PATH_MAX];
-  strncpy (tmp_path, path, PATH_MAX);
+  strncpy (tmp_path, path, PATH_MAX - 5);
   strcat (tmp_path, ".new");
   FILE * fd = fopen (tmp_path, "w");
   if (fd)
