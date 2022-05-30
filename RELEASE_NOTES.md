@@ -247,3 +247,4 @@
 - Support removed for Debian 9
 - Support removed for AzureSphere API 8 and 10
 - #216 Fix for calling `iot_data_alloc_from_string` with empty string
+- Data metadata set and get functions updated to take a key value
