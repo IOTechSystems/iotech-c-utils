@@ -1762,8 +1762,8 @@ static void test_data_multi_metadata (void)
 {
   static iot_data_static_t key1s;
   static iot_data_static_t key2s;
-  const char * str = "Hello";
-  const void * ptr = &key1s;
+  static const char * str = "Hello";
+  static const void * ptr = &key1s;
 
   iot_data_t * key1 = iot_data_alloc_const_pointer (&key1s, ptr);
   iot_data_t * key2 = iot_data_alloc_const_string (&key2s, str);
