@@ -1758,6 +1758,31 @@ static void test_data_metadata (void)
   iot_data_free (key2);
 }
 
+static void test_data_multi_metadata (void)
+{
+  static iot_data_static_t key1s;
+  static iot_data_static_t key2s;
+  const char * str = "Hello";
+  const void * ptr = &key1s;
+
+  iot_data_t * key1 = iot_data_alloc_const_pointer (&key1s, ptr);
+  iot_data_t * key2 = iot_data_alloc_const_string (&key2s, str);
+
+  iot_data_t * data = iot_data_alloc_ui32 (123u);
+  iot_data_t * md1 = iot_data_alloc_i32 (123);
+  iot_data_t * md2 = iot_data_alloc_i16 (12);
+
+  iot_data_set_metadata (data, md1, key1);
+  iot_data_set_metadata (data, md2, key2);
+
+  const iot_data_t * md = iot_data_get_metadata (data, key1);
+  CU_ASSERT (md == md1)
+  md = iot_data_get_metadata (data, key2);
+  CU_ASSERT (md == md2)
+
+  iot_data_free (data);
+}
+
 static bool string_match (const iot_data_t * data, const void * arg)
 {
   const char * target = (const char *) arg;
@@ -4645,6 +4670,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_check_equal_vector_map", test_data_equal_vector_map);
   CU_add_test (suite, "data_check_unequal_vector_map", test_data_unequal_vector_map);
   CU_add_test (suite, "data_metadata", test_data_metadata);
+  CU_add_test (suite, "data_multi_metadata", test_data_multi_metadata);
   CU_add_test (suite, "data_alloc_array_int8", test_data_alloc_array_i8);
   CU_add_test (suite, "data_alloc_array_uint8", test_data_alloc_array_ui8);
   CU_add_test (suite, "data_alloc_array_int16", test_data_alloc_array_i16);
