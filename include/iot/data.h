@@ -256,10 +256,11 @@ extern const char * iot_data_type_string (iot_data_type_t type);
  * This function should not be used with null or boolean data types as these are implemented as shared
  * constant instances.
  *
- * @param  data  Pointer to data
+ * @param  data      Pointer to data
  * @param  metadata  Pointer to metadata
+ * @param  key       Pointer to metadata key
  */
-extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata);
+extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata, const iot_data_t * key);
 
 /**
  * @brief Get metadata for data
@@ -267,9 +268,10 @@ extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata);
  * Gets the metadata associated with a data item.
  *
  * @param  data  Pointer to data
- * @return       Pointer to metadata (NULL if not set)
+ * @param  key   Pointer to metadata key
+ * @return       Pointer to metadata (NULL if not found)
  */
-extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data);
+extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data, const iot_data_t * key);
 
 /**
  * @brief Return address allocated for data

@@ -1692,59 +1692,95 @@ static void test_data_unequal_vector_map (void)
 
 static void test_data_metadata (void)
 {
-  iot_data_t * data1 = iot_data_alloc_i8 (-128);
-  CU_ASSERT (data1 != NULL)
+  iot_data_t * data = iot_data_alloc_i8 (-128);
+  iot_data_t * md1 = iot_data_alloc_string ("Hello", IOT_DATA_REF);
+  iot_data_t * key1 = iot_data_alloc_string ("key1", IOT_DATA_REF);
+  iot_data_t * md2 = iot_data_alloc_string ("John", IOT_DATA_REF);
+  iot_data_t * key2 = iot_data_alloc_string ("key2", IOT_DATA_REF);
 
-  iot_data_t * data2 = iot_data_alloc_string ("Hello", IOT_DATA_REF);
-  CU_ASSERT (data2 != NULL)
-
-  iot_data_set_metadata (data1, data2);
-  const iot_data_t * metadata1 = iot_data_get_metadata (data1);
+  iot_data_set_metadata (data, md1, key1);
+  iot_data_set_metadata (data, md2, key2);
+  const iot_data_t * metadata1 = iot_data_get_metadata (data, key1);
 
   CU_ASSERT (metadata1 != NULL)
   CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_STRING)
-  CU_ASSERT (iot_data_equal (data2, metadata1))
-  CU_ASSERT (iot_data_get_metadata (NULL) == NULL)
-  iot_data_free (data1);
+  CU_ASSERT (iot_data_equal (md1, metadata1))
+  CU_ASSERT (iot_data_get_metadata (NULL, key1) == NULL)
+  CU_ASSERT (iot_data_get_metadata (data, NULL) == NULL)
+  CU_ASSERT (iot_data_get_metadata (NULL, NULL) == NULL)
 
-  data1 = iot_data_alloc_ui64 (9999999999);
-  CU_ASSERT (data1 != NULL)
+  const iot_data_t * metadata2 = iot_data_get_metadata (data, key2);
+  CU_ASSERT (metadata2 != NULL)
+  CU_ASSERT (iot_data_type (metadata2) == IOT_DATA_STRING)
+  CU_ASSERT (iot_data_equal (md2, metadata2))
 
-  data2 = iot_data_alloc_i32 (2111111);
-  CU_ASSERT (data2 != NULL)
+  iot_data_free (data);
 
-  iot_data_set_metadata (data1, data2);
-  metadata1 = iot_data_get_metadata (data1);
+  data = iot_data_alloc_ui64 (9999999999);
+  CU_ASSERT (data != NULL)
+
+  md1 = iot_data_alloc_i32 (2111111);
+  CU_ASSERT (md1 != NULL)
+
+  iot_data_set_metadata (data, md1, key1);
+  metadata1 = iot_data_get_metadata (data, key1);
 
   CU_ASSERT (metadata1 != NULL)
   CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_INT32)
-  CU_ASSERT (iot_data_equal (data2, metadata1))
-  iot_data_free (data1);
+  CU_ASSERT (iot_data_equal (md1, metadata1))
+  iot_data_free (data);
 
-  data1 = iot_data_alloc_f32 (1.299999f);
-  CU_ASSERT (data1 != NULL)
+  data = iot_data_alloc_f32 (1.299999f);
+  CU_ASSERT (data != NULL)
 
-  data2 = iot_data_alloc_string ("qwertyQWERTY", IOT_DATA_REF);
-  CU_ASSERT (data2 != NULL)
+  md1 = iot_data_alloc_string ("qwertyQWERTY", IOT_DATA_REF);
+  CU_ASSERT (md1 != NULL)
 
-  iot_data_set_metadata (data1, iot_data_add_ref (data2));
-  iot_data_set_metadata (data1, iot_data_add_ref (data2));
-  metadata1 = iot_data_get_metadata (data1);
+  iot_data_set_metadata (data, iot_data_add_ref (md1), key1);
+  iot_data_set_metadata (data, iot_data_add_ref (md1), key1);
+  metadata1 = iot_data_get_metadata (data, key1);
 
   CU_ASSERT (metadata1 != NULL)
   CU_ASSERT (iot_data_type (metadata1) == IOT_DATA_STRING)
-  CU_ASSERT (iot_data_equal (data2, metadata1))
+  CU_ASSERT (iot_data_equal (md1, metadata1))
 
   // When data copied, metadata should also be copied.
-  iot_data_t * data3 = iot_data_copy (data1);
-  const iot_data_t * metadata2 = iot_data_get_metadata (data3);
+  iot_data_t * data3 = iot_data_copy (data);
+  const iot_data_t * metadata3 = iot_data_get_metadata (data3, key1);
 
-  CU_ASSERT (metadata2 != NULL)
-  CU_ASSERT (iot_data_equal (metadata2, metadata1))
+  CU_ASSERT (metadata3 != NULL)
+  CU_ASSERT (iot_data_equal (metadata3, metadata1))
 
-  iot_data_free (data1);
-  iot_data_free (data2);
+  iot_data_free (data);
+  iot_data_free (md1);
   iot_data_free (data3);
+  iot_data_free (key1);
+  iot_data_free (key2);
+}
+
+static void test_data_multi_metadata (void)
+{
+  static iot_data_static_t key1s;
+  static iot_data_static_t key2s;
+  static const char * str = "Hello";
+  static const void * ptr = &key1s;
+
+  iot_data_t * key1 = iot_data_alloc_const_pointer (&key1s, ptr);
+  iot_data_t * key2 = iot_data_alloc_const_string (&key2s, str);
+
+  iot_data_t * data = iot_data_alloc_ui32 (123u);
+  iot_data_t * md1 = iot_data_alloc_i32 (123);
+  iot_data_t * md2 = iot_data_alloc_i16 (12);
+
+  iot_data_set_metadata (data, md1, key1);
+  iot_data_set_metadata (data, md2, key2);
+
+  const iot_data_t * md = iot_data_get_metadata (data, key1);
+  CU_ASSERT (md == md1)
+  md = iot_data_get_metadata (data, key2);
+  CU_ASSERT (md == md2)
+
+  iot_data_free (data);
 }
 
 static bool string_match (const iot_data_t * data, const void * arg)
@@ -4634,6 +4670,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_check_equal_vector_map", test_data_equal_vector_map);
   CU_add_test (suite, "data_check_unequal_vector_map", test_data_unequal_vector_map);
   CU_add_test (suite, "data_metadata", test_data_metadata);
+  CU_add_test (suite, "data_multi_metadata", test_data_multi_metadata);
   CU_add_test (suite, "data_alloc_array_int8", test_data_alloc_array_i8);
   CU_add_test (suite, "data_alloc_array_uint8", test_data_alloc_array_ui8);
   CU_add_test (suite, "data_alloc_array_int16", test_data_alloc_array_i16);
