@@ -45,8 +45,14 @@
 
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
-static const char * ORDERING_KEY = "ordering";
 static _Thread_local bool iot_data_alloc_from_heap = false; /* Thread specific memory allocation policy */
+
+typedef struct iot_data_consts_t
+{
+  iot_data_static_t order_key;
+} iot_data_consts_t;
+
+static iot_data_consts_t iot_data_consts = { 0 };
 
 typedef enum iot_node_colour_t
 {
@@ -469,6 +475,7 @@ void iot_data_init (void)
   pthread_mutex_init (&iot_data_mutex, NULL);
   iot_data_block_free (iot_data_block_alloc ());  // Initialize data cache
 #endif
+  iot_data_alloc_const_pointer (&iot_data_consts.order_key, &iot_data_consts.order_key);
   atexit (iot_data_fini);
 }
 
@@ -505,16 +512,18 @@ const char * iot_data_type_name (const iot_data_t * data)
   return iot_data_type_string (data->type);
 }
 
-extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata)
+extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata, const iot_data_t * key)
 {
-  assert (data);
-  iot_data_free (data->base.meta);
-  data->base.meta = metadata;
+  if (data && metadata && key)
+  {
+    if (data->base.meta == NULL) data->base.meta = iot_data_alloc_map (IOT_DATA_MULTI);
+    iot_data_map_add (data->base.meta, iot_data_add_ref (key), metadata);
+  }
 }
 
-extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data)
+extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data, const iot_data_t * key)
 {
-  return data ? data->base.meta : NULL;
+  return (data && data->base.meta && key) ? iot_data_map_get (data->base.meta, key): NULL;
 }
 
 int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
@@ -686,7 +695,7 @@ iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
   assert (data);
   iot_data_union_t out;
   if (data->type == type) return iot_data_add_ref (data);
-  if (iot_data_cast_val (((iot_data_value_t*) data)->value, &out, data->type, type))
+  if (iot_data_cast_val (((const iot_data_value_t*) data)->value, &out, data->type, type))
   {
     switch (type)
     {
@@ -2367,8 +2376,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     }
     case IOT_DATA_MAP:
     {
-      const iot_data_t * metadata = iot_data_get_metadata (data);
-      const iot_data_t * ordering = metadata ? iot_data_string_map_get (metadata, ORDERING_KEY) : NULL;
+      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (iot_data_consts.order_key));
       iot_data_map_iter_t iter;
       iot_data_vector_iter_t vec_iter = { 0 };
       bool first = true;
@@ -2559,12 +2567,7 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
     if (ordered) iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
     iot_data_map_add (map, key, iot_data_value_from_json (tokens, json, ordered, cache));
   }
-  if (ordered)
-  {
-    iot_data_t * metadata = iot_data_alloc_map (IOT_DATA_STRING);
-    iot_data_string_map_add (metadata, ORDERING_KEY, ordering);
-    iot_data_set_metadata (map, metadata);
-  }
+  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (iot_data_consts.order_key));
   return map;
 }
 
@@ -2835,7 +2838,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
       ret = (iot_data_t*) val;
     }
   }
-  iot_data_set_metadata (ret, iot_data_add_ref (data->base.meta));
+  ret->base.meta = iot_data_add_ref (data->base.meta);
   return ret;
 }
 

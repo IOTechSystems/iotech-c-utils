@@ -74,7 +74,7 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
 
   comp->name = strdup (cname);
   comp->factory = factory;
-  iot_data_list_tail_push (cont->components, iot_data_alloc_pointer (comp, iot_component_free));
+  iot_data_list_head_push (cont->components, iot_data_alloc_pointer (comp, iot_component_free));
 #if defined (_AZURESPHERE_) && ! defined (NDEBUG)
   Log_Debug ("iot_component_create: %s (Total Memory: %" PRIu32 " kB)\n", cname, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
 #endif
