@@ -693,7 +693,7 @@ bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
 iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
 {
   assert (data);
-  iot_data_union_t out;
+  iot_data_union_t out = { 0 };
   if (data->type == type) return iot_data_add_ref (data);
   if (iot_data_cast_val (((const iot_data_value_t*) data)->value, &out, data->type, type))
   {
@@ -1416,7 +1416,7 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
   array->length = length;
   array->base.hash = data ? iot_hash_data (data, size) : 0;
   array->base.release = data ? (ownership != IOT_DATA_REF) : false;
-  if (length && (ownership == IOT_DATA_COPY))
+  if (length && data && (ownership == IOT_DATA_COPY))
   {
     array->data = malloc (size);
     memcpy (array->data, data, size);
@@ -2847,7 +2847,7 @@ extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t
   if (tc1 == tc2) return true;
   if (tc1 == NULL || tc2 == NULL) return false;
   bool ret = (tc1->type == tc2->type);
-  if (ret && ((tc1->type >= IOT_DATA_ARRAY) || (tc1->type <= IOT_DATA_MAP))) ret = (tc1->element_type == tc2->element_type);
+  if (ret && ((tc1->type >= IOT_DATA_ARRAY) && (tc1->type <= IOT_DATA_MULTI))) ret = (tc1->element_type == tc2->element_type);
   if (ret && (tc1->type == IOT_DATA_MAP)) ret = (tc1->key_type == tc2->key_type);
   return ret;
 }
