@@ -631,20 +631,20 @@ static void test_data_from_json (void)
 
   sval = iot_config_string (map, "Scheduler", false,NULL);
   CU_ASSERT (sval != NULL)
-  CU_ASSERT (strcmp (sval, "scheduler") == 0)
+  if (sval) CU_ASSERT (strcmp (sval, "scheduler") == 0)
   sval = iot_config_string (map, "Sched", false, NULL);
   CU_ASSERT (sval == NULL)
 
   sval = iot_config_string (map, "Escaped", false, NULL);
   CU_ASSERT (sval != NULL)
-  CU_ASSERT (strcmp (sval, "Double \" Quote") == 0)
+  if (sval) CU_ASSERT (strcmp (sval, "Double \" Quote") == 0)
 
   sval = iot_config_string_default (map, "Scheduler", "Hello", false);
   CU_ASSERT (sval != NULL)
-  CU_ASSERT (strcmp (sval, "scheduler") == 0)
+  if (sval) CU_ASSERT (strcmp (sval, "scheduler") == 0)
   sval = iot_config_string_default (map, "Nope", "Hello", true);
   CU_ASSERT (sval != NULL)
-  CU_ASSERT (strcmp (sval, "Hello") == 0)
+  if (sval) CU_ASSERT (strcmp (sval, "Hello") == 0)
   free ((void*) sval);
   sval = iot_config_string_default (map, "Nope", NULL, true);
   CU_ASSERT (sval == NULL)
@@ -779,7 +779,6 @@ static void test_data_from_json2 (void)
 
   iot_data_t * map = iot_data_from_json (config);
   CU_ASSERT (map != NULL)
-
   iot_data_free (map);
 }
 
@@ -811,7 +810,7 @@ static void test_data_from_xml (void)
   CU_ASSERT (json != NULL)
 //  printf ("\nXML: %s\n", json);
 //  printf ("\nEXP: %s\n", expected);
-  CU_ASSERT (strcmp (json, expected) == 0)
+  if (json) CU_ASSERT (strcmp (json, expected) == 0)
   free (json);
   iot_data_free (xml);
 }
@@ -1771,7 +1770,6 @@ static void test_data_multi_metadata (void)
   iot_data_t * data = iot_data_alloc_ui32 (123u);
   iot_data_t * md1 = iot_data_alloc_i32 (123);
   iot_data_t * md2 = iot_data_alloc_i16 (12);
-
   iot_data_set_metadata (data, md1, key1);
   iot_data_set_metadata (data, md2, key2);
 

@@ -772,8 +772,11 @@ iot_data_type_t iot_data_map_type (const iot_data_t * map)
 iot_data_t * iot_data_alloc_vector (uint32_t size)
 {
   iot_data_vector_t * vector = iot_data_block_alloc_data (IOT_DATA_VECTOR);
-  vector->size = size;
-  vector->values = calloc (size, sizeof (iot_data_t*));
+  if (size)
+  {
+    vector->size = size;
+    vector->values = calloc (size, sizeof (iot_data_t *));
+  }
   return (iot_data_t*) vector;
 }
 
