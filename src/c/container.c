@@ -6,6 +6,7 @@
 #include "iot/container.h"
 #include "iot/logger.h"
 #include "iot/config.h"
+#include "iot/time.h"
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 #include <dlfcn.h>
 #endif
@@ -13,6 +14,11 @@
 #include <applibs/applications.h>
 #include <applibs/log.h>
 #endif
+
+/* Wait/retry defaults for invoking running callbacks */
+
+#define IOT_CONTAINER_RUN_RETRIES 25
+#define IOT_CONTAINER_RUN_WAIT_MS 200
 
 struct iot_container_t
 {
@@ -286,6 +292,40 @@ void iot_container_free (iot_container_t * cont)
   }
 }
 
+static void iot_container_running (iot_container_t * cont)
+{
+  static const uint64_t sleep_msecs = IOT_CONTAINER_RUN_WAIT_MS;
+  iot_data_list_iter_t iter;
+  iot_component_t * comp;
+  unsigned tries = 0u;
+
+  // Wait for all components to start
+  while (true)
+  {
+    iot_data_list_iter (cont->components, &iter);
+    while (iot_data_list_iter_next (&iter))
+    {
+      comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter);
+      if (comp->state != IOT_COMPONENT_RUNNING) goto AGAIN;
+    }
+    break;
+AGAIN:
+    if (++tries == IOT_CONTAINER_RUN_RETRIES) break;
+    iot_wait_msecs (sleep_msecs);
+  }
+
+  // Invoke running callbacks if not timed out
+  if (tries != IOT_CONTAINER_RUN_RETRIES)
+  {
+    iot_data_list_iter (cont->components, &iter);
+    while (iot_data_list_iter_next (&iter))
+    {
+      comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter);
+      if (comp->running_fn) (comp->running_fn) (comp);
+    }
+  }
+}
+
 void iot_container_start (iot_container_t * cont)
 {
   pthread_rwlock_rdlock (&cont->lock);
@@ -299,6 +339,7 @@ void iot_container_start (iot_container_t * cont)
     Log_Debug ("iot_container_start: %s (Total Memory: %" PRIu32 " kB)\n", comp->name, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
 #endif
   }
+  iot_container_running (cont);
   pthread_rwlock_unlock (&cont->lock);
 }
 
