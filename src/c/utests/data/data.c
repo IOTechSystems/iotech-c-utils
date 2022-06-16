@@ -4227,6 +4227,7 @@ static void test_data_ref_count (void)
   iot_data_free (data);
   CU_ASSERT (iot_data_ref_count (data) == 1u)
   iot_data_free (data);
+  CU_ASSERT (iot_data_ref_count (NULL) == 0u)
 }
 
 static void test_data_array_transform (void)
