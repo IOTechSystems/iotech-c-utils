@@ -165,6 +165,7 @@
 * `iot_data_map_get_map`
 * `iot_data_map_get_list`
 * `iot_data_map_get_pointer`
+* `iot_data_map_get_typed`
 
 - Added functions to determine if current list, map, array or vector iterator has a next element:
 
