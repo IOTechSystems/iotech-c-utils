@@ -625,7 +625,7 @@ static void test_data_from_json (void)
   found = iot_config_bool (map, "Bolean", &bval, NULL);
   CU_ASSERT (! found)
   key = iot_data_alloc_string ("Boolean", IOT_DATA_REF);
-  bval = iot_data_map_get_bool(map, key, false);
+  bval = iot_data_map_get_bool (map, key, false);
   CU_ASSERT (bval)
   iot_data_free (key);
 
@@ -2315,6 +2315,18 @@ static void test_map_size (void)
   iot_data_string_map_add (map, "element2", iot_data_alloc_string ("data", IOT_DATA_REF));
   CU_ASSERT (iot_data_map_size (map) == 2)
 
+  iot_data_free (map);
+}
+
+static void test_map_get (void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * key = iot_data_alloc_string ("Key", IOT_DATA_REF);
+  iot_data_map_add (map, key, iot_data_alloc_ui32 (23u));
+  const iot_data_t * val = iot_data_map_get_typed (map, key, IOT_DATA_UINT32);
+  CU_ASSERT (val != NULL)
+  val = iot_data_map_get_typed (map, key, IOT_DATA_INT32);
+  CU_ASSERT (val == NULL)
   iot_data_free (map);
 }
 
@@ -4602,6 +4614,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_list_find", test_list_find);
   CU_add_test (suite, "data_list_equal", test_list_equal);
   CU_add_test (suite, "data_map_size", test_map_size);
+  CU_add_test (suite, "data_map_get", test_map_get);
   CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);
   CU_add_test (suite, "data_map_remove", test_data_map_remove);
   CU_add_test (suite, "data_string_vector", test_data_string_vector);

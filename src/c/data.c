@@ -1574,9 +1574,9 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
   bool ret = false;
   if (key)
   {
-    iot_data_t * k = iot_data_alloc_string (key, IOT_DATA_REF);
-    ret = iot_data_map_remove (map, k);
-    iot_data_free (k);
+    iot_data_static_t skey;
+    iot_data_alloc_const_string (&skey, key);
+    ret = iot_data_map_remove (map, IOT_DATA_STATIC (skey));
   }
   return ret;
 }
@@ -1627,13 +1627,19 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   return node ? node->value : NULL;
 }
 
+const iot_data_t * iot_data_map_get_typed (const iot_data_t * map, const iot_data_t * key, iot_data_type_t type)
+{
+  assert (map && key && (map->type == IOT_DATA_MAP));
+  const iot_node_t * node = iot_node_find (((const iot_data_map_t*) map)->tree, key);
+  return (node && (node->value->type == type)) ? node->value : NULL;
+}
+
 const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key)
 {
   assert (map && key);
-  iot_data_t * dkey = iot_data_alloc_string (key, IOT_DATA_REF);
-  const iot_data_t * value = iot_data_map_get (map, dkey);
-  iot_data_free (dkey);
-  return value;
+  iot_data_static_t skey;
+  iot_data_alloc_const_string (&skey, key);
+  return iot_data_map_get (map, IOT_DATA_STATIC (skey));
 }
 
 const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key)
