@@ -249,3 +249,16 @@
 - Support removed for AzureSphere API 8 and 10
 - #216 Fix for calling `iot_data_alloc_from_string` with empty string
 - Data metadata set and get functions updated to take a key value
+
+## Version 1.3.1
+
+- Shallow copy function added:
+
+* `iot_data_shallow_copy`
+
+- Functions added to support nested maps and vectors:
+
+* `iot_data_get_at`
+* `iot_data_add_at`
+* `iot_data_remove_at`
+* `iot_data_update_at`
