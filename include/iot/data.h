@@ -123,6 +123,9 @@ typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 /** Type for data free function pointer */
 typedef void (*iot_data_free_fn) (void * ptr);
 
+/** Type for data update function pointer */
+typedef iot_data_t * (*iot_data_update_fn) (const iot_data_t * data, void * arg);
+
 /**
  * @brief Set on a per thread basis allocation policy for data (cache or heap)
  *
@@ -1801,6 +1804,19 @@ extern int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2)
 extern iot_data_t * iot_data_copy (const iot_data_t * src);
 
 /**
+ * @brief Shallow copy data
+ *
+ * This function copies data from src and returns the pointer of the copied data.
+ * For map, vector and list data a new data object of the same type is constructed
+ * and the contents of the data object copied by reference into the new object.
+ * All other data types are returned unchanged with the referncec count incremented.
+ *
+ * @param src Data to copy
+ * @return    Pointer to the copied data. The caller should free memory after use
+ */
+extern iot_data_t * iot_data_shallow_copy (const iot_data_t * src);
+
+/**
  * @brief Check data type matches typecode
  *
  * The function returns where a data instance matches a given typecode. Note that this will
@@ -1884,6 +1900,59 @@ extern iot_data_t * iot_data_array_transform (const iot_data_t * array, iot_data
  * @return       The size of the contained type in bytes (e.g. 4 for IOT_DATA_UINT32)
  */
 extern uint32_t iot_data_type_size (iot_data_type_t type);
+
+/**
+ * @brief  Returns a data value by traversing nested maps and vectors following the keys and indexes supplied in path.
+ *         Each entry in path must be of the correct type for the corresponding map or an unsigned 32 bit integer
+ *         for vectors.
+ * @param  data The starting data structure
+ * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @return The data found by traversing the path or NULL if the path does not match the supplied data
+ *
+ */
+extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_data_t * path);
+
+
+/**
+ * @brief  Adds a data value at a point specified by traversing nested maps and vectors following the keys and indexes
+ *         supplied in path. Each entry in path must be of the correct type for the corresponding map or an unsigned
+ *         32 bit integer for vectors.
+ * @param  data The starting data structure
+ * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @param  val  The value to add
+ * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
+ *         the data parameter, as will intermediate objects along the specified path.
+ *
+ */
+extern iot_data_t * iot_data_add_at (const iot_data_t * data, const iot_data_t * path, iot_data_t * val);
+
+/**
+ * @brief  Removes a data value specified by traversing nested maps and vectors following the keys and indexes supplied in path.
+ *         Each entry in path must be of the correct type for the corresponding map or an unsigned 32 bit integer
+ *         for vectors.
+ * @param  data The starting data structure
+ * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
+ *         the data parameter, as will intermediate objects along the specified path.
+ *
+ */
+extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_t * path);
+
+
+/**
+ * @brief  Updates a data value at a point specified by traversing nested maps and vectors following the keys and indexes
+ *         supplied in path with result of applying. Each entry in path must be of the correct type for the corresponding map or an unsigned
+ *         32 bit integer for vectors.
+ * @param  data The starting data structure
+ * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @fn     pointer to an update function. The function will be passed the existing value specified by the path and the arg parameter.
+ *         The function must return the new value.
+ * @arg    user specified pointer suppled to the update function.
+ * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
+ *         the data parameter, as will intermediate objects along the specified path.
+ *
+ */
+extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_t * path, iot_data_update_fn fn, void * arg);
 
 #ifdef __cplusplus
 }
