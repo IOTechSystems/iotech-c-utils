@@ -1814,7 +1814,7 @@ extern iot_data_t * iot_data_copy (const iot_data_t * src);
  * @param src Data to copy
  * @return    Pointer to the copied data. The caller should free memory after use
  */
-extern iot_data_t * iot_data_shallow_copy (const iot_data_t * data);
+extern iot_data_t * iot_data_shallow_copy (const iot_data_t * src);
 
 /**
  * @brief Check data type matches typecode
@@ -1919,7 +1919,7 @@ extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_da
  *         32 bit integer for vectors.
  * @param  data The starting data structure
  * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
- * @val    The value to add
+ * @param  val  The value to add
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
  *         the data parameter, as will intermediate objects along the specified path.
  *

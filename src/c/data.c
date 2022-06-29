@@ -2868,17 +2868,17 @@ extern void iot_data_typecode (const iot_data_t * data, iot_typecode_t * tc)
   tc->key_type = data->key_type;
 }
 
-extern iot_data_t * iot_data_shallow_copy (const iot_data_t * data)
+extern iot_data_t * iot_data_shallow_copy (const iot_data_t * src)
 {
   iot_data_t * result;
-  assert (data);
-  switch (data->type)
+  assert (src);
+  switch (src->type)
   {
     case IOT_DATA_MAP:
     {
-      result = iot_data_alloc_map (iot_data_map_type (data));
+      result = iot_data_alloc_map (iot_data_map_type (src));
       iot_data_map_iter_t iter;
-      iot_data_map_iter (data, &iter);
+      iot_data_map_iter (src, &iter);
       while (iot_data_map_iter_next (&iter))
       {
         iot_data_map_add (result, iot_data_add_ref (iot_data_map_iter_key (&iter)), iot_data_add_ref (iot_data_map_iter_value (&iter)));
@@ -2887,10 +2887,10 @@ extern iot_data_t * iot_data_shallow_copy (const iot_data_t * data)
     }
     case IOT_DATA_VECTOR:
     {
-      result = iot_data_alloc_vector (iot_data_vector_size (data));
-      for (uint32_t i = 0; i < iot_data_vector_size (data); i++)
+      result = iot_data_alloc_vector (iot_data_vector_size (src));
+      for (uint32_t i = 0; i < iot_data_vector_size (src); i++)
       {
-        iot_data_vector_add (result, i, iot_data_add_ref (iot_data_vector_get (data, i)));
+        iot_data_vector_add (result, i, iot_data_add_ref (iot_data_vector_get (src, i)));
       }
       break;
     }
@@ -2898,7 +2898,7 @@ extern iot_data_t * iot_data_shallow_copy (const iot_data_t * data)
     {
       result = iot_data_alloc_list ();
       iot_data_list_iter_t iter;
-      iot_data_list_iter (data, &iter);
+      iot_data_list_iter (src, &iter);
       while (iot_data_list_iter_next (&iter))
       {
         iot_data_list_head_push (result, iot_data_add_ref (iot_data_list_iter_value (&iter)));
@@ -2907,7 +2907,7 @@ extern iot_data_t * iot_data_shallow_copy (const iot_data_t * data)
     }
     default:
     {
-      result = iot_data_add_ref (data);
+      result = iot_data_add_ref (src);
       break;
     }
   }
