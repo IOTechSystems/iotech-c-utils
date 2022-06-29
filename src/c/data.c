@@ -2921,7 +2921,7 @@ extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_da
   if (iot_data_list_length (path) > 0)
   {
     iot_data_t * p = iot_data_copy (path);
-    const iot_data_t * index = iot_data_list_head_pop (p);
+    iot_data_t * index = iot_data_list_head_pop (p);
     switch (data->type)
     {
       case IOT_DATA_MAP:
@@ -2953,7 +2953,7 @@ extern iot_data_t * iot_data_add_at (const iot_data_t * data, const iot_data_t *
   if (iot_data_list_length (path) > 0)
   {
     iot_data_t * p = iot_data_copy (path);
-    const iot_data_t * index = iot_data_list_head_pop (p);
+    iot_data_t * index = iot_data_list_head_pop (p);
     result = iot_data_shallow_copy (data);
     switch (data->type)
     {
@@ -2990,7 +2990,7 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
   if (iot_data_list_length (path) > 0)
   {
     iot_data_t * p = iot_data_copy (path);
-    const iot_data_t * index = iot_data_list_head_pop (p);
+    iot_data_t * index = iot_data_list_head_pop (p);
     switch (data->type)
     {
       case IOT_DATA_MAP:
@@ -3050,7 +3050,7 @@ extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_
   {
     result = iot_data_shallow_copy (data);
     iot_data_t * p = iot_data_copy (path);
-    const iot_data_t * index = iot_data_list_head_pop (p);
+    iot_data_t * index = iot_data_list_head_pop (p);
     switch (data->type)
     {
       case IOT_DATA_MAP:
