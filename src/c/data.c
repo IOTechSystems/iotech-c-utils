@@ -565,6 +565,9 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
       uint32_t size1 = ((const iot_data_vector_t*) v1)->size;
       uint32_t size2 = ((const iot_data_vector_t*) v2)->size;
       if (size1 != size2) return size1 < size2 ? -1 : 1;
+      uint32_t hash1 = iot_data_hash (v1);
+      uint32_t hash2 = iot_data_hash (v2);
+      if (hash1 != hash2) return hash1 < hash2 ? -1 : 1;
       iot_data_vector_iter_t iter1;
       iot_data_vector_iter_t iter2;
       iot_data_vector_iter (v1, &iter1);
@@ -582,6 +585,9 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
       uint32_t len1 = iot_data_list_length (v1);
       uint32_t len2 = iot_data_list_length (v2);
       if (len1 != len2) return len1 < len2 ? -1 : 1;
+      uint32_t hash1 = iot_data_hash (v1);
+      uint32_t hash2 = iot_data_hash (v2);
+      if (hash1 != hash2) return hash1 < hash2 ? -1 : 1;
       iot_data_list_iter_t iter1;
       iot_data_list_iter_t iter2;
       iot_data_list_iter (v1, &iter1);
@@ -599,6 +605,9 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
       uint32_t size1 = ((const iot_data_map_t*) v1)->size;
       uint32_t size2 =((const iot_data_map_t*) v2)->size;
       if (size1 != size2) return size1 < size2 ? -1 : 1;
+      uint32_t hash1 = iot_data_hash (v1);
+      uint32_t hash2 = iot_data_hash (v2);
+      if (hash1 != hash2) return hash1 < hash2 ? -1 : 1;
       iot_data_map_iter_t iter1;
       iot_data_map_iter_t iter2;
       iot_data_map_iter (v1, &iter1);
