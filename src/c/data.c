@@ -2044,8 +2044,6 @@ static char * iot_data_string_from_json_token (const char * json, const iot_json
               *dst = *(src++) == '0' ? 0u : 0x10u; // 0 or 1
               *dst++ |= *src <= '9' ? *src - '0' : tolower (*src) - 'a' + 10;
             }
-            *dst++ = '\\';
-            *dst++ = 'u';
             break;
           default:
             *dst++ = *src;
