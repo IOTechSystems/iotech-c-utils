@@ -163,3 +163,7 @@
 
 - Alpine Linux version 3.15 support added
 - #216 Fix for calling `iot_data_alloc_from_string` with empty string
+
+### Version 1.2.6
+
+- Fix for reading unicode strings in `iot_data_from_json`
