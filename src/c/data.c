@@ -2504,9 +2504,13 @@ static char * iot_data_string_from_json_token (const char * json, const iot_json
           case 't':
             *dst++ = '\t';
             break;
-          case 'u':         // leave escaped unicode in place
-            *dst++ = '\\';
-            *dst++ = 'u';
+          case 'u':
+            src += 3;
+            if (src + 1 < json + token->start + len)
+            {
+              *dst = *(src++) == '0' ? 0u : 0x10u; // 0 or 1
+              *dst++ |= *src <= '9' ? *src - '0' : tolower (*src) - 'a' + 10;
+            }
             break;
           default:
             *dst++ = *src;
