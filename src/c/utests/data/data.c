@@ -704,7 +704,7 @@ static void test_data_from_json (void)
   iot_data_free (key);
 
   const char * ustr = iot_data_string_map_get_string (map, "Unicode");
-  CU_ASSERT (strcmp (ustr, "\003HELLO\006HI") == 0);
+  CU_ASSERT (strcmp (ustr, "\003HELLO\006HI") == 0)
   iot_data_free (map);
 
   iot_data_t * cache = iot_data_alloc_map (IOT_DATA_STRING);
