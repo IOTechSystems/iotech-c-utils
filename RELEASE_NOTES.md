@@ -262,3 +262,5 @@
 * `iot_data_add_at`
 * `iot_data_remove_at`
 * `iot_data_update_at`
+
+- Fix `iot_data_from_json` handling of unicode strings
