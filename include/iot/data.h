@@ -1945,9 +1945,9 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
  *         32 bit integer for vectors.
  * @param  data The starting data structure
  * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
- * @param  fn   Pointer to an update function. The function will be passed the existing value specified by the path and the arg parameter.
+ * @param  fn Pointer to an update function. The function will be passed the existing value specified by the path and the arg parameter.
  *         The function must return the new value.
- * @arg    user specified pointer suppled to the update function.
+ * @param  arg User specified pointer supplied to the update function.
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
  *         the data parameter, as will intermediate objects along the specified path.
  *
