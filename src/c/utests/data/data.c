@@ -4590,15 +4590,15 @@ static void test_shallow_copy_map (void)
 {
   iot_data_t * map = iot_data_from_json (test_config);
   iot_data_t * copy = iot_data_shallow_copy (map);
-  CU_ASSERT (copy != NULL);
-  CU_ASSERT (copy != map);
-  CU_ASSERT (iot_data_type (copy) == IOT_DATA_MAP);
-  CU_ASSERT (iot_data_equal (copy, map));
+  CU_ASSERT (copy != NULL)
+  CU_ASSERT (copy != map)
+  CU_ASSERT (iot_data_type (copy) == IOT_DATA_MAP)
+  CU_ASSERT (iot_data_equal (copy, map))
   iot_data_map_iter_t iter;
   iot_data_map_iter (map, &iter);
   while (iot_data_map_iter_next (&iter))
   {
-    CU_ASSERT (iot_data_map_iter_value (&iter) == iot_data_map_get (copy, iot_data_map_iter_key (&iter)));
+    CU_ASSERT (iot_data_map_iter_value (&iter) == iot_data_map_get (copy, iot_data_map_iter_key (&iter)))
   }
   iot_data_free (copy);
   iot_data_free (map);
@@ -4609,13 +4609,13 @@ static void test_shallow_copy_vector (void)
   static const char * test_vector = "[1, \"a string\", {\"a\" : \"b\", [ 1.2, 3.5 ]} ]";
   iot_data_t * vec = iot_data_from_json (test_vector);
   iot_data_t * copy = iot_data_shallow_copy (vec);
-  CU_ASSERT (copy != NULL);
-  CU_ASSERT (copy != vec);
-  CU_ASSERT (iot_data_type (copy) == IOT_DATA_VECTOR);
-  CU_ASSERT (iot_data_equal (copy, vec));
+  CU_ASSERT (copy != NULL)
+  CU_ASSERT (copy != vec)
+  CU_ASSERT (iot_data_type (copy) == IOT_DATA_VECTOR)
+  CU_ASSERT (iot_data_equal (copy, vec))
   for (uint32_t i = 0; i < iot_data_vector_size (vec); i++)
   {
-    CU_ASSERT (iot_data_vector_get (vec, i) == iot_data_vector_get (copy, i));
+    CU_ASSERT (iot_data_vector_get (vec, i) == iot_data_vector_get (copy, i))
   }
   iot_data_free (copy);
   iot_data_free (vec);
@@ -4628,17 +4628,17 @@ static void test_shallow_copy_list (void)
   iot_data_list_head_push (list, iot_data_alloc_ui32 (1u));
   iot_data_list_tail_push (list, iot_data_alloc_ui32 (2u));
   iot_data_t * copy = iot_data_shallow_copy (list);
-  CU_ASSERT (copy != NULL);
-  CU_ASSERT (copy != list);
-  CU_ASSERT (iot_data_type (copy) == IOT_DATA_LIST);
-  CU_ASSERT (iot_data_equal (copy, list));
+  CU_ASSERT (copy != NULL)
+  CU_ASSERT (copy != list)
+  CU_ASSERT (iot_data_type (copy) == IOT_DATA_LIST)
+  CU_ASSERT (iot_data_equal (copy, list))
   iot_data_list_iter_t iter;
   iot_data_list_iter_t iter_copy;
   iot_data_list_iter (list, &iter);
   iot_data_list_iter (copy, &iter_copy);
   while (iot_data_list_iter_next (&iter) && iot_data_list_iter_next (&iter_copy))
   {
-    CU_ASSERT (iot_data_list_iter_value (&iter) == iot_data_list_iter_value (&iter_copy));
+    CU_ASSERT (iot_data_list_iter_value (&iter) == iot_data_list_iter_value (&iter_copy))
   }
   iot_data_free (copy);
   iot_data_free (list);
@@ -4654,7 +4654,7 @@ static void test_get_at (void)
   const iot_data_t * d1 = iot_data_string_map_get_vector (map, "Topics");
   const iot_data_t * d2 = iot_data_vector_get (d1, 0);
   const iot_data_t * d3 = iot_data_string_map_get (d2, "Priority");
-  CU_ASSERT (iot_data_get_at (map, path) == d3);
+  CU_ASSERT (iot_data_get_at (map, path) == d3)
   iot_data_free (path);
   iot_data_free (map);
 }
@@ -4668,12 +4668,12 @@ static void test_add_at (void)
   iot_data_list_tail_push (path, iot_data_alloc_string ("Priority", IOT_DATA_REF));
   iot_data_t * val = iot_data_alloc_ui32 (1);
   iot_data_t * modified = iot_data_add_at (map, path, val);
-  CU_ASSERT (modified != NULL);
-  CU_ASSERT (iot_data_type (modified) == IOT_DATA_MAP);
+  CU_ASSERT (modified != NULL)
+  CU_ASSERT (iot_data_type (modified) == IOT_DATA_MAP)
   const iot_data_t * d1 = iot_data_string_map_get_vector (modified, "Topics");
   const iot_data_t * d2 = iot_data_vector_get (d1, 0);
   const iot_data_t * d3 = iot_data_string_map_get (d2, "Priority");
-  CU_ASSERT (val == d3);
+  CU_ASSERT (val == d3)
   iot_data_free (modified);
   iot_data_free (path);
   iot_data_free (map);
@@ -4687,12 +4687,12 @@ static void test_remove_at (void)
   iot_data_list_tail_push (path, iot_data_alloc_ui32 (0));
   iot_data_list_tail_push (path, iot_data_alloc_string ("Priority", IOT_DATA_REF));
   iot_data_t * modified = iot_data_remove_at (map, path);
-  CU_ASSERT (modified != NULL);
-  CU_ASSERT (iot_data_type (modified) == IOT_DATA_MAP);
+  CU_ASSERT (modified != NULL)
+  CU_ASSERT (iot_data_type (modified) == IOT_DATA_MAP)
   const iot_data_t * d1 = iot_data_string_map_get_vector (modified, "Topics");
   const iot_data_t * d2 = iot_data_vector_get (d1, 0);
   const iot_data_t * d3 = iot_data_string_map_get (d2, "Priority");
-  CU_ASSERT (d3 == NULL);
+  CU_ASSERT (d3 == NULL)
   iot_data_free (modified);
   iot_data_free (path);
   iot_data_free (map);
@@ -4712,12 +4712,12 @@ static void test_update_at (void)
   iot_data_list_tail_push (path, iot_data_alloc_string ("Priority", IOT_DATA_REF));
   uint64_t inc = 2;
   iot_data_t * modified = iot_data_update_at (map, path, add, &inc);
-  CU_ASSERT (modified != NULL);
-  CU_ASSERT (iot_data_type (modified) == IOT_DATA_MAP);
+  CU_ASSERT (modified != NULL)
+  CU_ASSERT (iot_data_type (modified) == IOT_DATA_MAP)
   const iot_data_t * d1 = iot_data_string_map_get_vector (modified, "Topics");
   const iot_data_t * d2 = iot_data_vector_get (d1, 0);
   const int64_t val = iot_data_string_map_get_i64 (d2, "Priority", 0);
-  CU_ASSERT (val == 12);
+  CU_ASSERT (val == 12)
   iot_data_free (modified);
   iot_data_free (path);
   iot_data_free (map);
