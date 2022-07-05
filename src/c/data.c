@@ -2900,8 +2900,9 @@ extern iot_data_t * iot_data_shallow_copy (const iot_data_t * src)
     }
     case IOT_DATA_VECTOR:
     {
-      result = iot_data_alloc_vector (iot_data_vector_size (src));
-      for (uint32_t i = 0; i < iot_data_vector_size (src); i++)
+      uint32_t size = iot_data_vector_size (src);
+      result = iot_data_alloc_vector (size);
+      for (uint32_t i = 0; i < size; i++)
       {
         iot_data_vector_add (result, i, iot_data_add_ref (iot_data_vector_get (src, i)));
       }
