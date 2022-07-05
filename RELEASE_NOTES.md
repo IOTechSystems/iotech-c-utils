@@ -252,6 +252,7 @@
 
 ## Version 1.3.1
 
+- Support added for OpenSUSE 15.4
 - Shallow copy function added:
 
 * `iot_data_shallow_copy`
