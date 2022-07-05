@@ -1840,7 +1840,7 @@ static bool iot_data_vector_dims (const iot_data_t * vector, uint32_t * dims, ui
     *total = *total ? *total * size : size;
   }
   bool ok = (*dims == size);
-  if (ok && (size == vecs)) // Only regard as mult-dimensional vector if all elements also vectors
+  if (ok && (size == vecs)) // Only regard as multidimensional vector if all elements also vectors
   {
     dims++;
     iot_data_vector_iter_t iter;
@@ -2489,21 +2489,11 @@ static char * iot_data_string_from_json_token (const char * json, const iot_json
       {
         switch (*++src)
         {
-          case 'b':
-            *dst++ = '\b';
-            break;
-          case 'f':
-            *dst++ = '\f';
-            break;
-          case 'r':
-            *dst++ = '\r';
-            break;
-          case 'n':
-            *dst++ = '\n';
-            break;
-          case 't':
-            *dst++ = '\t';
-            break;
+          case 'b': *dst++ = '\b'; break;
+          case 'f': *dst++ = '\f'; break;
+          case 'r': *dst++ = '\r'; break;
+          case 'n': *dst++ = '\n'; break;
+          case 't': *dst++ = '\t'; break;
           case 'u':
             src += 3;
             if (src + 1 < json + token->start + len)
@@ -2640,16 +2630,9 @@ iot_data_t * iot_data_from_json_with_cache (const char * json, bool ordered, iot
     {
       switch (*ptr)
       {
-        case ',':
-        case '{':
-          count++;
-          break;
-        case ':':
-        case '[':
-          count += 2;
-          break;
-        default:
-          break;
+        case ',': case '{': count++; break;
+        case ':': case '[': count += 2; break;
+        default: break;
       }
       ptr++;
     }
