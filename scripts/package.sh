@@ -143,7 +143,7 @@ case ${SYSTEM} in
         UUID_DEP=libuuid
         UUID_DEV_DEP=libuuid-devel
       ;;
-      opensuse-15.3)
+      opensuse-15.*)
         FPM=fpm.ruby2.5
         UUID_DEP=libuuid1
         UUID_DEV_DEP=libuuid-devel
