@@ -1898,24 +1898,50 @@ static void test_data_vector_iters (void)
 
 static void test_data_vector_resize (void)
 {
-  iot_data_t * vector = iot_data_alloc_vector (3);
+  iot_data_t * vector = iot_data_alloc_vector (3u);
   iot_data_t * elem0 = iot_data_alloc_string ("test", IOT_DATA_REF);
   iot_data_t * elem1 = iot_data_alloc_string ("test1", IOT_DATA_REF);
   iot_data_t * elem2 = iot_data_alloc_string ("test2", IOT_DATA_REF);
-  iot_data_vector_add (vector, 0, elem0);
-  iot_data_vector_add (vector, 1, elem1);
-  iot_data_vector_add (vector, 2, elem2);
-  iot_data_vector_resize (vector, 5);
-  CU_ASSERT (iot_data_vector_size (vector) == 5)
-  CU_ASSERT (iot_data_vector_get (vector, 0) == elem0)
-  CU_ASSERT (iot_data_vector_get (vector, 1) == elem1)
-  CU_ASSERT (iot_data_vector_get (vector, 2) == elem2)
-  CU_ASSERT (iot_data_vector_get (vector, 3) == NULL)
-  CU_ASSERT (iot_data_vector_get (vector, 4) == NULL)
-  iot_data_vector_resize (vector, 2);
-  CU_ASSERT (iot_data_vector_size (vector) == 2)
-  CU_ASSERT (iot_data_vector_get (vector, 0) == elem0)
-  CU_ASSERT (iot_data_vector_get (vector, 1) == elem1)
+  iot_data_vector_add (vector, 0u, elem0);
+  iot_data_vector_add (vector, 1u, elem1);
+  iot_data_vector_add (vector, 2u, elem2);
+  iot_data_vector_resize (vector, 5u);
+  CU_ASSERT (iot_data_vector_size (vector) == 5u)
+  CU_ASSERT (iot_data_vector_get (vector, 0u) == elem0)
+  CU_ASSERT (iot_data_vector_get (vector, 1u) == elem1)
+  CU_ASSERT (iot_data_vector_get (vector, 2u) == elem2)
+  CU_ASSERT (iot_data_vector_get (vector, 3u) == NULL)
+  CU_ASSERT (iot_data_vector_get (vector, 4u) == NULL)
+  iot_data_vector_resize (vector, 2u);
+  CU_ASSERT (iot_data_vector_size (vector) == 2u)
+  CU_ASSERT (iot_data_vector_get (vector, 0u) == elem0)
+  CU_ASSERT (iot_data_vector_get (vector, 1u) == elem1)
+  iot_data_free (vector);
+}
+
+static void test_data_vector_compact (void)
+{
+  uint32_t size;
+  uint32_t hash1;
+  uint32_t hash2;
+  iot_data_t * vector = iot_data_alloc_vector (4u);
+  iot_data_t * elem0 = iot_data_alloc_ui32 (0u);
+  iot_data_t * elem2 = iot_data_alloc_ui32 (2u);
+  iot_data_vector_add (vector, 0u, elem0);
+  iot_data_vector_add (vector, 2u, elem2);
+  hash1 = iot_data_hash (vector);
+  size = iot_data_vector_compact (vector);
+  hash2 = iot_data_hash (vector);
+  CU_ASSERT (size == 2u)
+  CU_ASSERT (hash1 == hash2)
+  CU_ASSERT (iot_data_vector_size (vector) == 2u)
+  CU_ASSERT (iot_data_vector_get (vector, 0u) == elem0)
+  CU_ASSERT (iot_data_vector_get (vector, 1u) == elem2)
+  iot_data_free (vector);
+  vector = iot_data_alloc_vector (4u);
+  size = iot_data_vector_compact (vector);
+  CU_ASSERT (size == 0u)
+  CU_ASSERT (iot_data_vector_size (vector) == 0u)
   iot_data_free (vector);
 }
 
@@ -4816,6 +4842,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_vector_iter_prev", test_data_vector_iter_prev);
   CU_add_test (suite, "data_vector_iters", test_data_vector_iters);
   CU_add_test (suite, "data_vector_resize", test_data_vector_resize);
+  CU_add_test (suite, "data_vector_compact", test_data_vector_compact);
   CU_add_test (suite, "data_vector_find", test_data_vector_find);
   CU_add_test (suite, "data_copy_map_base64_to_array", test_data_copy_map_base64_to_array);
   CU_add_test (suite, "data_check_equal_nested_vector", test_data_equal_nested_vector);

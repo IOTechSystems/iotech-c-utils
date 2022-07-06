@@ -264,4 +264,8 @@
 * `iot_data_remove_at`
 * `iot_data_update_at`
 
+- Function added to compact a vector (removing NULL elements):
+
+* `iot_data_vector_compact`
+
 - Fix `iot_data_from_json` handling of unicode strings

@@ -1335,6 +1335,16 @@ extern const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32
 extern void iot_data_vector_resize (iot_data_t * vector, uint32_t size);
 
 /**
+ * @brief Compact a vector
+ *
+ * Compact a vector. All NULL elements in a vector are removed and the vector is resized accordingly.
+ *
+ * @param vector  Input vector
+ * @return        Size of the compacted vector
+ */
+extern uint32_t iot_data_vector_compact (iot_data_t * vector);
+
+/**
  * @brief Get the vector size
  * @param vector  Input vector
  * @return       Size of an vector
