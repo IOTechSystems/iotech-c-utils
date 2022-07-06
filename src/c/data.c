@@ -1796,6 +1796,32 @@ void iot_data_vector_resize (iot_data_t * vector, uint32_t size)
   vec->size = size;
 }
 
+uint32_t iot_data_vector_compact (iot_data_t * vector)
+{
+  iot_data_vector_t * vec = (iot_data_vector_t*) vector;
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  uint32_t new_size = vec->size;
+  for (uint32_t i = 0; i < vec->size; i++)
+  {
+    if (vec->values[i] == NULL)
+    {
+      new_size--;
+      for (uint32_t j = i + 1; j < vec->size; j++)
+      {
+        if (vec->values[j])
+        {
+          vec->values[i] = vec->values[j];
+          vec->values[j] = NULL;
+          new_size++;
+          break;
+        }
+      }
+    }
+  }
+  vec->size = new_size;
+  return new_size;
+}
+
 uint32_t iot_data_vector_size (const iot_data_t * vector)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR));
@@ -3011,15 +3037,8 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
         }
         else
         {
-          assert (i < iot_data_vector_size (result));
-          iot_data_free ((iot_data_t *) iot_data_vector_get (result, i));
-          uint32_t len = iot_data_vector_size (result) - 1;
-          while (i < len)
-          {
-            iot_data_vector_add (result, i, iot_data_add_ref (iot_data_vector_get (result, i + 1)));
-            i++;
-          }
-          iot_data_vector_resize (result, len);
+          iot_data_vector_add (result, i, NULL);
+          iot_data_vector_compact (result);
         }
         break;
       }
