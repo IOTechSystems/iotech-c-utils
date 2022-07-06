@@ -2943,26 +2943,10 @@ extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_da
   const iot_data_t * result = data;
   if (iot_data_list_length (path) > 0)
   {
+    assert (data->type == IOT_DATA_MAP || data->type == IOT_DATA_VECTOR);
     iot_data_t * p = iot_data_copy (path);
     iot_data_t * index = iot_data_list_head_pop (p);
-    switch (data->type)
-    {
-      case IOT_DATA_MAP:
-      {
-        result = iot_data_get_at (iot_data_map_get (data, index), p);
-        break;
-      }
-      case IOT_DATA_VECTOR:
-      {
-        result = iot_data_get_at (iot_data_vector_get (data, iot_data_ui32 (index)), p);
-        break;
-      }
-      default:
-      {
-        assert (0);
-        break;
-      }
-    }
+    result = (data->type == IOT_DATA_MAP) ? iot_data_get_at (iot_data_map_get (data, index), p) : iot_data_get_at (iot_data_vector_get (data, iot_data_ui32 (index)), p);
     iot_data_free (index);
     iot_data_free (p);
   }
@@ -2975,27 +2959,13 @@ extern iot_data_t * iot_data_add_at (const iot_data_t * data, const iot_data_t *
   iot_data_t * result;
   if (iot_data_list_length (path) > 0)
   {
+    assert (data->type == IOT_DATA_MAP || data->type == IOT_DATA_VECTOR);
     iot_data_t * p = iot_data_copy (path);
     iot_data_t * index = iot_data_list_head_pop (p);
     result = iot_data_shallow_copy (data);
-    switch (data->type)
-    {
-      case IOT_DATA_MAP:
-      {
-        iot_data_map_add (result, iot_data_add_ref (index), iot_data_add_at (iot_data_map_get (data, index), p, val));
-        break;
-      }
-      case IOT_DATA_VECTOR:
-      {
-        iot_data_vector_add (result, iot_data_ui32 (index), iot_data_add_at (iot_data_vector_get (data, iot_data_ui32 (index)), p, val));
-        break;
-      }
-      default:
-      {
-        assert (0);
-        break;
-      }
-    }
+    (data->type == IOT_DATA_MAP) ?
+      iot_data_map_add (result, iot_data_add_ref (index), iot_data_add_at (iot_data_map_get (data, index), p, val)) :
+      iot_data_vector_add (result, iot_data_ui32 (index), iot_data_add_at (iot_data_vector_get (data, iot_data_ui32 (index)), p, val));
     iot_data_free (index);
     iot_data_free (p);
   }
@@ -3012,40 +2982,31 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
   iot_data_t * result = iot_data_shallow_copy (data);
   if (iot_data_list_length (path) > 0)
   {
+    assert (data->type == IOT_DATA_MAP || data->type == IOT_DATA_VECTOR);
     iot_data_t * p = iot_data_copy (path);
     iot_data_t * index = iot_data_list_head_pop (p);
-    switch (data->type)
+    if (data->type == IOT_DATA_MAP)
     {
-      case IOT_DATA_MAP:
+      if (iot_data_list_length (p) > 0)
       {
-        if (iot_data_list_length (p) > 0)
-        {
-          iot_data_map_add (result, iot_data_add_ref (index), iot_data_remove_at (iot_data_map_get (result, index), p));
-        }
-        else
-        {
-          iot_data_map_remove (result, index);
-        }
-        break;
+        iot_data_map_add (result, iot_data_add_ref (index), iot_data_remove_at (iot_data_map_get (result, index), p));
       }
-      case IOT_DATA_VECTOR:
+      else
       {
-        uint32_t i = iot_data_ui32 (index);
-        if (iot_data_list_length (p) > 0)
-        {
-          iot_data_vector_add (result, i, iot_data_remove_at (iot_data_vector_get (result, i), p));
-        }
-        else
-        {
-          iot_data_vector_add (result, i, NULL);
-          iot_data_vector_compact (result);
-        }
-        break;
+        iot_data_map_remove (result, index);
       }
-      default:
+    }
+    else
+    {
+      uint32_t i = iot_data_ui32 (index);
+      if (iot_data_list_length (p) > 0)
       {
-        assert (0);
-        break;
+        iot_data_vector_add (result, i, iot_data_remove_at (iot_data_vector_get (result, i), p));
+      }
+      else
+      {
+        iot_data_vector_add (result, i, NULL);
+        iot_data_vector_compact (result);
       }
     }
     iot_data_free (index);
@@ -3067,21 +3028,15 @@ extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_
     result = iot_data_shallow_copy (data);
     iot_data_t * p = iot_data_copy (path);
     iot_data_t * index = iot_data_list_head_pop (p);
-    switch (data->type)
+    if (data->type == IOT_DATA_MAP)
     {
-      case IOT_DATA_MAP:
-      {
-        const iot_data_t * val = iot_data_map_get (data, index);
-        if (val) iot_data_map_add (result, iot_data_add_ref (index), iot_data_update_at (val, p, fn, arg));
-        break;
-      }
-      case IOT_DATA_VECTOR:
-      {
-        iot_data_vector_add (result, iot_data_ui32 (index), iot_data_update_at (iot_data_vector_get (data, iot_data_ui32 (index)), p, fn, arg));
-        break;
-      }
-      default: break;
-    } 
+      const iot_data_t * val = iot_data_map_get (data, index);
+      if (val) iot_data_map_add (result, iot_data_add_ref (index), iot_data_update_at (val, p, fn, arg));
+    }
+    else if (data->type == IOT_DATA_VECTOR)
+    {
+      iot_data_vector_add (result, iot_data_ui32 (index), iot_data_update_at (iot_data_vector_get (data, iot_data_ui32 (index)), p, fn, arg));
+    }
     iot_data_free (index);
     iot_data_free (p);
   }
