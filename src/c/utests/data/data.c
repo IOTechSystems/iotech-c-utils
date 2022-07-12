@@ -4749,6 +4749,25 @@ static void test_update_at (void)
   iot_data_free (map);
 }
 
+static void test_array_to_binary (void)
+{
+ uint8_t data [4] = { 1, 2, 3, 4 };
+ iot_data_t * array = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT8, IOT_DATA_REF);
+ iot_data_array_to_binary (array);
+ CU_ASSERT (iot_data_type (array) == IOT_DATA_BINARY)
+ iot_data_free (array);
+}
+
+static void test_binary_to_array (void)
+{
+  uint8_t data [4] = { 1, 2, 3, 4 };
+  iot_data_t * binary = iot_data_alloc_binary (data, 4u, IOT_DATA_REF);
+  iot_data_binary_to_array (binary);
+  CU_ASSERT (iot_data_type (binary) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_type (binary) == IOT_DATA_UINT8)
+  iot_data_free (binary);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -4902,6 +4921,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "test_add_at", test_add_at);
   CU_add_test (suite, "test_remove_at", test_remove_at);
   CU_add_test (suite, "test_update_at", test_update_at);
+  CU_add_test (suite, "test_array_to_binary", test_array_to_binary);
+  CU_add_test (suite, "test_binary_to_array", test_binary_to_array);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif

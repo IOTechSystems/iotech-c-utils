@@ -269,3 +269,7 @@
 * `iot_data_vector_compact`
 
 - Fix `iot_data_from_json` handling of unicode strings
+- Conversion functions added for array and binary data types
+
+* `iot_data_array_to_binary`
+* `iot_data_binary_to_array`
