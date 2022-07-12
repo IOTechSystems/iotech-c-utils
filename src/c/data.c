@@ -1409,6 +1409,18 @@ extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_dat
   return bin;
 }
 
+extern void iot_data_array_to_binary (iot_data_t * data)
+{
+  assert (data && (data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_BINARY) && data->element_type == IOT_DATA_UINT8);
+  data->type = IOT_DATA_BINARY;
+}
+
+extern void iot_data_binary_to_array (iot_data_t * data)
+{
+  assert (data && (data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_BINARY) && data->element_type == IOT_DATA_UINT8);
+  data->type = IOT_DATA_ARRAY;
+}
+
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)
 {
   assert ((type <= IOT_DATA_BOOL) && ((length > 0 && data != NULL) || length == 0));

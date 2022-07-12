@@ -675,7 +675,7 @@ extern iot_data_t * iot_data_list_head_pop (iot_data_t * list);
 /**
  * @brief Allocate data for a binary array
  *
- * The function to allocate data for a binary array of given size (in bytes)
+ * The function to allocate data for a binary array of given size (in bytes), Binaries can be used as arrays.
  *
  * @param data       Pointer to an array of bytes
  * @param length     Lenngth of the byte array
@@ -684,6 +684,18 @@ extern iot_data_t * iot_data_list_head_pop (iot_data_t * list);
  * @return           Pointer to the allocated data
  */
 extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_data_ownership_t ownership);
+
+/**
+ * @brief Convert an array to a binary
+ * @param data       Pointer to the array to be converted
+ */
+extern void iot_data_binary_to_array (iot_data_t * data);
+
+/**
+ * @brief Convert a binary to an array
+ * @param data       Pointer to the binary to be converted
+ */
+extern void iot_data_array_to_binary (iot_data_t * data);
 
 /**
  * @brief Allocate memory for an array
