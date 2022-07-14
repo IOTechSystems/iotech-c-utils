@@ -1974,8 +1974,8 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
 
 /**
  * @brief  Updates a data value at a point specified by traversing nested maps and vectors following the keys and indexes
- *         supplied in path with result of applying. Each entry in path must be of the correct type for the corresponding map or an unsigned
- *         32 bit integer for vectors.
+ *         supplied in path. Each entry in path must be of the correct type for the corresponding map key
+ *         or an unsigned 32 bit integer for vectors.
  * @param  data The starting data structure
  * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
  * @param  fn Pointer to an update function. The function will be passed the existing value specified by the path and the arg parameter.
