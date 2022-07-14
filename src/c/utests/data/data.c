@@ -3966,6 +3966,23 @@ static void test_data_const_pointer (void)
   iot_data_free (data);
 }
 
+static void test_data_const_list (void)
+{
+  static iot_data_static_t block;
+  static iot_data_static_t block2;
+  iot_data_t * list = iot_data_alloc_const_list (&block);
+  iot_data_t * ptr = iot_data_alloc_const_pointer (&block2, &block2);
+  CU_ASSERT (iot_data_list_length (list) == 0u)
+  CU_ASSERT (iot_data_type (list) == IOT_DATA_LIST)
+  CU_ASSERT (list == IOT_DATA_STATIC (block))
+  CU_ASSERT (iot_data_is_static (list))
+  iot_data_list_tail_push (list, ptr);
+  CU_ASSERT (iot_data_list_length (list) == 1u)
+  iot_data_free (list);
+  iot_data_free (list);
+}
+
+
 static void test_data_const_types (void)
 {
   const iot_data_t * b1 = iot_data_alloc_bool (true);
@@ -4896,6 +4913,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_cast", test_data_cast);
   CU_add_test (suite, "data_const_string", test_data_const_string);
   CU_add_test (suite, "data_const_pointer", test_data_const_pointer);
+  CU_add_test (suite, "data_const_list", test_data_const_list);
   CU_add_test (suite, "data_const_types", test_data_const_types);
   CU_add_test (suite, "data_hash", test_data_hash);
   CU_add_test (suite, "data_multi_key_map", test_data_multi_key_map);
