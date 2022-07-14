@@ -489,6 +489,17 @@ extern iot_data_t * iot_data_alloc_const_pointer (iot_data_static_t * data, cons
 extern iot_data_t * iot_data_alloc_list (void);
 
 /**
+ * @brief Allocate constant list data
+ *
+ * The function to allocate data for a constant list, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @return           Pointer to the allocated data (same address as the static storge)
+ */
+extern iot_data_t * iot_data_alloc_const_list (iot_data_static_t * data);
+
+/**
  * @brief Allocate data for a list
  *
  * The function to allocate data for a list of fixed element type

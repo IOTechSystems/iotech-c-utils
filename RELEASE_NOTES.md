@@ -200,9 +200,10 @@
 
 * `iot_data_cast`
 
-- Functions added for the creation of static const data string values and to determine if statically allocated:
+- Functions added for the creation of static const data string and pointer values and to determine if statically allocated:
 
 * `iot_data_alloc_const_string`
+* `iot_data_alloc_const_pointer`
 * `iot_data_is_static`
 
 - Function added to return data hash value:
@@ -273,3 +274,7 @@
 
 * `iot_data_array_to_binary`
 * `iot_data_binary_to_array`
+
+- Function added for the creation of static const data list values:
+
+* `iot_data_alloc_const_list`

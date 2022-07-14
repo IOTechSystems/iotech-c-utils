@@ -807,6 +807,15 @@ iot_data_t * iot_data_alloc_list (void)
   return (iot_data_t*) iot_data_block_alloc_data (IOT_DATA_LIST);
 }
 
+iot_data_t * iot_data_alloc_const_list (iot_data_static_t * data)
+{
+  iot_data_list_t * val = (iot_data_list_t*) data;
+  memset (data, 0, sizeof (*data));
+  iot_data_block_init (&val->base, IOT_DATA_LIST);
+  val->base.constant = true;
+  return (iot_data_t*) val;
+}
+
 iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type)
 {
   iot_data_t * list = iot_data_block_alloc_data (IOT_DATA_LIST);
