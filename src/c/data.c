@@ -220,7 +220,7 @@ _Static_assert (sizeof (iot_data_list_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_lis
 _Static_assert (sizeof (iot_node_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_node bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
-_Static_assert (sizeof (iot_data_list_static_t) == sizeof (iot_data_list_t), "iot_data_list_static not equal to iot_data_list");
+_Static_assert (sizeof (iot_data_list_static_t) <= sizeof (iot_data_list_t), "iot_data_list_static not equal to iot_data_list");
 _Static_assert (sizeof (iot_data_struct_dummy_t) == 2 * sizeof (iot_data_static_t), "iot_data_static_t structs not aligned for iot_data_static_t");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
