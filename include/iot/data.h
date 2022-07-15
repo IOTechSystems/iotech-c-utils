@@ -76,6 +76,11 @@ typedef struct iot_typecode_t
 typedef void * iot_data_static_t [2u + 16u/sizeof (void*)];
 
 /**
+* Type for list type static allocation
+*/
+typedef void * iot_data_list_static_t [3u + 16u/sizeof (void*)];
+
+/**
 * Macro to cast static data instance (iot_data_static_t) to a iot_data_t pointer
 */
 #define IOT_DATA_STATIC(s) ((iot_data_t*) (s))
@@ -497,7 +502,7 @@ extern iot_data_t * iot_data_alloc_list (void);
  * @param data       Address of static storage for data
  * @return           Pointer to the allocated data (same address as the static storge)
  */
-extern iot_data_t * iot_data_alloc_const_list (iot_data_static_t * data);
+extern iot_data_t * iot_data_alloc_const_list (iot_data_list_static_t * data);
 
 /**
  * @brief Allocate data for a list

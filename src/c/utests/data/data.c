@@ -3968,7 +3968,7 @@ static void test_data_const_pointer (void)
 
 static void test_data_const_list (void)
 {
-  static iot_data_static_t block;
+  static iot_data_list_static_t block;
   static iot_data_static_t block2;
   static iot_data_static_t block3;
   iot_data_t * list = iot_data_alloc_const_list (&block);
@@ -3985,7 +3985,7 @@ static void test_data_const_list (void)
   iot_data_free (list);
   iot_data_free (list);
 
-  iot_data_static_t block_non_static;
+  iot_data_list_static_t block_non_static;
   iot_data_t * list_non_static = iot_data_alloc_const_list (&block_non_static);
   CU_ASSERT (iot_data_list_length (list_non_static) == 0u)
   CU_ASSERT (iot_data_type (list_non_static) == IOT_DATA_LIST)
