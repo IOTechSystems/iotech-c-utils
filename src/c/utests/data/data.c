@@ -3970,14 +3970,18 @@ static void test_data_const_list (void)
 {
   static iot_data_static_t block;
   static iot_data_static_t block2;
+  static iot_data_static_t block3;
   iot_data_t * list = iot_data_alloc_const_list (&block);
   iot_data_t * ptr = iot_data_alloc_const_pointer (&block2, &block2);
+  iot_data_t * str = iot_data_alloc_const_string (&block3, "test");
   CU_ASSERT (iot_data_list_length (list) == 0u)
   CU_ASSERT (iot_data_type (list) == IOT_DATA_LIST)
   CU_ASSERT (list == IOT_DATA_STATIC (block))
   CU_ASSERT (iot_data_is_static (list))
   iot_data_list_tail_push (list, ptr);
   CU_ASSERT (iot_data_list_length (list) == 1u)
+  iot_data_list_tail_push (list, str);
+  CU_ASSERT (iot_data_list_length (list) == 2u)
   iot_data_free (list);
   iot_data_free (list);
 }
