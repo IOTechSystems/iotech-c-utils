@@ -78,7 +78,7 @@ typedef void * iot_data_static_t [2u + 16u/sizeof (void*)];
 /**
 * Type for list type static allocation
 */
-typedef void * iot_data_list_static_t [3u + 16u/sizeof (void*)];
+typedef void * iot_data_list_static_t [4u + 8u/sizeof (void*)];
 
 /**
 * Macro to cast static data instance (iot_data_static_t) to a iot_data_t pointer

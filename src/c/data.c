@@ -220,7 +220,7 @@ _Static_assert (sizeof (iot_data_list_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_data_lis
 _Static_assert (sizeof (iot_node_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_node bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bigger than IOT_MEMORY_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
-_Static_assert (sizeof (iot_data_list_static_t) >= sizeof (iot_data_list_t), "iot_data_list_static less than to iot_data_list");
+_Static_assert (sizeof (iot_data_list_static_t) == sizeof (iot_data_list_t), "iot_data_list_static not equal to iot_data_list");
 _Static_assert (sizeof (iot_data_struct_dummy_t) == 2 * sizeof (iot_data_static_t), "iot_data_static_t structs not aligned for iot_data_static_t");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
@@ -452,7 +452,7 @@ static void iot_data_fini (void)
 
 void iot_data_init (void)
 {
-/*
+
   printf ("sizeof (iot_data_t): %zu\n", sizeof (iot_data_t));
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
@@ -468,7 +468,6 @@ void iot_data_init (void)
   printf ("sizeof (iot_data_list_static_t): %zu\n", sizeof (iot_data_list_static_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-*/
 
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
