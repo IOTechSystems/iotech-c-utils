@@ -278,3 +278,7 @@
 - Function added for the creation of static const data list values:
 
 * `iot_data_alloc_const_list`
+
+## Version 1.3.2
+
+- Support removed for Alpine Linux 3.14 and added for v3.16
