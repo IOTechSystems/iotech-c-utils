@@ -4344,6 +4344,7 @@ static void test_data_transform (void)
   CU_ASSERT (iot_data_i16 (xform) == -1)
   iot_data_free (data);
   iot_data_free (xform);
+
   data = iot_data_alloc_ui32 (1234u);
   xform = iot_data_transform (data, IOT_DATA_UINT8);
   CU_ASSERT (xform == NULL)
@@ -4381,6 +4382,18 @@ static void test_data_transform (void)
   iot_data_free (xform);
   xform = iot_data_transform (data, IOT_DATA_BOOL);
   CU_ASSERT (iot_data_bool (xform))
+  iot_data_free (xform);
+  iot_data_free (data);
+
+  data = iot_data_alloc_ui64 (UINT32_MAX);
+  xform = iot_data_transform (data, IOT_DATA_UINT32);
+  CU_ASSERT (iot_data_ui32 (xform) == UINT32_MAX)
+  iot_data_free (xform);
+  iot_data_free (data);
+
+  data = iot_data_alloc_i64 (UINT32_MAX);
+  xform = iot_data_transform (data, IOT_DATA_UINT32);
+  CU_ASSERT (iot_data_ui32 (xform) == UINT32_MAX)
   iot_data_free (xform);
   iot_data_free (data);
 }
