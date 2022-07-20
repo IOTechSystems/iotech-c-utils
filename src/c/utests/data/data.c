@@ -3940,6 +3940,23 @@ static void test_data_cast (void)
   data = iot_data_alloc_pointer (&data, NULL);
   CU_ASSERT (! iot_data_cast (data, IOT_DATA_UINT8, &u8))
   iot_data_free (data);
+
+  uint8_t temp_buf[8];
+  data = iot_data_alloc_i64 (-1);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT32, &temp_buf))
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (UINT32_MAX+1);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT32, &temp_buf))
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (INT32_MIN-1);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_INT32, &temp_buf))
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (INT32_MAX+1);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_INT32, &temp_buf))
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (-1);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT64, &temp_buf))
+  iot_data_free (data);
 }
 
 static void test_data_const_string (void)
@@ -4384,6 +4401,7 @@ static void test_data_transform (void)
   iot_data_free (xform);
   iot_data_free (data);
 
+  // json integer tests
   data = iot_data_alloc_i64 (UINT32_MAX);
   xform = iot_data_transform (data, IOT_DATA_UINT32);
   CU_ASSERT (iot_data_ui32 (xform) == UINT32_MAX)
