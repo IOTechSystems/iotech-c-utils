@@ -3941,7 +3941,7 @@ static void test_data_cast (void)
   CU_ASSERT (! iot_data_cast (data, IOT_DATA_UINT8, &u8))
   iot_data_free (data);
 
-  uint8_t temp_buf[8];
+  uint64_t temp_buf;
   data = iot_data_alloc_i64 (-1);
   CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT32, &temp_buf))
   iot_data_free (data);
