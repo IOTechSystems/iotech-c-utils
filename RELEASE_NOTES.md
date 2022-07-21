@@ -282,3 +282,7 @@
 ## Version 1.3.2
 
 - Support removed for Alpine Linux 3.14 and added for v3.16
+- Functions added to remove all elements from a list or map
+
+* `iot_data_list_empty`
+* `iot_data_map_empty`
