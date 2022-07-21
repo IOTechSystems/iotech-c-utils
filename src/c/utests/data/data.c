@@ -786,6 +786,18 @@ static void test_data_from_json2 (void)
   iot_data_free (map);
 }
 
+static void test_data_from_json3 (void)
+{
+  static const char * original_json = "{\"int64_max\":9223372036854775807,\"int64_min\":-9223372036854775808}";
+  iot_data_t * iot_map = iot_data_from_json (original_json);
+  CU_ASSERT (iot_map != NULL)
+  char *new_json = iot_data_to_json (iot_map);
+  CU_ASSERT (new_json != NULL)
+  CU_ASSERT (strcmp (new_json, original_json) == 0)
+  iot_data_free (iot_map);
+  free (new_json);
+}
+
 #ifdef IOT_HAS_XML
 static void test_data_from_xml (void)
 {
@@ -4889,6 +4901,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
   CU_add_test (suite, "data_from_json2", test_data_from_json2);
+  CU_add_test (suite, "data_from_json3", test_data_from_json3);
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_infinite", test_data_infinite);
   CU_add_test (suite, "data_from_string", test_data_from_string);
