@@ -4022,6 +4022,8 @@ static void test_data_const_list (void)
   CU_ASSERT (iot_data_is_static (list_non_static))
   iot_data_list_tail_push (list_non_static, str);
   CU_ASSERT (iot_data_list_length (list_non_static) == 1u)
+  iot_data_list_empty (list_non_static);
+  CU_ASSERT (iot_data_list_length (list_non_static) == 0u)
   iot_data_free (list_non_static);
   iot_data_free (list_non_static);
 }
@@ -4083,6 +4085,21 @@ static void test_data_multi_key_map (void)
   val = iot_data_map_get (map, key);
   CU_ASSERT (iot_data_ui32 (val) == 11u)
   iot_data_free (key);
+  iot_data_free (map);
+}
+
+static void test_data_map_empty (void)
+{
+  iot_data_t * map = iot_data_alloc_typed_map (IOT_DATA_UINT32, IOT_DATA_UINT32);
+  uint32_t i = 0;
+  while (i < 10)
+  {
+    iot_data_map_add (map, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
+    i++;
+  }
+  CU_ASSERT (iot_data_map_size (map) == 10u)
+  iot_data_map_empty (map);
+  CU_ASSERT (iot_data_map_size (map) == 0u)
   iot_data_free (map);
 }
 
@@ -4927,6 +4944,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_check_equal_vector_string", test_data_equal_vector_string);
   CU_add_test (suite, "data_check_equal_array", test_data_equal_array);
   CU_add_test (suite, "data_check_equal_map", test_data_equal_map);
+  CU_add_test (suite, "data_map_empty", test_data_map_empty);
   CU_add_test (suite, "data_check_map_null_ret", test_data_check_map_null_ret);
   CU_add_test (suite, "data_check_equal_map_refcount", test_data_equal_map_refcount);
   CU_add_test (suite, "data_check_unequal_map_size", test_data_unequal_map_size);

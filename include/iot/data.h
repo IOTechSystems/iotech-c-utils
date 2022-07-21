@@ -535,6 +535,15 @@ extern iot_data_type_t iot_data_list_type (const iot_data_t * list);
 extern uint32_t iot_data_list_length (const iot_data_t * list);
 
 /**
+ * @brief Empty a list of all elements
+ *
+ * The function to empty a list of all elements
+ *
+ * @param list  Input list
+ */
+extern void iot_data_list_empty (iot_data_t * list);
+
+/**
  * @brief Find matching element in a list using compare function
  *
  * Applies a compare function to each element in a list until the compare
@@ -1056,6 +1065,15 @@ extern bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key);
  * @return    Size of the map
  */
 extern uint32_t iot_data_map_size (const iot_data_t * map);
+
+/**
+ * @brief Empty a map of all elements
+ *
+ * Function to empty a map of all elements
+ *
+ * @param map  Input map
+ */
+extern void iot_data_map_empty (iot_data_t * map);
 
 /**
  * @brief Add key-value pair to a map
