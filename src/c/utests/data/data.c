@@ -4361,6 +4361,7 @@ static void test_data_transform (void)
   CU_ASSERT (iot_data_i16 (xform) == -1)
   iot_data_free (data);
   iot_data_free (xform);
+
   data = iot_data_alloc_ui32 (1234u);
   xform = iot_data_transform (data, IOT_DATA_UINT8);
   CU_ASSERT (xform == NULL)
