@@ -3942,19 +3942,19 @@ static void test_data_cast (void)
   iot_data_free (data);
 
   uint64_t temp_buf;
-  data = iot_data_alloc_i64 ((int64_t) -1);
+  data = iot_data_alloc_i64 (-1);
   CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT32, &temp_buf))
   iot_data_free (data);
-  data = iot_data_alloc_i64 ((int64_t) UINT32_MAX+1);
+  data = iot_data_alloc_i64 (UINT32_MAX+1);
   CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT32, &temp_buf))
   iot_data_free (data);
-  data = iot_data_alloc_i64 ((int64_t) INT32_MIN-1);
+  data = iot_data_alloc_i64 (-2147483649);
   CU_ASSERT (!iot_data_cast (data, IOT_DATA_INT32, &temp_buf))
   iot_data_free (data);
-  data = iot_data_alloc_i64 ((int64_t) INT32_MAX+1);
+  data = iot_data_alloc_i64 (INT32_MAX+1);
   CU_ASSERT (!iot_data_cast (data, IOT_DATA_INT32, &temp_buf))
   iot_data_free (data);
-  data = iot_data_alloc_i64 ((int64_t) -1);
+  data = iot_data_alloc_i64 (-1);
   CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT64, &temp_buf))
   iot_data_free (data);
 }
