@@ -281,6 +281,7 @@
 
 ## Version 1.3.2
 
+- Additional range checking added for `iot_data_alloc_from_string` function
 - Support removed for Alpine Linux 3.14 and added for v3.16
 - Functions added to remove all elements from a list or map
 

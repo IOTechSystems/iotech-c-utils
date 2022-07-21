@@ -1211,12 +1211,8 @@ iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * valu
       }
     }
   }
-  switch (type)
-  {
-    case IOT_DATA_BOOL: return iot_data_alloc_bool (value[0] == 't' || value[0] == 'T');
-    case IOT_DATA_STRING: return iot_data_alloc_string (value, IOT_DATA_COPY);
-    default: break;
-  }
+  if (type == IOT_DATA_BOOL) return iot_data_alloc_bool (value[0] == 't' || value[0] == 'T');
+  if (type == IOT_DATA_STRING) return iot_data_alloc_string (value, IOT_DATA_COPY);
   return NULL;
 }
 
@@ -2618,7 +2614,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
     case 'n': ret = iot_data_alloc_null (); break; // null
     default: // Handle all floating point numbers as doubles and integers as uint64_t
       ret = (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E')) ?
-        iot_data_alloc_f64 (strtod (str, NULL)) : iot_data_alloc_i64 (strtoll (str, NULL, 0));
+        iot_data_alloc_f64 (strtod (str, NULL)) : iot_data_alloc_i64 (atoll (str));
       break;
   }
   free (str);
