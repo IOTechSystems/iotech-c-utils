@@ -287,3 +287,7 @@
 
 * `iot_data_list_empty`
 * `iot_data_map_empty`
+
+## Version 1.3.3
+
+- Support removed for Fedora 35 and added for Fedora 36
