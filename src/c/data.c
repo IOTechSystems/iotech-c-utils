@@ -52,7 +52,7 @@ typedef struct iot_data_consts_t
   iot_data_static_t order_key;
 } iot_data_consts_t;
 
-static iot_data_consts_t iot_data_consts = { 0 };
+static iot_data_consts_t iot_data_consts = { .order_key = 0 };
 
 typedef enum iot_node_colour_t
 {

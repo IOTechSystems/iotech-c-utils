@@ -34,7 +34,7 @@ DESC_DEV="IOT C Framework (dev)"
 DESC_DBG="IOT C Framework (debug)"
 FPM=fpm
 
-build_apk()
+build_apk ()
 {
   export SRC=$2
   REPO=/tmp/repo
@@ -138,8 +138,8 @@ case ${SYSTEM} in
         RPM_DIST=ph4
         UUID_DEV_DEP=util-linux-devel
       ;;
-      fedora-35)
-        RPM_DIST=fc35
+      fedora-36)
+        RPM_DIST=fc36
         UUID_DEP=libuuid
         UUID_DEV_DEP=libuuid-devel
       ;;
