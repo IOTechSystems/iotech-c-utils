@@ -291,3 +291,5 @@
 ## Version 1.3.3
 
 - Support removed for Fedora 35 and added for Fedora 36
+- Support removed for AzureSphere API 11
+- Support removed for OpenSUSE 15.3
