@@ -39,7 +39,7 @@
 #undef IOT_HAS_UUID
 #endif
 
-#ifdef _RISCV_LINUX_
+#ifdef _RISCV_YOCTO_
 #undef IOT_HAS_CPU_AFFINITY
 #undef IOT_HAS_UUID
 #endif
