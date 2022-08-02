@@ -47,6 +47,7 @@ configure_file ("${CMAKE_SOURCE_DIR}/c/defs.h.in" "${CMAKE_SOURCE_DIR}/../includ
 
 set (OS_ARCH x86_64)
 set (CPACK_GENERATOR TGZ)
+message (STATUS "CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME} ${OS_ARCH} ${LINUX_SYS}")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set (CPACK_GENERATOR ZIP)
@@ -63,6 +64,9 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Generic")
   else ()
     set (CPACK_GENERATOR TGZ)
   endif ()
+elseif ("${LINUX_SYS}" STREQUAL "RISCV32")
+  set (OS_ARCH "rc32")
+  set (IOT_BUILD_UUID ON)
 else ()
   if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     execute_process (COMMAND uname -m OUTPUT_VARIABLE UNAME_M OUTPUT_STRIP_TRAILING_WHITESPACE)
