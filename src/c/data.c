@@ -290,7 +290,7 @@ static void * iot_data_block_alloc (void)
       iot_data_blocks = block;
 
       uint8_t * iter = (uint8_t*) block->chunks;
-      new_data_cache = (iot_block_t*) iter;
+      new_data_cache = (iot_data_t*) iter;
       for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
       {
         iot_block_t * prev = (iot_block_t*) iter;
