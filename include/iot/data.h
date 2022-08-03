@@ -1145,6 +1145,18 @@ extern const char * iot_data_map_get_string (const iot_data_t * map, const iot_d
 extern int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, int64_t default_val);
 
 /**
+ * @brief Get uint64_t value corresponding to key from a map
+ *
+ * Function to get a string value from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default int64 value
+ * @return             int64_t value corresponding to the key, or default_val if not found
+ */
+extern uint64_t iot_data_map_get_ui64 (const iot_data_t * map, const iot_data_t * key, uint64_t default_val);
+
+/**
  * @brief Get bool value corresponding to key from a map
  *
  * Get bool value corresponding to key from the map, if the value type is IOT_DATA_BOOL, else return default_val
@@ -1237,7 +1249,7 @@ extern const char * iot_data_string_map_get_string (const iot_data_t * map, cons
 /**
  * @brief Get int64_t value corresponding to a string key from a map
  *
- * The function to get int64 value corresponding to key from the map, if the value type is IOT_DATA_INT64, else return default_val
+ * The function to get a int64 value corresponding to key from the map, if the value type is IOT_DATA_INT64, else return default_val
  *
  * @param map          Map from which get a value
  * @param key          String key for the value
@@ -1245,6 +1257,19 @@ extern const char * iot_data_string_map_get_string (const iot_data_t * map, cons
  * @return             Int64_t value corresponding to the key, else default_val
  */
 extern int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val);
+
+/**
+ * @brief Get uint64_t value corresponding to a string key from a map
+ *
+ * The function to get a uint64 value corresponding to key from the map, if the value type is IOT_DATA_UINT64, else return default_val
+ *
+ * @param map          Map from which get a value
+ * @param key          String key for the value
+ * @param default_val  Default int64 value
+ * @return             Uint64_t value corresponding to the key, else default_val
+ */
+extern uint64_t iot_data_string_map_get_ui64 (const iot_data_t * map, const char * key, uint64_t default_val);
+
 
 /**
  * @brief Get bool value corresponding to key from a map
