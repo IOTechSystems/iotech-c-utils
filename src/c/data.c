@@ -266,6 +266,7 @@ static void * iot_data_block_alloc (void)
 {
   iot_block_t * data;
 #ifdef IOT_DATA_CACHE
+  iot_block_t * new_data_cache;
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
@@ -274,14 +275,14 @@ static void * iot_data_block_alloc (void)
 #ifdef IOT_HAS_SPINLOCK
   while (iot_data_cache <= IOT_DATA_ALLOCATING)
   {
+    new_data_cache = NULL;
     bool allocate = (iot_data_cache == NULL);
-    iot_block_t * new_data_cache = NULL;
     if (allocate) iot_data_cache = IOT_DATA_ALLOCATING;
     pthread_spin_unlock (&iot_data_slock);
     pthread_mutex_lock (&iot_data_mutex);
 #else
     bool allocate = (iot_data_cache == NULL);
-    iot_data_t * new_data_cache = NULL;
+    new_data_cache = NULL;
 #endif
     if (allocate)
     {
@@ -1686,6 +1687,12 @@ int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, in
   return (data && (iot_data_type (data) == IOT_DATA_INT64)) ? iot_data_i64 (data) : default_val;
 }
 
+uint64_t iot_data_map_get_ui64 (const iot_data_t * map, const iot_data_t * key, uint64_t default_val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_UINT64)) ? iot_data_ui64 (data) : default_val;
+}
+
 bool iot_data_map_get_bool (const iot_data_t * map, const iot_data_t * key, bool default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
@@ -1732,6 +1739,12 @@ int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, i
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
   return (data && (iot_data_type (data) == IOT_DATA_INT64)) ? iot_data_i64 (data) : default_val;
+}
+
+uint64_t iot_data_string_map_get_ui64 (const iot_data_t * map, const char * key, uint64_t default_val)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return (data && (iot_data_type (data) == IOT_DATA_UINT64)) ? iot_data_ui64 (data) : default_val;
 }
 
 bool iot_data_string_map_get_bool (const iot_data_t * map, const char * key, bool default_val)
@@ -2605,17 +2618,31 @@ static iot_data_t * iot_data_string_from_json (iot_json_tok_t ** tokens, const c
 
 static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, const char * json)
 {
-  iot_data_t * ret;
+  iot_data_t * ret = NULL;
   char * str = iot_data_string_from_json_token (json, *tokens);
   (*tokens)++;
   switch (str[0])
   {
     case 't': case 'f': ret = iot_data_alloc_bool (str[0] == 't'); break; // true/false
     case 'n': ret = iot_data_alloc_null (); break; // null
-    default: // Handle all floating point numbers as doubles and integers as uint64_t
-      ret = (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E')) ?
-        iot_data_alloc_f64 (strtod (str, NULL)) : iot_data_alloc_i64 (atoll (str));
+    default: // Handle all floating point numbers as doubles, negative integers as int64_t and positive integers as int64_t
+    {
+      if (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E'))
+      {
+        ret = iot_data_alloc_f64 (strtod (str, NULL));
+      }
+      else if (strchr (str, '-'))
+      {
+        int64_t i64;
+        if (sscanf (str,"%"SCNi64, &i64) == 1) ret = iot_data_alloc_i64 (i64);
+      }
+      else
+      {
+        uint64_t ui64;
+        if (sscanf (str,"%"SCNd64, &ui64) == 1) ret = iot_data_alloc_ui64 (ui64);
+      }
       break;
+    }
   }
   free (str);
   return ret;
