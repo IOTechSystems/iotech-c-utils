@@ -2625,7 +2625,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
   {
     case 't': case 'f': ret = iot_data_alloc_bool (str[0] == 't'); break; // true/false
     case 'n': ret = iot_data_alloc_null (); break; // null
-    default: // Handle all floating point numbers as doubles, negative integers as int64_t and positive integers as int64_t
+    default: // Handle all floating point numbers as doubles, negative integers as int64_t and positive integers as uint64_t
     {
       if (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E'))
       {
