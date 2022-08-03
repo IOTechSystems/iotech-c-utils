@@ -2639,7 +2639,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
       else
       {
         uint64_t ui64;
-        if (sscanf (str,"%"SCNd64, &ui64) == 1) ret = iot_data_alloc_ui64 (ui64);
+        if (sscanf (str,"%"SCNu64, &ui64) == 1) ret = iot_data_alloc_ui64 (ui64);
       }
       break;
     }

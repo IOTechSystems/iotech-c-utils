@@ -44,9 +44,19 @@ bool iot_config_i64 (const iot_data_t * map, const char * key, int64_t * val, io
   return iot_config_cast (map, key, val, IOT_DATA_INT64, logger);
 }
 
+bool iot_config_ui64 (const iot_data_t * map, const char * key, uint64_t * val, iot_logger_t * logger)
+{
+  return iot_config_cast (map, key, val, IOT_DATA_UINT64, logger);
+}
+
 bool iot_config_i32 (const iot_data_t * map, const char * key, int32_t * val, iot_logger_t * logger)
 {
   return iot_config_cast (map, key, val, IOT_DATA_INT32, logger);
+}
+
+bool iot_config_ui32 (const iot_data_t * map, const char * key, uint32_t * val, iot_logger_t * logger)
+{
+  return iot_config_cast (map, key, val, IOT_DATA_UINT32, logger);
 }
 
 bool iot_config_bool (const iot_data_t * map, const char * key, bool * val, iot_logger_t * logger)

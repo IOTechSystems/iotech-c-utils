@@ -297,3 +297,8 @@
 
 * `iot_data_map_get_ui64`
 * `iot_data_string_map_get_ui64`
+
+- Functions added to access data from configurations
+
+* `iot_config_ui32`
+* `iot_config_ui64`
