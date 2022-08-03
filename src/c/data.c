@@ -266,6 +266,7 @@ static void * iot_data_block_alloc (void)
 {
   iot_block_t * data;
 #ifdef IOT_DATA_CACHE
+  iot_block_t * new_data_cache;
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_lock (&iot_data_slock);
 #else
@@ -274,14 +275,14 @@ static void * iot_data_block_alloc (void)
 #ifdef IOT_HAS_SPINLOCK
   while (iot_data_cache <= IOT_DATA_ALLOCATING)
   {
+    new_data_cache = NULL;
     bool allocate = (iot_data_cache == NULL);
-    iot_block_t * new_data_cache = NULL;
     if (allocate) iot_data_cache = IOT_DATA_ALLOCATING;
     pthread_spin_unlock (&iot_data_slock);
     pthread_mutex_lock (&iot_data_mutex);
 #else
     bool allocate = (iot_data_cache == NULL);
-    iot_data_t * new_data_cache = NULL;
+    new_data_cache = NULL;
 #endif
     if (allocate)
     {
@@ -290,7 +291,7 @@ static void * iot_data_block_alloc (void)
       iot_data_blocks = block;
 
       uint8_t * iter = (uint8_t*) block->chunks;
-      new_data_cache = (iot_data_t*) iter;
+      new_data_cache = (iot_block_t*) iter;
       for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
       {
         iot_block_t * prev = (iot_block_t*) iter;
