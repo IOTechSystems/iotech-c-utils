@@ -293,3 +293,12 @@
 - Support removed for Fedora 35 and added for Fedora 36
 - Support removed for AzureSphere API 11
 - Support removed for OpenSUSE 15.3
+- Functions added to access typed data in maps
+
+* `iot_data_map_get_ui64`
+* `iot_data_string_map_get_ui64`
+
+- Functions added to access data from configurations
+
+* `iot_config_ui32`
+* `iot_config_ui64`

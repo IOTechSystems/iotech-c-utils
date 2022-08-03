@@ -27,43 +27,46 @@ static const iot_data_t * iot_config_get_type (const iot_data_t * map, const cha
   return data;
 }
 
+static bool iot_config_cast (const iot_data_t * map, const char * key, void * val, iot_data_type_t type, iot_logger_t * logger)
+{
+  assert (map && key && val);
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  bool ret = (data && iot_data_cast (data, type, val));
+  if (! ret)
+  {
+    iot_log_error (logger, "Failed to resolve %s configuration value for: %s", iot_data_type_string (type), key);
+  }
+  return ret;
+}
+
 bool iot_config_i64 (const iot_data_t * map, const char * key, int64_t * val, iot_logger_t * logger)
 {
-  assert (val);
-  const iot_data_t * data = iot_config_get_type (map, key, IOT_DATA_INT64, logger);
-  if (data) *val = iot_data_i64 (data);
-  return (data != NULL);
+  return iot_config_cast (map, key, val, IOT_DATA_INT64, logger);
+}
+
+bool iot_config_ui64 (const iot_data_t * map, const char * key, uint64_t * val, iot_logger_t * logger)
+{
+  return iot_config_cast (map, key, val, IOT_DATA_UINT64, logger);
 }
 
 bool iot_config_i32 (const iot_data_t * map, const char * key, int32_t * val, iot_logger_t * logger)
 {
-  int64_t val64;
-  if (iot_config_i64 (map, key, &val64, logger))
-  {
-    if (val64 <= INT32_MAX)
-    {
-      *val = (int32_t) val64;
-      return true;
-    }
-    iot_log_error (logger, "Invalid int32 configuration value for: %s", key);
-  }
-  return false;
+  return iot_config_cast (map, key, val, IOT_DATA_INT32, logger);
+}
+
+bool iot_config_ui32 (const iot_data_t * map, const char * key, uint32_t * val, iot_logger_t * logger)
+{
+  return iot_config_cast (map, key, val, IOT_DATA_UINT32, logger);
 }
 
 bool iot_config_bool (const iot_data_t * map, const char * key, bool * val, iot_logger_t * logger)
 {
-  assert (val);
-  const iot_data_t * data = iot_config_get_type (map, key, IOT_DATA_BOOL, logger);
-  if (data) *val = iot_data_bool (data);
-  return (data != NULL);
+  return iot_config_cast (map, key, val, IOT_DATA_BOOL, logger);
 }
 
 bool iot_config_f64 (const iot_data_t * map, const char * key, double * val, iot_logger_t * logger)
 {
-  assert (val);
-  const iot_data_t * data = iot_config_get_type (map, key, IOT_DATA_FLOAT64, logger);
-  if (data) *val = iot_data_f64 (data);
-  return (data != NULL);
+  return iot_config_cast (map, key, val, IOT_DATA_FLOAT64, logger);
 }
 
 const char * iot_config_string (const iot_data_t * map, const char * key, bool alloc, iot_logger_t * logger)
