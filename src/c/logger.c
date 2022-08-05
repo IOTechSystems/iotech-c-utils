@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2021 IOTech
+// Copyright (c) 2018-2022 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -41,18 +41,17 @@ typedef struct iot_logger_impl_t
   volatile iot_loglevel_t save;       // Last saved log level
   char * name;                        // Name of logger
   iot_log_function_t impl;            // Log implementation function
+  iot_log_free_fn_t freectx;          // Fucntion to free log context
+  void *ctx;                          // Context for custom loggers
   struct iot_logger_impl_t * next;    // Pointer to next logger (can be chained in config)
-  int sock;                           // Socket for UDP logger
-  struct sockaddr_in addr;            // Address for UDP logger
   char buff [IOT_LOG_MSG_MAX];        // Log format buffer
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-  FILE * fd;                          // Descriptor for File logger
-#endif
 }
 iot_logger_impl_t;
 
 static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
 static iot_logger_impl_t iot_logger_dfl;
+
+static void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx);
 
 iot_logger_t * iot_logger_default (void)
 {
@@ -74,10 +73,10 @@ static void iot_logger_log (iot_logger_impl_t * logger, iot_loglevel_t level, va
   const char * fmt = va_arg (args, const char *);
   vsnprintf (str, sizeof (str), fmt, args);
   uint64_t ts = iot_time_usecs ();
-  if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str);
+  if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str, logger->ctx);
   while ((logger = logger->next))
   {
-    if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str);
+    if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str, logger->ctx);
   }
 }
 
@@ -127,51 +126,16 @@ void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
   logger->level = level;
 }
 
-static inline iot_logger_type_t iot_logger_type (iot_log_function_t fn)
+iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, bool start, iot_logger_t * next, iot_log_function_t impl, void * ctx, iot_log_free_fn_t freectx)
 {
-  if (fn == &iot_log_console) return IOT_LOGGER_CONSOLE;
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-  if (fn == &iot_log_file) return IOT_LOGGER_FILE;
-#endif
-  if (fn == &iot_log_udp) return IOT_LOGGER_UDP;
-  return IOT_LOGGER_CUSTOM;
-}
-
-iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next, bool start)
-{
-  static const int yes = 1;
   assert (name && impl);
-  iot_logger_type_t type = iot_logger_type (impl);
   iot_logger_impl_t * logger = calloc (1, sizeof (*logger));
   logger->impl = impl;
-  logger->sock = -1;
   logger->name = strdup (name);
   logger->save = level;
   logger->next = (iot_logger_impl_t*) next;
-  if (type == IOT_LOGGER_UDP)
-  {
-    const char * sep = strchr (to, ':');
-    if (sep)
-    {
-      char target[17] = { 0 };
-      strncpy (target, to, (size_t) (sep - to));
-      inet_aton (target, &logger->addr.sin_addr);
-      to = sep + 1;
-    }
-    else
-    {
-      logger->addr.sin_addr.s_addr = htonl (INADDR_BROADCAST);
-    }
-    logger->addr.sin_port = htons ((uint16_t) atoi (to));
-    logger->sock = socket (AF_INET, SOCK_DGRAM, 0);
-    if (sep == NULL) setsockopt (logger->sock, SOL_SOCKET, SO_BROADCAST, (const void*) &yes, sizeof (yes));
-  }
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-  else if (type == IOT_LOGGER_FILE)
-  {
-    logger->fd = fopen (to, "a");
-  }
-#endif
+  logger->ctx = ctx;
+  logger->freectx = freectx;
   iot_component_init (&logger->base.component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
   if (start) iot_logger_start (&logger->base);
   return &logger->base;
@@ -179,7 +143,7 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
 
 iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool start)
 {
-  return iot_logger_alloc_custom (name, level,NULL, iot_log_console, NULL, start);
+  return iot_logger_alloc_custom (name, level, start, NULL, iot_log_console, NULL, NULL);
 }
 
 void iot_logger_free (iot_logger_t * logger)
@@ -188,10 +152,7 @@ void iot_logger_free (iot_logger_t * logger)
   if (impl && (impl != &iot_logger_dfl) && iot_component_dec_ref (&logger->component))
   {
     free (impl->name);
-    close (impl->sock);
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-    if (impl->fd) fclose (impl->fd);
-#endif
+    if (impl->freectx) (impl->freectx) (impl->ctx);
     iot_component_fini (&logger->component);
     free (logger);
   }
@@ -242,39 +203,85 @@ static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, 
   iot_component_unlock (&logger->base.component);
 }
 
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-extern void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
-{
-  iot_logger_impl_t * impl = (iot_logger_impl_t*) logger;
-  if (impl->fd) iot_logger_log_to_fd (impl, impl->fd, level, timestamp, message);
-}
-#endif
-
-extern void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
+static void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
   iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message);
 }
 
-/* iot_log_udp: To is either "<host>:<port>" or "<port>". Latter form means broadcast. */
+/********* Standard Logger Implementations: UDP *********/
 
-extern void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
+typedef struct iot_logger_udp_ctx_t
 {
-  iot_logger_impl_t * impl = (iot_logger_impl_t*) logger;
+  struct sockaddr_in addr;            // Address
+  int sock;                           // Socket
+} iot_logger_udp_ctx_t;
+
+static void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
+{
+  iot_logger_impl_t * logimpl = (iot_logger_impl_t*) logger;
+  iot_logger_udp_ctx_t *impl = (iot_logger_udp_ctx_t *)ctx;
   iot_component_lock (&logger->component);
   if (impl->sock != -1)
   {
-    size_t len = iot_logger_format_log (impl, level, timestamp, message);
-    if (len > 0) sendto (impl->sock, impl->buff, len, 0, (struct sockaddr *) &impl->addr, sizeof (struct sockaddr_in));
+    size_t len = iot_logger_format_log (logimpl, level, timestamp, message);
+    if (len > 0) sendto (impl->sock, logimpl->buff, len, 0, (struct sockaddr *) &impl->addr, sizeof (struct sockaddr_in));
   }
   iot_component_unlock (&logger->component);
 }
 
-#ifdef IOT_BUILD_COMPONENTS
+static void iot_logger_udp_ctx_free (void *ctx)
+{
+  iot_logger_udp_ctx_t *udp = (iot_logger_udp_ctx_t *)ctx;
+  close (udp->sock);
+  free (ctx);
+}
 
-static iot_loglevel_t iot_logger_config_level (const iot_data_t * map)
+iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *host, uint16_t port)
+{
+  static const int yes = 1;
+  iot_logger_udp_ctx_t *ctx = calloc (1, sizeof (iot_logger_udp_ctx_t));
+  if (host)
+  {
+    inet_aton (host, &ctx->addr.sin_addr);
+  }
+  else
+  {
+    ctx->addr.sin_addr.s_addr = htonl (INADDR_BROADCAST);
+  }
+  ctx->addr.sin_port = htons (port);
+  ctx->sock = socket (AF_INET, SOCK_DGRAM, 0);
+  if (host == NULL) setsockopt (ctx->sock, SOL_SOCKET, SO_BROADCAST, (const void*) &yes, sizeof (yes));
+  return iot_logger_alloc_custom (name, level, self_start, next, iot_log_udp, ctx, iot_logger_udp_ctx_free);
+}
+
+/********* Standard Logger Implementations: File *********/
+
+#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
+
+static void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
+{
+  if (ctx) iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (FILE *)ctx, level, timestamp, message);
+}
+
+static void iot_logger_file_ctx_free (void *ctx)
+{
+  if (ctx)
+  {
+    fclose (ctx);
+  }
+}
+
+iot_logger_t * iot_logger_alloc_file (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *pathname)
+{
+  FILE *fd = fopen (pathname, "a");
+  return iot_logger_alloc_custom (name, level, self_start, next, iot_log_file, fd, iot_logger_file_ctx_free);
+}
+
+#endif
+
+iot_loglevel_t iot_logger_level_from_string (const char *name)
 {
   iot_loglevel_t level = IOT_LOGLEVEL_DEFAULT;
-  const char * name = iot_data_string_map_get_string (map, "Level");
   if (name)
   {
     int c = toupper (name[0]);
@@ -290,30 +297,58 @@ static iot_loglevel_t iot_logger_config_level (const iot_data_t * map)
   return level;
 }
 
+const char *iot_logger_level_to_string (iot_loglevel_t level)
+{
+  return iot_log_levels[level];
+}
+
+#ifdef IOT_BUILD_COMPONENTS
+
+static iot_loglevel_t iot_logger_config_level (const iot_data_t * map)
+{
+  return iot_logger_level_from_string (iot_data_string_map_get_string (map, "Level"));
+}
+
 static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_log_function_t impl = iot_log_console; /* log to stderr or stdout */
+  iot_logger_t *result;
   iot_loglevel_t level = iot_logger_config_level (map);
+  iot_logger_t * next = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Next"));
+  bool start = iot_data_string_map_get_bool (map, "Start", true);
+  const char * name = iot_data_string_map_get_string (map, "Name");
   const char * to = iot_data_string_map_get_string (map, "To");
 
 #if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
   if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
   {
-    impl = iot_log_file; /* Log to file */
-    to += 5;
+    result = iot_logger_alloc_file (name, level, start, next, to + 5);
   }
   else
 #endif
   {
     if (to && strncmp (to, "udp:", 4) == 0 && strlen (to) > 4)
     {
-      impl = iot_log_udp; /* Log to udp */
+      uint16_t port;
+      const char *host = NULL;
       to += 4;
+      const char * sep = strchr (to, ':');
+      if (sep)
+      {
+        char target[17] = { 0 };
+        strncpy (target, to, (size_t) (sep - to));
+        host = target;
+        to = sep + 1;
+      }
+      port = atoi (to);
+
+      result = iot_logger_alloc_udp (name, level, start, next, host, port);
+    }
+    else
+    {
+      result = iot_logger_alloc_custom (name, level, start, next, iot_log_console, NULL, NULL);
     }
   }
-  iot_logger_t * next = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Next"));
-  bool start = iot_data_string_map_get_bool (map, "Start", true);
-  return (iot_component_t*) iot_logger_alloc_custom (iot_data_string_map_get_string (map, "Name"), level, to, impl, next, start);
+  return (iot_component_t*) result;
 }
 
 static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map)

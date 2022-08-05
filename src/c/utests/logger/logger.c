@@ -20,7 +20,7 @@ static int suite_clean (void)
 
 static uint32_t cunit_custom_log_count = 0;
 
-static void cunit_custom_log_fn (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
+static void cunit_custom_log_fn (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
   cunit_custom_log_count++;
 }
@@ -59,7 +59,7 @@ static void cunit_logger_named (void)
 
 static void cunit_logger_impl (void)
 {
-  iot_logger_t * logger = iot_logger_alloc_custom ("Sub", IOT_LOG_NONE, NULL, cunit_custom_log_fn, NULL, false);
+  iot_logger_t * logger = iot_logger_alloc_custom ("Sub", IOT_LOG_NONE, false, NULL, cunit_custom_log_fn, NULL, NULL);
   iot_logger_start (logger);
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 0)
@@ -84,7 +84,7 @@ static void cunit_logger_impl (void)
 static void cunit_logger_sub (void)
 {
   iot_logger_t * sub = iot_logger_default ();
-  iot_logger_t * logger = iot_logger_alloc_custom ("Custom", IOT_LOG_INFO, NULL, cunit_custom_log_fn, sub, false);
+  iot_logger_t * logger = iot_logger_alloc_custom ("Custom", IOT_LOG_INFO, false, NULL, cunit_custom_log_fn, sub, NULL);
   iot_logger_start (sub);
   iot_logger_start (logger);
   iot_logger_set_level (sub, IOT_LOG_NONE);
@@ -96,7 +96,7 @@ static void cunit_logger_sub (void)
 
 static void cunit_logger_file (void)
 {
-  iot_logger_t * logger = iot_logger_alloc_custom ("File", IOT_LOG_WARN, "./test.log", iot_log_file, NULL, false);
+  iot_logger_t * logger = iot_logger_alloc_file ("File", IOT_LOG_WARN, false, NULL, "./test.log");
   iot_logger_start (logger);
   cunit_test_logs (logger);
   iot_logger_free (logger);
@@ -104,7 +104,7 @@ static void cunit_logger_file (void)
 
 static void cunit_logger_udp (void)
 {
-  iot_logger_t * logger = iot_logger_alloc_custom ("udp", IOT_LOG_WARN, "localhost:22222", iot_log_udp, NULL, false);
+  iot_logger_t * logger = iot_logger_alloc_udp ("udp", IOT_LOG_WARN, false, NULL, "localhost", 22222);
   iot_logger_start (logger);
   cunit_test_logs (logger);
   iot_logger_free (logger);
@@ -112,7 +112,7 @@ static void cunit_logger_udp (void)
 
 static void cunit_logger_udp_broadcast (void)
 {
-  iot_logger_t * logger = iot_logger_alloc_custom ("udp-broadcast", IOT_LOG_WARN, "33333", iot_log_udp, NULL, false);
+  iot_logger_t * logger = iot_logger_alloc_udp ("udp-broadcast", IOT_LOG_WARN, false, NULL, NULL, 33333);
   iot_logger_start (logger);
   cunit_test_logs (logger);
   iot_logger_free (logger);
@@ -126,7 +126,7 @@ static void cunit_logger_null (void)
 
 static void cunit_logger_start_stop (void)
 {
-  iot_logger_t * logger = iot_logger_alloc_custom ("StartStop", IOT_LOG_WARN, NULL, cunit_custom_log_fn, NULL, false);
+  iot_logger_t * logger = iot_logger_alloc_custom ("StartStop", IOT_LOG_WARN, false, NULL, cunit_custom_log_fn, NULL, NULL);
   cunit_custom_log_count = 0;
   cunit_test_logs (logger);
   CU_ASSERT (cunit_custom_log_count == 0)
@@ -144,7 +144,7 @@ static void cunit_logger_start_stop (void)
 
 static void cunit_logger_refcount (void)
 {
-  iot_logger_t *logger = iot_logger_alloc_custom ("StartStop", IOT_LOG_WARN, NULL, cunit_custom_log_fn, NULL, false);
+  iot_logger_t *logger = iot_logger_alloc_custom ("StartStop", IOT_LOG_WARN, false, NULL, cunit_custom_log_fn, NULL, NULL);
   cunit_custom_log_count = 0;
   iot_logger_add_ref (logger);
   iot_logger_start (logger);
