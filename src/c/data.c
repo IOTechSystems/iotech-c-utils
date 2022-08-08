@@ -1188,7 +1188,7 @@ void iot_data_free (iot_data_t * data)
 
 iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value)
 {
-  static const char * fmt [] =  { "%"SCNi8,"%"SCNu8,"%"SCNi16,"%"SCNu16,"%"SCNi32,"%"SCNu32,"%"SCNi64,"%"SCNu64,"%f","%lf" };
+  static const char * fmt [] =  { "%"SCNd8,"%"SCNu8,"%"SCNd16,"%"SCNu16,"%"SCNd32,"%"SCNu32,"%"SCNd64,"%"SCNu64,"%f","%lf" };
   assert (value && ((type == IOT_DATA_STRING) || strlen (value)));
 
   if (type < IOT_DATA_BOOL)
@@ -2625,7 +2625,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
   {
     case 't': case 'f': ret = iot_data_alloc_bool (str[0] == 't'); break; // true/false
     case 'n': ret = iot_data_alloc_null (); break; // null
-    default: // Handle all floating point numbers as doubles, negative integers as int64_t and positive integers as uint64_t
+    default: // Handle all floating point numbers as doubles, all integers as int64_t unless to big in which case as uint64_t
     {
       if (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E'))
       {
@@ -2634,12 +2634,16 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
       else if (strchr (str, '-'))
       {
         int64_t i64;
-        if (sscanf (str,"%"SCNi64, &i64) == 1) ret = iot_data_alloc_i64 (i64);
+        if (sscanf (str,"%"SCNd64, &i64) == 1) ret = iot_data_alloc_i64 (i64);
       }
       else
       {
         uint64_t ui64;
-        if (sscanf (str,"%"SCNu64, &ui64) == 1) ret = iot_data_alloc_ui64 (ui64);
+        if (sscanf (str,"%"SCNu64, &ui64) == 1)
+        {
+          printf ("########################## U64: %"PRIu64"\n", ui64);
+          ret = (ui64 <= INT64_MAX) ? iot_data_alloc_i64 (ui64) : iot_data_alloc_ui64 (ui64);
+        }
       }
       break;
     }
