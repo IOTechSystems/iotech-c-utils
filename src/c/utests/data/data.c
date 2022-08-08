@@ -674,8 +674,8 @@ static void test_data_from_json (void)
   CU_ASSERT (found)
   CU_ASSERT (uival32 == 1000)
   key = iot_data_alloc_string ("Interval", IOT_DATA_REF);
-  uival64 = iot_data_map_get_ui64 (map, key, 666);
-  CU_ASSERT (uival64 == 1000)
+  ival64 = iot_data_map_get_i64 (map, key, 666);
+  CU_ASSERT (ival64 == 1000)
   iot_data_free (key);
 
   dval = 7.7;
@@ -4849,7 +4849,7 @@ static void test_remove_at (void)
 
 static iot_data_t * add (const iot_data_t * data, void * arg)
 {
-  return iot_data_alloc_ui64 (iot_data_ui64 (data) + *((uint64_t *) arg));
+  return iot_data_alloc_i64 (iot_data_i64 (data) + *((uint64_t *) arg));
 }
 
 static void test_update_at (void)
@@ -4857,7 +4857,7 @@ static void test_update_at (void)
   iot_data_t * map = iot_data_from_json (test_config);
   iot_data_t * path = iot_data_alloc_list ();
   iot_data_list_tail_push (path, iot_data_alloc_string ("Topics", IOT_DATA_REF));
-  iot_data_list_tail_push (path, iot_data_alloc_ui32 (0));
+  iot_data_list_tail_push (path, iot_data_alloc_ui32 (0u));
   iot_data_list_tail_push (path, iot_data_alloc_string ("Priority", IOT_DATA_REF));
   uint64_t inc = 2;
   iot_data_t * modified = iot_data_update_at (map, path, add, &inc);
@@ -4865,7 +4865,7 @@ static void test_update_at (void)
   CU_ASSERT (iot_data_type (modified) == IOT_DATA_MAP)
   const iot_data_t * d1 = iot_data_string_map_get_vector (modified, "Topics");
   const iot_data_t * d2 = iot_data_vector_get (d1, 0);
-  const uint64_t val = iot_data_string_map_get_ui64 (d2, "Priority", 0u);
+  const int64_t val = iot_data_string_map_get_i64 (d2, "Priority", 0u);
   CU_ASSERT (val == 12)
   iot_data_free (modified);
   iot_data_free (path);
