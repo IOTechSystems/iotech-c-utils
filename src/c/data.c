@@ -2567,7 +2567,7 @@ char * iot_data_to_json_with_buffer (const iot_data_t * data, char * buff, uint3
 static char * iot_data_string_from_json_token (const char * json, const iot_json_tok_t * token)
 {
   size_t len = (size_t) (token->end - token->start);
-  char * str = malloc (len + 1);
+  char * str = calloc (1u, len + 1u);
   if (token->type == IOT_JSON_STRING_ESC)
   {
     const char *src = json + token->start;
@@ -2601,12 +2601,10 @@ static char * iot_data_string_from_json_token (const char * json, const iot_json
         *dst++ = *src++;
       }
     }
-    *dst = '\0';
   }
   else
   {
     memcpy (str, json + token->start, len);
-    str[len] = 0;
   }
   return str;
 }
