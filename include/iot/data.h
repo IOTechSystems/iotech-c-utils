@@ -1133,6 +1133,19 @@ extern const iot_data_t * iot_data_map_get_typed (const iot_data_t * map, const 
 extern const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key);
 
 /**
+ * @brief Get numeric value corresponding to key from a map.
+ *
+ * Function to get a numeric value from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param type         Data type to return (an integer or floating point type)
+ * @param val          Pointer to the numeric type to be set
+ * @return             Returns if value could be found in map and cast to required type
+ */
+extern bool iot_data_map_get_number (const iot_data_t * map, const iot_data_t * key, iot_data_type_t type, void * val);
+
+/**
  * @brief Get int64_t value corresponding to key from a map
  *
  * Function to get a string value from a map
@@ -1245,6 +1258,19 @@ extern const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const
  * @return     String value corresponding to the key, or NULL if not found
  */
 extern const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key);
+
+/**
+ * @brief Get numeric value corresponding to string key from a map.
+ *
+ * Function to get a numeric value from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param type         Data type to return (an integer or floating point type)
+ * @param val          Pointer to the numeric type to be set
+ * @return             Returns if value could be found in map and cast to required type
+ */
+extern bool iot_data_string_map_get_number (const iot_data_t * map, const char * key, iot_data_type_t type, void * val);
 
 /**
  * @brief Get int64_t value corresponding to a string key from a map

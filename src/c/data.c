@@ -1681,6 +1681,12 @@ const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t *
   return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
 }
 
+bool iot_data_map_get_number (const iot_data_t * map, const iot_data_t * key, iot_data_type_t type, void * val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return data ? iot_data_cast (data, type, val) : false;
+}
+
 int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, int64_t default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
@@ -1733,6 +1739,12 @@ const char * iot_data_string_map_get_string (const iot_data_t * map, const char 
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
   return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
+}
+
+bool iot_data_string_map_get_number (const iot_data_t * map, const char * key, iot_data_type_t type, void * val)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return data ? iot_data_cast (data, type, val) : false;
 }
 
 int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val)
