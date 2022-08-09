@@ -302,3 +302,8 @@
 
 * `iot_config_ui32`
 * `iot_config_ui64`
+
+- Functions added to return numeric values from maps
+
+* `iot_data_map_get_number`
+* `iot_data_string_map_get_number`
