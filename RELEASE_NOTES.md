@@ -307,3 +307,5 @@
 
 * `iot_data_map_get_number`
 * `iot_data_string_map_get_number`
+* `iot_data_map_get_int`
+* `iot_data_string_map_get_int`
