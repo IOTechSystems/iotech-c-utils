@@ -4922,6 +4922,25 @@ static void test_data_map_number (void)
   iot_data_free (map);
 }
 
+static void test_data_map_int (void)
+{
+  bool ok;
+  iot_data_t * key = iot_data_alloc_string ("Value", IOT_DATA_REF);
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_map_add (map, key, iot_data_alloc_ui16 (123u));
+
+  int i = 0;
+  ok = iot_data_map_get_int (map, key, &i);
+  CU_ASSERT (ok)
+  CU_ASSERT (i == 123)
+  i = 0;
+  ok = iot_data_string_map_get_int (map, "Value", &i);
+  CU_ASSERT (ok)
+  CU_ASSERT (i == 123)
+
+  iot_data_free (map);
+}
+
 static void test_array_to_binary (void)
 {
  uint8_t data [4] = { 1, 2, 3, 4 };
@@ -5081,6 +5100,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_compare", test_data_compare);
   CU_add_test (suite, "data_compress", test_data_compress);
   CU_add_test (suite, "data_map_number", test_data_map_number);
+  CU_add_test (suite, "data_map_int", test_data_map_int);
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
   CU_add_test (suite, "data_vector_to_vector", test_data_vector_to_vector);
   CU_add_test (suite, "data_nested_vector_to_array", test_data_nested_vector_to_array);

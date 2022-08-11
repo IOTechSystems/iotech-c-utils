@@ -222,6 +222,7 @@ _Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bi
 _Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
 _Static_assert (sizeof (iot_data_list_static_t) == sizeof (iot_data_list_t), "iot_data_list_static not equal to iot_data_list");
 _Static_assert (sizeof (iot_data_struct_dummy_t) == 2 * sizeof (iot_data_static_t), "iot_data_static_t structs not aligned for iot_data_static_t");
+_Static_assert (sizeof (int) == sizeof (int32_t) || sizeof (int) == sizeof (int64_t), "int not a uint32_t or int64_t");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -1687,6 +1688,12 @@ bool iot_data_map_get_number (const iot_data_t * map, const iot_data_t * key, io
   return data ? iot_data_cast (data, type, val) : false;
 }
 
+extern bool iot_data_map_get_int (const iot_data_t * map, const iot_data_t * key, int * val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return data ? iot_data_cast (data, (sizeof (int) == sizeof (int32_t)) ? IOT_DATA_INT32 : IOT_DATA_INT64, val) : false;
+}
+
 int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, int64_t default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
@@ -1745,6 +1752,12 @@ bool iot_data_string_map_get_number (const iot_data_t * map, const char * key, i
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
   return data ? iot_data_cast (data, type, val) : false;
+}
+
+extern bool iot_data_string_map_get_int (const iot_data_t * map, const char * key, int * val)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return data ? iot_data_cast (data, (sizeof (int) == sizeof (int32_t)) ? IOT_DATA_INT32 : IOT_DATA_INT64, val) : false;
 }
 
 int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val)
