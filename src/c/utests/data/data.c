@@ -674,8 +674,8 @@ static void test_data_from_json (void)
   CU_ASSERT (found)
   CU_ASSERT (uival32 == 1000)
   key = iot_data_alloc_string ("Interval", IOT_DATA_REF);
-  uival64 = iot_data_map_get_ui64 (map, key, 666);
-  CU_ASSERT (uival64 == 1000)
+  ival64 = iot_data_map_get_i64 (map, key, 666);
+  CU_ASSERT (ival64 == 1000)
   iot_data_free (key);
 
   dval = 7.7;
@@ -4847,9 +4847,9 @@ static void test_remove_at (void)
   iot_data_free (map);
 }
 
-static iot_data_t * add (const iot_data_t * data, void * arg)
+static iot_data_t * add_fn (const iot_data_t * data, void * arg)
 {
-  return iot_data_alloc_ui64 (iot_data_ui64 (data) + *((uint64_t *) arg));
+  return iot_data_alloc_i64 (iot_data_i64 (data) + *((uint64_t *) arg));
 }
 
 static void test_update_at (void)
@@ -4857,18 +4857,87 @@ static void test_update_at (void)
   iot_data_t * map = iot_data_from_json (test_config);
   iot_data_t * path = iot_data_alloc_list ();
   iot_data_list_tail_push (path, iot_data_alloc_string ("Topics", IOT_DATA_REF));
-  iot_data_list_tail_push (path, iot_data_alloc_ui32 (0));
+  iot_data_list_tail_push (path, iot_data_alloc_ui32 (0u));
   iot_data_list_tail_push (path, iot_data_alloc_string ("Priority", IOT_DATA_REF));
   uint64_t inc = 2;
-  iot_data_t * modified = iot_data_update_at (map, path, add, &inc);
+  iot_data_t * modified = iot_data_update_at (map, path, add_fn, &inc);
   CU_ASSERT (modified != NULL)
   CU_ASSERT (iot_data_type (modified) == IOT_DATA_MAP)
   const iot_data_t * d1 = iot_data_string_map_get_vector (modified, "Topics");
   const iot_data_t * d2 = iot_data_vector_get (d1, 0);
-  const uint64_t val = iot_data_string_map_get_ui64 (d2, "Priority", 0u);
+  const int64_t val = iot_data_string_map_get_i64 (d2, "Priority", 0u);
   CU_ASSERT (val == 12)
   iot_data_free (modified);
   iot_data_free (path);
+  iot_data_free (map);
+}
+
+static void test_data_map_number (void)
+{
+  bool ok;
+  iot_data_t * key = iot_data_alloc_string ("Value", IOT_DATA_REF);
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_map_add (map, key, iot_data_alloc_ui16 (123u));
+
+  int8_t i8 = 0;
+  ok = iot_data_map_get_number (map, key, IOT_DATA_INT8, &i8);
+  CU_ASSERT (ok)
+  CU_ASSERT (i8 == 123u)
+  uint8_t ui8 = 0;
+  ok = iot_data_map_get_number (map, key, IOT_DATA_UINT8, &ui8);
+  CU_ASSERT (ok)
+  CU_ASSERT (ui8 == 123u)
+
+  int16_t i16 = 0;
+  ok = iot_data_map_get_number (map, key, IOT_DATA_INT16, &i16);
+  CU_ASSERT (ok)
+  CU_ASSERT (i16 == 123u)
+  uint16_t ui16 = 0;
+  ok = iot_data_map_get_number (map, key, IOT_DATA_UINT16, &ui16);
+  CU_ASSERT (ok)
+  CU_ASSERT (ui16 == 123u)
+
+  int32_t i32 = 0;
+  ok = iot_data_map_get_number (map, key, IOT_DATA_INT32, &i32);
+  CU_ASSERT (ok)
+  CU_ASSERT (i32 == 123u)
+  uint32_t ui32 = 0;
+  ok = iot_data_map_get_number (map, key, IOT_DATA_UINT32, &ui32);
+  CU_ASSERT (ok)
+  CU_ASSERT (ui32 == 123u)
+
+  int64_t i64 = 0;
+  ok = iot_data_map_get_number (map, key, IOT_DATA_INT64, &i64);
+  CU_ASSERT (ok)
+  CU_ASSERT (i64 == 123u)
+  uint64_t ui64 = 0;
+  ok = iot_data_map_get_number (map, key, IOT_DATA_UINT64, &ui64);
+  CU_ASSERT (ok)
+  CU_ASSERT (ui64 == 123u)
+
+  ok = iot_data_string_map_get_number (map, "Value", IOT_DATA_INT64, &i64);
+  CU_ASSERT (ok)
+  CU_ASSERT (i64 == 123u)
+
+  iot_data_free (map);
+}
+
+static void test_data_map_int (void)
+{
+  bool ok;
+  iot_data_t * key = iot_data_alloc_string ("Value", IOT_DATA_REF);
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_map_add (map, key, iot_data_alloc_ui16 (123u));
+
+  int i = 0;
+  ok = iot_data_map_get_int (map, key, &i);
+  CU_ASSERT (ok)
+  CU_ASSERT (i == 123)
+  i = 0;
+  ok = iot_data_string_map_get_int (map, "Value", &i);
+  CU_ASSERT (ok)
+  CU_ASSERT (i == 123)
+
   iot_data_free (map);
 }
 
@@ -5030,6 +5099,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_vector_hash", test_data_vector_hash);
   CU_add_test (suite, "data_compare", test_data_compare);
   CU_add_test (suite, "data_compress", test_data_compress);
+  CU_add_test (suite, "data_map_number", test_data_map_number);
+  CU_add_test (suite, "data_map_int", test_data_map_int);
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
   CU_add_test (suite, "data_vector_to_vector", test_data_vector_to_vector);
   CU_add_test (suite, "data_nested_vector_to_array", test_data_nested_vector_to_array);

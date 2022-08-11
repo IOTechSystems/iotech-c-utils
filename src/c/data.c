@@ -222,6 +222,7 @@ _Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bi
 _Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
 _Static_assert (sizeof (iot_data_list_static_t) == sizeof (iot_data_list_t), "iot_data_list_static not equal to iot_data_list");
 _Static_assert (sizeof (iot_data_struct_dummy_t) == 2 * sizeof (iot_data_static_t), "iot_data_static_t structs not aligned for iot_data_static_t");
+_Static_assert (sizeof (int) == sizeof (int32_t) || sizeof (int) == sizeof (int64_t), "int not a uint32_t or int64_t");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -1188,7 +1189,7 @@ void iot_data_free (iot_data_t * data)
 
 iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value)
 {
-  static const char * fmt [] =  { "%"SCNi8,"%"SCNu8,"%"SCNi16,"%"SCNu16,"%"SCNi32,"%"SCNu32,"%"SCNi64,"%"SCNu64,"%f","%lf" };
+  static const char * fmt [] =  { "%"SCNd8,"%"SCNu8,"%"SCNd16,"%"SCNu16,"%"SCNd32,"%"SCNu32,"%"SCNd64,"%"SCNu64,"%f","%lf" };
   assert (value && ((type == IOT_DATA_STRING) || strlen (value)));
 
   if (type < IOT_DATA_BOOL)
@@ -1681,6 +1682,18 @@ const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t *
   return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
 }
 
+bool iot_data_map_get_number (const iot_data_t * map, const iot_data_t * key, iot_data_type_t type, void * val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return data ? iot_data_cast (data, type, val) : false;
+}
+
+extern bool iot_data_map_get_int (const iot_data_t * map, const iot_data_t * key, int * val)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return data ? iot_data_cast (data, (sizeof (int) == sizeof (int32_t)) ? IOT_DATA_INT32 : IOT_DATA_INT64, val) : false;
+}
+
 int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, int64_t default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
@@ -1733,6 +1746,18 @@ const char * iot_data_string_map_get_string (const iot_data_t * map, const char 
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
   return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
+}
+
+bool iot_data_string_map_get_number (const iot_data_t * map, const char * key, iot_data_type_t type, void * val)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return data ? iot_data_cast (data, type, val) : false;
+}
+
+extern bool iot_data_string_map_get_int (const iot_data_t * map, const char * key, int * val)
+{
+  const iot_data_t * data = iot_data_string_map_get (map, key);
+  return data ? iot_data_cast (data, (sizeof (int) == sizeof (int32_t)) ? IOT_DATA_INT32 : IOT_DATA_INT64, val) : false;
 }
 
 int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val)
@@ -2555,7 +2580,7 @@ char * iot_data_to_json_with_buffer (const iot_data_t * data, char * buff, uint3
 static char * iot_data_string_from_json_token (const char * json, const iot_json_tok_t * token)
 {
   size_t len = (size_t) (token->end - token->start);
-  char * str = malloc (len + 1);
+  char * str = calloc (1u, len + 1u);
   if (token->type == IOT_JSON_STRING_ESC)
   {
     const char *src = json + token->start;
@@ -2589,12 +2614,10 @@ static char * iot_data_string_from_json_token (const char * json, const iot_json
         *dst++ = *src++;
       }
     }
-    *dst = '\0';
   }
   else
   {
     memcpy (str, json + token->start, len);
-    str[len] = 0;
   }
   return str;
 }
@@ -2625,7 +2648,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
   {
     case 't': case 'f': ret = iot_data_alloc_bool (str[0] == 't'); break; // true/false
     case 'n': ret = iot_data_alloc_null (); break; // null
-    default: // Handle all floating point numbers as doubles, negative integers as int64_t and positive integers as uint64_t
+    default: // Handle all floating point numbers as doubles, all integers as int64_t unless to big in which case as uint64_t
     {
       if (strchr (str, '.') || strchr (str, 'e') || strchr (str, 'E'))
       {
@@ -2634,12 +2657,15 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
       else if (strchr (str, '-'))
       {
         int64_t i64;
-        if (sscanf (str,"%"SCNi64, &i64) == 1) ret = iot_data_alloc_i64 (i64);
+        if (sscanf (str,"%"SCNd64, &i64) == 1) ret = iot_data_alloc_i64 (i64);
       }
       else
       {
         uint64_t ui64;
-        if (sscanf (str,"%"SCNu64, &ui64) == 1) ret = iot_data_alloc_ui64 (ui64);
+        if (sscanf (str,"%"SCNu64, &ui64) == 1)
+        {
+          ret = (ui64 <= INT64_MAX) ? iot_data_alloc_i64 (ui64) : iot_data_alloc_ui64 (ui64);
+        }
       }
       break;
     }
