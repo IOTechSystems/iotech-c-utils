@@ -14,7 +14,7 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=/opt/oecore-riscv64/sysroots/x86_64-oesdk-linux/usr/share/cmake/riscv64-oe-linux-toolchain.cmake \
   -DCMAKE_BUILD_TYPE="MinSizeRel" \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-  -DLINUX_SYS==RISCV64 \
+  -DLINUX_SYS=RISCV64 \
   -DSYSROOT=/opt/oecore-riscv64/sysroots/riscv64-oe-linux \
   -DIOT_BUILD_COMPONENTS=ON \
   -DIOT_BUILD_DYNAMIC_LOAD=ON \
@@ -28,7 +28,7 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=/opt/oecore-riscv64/sysroots/x86_64-oesdk-linux/usr/share/cmake/riscv64-oe-linux-toolchain.cmake \
   -DCMAKE_BUILD_TYPE="Debug" \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-  -DLINUX_SYS==RISCV64 \
+  -DLINUX_SYS=RISCV64 \
   -DSYSROOT=/opt/oecore-riscv64/sysroots/riscv64-oe-linux \
   -DIOT_BUILD_COMPONENTS=ON \
   -DIOT_BUILD_DYNAMIC_LOAD=ON \
