@@ -6,6 +6,8 @@ BROOT=${ROOT}/riscv
 VER=$(cat ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 
+. /opt/oecore-riscv64/environment-setup-riscv64-oe-linux
+
 mkdir -p "${BROOT}/release"
 cd "${BROOT}/release"
 cmake \
