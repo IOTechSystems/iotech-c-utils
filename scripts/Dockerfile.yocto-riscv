@@ -1,0 +1,16 @@
+FROM iotechsys/riscv-yocto-builder:22.08
+ENV SYSTEM="riscv"
+LABEL MAINTAINER="IOTech <support@iotechsys.com>"
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y unzip build-essential file wget git gcc cmake make
+RUN gem install --no-document fpm
+RUN pip3 install lxml gcovr==5.0
+COPY VERSION /iotech-iot/
+COPY RELEASE_NOTES.md /iotech-iot/
+COPY src /iotech-iot/src/
+COPY include /iotech-iot/include/
+COPY scripts /iotech-iot/scripts/
+COPY sonar-project.properties /iotech-iot/
+COPY .git /iotech-iot/.git/
+WORKDIR /iotech-iot
+ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/riscv.sh"]
