@@ -5,6 +5,7 @@ ROOT=$(dirname $(dirname $(readlink -f $0)))
 BROOT=${ROOT}/riscv
 VER=$(cat ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
+OS_ARCH=`dpkg --print-architecture`
 
 . /opt/oecore-riscv64/environment-setup-riscv64-oe-linux
 
@@ -18,6 +19,7 @@ cmake \
   -DSYSROOT=/opt/oecore-riscv64/sysroots/riscv64-oe-linux \
   -DIOT_BUILD_COMPONENTS=ON \
   -DIOT_BUILD_DYNAMIC_LOAD=ON \
+  -DIOT_BUILD_EXES=OFF \
   "${ROOT}/src"
 make 2>&1 | tee release.log
 make package
@@ -32,11 +34,10 @@ cmake \
   -DSYSROOT=/opt/oecore-riscv64/sysroots/riscv64-oe-linux \
   -DIOT_BUILD_COMPONENTS=ON \
   -DIOT_BUILD_DYNAMIC_LOAD=ON \
+  -DIOT_BUILD_EXES=OFF \
   "${ROOT}/src"
 make 2>&1 | tee debug.log
 make package
-
-OS_ARCH=`dpkg --print-architecture`
 
 cd ${BROOT}/release
 fpm -s dir -t deb -n iotech-iot-riscv${AZ_API}-${PKG_VER}-dev -v "${VER}" \
