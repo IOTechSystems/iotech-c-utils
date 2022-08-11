@@ -2,7 +2,7 @@
 set -e -x
 
 ROOT=$(dirname $(dirname $(readlink -f $0)))
-BROOT=${ROOT}/riscv
+BROOT=${ROOT}/x86_64
 VER=$(cat ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 OS_ARCH=`dpkg --print-architecture`
