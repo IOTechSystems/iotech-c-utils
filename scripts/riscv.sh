@@ -6,6 +6,7 @@ BROOT=${ROOT}/x86_64
 VER=$(cat ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 OS_ARCH=`dpkg --print-architecture`
+SYS_NAME=Linux
 
 . /opt/oecore-riscv64/environment-setup-riscv64-oe-linux
 
@@ -19,7 +20,6 @@ cmake \
   -DSYSROOT=/opt/oecore-riscv64/sysroots/riscv64-oe-linux \
   -DIOT_BUILD_COMPONENTS=ON \
   -DIOT_BUILD_DYNAMIC_LOAD=ON \
-  -DIOT_BUILD_EXES=OFF \
   "${ROOT}/src"
 make 2>&1 | tee release.log
 make package
@@ -34,14 +34,13 @@ cmake \
   -DSYSROOT=/opt/oecore-riscv64/sysroots/riscv64-oe-linux \
   -DIOT_BUILD_COMPONENTS=ON \
   -DIOT_BUILD_DYNAMIC_LOAD=ON \
-  -DIOT_BUILD_EXES=OFF \
   "${ROOT}/src"
 make 2>&1 | tee debug.log
 make package
 
 cd ${BROOT}/release
 fpm -s dir -t deb -n iotech-iot-riscv-${PKG_VER}-dev -v "${VER}" \
-  --chdir _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+  --chdir _CPack_Packages/${SYS_NAME}/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/iotech/iot/riscv/${PKG_VER} \
   --description "IOT C Framework (RISC-V)" \
@@ -51,7 +50,7 @@ rm *.tar.gz
 
 cd ${BROOT}/debug
 fpm -s dir -t deb -n iotech-iot-riscv-${PKG_VER}-dbg -v "${VER}" \
-  --chdir _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
+  --chdir _CPack_Packages/${SYS_NAME}/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/iotech/iot/riscv/${PKG_VER} \
   --description "IOT C Framework (RISC-V)" \

@@ -6,6 +6,7 @@ BROOT=${ROOT}/x86_64
 VER=$(cat ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 OS_ARCH=`dpkg --print-architecture`
+SYS_NAME=Generic
 
 mkdir -p "${BROOT}/release"
 cd "${BROOT}/release"
@@ -35,7 +36,7 @@ ninja package
 
 cd ${BROOT}/release
 fpm -s dir -t deb -n iotech-iot-azsphere${AZ_API}-${PKG_VER}-dev -v "${VER}" \
-  --chdir _CPack_Packages/Generic/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+  --chdir _CPack_Packages/${SYS_NAME}/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/azurespheresdk/Sysroots/${AZ_API}/opt/iotech/iot/${PKG_VER} \
   --description "IOT C Framework (AzureSphere)" \
@@ -45,7 +46,7 @@ rm *.tar.gz
 
 cd ${BROOT}/debug
 fpm -s dir -t deb -n iotech-iot-azsphere${AZ_API}-${PKG_VER}-dbg -v "${VER}" \
-  --chdir _CPack_Packages/Generic/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
+  --chdir _CPack_Packages/${SYS_NAME}/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/azurespheresdk/Sysroots/${AZ_API}/opt/iotech/iot/${PKG_VER} \
   --description "IOT C Framework (AzureSphere debug)" \
