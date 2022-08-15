@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2020 IOTech Ltd
+// Copyright (c) 2018-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -39,17 +39,6 @@ typedef enum iot_loglevel_t
 } iot_loglevel_t;
 
 /**
- * Log type enumeration
- */
-typedef enum iot_logger_type_t
-{
-  IOT_LOGGER_CONSOLE, /**< Console logger to stdout or stderr (for Warning and Error) */
-  IOT_LOGGER_FILE,    /**< File logger */
-  IOT_LOGGER_UDP,     /**< UDP logger (to fixed address or broadcast) */
-  IOT_LOGGER_CUSTOM   /**< Non core, custom logger */
-} iot_logger_type_t;
-
-/**
  * Public logger struct. Do not use directly or stack allocate.
  */
 typedef struct iot_logger_t
@@ -61,20 +50,15 @@ typedef struct iot_logger_t
 /**
  * Logger implementation function type
  */
-typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-
-
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
-/** File logger function */
-extern void iot_log_file (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-#endif
-/** Console logger function */
-extern void iot_log_console (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
-/** UDP logger function */
-extern void iot_log_udp (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
+typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx);
 
 /**
- * @brief Allocate memory an initialize logger component
+ * Logger context freeing function type
+ */
+typedef void (*iot_log_free_fn_t) (void *ctx);
+
+/**
+ * @brief Allocate memory and initialize logger component
  *
  * The function to allocate memory and initialize logger component. The logger component logs messages to console
  *
@@ -85,20 +69,52 @@ extern void iot_log_udp (struct iot_logger_t * logger, iot_loglevel_t level, uin
  */
 extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool self_start);
 
+#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
+/**
+ * @brief Allocate memory and initialize file logger component
+ *
+ * The function to allocate memory and initialize file logger component. The logger component logs messages to a file
+ *
+ * @param name        Identifier to use for logging
+ * @param level       Log level
+ * @param self_start  'true' will start the logger after initialization
+ * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
+ * @param pathname    File and location of the logfile
+ * @return            Pointer to the logger component created
+ */
+extern iot_logger_t * iot_logger_alloc_file (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *pathname);
+#endif
+
+/**
+ * @brief Allocate memory and initialize UDP logger component
+ *
+ * The function to allocate memory and initialize UDP logger component. The logger component logs messages to a UDP port
+ *
+ * @param name        Identifier to use for logging
+ * @param level       Log level
+ * @param self_start  'true' will start the logger after initialization
+ * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
+ * @param host        Address to send data - NULL means broadcast
+ * @param port        Port on which to send data
+ * @return            Pointer to the logger component created
+ */
+extern iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *host, uint16_t port);
+
 /**
  * @brief Allocate memory and initialize logger component with the custom log function
  *
- * The function to allocate memory and initialize logger component to use custom defined log function. By default, the  logger logs messages to console
+ * The function to allocate memory and initialize logger component to use custom defined log function.
  *
  * @param name        Identifier to use for logging
  * @param level       Log level, Messages are filtered for logging based on the log level set
- * @param to          File and location of the logger file, if iot_log_file option is used
- * @param impl        Custom log function
- * @param next        Another logger component, this logger component must be pre-initialized
  * @param self_start  'true' will start the logger after initialization
+ * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
+ * @param impl        Custom log function
+ * @param ctx         Context to be passed to custom log function
+ * @param freectx     Function to dispose of context
  * @return            Pointer to the logger component created
  */
-extern iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next, bool self_start);
+extern iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, iot_log_function_t impl, void *ctx, iot_log_free_fn_t freectx);
 
 /**
  * @brief Increment the logger reference count
@@ -195,6 +211,22 @@ extern void iot_log__error (iot_logger_t * logger, ...);
  * @param level   Log level
  */
 extern void iot_logger_set_level (iot_logger_t *logger, iot_loglevel_t level);
+
+/**
+ * @brief Parse string into log level
+ * @param str level string
+ * @return log level corresponding to the string, or IOT_LOGLEVEL_DEFAULT
+ */
+
+extern iot_loglevel_t iot_logger_level_from_string (const char *str);
+
+/**
+ * @brief Get string representation of log level
+ * @param level log level
+ * @return string corresponding to level
+ */
+
+extern const char *iot_logger_level_to_string (iot_loglevel_t);
 
 /**
  * @brief Create Logger component factory
