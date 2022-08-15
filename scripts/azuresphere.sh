@@ -5,6 +5,7 @@ ROOT=$(dirname $(dirname $(readlink -f $0)))
 BROOT=${ROOT}/x86_64
 VER=$(cat ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
+OS_ARCH=`dpkg --print-architecture`
 
 mkdir -p "${BROOT}/release"
 cd "${BROOT}/release"
@@ -31,8 +32,6 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   "${ROOT}/src"
 ninja | tee debug.log
 ninja package
-
-OS_ARCH=`dpkg --print-architecture`
 
 cd ${BROOT}/release
 fpm -s dir -t deb -n iotech-iot-azsphere${AZ_API}-${PKG_VER}-dev -v "${VER}" \

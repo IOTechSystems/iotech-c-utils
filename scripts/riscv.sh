@@ -40,7 +40,7 @@ make 2>&1 | tee debug.log
 make package
 
 cd ${BROOT}/release
-fpm -s dir -t deb -n iotech-iot-riscv${AZ_API}-${PKG_VER}-dev -v "${VER}" \
+fpm -s dir -t deb -n iotech-iot-riscv-${PKG_VER}-dev -v "${VER}" \
   --chdir _CPack_Packages/Generic/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/iotech/iot/riscv/${PKG_VER} \
@@ -50,7 +50,7 @@ fpm -s dir -t deb -n iotech-iot-riscv${AZ_API}-${PKG_VER}-dev -v "${VER}" \
 rm *.tar.gz
 
 cd ${BROOT}/debug
-fpm -s dir -t deb -n iotech-iot-riscv${AZ_API}-${PKG_VER}-dbg -v "${VER}" \
+fpm -s dir -t deb -n iotech-iot-riscv-${PKG_VER}-dbg -v "${VER}" \
   --chdir _CPack_Packages/Generic/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/iotech/iot/riscv/${PKG_VER} \
