@@ -41,7 +41,7 @@ make package
 
 cd ${BROOT}/release
 fpm -s dir -t deb -n iotech-iot-riscv-${PKG_VER}-dev -v "${VER}" \
-  --chdir _CPack_Packages/Generic/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
+  --chdir _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/iotech/iot/riscv/${PKG_VER} \
   --description "IOT C Framework (RISC-V)" \
@@ -51,7 +51,7 @@ rm *.tar.gz
 
 cd ${BROOT}/debug
 fpm -s dir -t deb -n iotech-iot-riscv-${PKG_VER}-dbg -v "${VER}" \
-  --chdir _CPack_Packages/Generic/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
+  --chdir _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/iotech/iot/riscv/${PKG_VER} \
   --description "IOT C Framework (RISC-V)" \
