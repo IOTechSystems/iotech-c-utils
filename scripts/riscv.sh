@@ -11,11 +11,11 @@ SYS_NAME=Linux
 case "${TARGET}" in
   riscv64-oe)
     . /opt/oecore-riscv/environment-setup-riscv64-oe-linux
-    RISCV=RISC64
+    RISCV=RISCV64
   ;;
   riscv32-oe)
     . /opt/oecore-riscv/environment-setup-riscv32-oe-linux
-    RISCV=RISC32
+    RISCV=RISCV32
   ;;
   *)
     echo "RISC-V Target BOARD not set or invalid"
