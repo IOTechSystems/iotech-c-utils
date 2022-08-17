@@ -12,10 +12,28 @@ case "${TARGET}" in
   riscv64-oe)
     . /opt/oecore-riscv/environment-setup-riscv64-oe-linux
     RISCV=RISCV64
+    TOOLCHAIN=/opt/oecore-riscv/sysroots/x86_64-oesdk-linux/usr/share/cmake/${TARGET}-linux-toolchain.cmake
+    SYSROOT=/opt/oecore-riscv/sysroots/${TARGET}-linux
   ;;
   riscv32-oe)
     . /opt/oecore-riscv/environment-setup-riscv32-oe-linux
     RISCV=RISCV32
+    TOOLCHAIN=/opt/oecore-riscv/sysroots/x86_64-oesdk-linux/usr/share/cmake/${TARGET}-linux-toolchain.cmake
+    SYSROOT=/opt/oecore-riscv/sysroots/${TARGET}-linux
+  ;;
+  riscv64-lp64)
+    . /opt/pathfinder-1.1-sdk/bin/environment-setup.sh
+    RISCV=RISCV64
+    RISCV_DEFS="-DRISCV_ABI=lp64"
+    TOOLCHAIN=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdn-linux/sysroots/x86_64-rvdnsdk-linux/usr/share/cmake/riscv64-rvdn-linux-musl-toolchain.cmake
+    SYSROOT=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdn-linux/sysroots/riscv64-rvdn-linux-musl
+  ;;
+  riscv32-ilp32)
+    . /opt/pathfinder-1.1-sdk/bin/environment-setup.sh
+    RISCV=RISCV32
+    RISCV_DEFS="-DRISCV_ABI=ilp32"
+    TOOLCHAIN=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdn-linux/sysroots/x86_64-rvdnsdk-linux/usr/share/cmake/riscv32-rvdn-linux-musl-toolchain.cmake
+    SYSROOT=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdn-linux/sysroots/riscv32-rvdn-linux-musl
   ;;
   *)
     echo "RISC-V Target BOARD not set or invalid"
@@ -26,11 +44,11 @@ esac
 mkdir -p "${BROOT}/release"
 cd "${BROOT}/release"
 cmake \
-  -DCMAKE_TOOLCHAIN_FILE=/opt/oecore-riscv/sysroots/x86_64-oesdk-linux/usr/share/cmake/${TARGET}-linux-toolchain.cmake \
+  -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN} ${RISCV_DEFS} \
   -DCMAKE_BUILD_TYPE="MinSizeRel" \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DLINUX_SYS=${RISCV} \
-  -DSYSROOT=/opt/oecore-riscv/sysroots/${TARGET}-linux \
+  -DSYSROOT=${SYSROOT} \
   -DIOT_BUILD_COMPONENTS=ON \
   -DIOT_BUILD_DYNAMIC_LOAD=ON \
   "${ROOT}/src"
@@ -40,11 +58,11 @@ make package
 mkdir -p "${BROOT}/debug"
 cd "${BROOT}/debug"
 cmake \
-  -DCMAKE_TOOLCHAIN_FILE=/opt/oecore-riscv/sysroots/x86_64-oesdk-linux/usr/share/cmake/${TARGET}-linux-toolchain.cmake \
+  -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN} \
   -DCMAKE_BUILD_TYPE="Debug" \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DLINUX_SYS=${RISCV} \
-  -DSYSROOT=/opt/oecore-riscv/sysroots/${TARGET}-linux \
+  -DSYSROOT=${SYSROOT} \
   -DIOT_BUILD_COMPONENTS=ON \
   -DIOT_BUILD_DYNAMIC_LOAD=ON \
   "${ROOT}/src"

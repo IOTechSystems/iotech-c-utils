@@ -412,7 +412,7 @@ pipeline
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
     choice (name: 'System', choices: ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.15','alpine-3.16','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40','zephyr-2.3','clearlinux','seawolf','azuresphere-12','yocto-riscv','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','x86','arm64','arm32', 'i586','all'], description: 'Build Host Architecture')
-    choice (name: 'Board', choices: ['None','frdm_k64f','qemu_x86','riscv64-oe','riscv32-oe','acrn','all'], description: 'Target Board')
+    choice (name: 'Board', choices: ['None','frdm_k64f','qemu_x86','riscv64-oe','riscv32-oe','riscv64-lp64','riscv32-ilp32','acrn','all'], description: 'Target Board')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
     booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-22.04 x86_64)')
   }
