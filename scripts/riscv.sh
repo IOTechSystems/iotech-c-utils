@@ -21,7 +21,7 @@ case "${TARGET}" in
     TOOLCHAIN=/opt/oecore-riscv/sysroots/x86_64-oesdk-linux/usr/share/cmake/${TARGET}-linux-toolchain.cmake
     SYSROOT=/opt/oecore-riscv/sysroots/${TARGET}-linux
   ;;
-  riscv64-musl-lp64)
+  riscv64-musl-rv64i)
     . /opt/pathfinder-1.1-sdk/bin/environment-setup.sh
     PATH=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdn-linux/sysroots/x86_64-rvdnsdk-linux/usr/bin:$PATH
     RISCV=RISCV64
@@ -29,7 +29,7 @@ case "${TARGET}" in
     TOOLCHAIN=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdn-linux/sysroots/x86_64-rvdnsdk-linux/usr/share/cmake/riscv64-rvdn-linux-musl-toolchain.cmake
     SYSROOT=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdn-linux/sysroots/riscv64-rvdn-linux-musl
   ;;
-  riscv32-musl-ilp32)
+  riscv32-musl-rv32i)
     . /opt/pathfinder-1.1-sdk/bin/environment-setup.sh
     PATH=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdn-linux/sysroots/x86_64-rvdnsdk-linux/usr/bin:$PATH
     RISCV=RISCV32
@@ -37,7 +37,7 @@ case "${TARGET}" in
     TOOLCHAIN=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdn-linux/sysroots/x86_64-rvdnsdk-linux/usr/share/cmake/riscv32-rvdn-linux-musl-toolchain.cmake
     SYSROOT=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdn-linux/sysroots/riscv32-rvdn-linux-musl
   ;;
-  riscv64-musl-lp64d)
+  riscv64-musl-rv64id)
     . /opt/pathfinder-1.1-sdk/bin/environment-setup.sh
     PATH=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/bin:$PATH
     RISCV=RISCV64
@@ -45,7 +45,7 @@ case "${TARGET}" in
     TOOLCHAIN=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/share/cmake/riscv64-rvdnd-linux-musl-toolchain.cmake
     SYSROOT=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdnd-linux/sysroots/riscv64-rvdnd-linux-musl
   ;;
-  riscv32-musl-ilp32d)
+  riscv32-musl-rv32id)
     . /opt/pathfinder-1.1-sdk/bin/environment-setup.sh
     PATH=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/bin:$PATH
     RISCV=RISCV32
