@@ -313,4 +313,4 @@
 
 ## Version 1.3.4
 
-- Support added for RISC-V on 32/64 bit OE and Intel Pathfinder targets
+- Support added for RISC-V on 32/64 bit OE and Intel Pathfinder targets (rv64i, rv32i, rv64id, rv32id)
