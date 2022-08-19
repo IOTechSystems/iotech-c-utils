@@ -39,7 +39,7 @@ case "${TARGET}" in
   ;;
   riscv64-musl-lp64d)
     . /opt/pathfinder-1.1-sdk/bin/environment-setup.sh
-    PATH=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/bin
+    PATH=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/bin:$PATH
     RISCV=RISCV64
     RISCV_DEFS="-DRISCV_ABI=lp64d"
     TOOLCHAIN=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv64-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/share/cmake/riscv64-rvdnd-linux-musl-toolchain.cmake
@@ -47,7 +47,7 @@ case "${TARGET}" in
   ;;
   riscv32-musl-ilp32d)
     . /opt/pathfinder-1.1-sdk/bin/environment-setup.sh
-    PATH=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/bin
+    PATH=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/bin:$PATH
     RISCV=RISCV32
     RISCV_DEFS="-DRISCV_ABI=ilp32d"
     TOOLCHAIN=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdnd-linux/sysroots/x86_64-rvdnsdk-linux/usr/share/cmake/riscv32-rvdnd-linux-musl-toolchain.cmake
