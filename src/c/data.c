@@ -2664,7 +2664,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
         uint64_t ui64;
         if (sscanf (str,"%"SCNu64, &ui64) == 1)
         {
-          ret = (ui64 <= INT64_MAX) ? iot_data_alloc_i64 (ui64) : iot_data_alloc_ui64 (ui64);
+          ret = (ui64 <= INT64_MAX) ? iot_data_alloc_i64 ((int64_t) ui64) : iot_data_alloc_ui64 (ui64);
         }
       }
       break;
