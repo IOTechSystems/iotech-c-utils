@@ -76,7 +76,7 @@ make package
 mkdir -p "${BROOT}/debug"
 cd "${BROOT}/debug"
 cmake \
-  -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN} \
+  -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN} ${RISCV_DEFS} \
   -DCMAKE_BUILD_TYPE="Debug" \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DLINUX_SYS=${RISCV} \
