@@ -21,7 +21,7 @@ if ("${LINUX_SYS}" STREQUAL "RISCV32" OR "${LINUX_SYS}" STREQUAL "RISCV64")
   set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Xlinker --gc-sections")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -msmall-data-limit=8 -mno-save-restore -lm")
   if (DEFINED RISCV_YOCTO_MUSL)
-   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_YOCTO_MUSL_")
+   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_YOCTO_MUSL_=${RISCV_YOCTO_MUSL}")
   endif ()
   # ABI 32/64 bit soft/double ilp32/ilp32d/lp64/lp64d
   if (DEFINED RISCV_ABI)
