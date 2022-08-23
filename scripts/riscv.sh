@@ -54,7 +54,7 @@ case "${TARGET}" in
     SYSROOT=/opt/pathfinder-1.1-sdk/bin/toolchain/riscv32-rvdnd-linux/sysroots/riscv32-rvdnd-linux-musl
   ;;
   *)
-    echo "RISC-V Target BOARD not set or invalid"
+    echo "RISC-V Target not set or invalid"
     exit 1
   ;;
 esac
@@ -91,7 +91,7 @@ cd ${BROOT}/release
 fpm -s dir -t deb -n iotech-iot-${TARGET}-${PKG_VER}-dev -v "${VER}" \
   --chdir _CPack_Packages/${SYS_NAME}/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
-  --prefix opt/iotech/iot/riscv/${PKG_VER} \
+  --prefix opt/iotech/iot/${PKG_VER}/targets/${TARGET} \
   --description "IOT C Framework (${TARGET})" \
   --vendor "IOTech" --maintainer "IOTech Support <support@iotechsys.com>" \
   --depends cmake --depends make
@@ -101,7 +101,7 @@ cd ${BROOT}/debug
 fpm -s dir -t deb -n iotech-iot-${TARGET}-${PKG_VER}-dbg -v "${VER}" \
   --chdir _CPack_Packages/${SYS_NAME}/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
-  --prefix opt/iotech/iot/riscv/${PKG_VER} \
+  --prefix opt/iotech/iot/${PKG_VER}/targets/${TARGET} \
   --description "IOT C Framework (${TARGET})" \
   --vendor "IOTech" --maintainer "IOTech Support <support@iotechsys.com>" \
   --depends cmake --depends make
