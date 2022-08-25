@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2020 IOTech Ltd
+// Copyright (c) 2018-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -63,6 +63,16 @@ typedef struct iot_logger_t
  */
 typedef void (*iot_log_function_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message);
 
+/**
+ * Logger implementation with context function type
+ */
+typedef void (*iot_log_function_ctx_t) (struct iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx);
+
+/**
+ * Logger context freeing function type
+ */
+typedef void (*iot_log_free_fn_t) (void *ctx);
+
 
 #if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
 /** File logger function */
@@ -99,6 +109,22 @@ extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level,
  * @return            Pointer to the logger component created
  */
 extern iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, const char * to, iot_log_function_t impl, iot_logger_t * next, bool self_start);
+
+/**
+ * @brief Allocate memory and initialize logger component with the custom log function with context
+ *
+ * The function to allocate memory and initialize logger component to use custom defined log function.
+ *
+ * @param name        Identifier to use for logging
+ * @param level       Log level, Messages are filtered for logging based on the log level set
+ * @param ctx         Context to be passed to custom log function
+ * @param impl        Custom log function
+ * @param freectx     Function to dispose of context
+ * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
+ * @param self_start  'true' will start the logger after initialization
+ * @return            Pointer to the logger component created
+ */
+extern iot_logger_t * iot_logger_alloc_custom_ctx (const char * name, iot_loglevel_t level, void *ctx, iot_log_function_ctx_t impl, iot_log_free_fn_t freectx, iot_logger_t * next, bool self_start);
 
 /**
  * @brief Increment the logger reference count
@@ -195,6 +221,22 @@ extern void iot_log__error (iot_logger_t * logger, ...);
  * @param level   Log level
  */
 extern void iot_logger_set_level (iot_logger_t *logger, iot_loglevel_t level);
+
+/**
+ * @brief Parse string into log level
+ * @param str level string
+ * @return log level corresponding to the string, or IOT_LOGLEVEL_DEFAULT
+ */
+
+extern iot_loglevel_t iot_logger_level_from_string (const char *str);
+
+/**
+ * @brief Get string representation of log level
+ * @param level log level
+ * @return string corresponding to level
+ */
+
+extern const char *iot_logger_level_to_string (iot_loglevel_t);
 
 /**
  * @brief Create Logger component factory

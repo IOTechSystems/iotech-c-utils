@@ -167,3 +167,7 @@
 ### Version 1.2.6
 
 - Fix for reading unicode strings in `iot_data_from_json`
+
+## Version 1.2.7
+
+- Support custom loggers with associated state

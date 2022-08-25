@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2021 IOTech
+// Copyright (c) 2018-2022 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -41,6 +41,9 @@ typedef struct iot_logger_impl_t
   volatile iot_loglevel_t save;       // Last saved log level
   char * name;                        // Name of logger
   iot_log_function_t impl;            // Log implementation function
+  iot_log_function_ctx_t impl_ctx;    // Log implementation function with context
+  iot_log_free_fn_t free_ctx;        // Function to free context
+  void *ctx;                          // Context for custom loggers
   struct iot_logger_impl_t * next;    // Pointer to next logger (can be chained in config)
   int sock;                           // Socket for UDP logger
   struct sockaddr_in addr;            // Address for UDP logger
@@ -68,17 +71,49 @@ iot_logger_t * iot_logger_default (void)
   return logger;
 }
 
+iot_loglevel_t iot_logger_level_from_string (const char *name)
+{
+  iot_loglevel_t level = IOT_LOGLEVEL_DEFAULT;
+  if (name)
+  {
+    int c = toupper (name[0]);
+    for (int lvl = 0; lvl < IOT_LOG_LEVELS; lvl++)
+    {
+      if (iot_log_levels[lvl][0] == c)
+      {
+        level = lvl;
+        break;
+      }
+    }
+  }
+  return level;
+}
+
+const char *iot_logger_level_to_string (iot_loglevel_t level)
+{
+  return iot_log_levels[level];
+}
+
 static void iot_logger_log (iot_logger_impl_t * logger, iot_loglevel_t level, va_list args)
 {
   char str[1024];
   const char * fmt = va_arg (args, const char *);
   vsnprintf (str, sizeof (str), fmt, args);
   uint64_t ts = iot_time_usecs ();
-  if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str);
-  while ((logger = logger->next))
+  do
   {
-    if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str);
-  }
+    if (logger->base.level >= level)
+    {
+      if (logger->impl_ctx)
+      {
+        (logger->impl_ctx) (&logger->base, level, ts, str, logger->ctx);
+      }
+      else
+      {
+        (logger->impl) (&logger->base, level, ts, str);
+      }
+    }
+  } while ((logger = logger->next));
 }
 
 void iot_log__error (iot_logger_t * logger, ...)
@@ -177,6 +212,22 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
   return &logger->base;
 }
 
+iot_logger_t * iot_logger_alloc_custom_ctx (const char * name, iot_loglevel_t level, void *ctx, iot_log_function_ctx_t impl, iot_log_free_fn_t freectx, iot_logger_t * next, bool start)
+{
+  assert (name && impl);
+  iot_logger_impl_t * logger = calloc (1, sizeof (*logger));
+  logger->impl_ctx = impl;
+  logger->free_ctx = freectx;
+  logger->ctx = ctx;
+  logger->sock = -1;
+  logger->name = strdup (name);
+  logger->save = level;
+  logger->next = (iot_logger_impl_t*) next;
+  iot_component_init (&logger->base.component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
+  if (start) iot_logger_start (&logger->base);
+  return &logger->base;
+}
+
 iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool start)
 {
   return iot_logger_alloc_custom (name, level,NULL, iot_log_console, NULL, start);
@@ -192,6 +243,7 @@ void iot_logger_free (iot_logger_t * logger)
 #if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
     if (impl->fd) fclose (impl->fd);
 #endif
+    if (impl->free_ctx) (impl->free_ctx) (impl->ctx);
     iot_component_fini (&logger->component);
     free (logger);
   }
@@ -273,21 +325,7 @@ extern void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t t
 
 static iot_loglevel_t iot_logger_config_level (const iot_data_t * map)
 {
-  iot_loglevel_t level = IOT_LOGLEVEL_DEFAULT;
-  const char * name = iot_data_string_map_get_string (map, "Level");
-  if (name)
-  {
-    int c = toupper (name[0]);
-    for (int lvl = 0; lvl < IOT_LOG_LEVELS; lvl++)
-    {
-      if (iot_log_levels[lvl][0] == c)
-      {
-        level = lvl;
-        break;
-      }
-    }
-  }
-  return level;
+  return iot_logger_level_from_string (iot_data_string_map_get_string (map, "Level"));
 }
 
 static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_data_t * map)
