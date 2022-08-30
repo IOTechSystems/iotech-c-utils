@@ -92,7 +92,7 @@ fpm -s dir -t deb -n iotech-iot-${TARGET}-${PKG_VER}-dev -v "${VER}" \
   --chdir _CPack_Packages/${SYS_NAME}/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/iotech/iot/${PKG_VER}/targets/${TARGET} \
-  --description "IOT C Framework (${TARGET})" \
+  --description "IOT C Framework (Yocto ${TARGET})" \
   --vendor "IOTech" --maintainer "IOTech Support <support@iotechsys.com>" \
   --depends cmake --depends make
 rm *.tar.gz
@@ -102,7 +102,7 @@ fpm -s dir -t deb -n iotech-iot-${TARGET}-${PKG_VER}-dbg -v "${VER}" \
   --chdir _CPack_Packages/${SYS_NAME}/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
   --deb-no-default-config-files --deb-priority "optional" --category "devel" \
   --prefix opt/iotech/iot/${PKG_VER}/targets/${TARGET} \
-  --description "IOT C Framework (${TARGET})" \
+  --description "IOT C Framework (Yocto ${TARGET})" \
   --vendor "IOTech" --maintainer "IOTech Support <support@iotechsys.com>" \
   --depends cmake --depends make
 rm *.tar.gz
