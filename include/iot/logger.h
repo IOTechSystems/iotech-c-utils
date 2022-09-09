@@ -154,55 +154,26 @@ extern iot_logger_t * iot_logger_default (void);
 
 /* Logging functions */
 /**
- * @brief Log message with the log level set to Trace
+ * @brief Log message with a specified log level
  *
  * @param logger  Pointer to the logger component
+ * @param level   Log level for this entry
  * @param ...     Formatted string for logging
  */
-extern void iot_log__trace (iot_logger_t * logger, ...);
-
-/**
- * @brief Log message with the log level set to Debug
- *
- * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
- */
-extern void iot_log__debug (iot_logger_t * logger, ...);
-
-/**
- * @brief Log message with the log level set to Info
- *
- * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
- */
-extern void iot_log__info (iot_logger_t * logger, ...);
-
-/**
- * @brief Log message with the log level set to Warning
- *
- * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
- */
-extern void iot_log__warn (iot_logger_t * logger, ...);
-
-/**
- * @brief Log message with the log level set to Error
- *
- * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
- */
-extern void iot_log__error (iot_logger_t * logger, ...);
+extern void iot_log__log (iot_logger_t * logger, iot_loglevel_t level, ...);
 
 /** Log trace macro */
-#define iot_log_trace(l,...) if ((l) && (l)->level >= IOT_LOG_TRACE) iot_log__trace ((l), __VA_ARGS__)
+#define iot_log_trace(l,...) if ((l) && (l)->level >= IOT_LOG_TRACE) iot_log__log ((l), IOT_LOG_TRACE, __VA_ARGS__)
 /** Log info macro */
-#define iot_log_info(l,...) if ((l) && (l)->level >= IOT_LOG_INFO) iot_log__info ((l), __VA_ARGS__)
+#define iot_log_info(l,...) if ((l) && (l)->level >= IOT_LOG_INFO) iot_log__log ((l), IOT_LOG_INFO, __VA_ARGS__)
 /** Log debug macro */
-#define iot_log_debug(l,...) if ((l) && (l)->level >= IOT_LOG_DEBUG) iot_log__debug ((l), __VA_ARGS__)
+#define iot_log_debug(l,...) if ((l) && (l)->level >= IOT_LOG_DEBUG) iot_log__log ((l), IOT_LOG_DEBUG, __VA_ARGS__)
 /** Log warn macro */
-#define iot_log_warn(l,...) if ((l) && (l)->level >= IOT_LOG_WARN) iot_log__warn ((l), __VA_ARGS__)
+#define iot_log_warn(l,...) if ((l) && (l)->level >= IOT_LOG_WARN) iot_log__log ((l), IOT_LOG_WARN, __VA_ARGS__)
 /** Log error macro */
-#define iot_log_error(l,...) if ((l) && (l)->level >= IOT_LOG_ERROR) iot_log__error ((l), __VA_ARGS__)
+#define iot_log_error(l,...) if ((l) && (l)->level >= IOT_LOG_ERROR) iot_log__log ((l), IOT_LOG_ERROR, __VA_ARGS__)
+/** Log macro */
+#define iot_log_log(l,lv,...) if ((l) && (l)->level >= (lv)) iot_log__log ((l), (lv), __VA_ARGS__)
 
 /**
  * @brief  Set log level for the logger

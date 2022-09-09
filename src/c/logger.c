@@ -67,57 +67,20 @@ iot_logger_t * iot_logger_default (void)
   return logger;
 }
 
-static void iot_logger_log (iot_logger_impl_t * logger, iot_loglevel_t level, va_list args)
+void iot_log__log (iot_logger_t * l, iot_loglevel_t level, ...)
 {
   char str[1024];
+  iot_logger_impl_t *logger = (iot_logger_impl_t *)l;
+  va_list args;
+  va_start (args, level);
   const char * fmt = va_arg (args, const char *);
   vsnprintf (str, sizeof (str), fmt, args);
+  va_end (args);
   uint64_t ts = iot_time_usecs ();
-  if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str, logger->ctx);
-  while ((logger = logger->next))
+  do
   {
     if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str, logger->ctx);
-  }
-}
-
-void iot_log__error (iot_logger_t * logger, ...)
-{
-  va_list args;
-  va_start (args, logger);
-  iot_logger_log ((iot_logger_impl_t*) logger, IOT_LOG_ERROR, args);
-  va_end (args);
-}
-
-void iot_log__warn (iot_logger_t * logger, ...)
-{
-  va_list args;
-  va_start (args, logger);
-  iot_logger_log ((iot_logger_impl_t*) logger, IOT_LOG_WARN, args);
-  va_end (args);
-}
-
-void iot_log__info (iot_logger_t * logger, ...)
-{
-  va_list args;
-  va_start (args, logger);
-  iot_logger_log ((iot_logger_impl_t*) logger, IOT_LOG_INFO, args);
-  va_end (args);
-}
-
-void iot_log__debug (iot_logger_t * logger, ...)
-{
-  va_list args;
-  va_start (args, logger);
-  iot_logger_log ((iot_logger_impl_t*) logger, IOT_LOG_DEBUG, args);
-  va_end (args);
-}
-
-void iot_log__trace (iot_logger_t * logger, ...)
-{
-  va_list args;
-  va_start (args, logger);
-  iot_logger_log ((iot_logger_impl_t*) logger, IOT_LOG_TRACE, args);
-  va_end (args);
+  } while ((logger = logger->next));
 }
 
 void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
