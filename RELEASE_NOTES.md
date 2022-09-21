@@ -314,3 +314,7 @@
 ## Version 1.3.4
 
 - Support added for RISC-V on 32/64 bit OE and Intel Pathfinder targets (rv64i, rv32i, rv64id, rv32id)
+
+## Version 1.4.0
+
+- `iot_schedule_reset` function updated to take a start delay parameter
