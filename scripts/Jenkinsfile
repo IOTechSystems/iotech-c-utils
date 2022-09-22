@@ -73,9 +73,9 @@ def metricsStage (systems, arch)
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
   publishCoreMetrics (systems, arch)
-  if ("${sys}" == 'ubuntu-20.04' || "${sys}" == 'all')
+  if ("${sys}" == 'ubuntu-22.04' || "${sys}" == 'all')
   {
-    publishAdvancedMetrics ('ubuntu-20.04', arch)
+    publishAdvancedMetrics ('ubuntu-22.04', arch)
   }
   if ("${archive}" == 'Release')
   {
@@ -382,6 +382,7 @@ for (t in targets)
   def sys = getSystemParam ()
   def arch = getArchParam ()
   def systems = systemMap["${arch}"]
+  println "sys: ${sys} arch: ${arch} systems: ${systems} target: ${target}"
 
   if (("${arch}" == target || "${arch}" == 'all') && ("${sys}" == 'all' || systems.count ("${sys}") != 0))
   {
