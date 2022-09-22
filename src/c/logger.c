@@ -291,19 +291,18 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   {
     if (to && strncmp (to, "udp:", 4) == 0 && strlen (to) > 4)
     {
+      char target[17] = { 0 };
       uint16_t port;
       const char *host = NULL;
       to += 4;
       const char * sep = strchr (to, ':');
       if (sep)
       {
-        char target[17] = { 0 };
         strncpy (target, to, (size_t) (sep - to));
         host = target;
         to = sep + 1;
       }
       port = atoi (to);
-
       result = iot_logger_alloc_udp (name, level, start, next, host, port);
     }
     else
