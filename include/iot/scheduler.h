@@ -74,14 +74,6 @@ extern iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_lo
 extern void iot_scheduler_add_ref (iot_scheduler_t * scheduler);
 
 /**
- * @brief Get the thread pool associated to the scheduler
- *
- * @param  scheduler  Pointer to a scheduler
- * @return            Pointer to a thread pool associated with the scheduler
- */
-extern iot_threadpool_t * iot_scheduler_thread_pool (iot_scheduler_t * scheduler);
-
-/**
  * @brief  Start scheduler and set the component state to IOT_COMPONENT_RUNNING
  *
  * @code
@@ -108,14 +100,14 @@ extern void iot_scheduler_start (iot_scheduler_t * scheduler);
  * @param  free_func          The function to free the arg parameter when scheduler is deleted, could be NULL
  * @param  arg                The argument to be passed to the function
  * @param  period             The period of the schedule (in nanoseconds)
- * @param  start              The time to wait until the schedule is first triggered (in nanoseconds)
+ * @param  delay              The time delay before the schedule is first triggered (in nanoseconds)
  * @param  repeat             The number of times the schedule should repeat, (0 = infinite)
  * @param  pool               The thread pool used to run the schedule
  * @param  priority           The thread priority for running the schedule, (not set if -1)
  * @return iot_schedule       Pointer to the created schedule, NULL on error
  */
 extern iot_schedule_t * iot_schedule_create
-  (iot_scheduler_t * schd, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority);
+  (iot_scheduler_t * schd, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t delay, uint64_t repeat, iot_threadpool_t * pool, int priority);
 
 /**
  * @brief  Add a schedule to the queue
@@ -157,9 +149,10 @@ extern bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * s
  * @endcode
  *
  * @param  scheduler  Pointer to a scheduler
+ * @param  delay      The time delay before the schedule is first triggered (in nanoseconds)
  * @param  schedule   Pointer to the schedule to be reset
  */
-extern void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
+extern void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule, uint64_t delay);
 /**
  * @brief  Add callback function to be invoked when a schedule is run
  *
