@@ -320,7 +320,7 @@ def String getSystemParam ()
   def ret = "${params.System}"
   if ("${ret}" == 'null')
   {
-    ret = 'ubuntu-20.04'
+    ret = 'ubuntu-22.04'
   }
   return ret
 }
@@ -381,7 +381,7 @@ for (t in targets)
   def target = t
   def sys = getSystemParam ()
   def arch = getArchParam ()
-  def systems = systemMap["${target}"]
+  def systems = systemMap["${arch}"]
 
   if (("${arch}" == target || "${arch}" == 'all') && ("${sys}" == 'all' || systems.count ("${sys}") != 0))
   {
