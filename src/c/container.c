@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2022 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -309,7 +309,7 @@ static void iot_container_running (iot_container_t * cont)
     iot_data_list_iter (cont->components, &iter);
     while (iot_data_list_iter_next (&iter))
     {
-      comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter);
+      comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
       if (comp->state != IOT_COMPONENT_RUNNING) goto AGAIN;
     }
     break;
@@ -318,15 +318,12 @@ AGAIN:
     iot_wait_msecs (sleep_msecs);
   }
 
-  // Invoke running callbacks if not timed out
-  if (tries != IOT_CONTAINER_RUN_RETRIES)
+  // Invoke running callbacks
+  iot_data_list_iter (cont->components, &iter);
+  while (iot_data_list_iter_next (&iter))
   {
-    iot_data_list_iter (cont->components, &iter);
-    while (iot_data_list_iter_next (&iter))
-    {
-      comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter);
-      if (comp->running_fn) (comp->running_fn) (comp);
-    }
+    comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
+    if (comp->running_fn) (comp->running_fn) (comp, tries == IOT_CONTAINER_RUN_RETRIES);
   }
 }
 

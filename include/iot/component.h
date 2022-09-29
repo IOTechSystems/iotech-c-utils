@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2020 IOTech Ltd
+// Copyright (c) 2019-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -58,7 +58,7 @@ typedef void (*iot_component_stop_fn_t) (iot_component_t * comp);
 /** Type definition for component free function pointer */
 typedef void (*iot_component_free_fn_t) (iot_component_t * comp);
 /** Type definition for component running function pointer */
-typedef void (*iot_component_running_fn_t) (iot_component_t * comp);
+typedef void (*iot_component_running_fn_t) (iot_component_t * comp, bool timeout);
 
 /**
  * Component factory structure

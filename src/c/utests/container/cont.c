@@ -42,8 +42,9 @@ static void test_alloc (void)
   iot_container_free (cont2);
 }
 
-static void test_logger_running_callback (iot_component_t * comp)
+static void test_logger_running_callback (iot_component_t * comp, bool timeout)
 {
+  CU_ASSERT (! timeout)
   running_called = true;
 }
 
