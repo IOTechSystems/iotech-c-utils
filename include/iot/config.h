@@ -31,6 +31,17 @@ extern "C" {
 extern bool iot_config_i64 (const iot_data_t * map, const char * key, int64_t * val, iot_logger_t * logger);
 
 /**
+ * @brief Get mandatory uint64_t configuration value and log error if cannot be resolved.
+ *
+ * @param map Configuration map
+ * @param key Configuration key
+ * @param val Pointer to uint64_t configuration value to set if found
+ * @param logger Logger used to log if configuration not found. If not set, default logger is used.
+ * @return Whether configuration value was resolved
+ */
+extern bool iot_config_ui64 (const iot_data_t * map, const char * key, uint64_t * val, iot_logger_t * logger);
+
+/**
  * @brief Get mandatory int32_t configuration value and log error if cannot be resolved or is invalid
  *
  * @param map Configuration map
@@ -40,6 +51,17 @@ extern bool iot_config_i64 (const iot_data_t * map, const char * key, int64_t * 
  * @return Whether configuration value was resolved
  */
 extern bool iot_config_i32 (const iot_data_t * map, const char * key, int32_t * val, iot_logger_t * logger);
+
+/**
+ * @brief Get mandatory uint32_t configuration value and log error if cannot be resolved or is invalid
+ *
+ * @param map Configuration map
+ * @param key Configuration key
+ * @param val Pointer to uint32_t configuration value to set if found
+ * @param logger Logger used to log if configuration not found. If not set, default logger is used.
+ * @return Whether configuration value was resolved
+ */
+extern bool iot_config_ui32 (const iot_data_t * map, const char * key, uint32_t * val, iot_logger_t * logger);
 
 /**
  * @brief Get mandatory string configuration value and log error if cannot be resolved.

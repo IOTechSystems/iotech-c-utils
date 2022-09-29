@@ -51,7 +51,7 @@ void iot_component_add_ref (iot_component_t * component)
 
 bool iot_component_dec_ref (iot_component_t * component)
 {
-  return (atomic_fetch_sub (&component->refs, 1u) <= 1);
+  return (atomic_fetch_sub (&component->refs, 1u) <= 1u);
 }
 
 static bool iot_component_set_state (iot_component_t * component, uint32_t state)

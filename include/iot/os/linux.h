@@ -39,4 +39,9 @@
 #undef IOT_HAS_UUID
 #endif
 
+#ifdef _YOCTO_MUSL_
+#undef IOT_HAS_CPU_AFFINITY
+#undef IOT_HAS_UUID
+#endif
+
 #endif

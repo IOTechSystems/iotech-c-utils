@@ -29,7 +29,7 @@ struct iot_schedule_t
   iot_threadpool_t * threadpool;     /* Thread pool used to run scheduled function */
   int priority;                      /* Schedule priority (pool override) */
   uint64_t period;                   /* The period of the schedule, in ns */
-  uint64_t start;                    /* The start time of the schedule, in ns, */
+  uint64_t start;                    /* The start time of the schedule, in ns */
   uint64_t repeat;                   /* The number of repetitions, 0 == infinite */
   uint64_t id;                       /* Schedule unique id */
   iot_data_t * id_key;               /* Data wrapper for schedule id used as key for idle map */
@@ -236,7 +236,7 @@ static void iot_schedule_free (iot_schedule_t * schedule)
 }
 
 /* Create a schedule and insert it into the idle queue */
-iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
+iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t delay, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
   static _Atomic uint64_t schedule_id_counter = 0;
 
@@ -246,7 +246,7 @@ iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_
   schedule->freefn = free_func;
   schedule->arg = arg;
   schedule->period = period;
-  schedule->start = iot_time_nsecs () + start;
+  schedule->start = iot_time_nsecs () + delay;
   schedule->repeat = repeat;
   schedule->threadpool = pool;
   schedule->priority = priority;
@@ -254,7 +254,7 @@ iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_
   schedule->id_key = iot_data_alloc_ui64 (schedule->id);
   schedule->self = iot_data_alloc_const_pointer (&(schedule->self_static), schedule);
   schedule->start_key = iot_data_alloc_ui64 (schedule->start);
-  iot_log_trace (scheduler->logger, "iot_schedule_create #%" PRIu64 " (period: %" PRId64 " repeat: %" PRId64 ")", schedule->id, period, repeat);
+  iot_log_trace (scheduler->logger, "iot_schedule_create #%" PRIu64 " (period: %"PRId64" repeat: %"PRId64" delay: %"PRId64")", schedule->id, period, repeat, delay);
   iot_threadpool_add_ref (pool);
   iot_component_lock (&scheduler->component);
   iot_schedule_idle_add (scheduler, schedule);
@@ -300,14 +300,14 @@ bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule
 }
 
 /* Reset schedule timeout */
-void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
+void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule, uint64_t delay)
 {
   assert (scheduler && schedule);
-  iot_log_trace (scheduler->logger, "iot_schedule_reset #%" PRIu64, schedule->id);
+  iot_log_trace (scheduler->logger, "iot_schedule_reset #%"PRIu64" delay: %"PRIu64, schedule->id, delay);
   iot_component_lock (&scheduler->component);
 
   /* Recalculate the next start time for the schedule */
-  uint64_t next = schedule->period + iot_time_nsecs ();
+  uint64_t next = schedule->period + iot_time_nsecs () + delay;
   if (schedule->scheduled)
   {
     bool front = iot_schedule_queue_update (scheduler, schedule, next);
@@ -326,7 +326,6 @@ void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 void iot_schedule_add_run_callback (iot_scheduler_t * scheduler, iot_schedule_t * schedule, iot_schedule_fn_t func)
 {
   assert (scheduler && schedule);
-  iot_log_trace (scheduler->logger, "iot_schedule_reset()");
   iot_component_lock (&scheduler->component);
   schedule->run_cb = func;
   iot_component_unlock (&scheduler->component);
@@ -335,7 +334,6 @@ void iot_schedule_add_run_callback (iot_scheduler_t * scheduler, iot_schedule_t 
 void iot_schedule_add_abort_callback (iot_scheduler_t * scheduler, iot_schedule_t * schedule, iot_schedule_fn_t func)
 {
   assert (scheduler && schedule);
-  iot_log_trace (scheduler->logger, "iot_schedule_reset()");
   iot_component_lock (&scheduler->component);
   schedule->abort_cb = func;
   iot_component_unlock (&scheduler->component);

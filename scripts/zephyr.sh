@@ -7,7 +7,7 @@ TARGETS="frdm_k64f qemu_x86 acrn"
 
 if [ -z "${TARGET}" ] || [ "${TARGET}" = "None" ]
 then
-  echo "Zephyr Target BOARD not set"
+  echo "Zephyr Target not set"
   exit 1
 fi
 if [ "${TARGET}" = "all" ]
@@ -38,10 +38,10 @@ do
   esac
 done
 
-build_board()
+build_board ()
 {
-  export BOARD=$1
-  export CONF_FILE="${ROOT}/src/etc/zephyr/prj-${BOARD}.conf"
+  export TARG=$1
+  export CONF_FILE="${ROOT}/src/etc/zephyr/prj-${TARG}.conf"
   mkdir -p "${BROOT}/release"
   cd "${BROOT}/release"
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "${ROOT}/src/c/zephyr/lib"

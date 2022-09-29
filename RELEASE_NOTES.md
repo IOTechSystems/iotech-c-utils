@@ -165,6 +165,7 @@
 * `iot_data_map_get_map`
 * `iot_data_map_get_list`
 * `iot_data_map_get_pointer`
+* `iot_data_map_get_typed`
 
 - Added functions to determine if current list, map, array or vector iterator has a next element:
 
@@ -199,9 +200,10 @@
 
 * `iot_data_cast`
 
-- Functions added for the creation of static const data string values and to determine if statically allocated:
+- Functions added for the creation of static const data string and pointer values and to determine if statically allocated:
 
 * `iot_data_alloc_const_string`
+* `iot_data_alloc_const_pointer`
 * `iot_data_is_static`
 
 - Function added to return data hash value:
@@ -248,3 +250,71 @@
 - Support removed for AzureSphere API 8 and 10
 - #216 Fix for calling `iot_data_alloc_from_string` with empty string
 - Data metadata set and get functions updated to take a key value
+
+## Version 1.3.1
+
+- Support added for OpenSUSE 15.4
+- Shallow copy function added:
+
+* `iot_data_shallow_copy`
+
+- Functions added to support nested maps and vectors:
+
+* `iot_data_get_at`
+* `iot_data_add_at`
+* `iot_data_remove_at`
+* `iot_data_update_at`
+
+- Function added to compact a vector (removing NULL elements):
+
+* `iot_data_vector_compact`
+
+- Fix `iot_data_from_json` handling of unicode strings
+- Conversion functions added for array and binary data types
+
+* `iot_data_array_to_binary`
+* `iot_data_binary_to_array`
+
+- Function added for the creation of static const data list values:
+
+* `iot_data_alloc_const_list`
+
+## Version 1.3.2
+
+- Additional range checking added for `iot_data_alloc_from_string` function
+- Support removed for Alpine Linux 3.14 and added for v3.16
+- Functions added to remove all elements from a list or map
+
+* `iot_data_list_empty`
+* `iot_data_map_empty`
+
+## Version 1.3.3
+
+- Support removed for Fedora 35 and added for Fedora 36
+- Support removed for AzureSphere API 11
+- Support removed for OpenSUSE 15.3
+
+- Functions added to access typed data in maps
+
+* `iot_data_map_get_ui64`
+* `iot_data_string_map_get_ui64`
+
+- Functions added to access data from configurations
+
+* `iot_config_ui32`
+* `iot_config_ui64`
+
+- Functions added to return numeric values from maps
+
+* `iot_data_map_get_number`
+* `iot_data_string_map_get_number`
+* `iot_data_map_get_int`
+* `iot_data_string_map_get_int`
+
+## Version 1.3.4
+
+- Support added for RISC-V on 32/64 bit OE and Intel Pathfinder targets (rv64i, rv32i, rv64id, rv32id)
+
+## Version 1.4.0
+
+- `iot_schedule_reset` function updated to take a start delay parameter
