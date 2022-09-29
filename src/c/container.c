@@ -296,7 +296,7 @@ void iot_container_free (iot_container_t * cont)
   }
 }
 
-static void iot_container_running (iot_container_t * cont)
+static void iot_container_running (const iot_container_t * cont)
 {
   static const uint64_t sleep_msecs = IOT_CONTAINER_RUN_WAIT_MS;
   iot_data_list_iter_t iter;
