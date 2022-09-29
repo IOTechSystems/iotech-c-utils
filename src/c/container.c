@@ -71,13 +71,17 @@ static iot_data_t * iot_component_config_to_map (const char * config, iot_logger
 
 static void iot_component_create (iot_container_t * cont, const char *cname, const iot_component_factory_t * factory, const char * config)
 {
-  iot_data_t * map = iot_component_config_to_map (config, cont->logger);
   iot_component_t * comp = NULL;
+  iot_data_t * map = iot_component_config_to_map (config, cont->logger);
+
   if (map == NULL) goto ERROR;
   comp = (factory->config_fn) (cont, map);
-  iot_data_free (map);
-  if (comp == NULL) goto ERROR;
-
+  if (comp == NULL)
+  {
+    iot_data_free (map);
+    goto ERROR;
+  }
+  comp->config = map;
   comp->name = strdup (cname);
   comp->factory = factory;
   iot_data_list_head_push (cont->components, iot_data_alloc_pointer (comp, iot_component_free));
@@ -161,7 +165,7 @@ static bool iot_container_typed_load (iot_container_t * cont, const char * cname
     const iot_component_factory_t *factory = iot_component_factory_find (ctype);
     if (factory)
     {
-      char *config = (iot_config->load) (cname, iot_config->uri);
+      char * config = (iot_config->load) (cname, iot_config->uri);
       if (config)
       {
         iot_component_create (cont, cname, factory, config);
@@ -196,13 +200,13 @@ static bool iot_container_load_locked (iot_container_t * cont, const char * cnam
     if (!loading)
     {
       iot_load_in_progress = &this;
-      char *config = (iot_config->load) (cont->name, iot_config->uri);
-      iot_data_t *map = iot_component_config_to_map (config, cont->logger);
+      char * config = (iot_config->load) (cont->name, iot_config->uri);
+      iot_data_t * map = iot_component_config_to_map (config, cont->logger);
       free (config);
 
       if (map)
       {
-        const char *ctype = iot_data_string_map_get_string (map, cname);
+        const char * ctype = iot_data_string_map_get_string (map, cname);
         if (ctype) result = iot_container_typed_load (cont, cname, ctype);
       }
       iot_data_free (map);

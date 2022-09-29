@@ -40,6 +40,7 @@ bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont
 void iot_component_fini (iot_component_t * component)
 {
   free (component->name);
+  iot_data_free (component->config);
   pthread_cond_destroy (&component->cond);
   pthread_mutex_destroy (&component->mutex);
 }

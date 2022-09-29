@@ -85,6 +85,7 @@ struct iot_component_t
   iot_component_stop_fn_t stop_fn;          /**< Pointer to function that handles stopping a component */
   iot_component_running_fn_t running_fn;    /**< Pointer to function callback made when all components are running */
   atomic_int_fast32_t refs;                 /**< Current reference count */
+  iot_data_t * config;                      /**< Parsed configuration */
   const iot_component_factory_t * factory;  /**< Pointer to component factory structure */
 };
 
