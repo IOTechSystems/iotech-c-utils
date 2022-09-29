@@ -4023,6 +4023,8 @@ static void test_data_const_list (void)
   CU_ASSERT (iot_data_list_length (list) == 1u)
   iot_data_list_tail_push (list, str);
   CU_ASSERT (iot_data_list_length (list) == 2u)
+  iot_data_list_empty (list);
+  CU_ASSERT (iot_data_list_length (list) == 0u)
   iot_data_free (list);
   iot_data_free (list);
 
