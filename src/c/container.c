@@ -303,7 +303,7 @@ static void iot_container_running (iot_container_t * cont)
   iot_component_t * comp;
   unsigned tries = 0u;
 
-  // Wait for all components to start
+  // Timeout wait for all components to start
   while (true)
   {
     iot_data_list_iter (cont->components, &iter);
