@@ -429,6 +429,7 @@ static void iot_component_info_free (void * val)
   iot_component_info_t * info = val;
   if (info)
   {
+    iot_data_free (info->config);
     free (info->name);
     free (info->type);
     free (info);
@@ -449,6 +450,7 @@ iot_data_t * iot_container_list_components (iot_container_t * cont)
     info->name = strdup (comp->name);
     info->type = strdup (comp->factory->type);
     info->state = comp->state;
+    info->config = iot_data_add_ref (comp->config);
     iot_data_map_add (map, iot_data_alloc_string (info->name, IOT_DATA_REF), iot_data_alloc_pointer (info, iot_component_info_free));
   }
   pthread_rwlock_unlock (&cont->lock);
