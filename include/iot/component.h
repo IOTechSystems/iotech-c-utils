@@ -105,7 +105,7 @@ extern void iot_component_init (iot_component_t * component, const iot_component
 /**
  * @brief Set component callback function, called when all container components are up (started)
  *
- * The function to initialise the component
+ * The function to register a running callback handler with the component
  *
  * @param component  Pointer to the component
  * @param fn         Function pointer to the component running function
