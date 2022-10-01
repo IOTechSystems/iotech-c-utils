@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2020-2022
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -25,6 +25,12 @@ void iot_component_init (iot_component_t * component, const iot_component_factor
   atomic_store (&component->refs, 1u);
 }
 
+void iot_component_set_running_callback (iot_component_t * component, iot_component_running_fn_t fn)
+{
+  assert (component && fn);
+  component->running_fn = fn;
+}
+
 bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont, const iot_data_t * map)
 {
   assert (component && cont && map);
@@ -34,6 +40,7 @@ bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont
 void iot_component_fini (iot_component_t * component)
 {
   free (component->name);
+  iot_data_free (component->config);
   pthread_cond_destroy (&component->cond);
   pthread_mutex_destroy (&component->mutex);
 }

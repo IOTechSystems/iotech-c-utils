@@ -68,7 +68,7 @@ int main (int argc, char ** argv)
       dup_vectors++;
     }
   }
-  printf ("Cache size: %d\n", iot_data_map_size (cache));
+  printf ("Cache size: %" PRIu32 "\n", iot_data_map_size (cache));
   printf ("Cached Strings: # %" PRIu32 "\n", dup_strings);
   printf ("Cached Maps: # %" PRIu32 "\n", dup_maps);
   printf ("Cached Ints: # %" PRIu32 "\n", dup_ints);
