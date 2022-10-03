@@ -37,17 +37,6 @@ typedef enum
   IOT_COMPONENT_STARTING = 8u  /**< Starting transient component state */
 } iot_component_state_t;
 
-/**
- * Component info struct
- */
-typedef struct iot_component_info_t
-{
-  char * name;                        /**< The component name */
-  char * type;                        /**< The component type name */
-  iot_data_t * config;                /**< The parsed component configuration */
-  iot_component_state_t state;        /**< The component state */
-} iot_component_info_t;
-
 /** Type definition for component configuration function pointer */
 typedef iot_component_t * (*iot_component_config_fn_t) (iot_container_t * cont, const iot_data_t * map);
 /** Type definition for component reconfiguration function pointer */

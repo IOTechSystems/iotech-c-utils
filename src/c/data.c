@@ -46,13 +46,10 @@
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
 static _Thread_local bool iot_data_alloc_from_heap = false; /* Thread specific memory allocation policy */
+static iot_data_static_t iot_data_order = { 0 };
+static const char * iot_data_const_strings [] = { "config","name","state","type",NULL };
 
-typedef struct iot_data_consts_t
-{
-  iot_data_static_t order_key;
-} iot_data_consts_t;
-
-static iot_data_consts_t iot_data_consts = { .order_key = { NULL } };
+iot_data_consts_t iot_data_consts = { 0 };
 
 typedef enum iot_node_colour_t
 {
@@ -478,7 +475,10 @@ void iot_data_init (void)
   pthread_mutex_init (&iot_data_mutex, NULL);
   iot_data_block_free (iot_data_block_alloc ());  // Initialize data cache
 #endif
-  iot_data_alloc_const_pointer (&iot_data_consts.order_key, &iot_data_consts.order_key);
+  iot_data_alloc_const_pointer (&iot_data_order, &iot_data_order);
+  const char ** str = iot_data_const_strings;
+  iot_data_static_t * ptr = (iot_data_static_t*) &iot_data_consts;
+  while (*str) iot_data_alloc_const_string (ptr++, *str++);
   atexit (iot_data_fini);
 }
 
@@ -2488,7 +2488,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     }
     case IOT_DATA_MAP:
     {
-      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (iot_data_consts.order_key));
+      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (iot_data_order));
       iot_data_map_iter_t iter;
       iot_data_vector_iter_t vec_iter = { 0 };
       bool first = true;
@@ -2688,7 +2688,7 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
     if (ordered) iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
     iot_data_map_add (map, key, iot_data_value_from_json (tokens, json, ordered, cache));
   }
-  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (iot_data_consts.order_key));
+  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (iot_data_order));
   return map;
 }
 

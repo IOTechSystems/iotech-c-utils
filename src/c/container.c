@@ -424,35 +424,42 @@ void iot_container_delete_component (iot_container_t * cont, const char * name)
   pthread_rwlock_unlock (&cont->lock);
 }
 
-static void iot_component_info_free (void * val)
+static iot_data_t * iot_container_component_data_locked (const iot_component_t * comp)
 {
-  iot_component_info_t * info = val;
-  if (info)
-  {
-    iot_data_free (info->config);
-    free (info->name);
-    free (info->type);
-    free (info);
-  }
+  iot_data_t * data = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.name), iot_data_alloc_string (comp->name, IOT_DATA_REF));
+  iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.type), iot_data_alloc_string (comp->factory->type, IOT_DATA_REF));
+  iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.state), iot_data_alloc_ui32 ((uint32_t) comp->state));
+  iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.config), iot_data_add_ref (comp->config));
+  return data;
 }
 
 iot_data_t * iot_container_list_components (iot_container_t * cont)
 {
   assert (cont);
-  iot_data_t * map = iot_data_alloc_typed_map (IOT_DATA_STRING, IOT_DATA_POINTER);
-  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_t * list = iot_data_alloc_list ();
   iot_data_list_iter_t iter;
+  pthread_rwlock_rdlock (&cont->lock);
   iot_data_list_iter (cont->components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
-    const iot_component_t * comp = iot_data_list_iter_pointer_value (&iter);
-    iot_component_info_t * info = malloc (sizeof (*info));
-    info->name = strdup (comp->name);
-    info->type = strdup (comp->factory->type);
-    info->state = comp->state;
-    info->config = iot_data_add_ref (comp->config);
-    iot_data_map_add (map, iot_data_alloc_string (info->name, IOT_DATA_REF), iot_data_alloc_pointer (info, iot_component_info_free));
+    iot_data_t * data = iot_container_component_data_locked (iot_data_list_iter_pointer_value (&iter));
+    iot_data_list_tail_push (list, data);
   }
   pthread_rwlock_unlock (&cont->lock);
-  return map;
+  return list;
+}
+
+iot_data_t * iot_container_get_component_data (iot_container_t * cont, const char * name)
+{
+  assert (cont);
+  iot_data_t * data = NULL;
+  if (name)
+  {
+    pthread_rwlock_rdlock (&cont->lock);
+    const iot_component_t * comp = iot_container_find_component_locked (cont, name);
+    if (comp) data = iot_container_component_data_locked (comp);
+    pthread_rwlock_unlock (&cont->lock);
+  }
+  return data;
 }

@@ -29,15 +29,19 @@ int main (void)
   iot_container_start (container);
 
   /* list components state */
-  iot_data_t * map = iot_container_list_components (container);
-  iot_data_map_iter_t iter;
-  iot_data_map_iter (map, &iter);
-  while (iot_data_map_iter_next (&iter))
+  iot_data_t * list = iot_container_list_components (container);
+  iot_data_list_iter_t iter;
+  iot_data_list_iter (list, &iter);
+  while (iot_data_list_iter_next (&iter))
   {
-    const iot_component_info_t * info = iot_data_map_iter_pointer_value (&iter);
-    printf ("Component: %s type: %s state: %s\n", info->name, info->type, iot_component_state_name (info->state));
+    const iot_data_t * map = iot_data_list_iter_value  (&iter);
+    const char * name = iot_data_string_map_get_string (map, "name");
+    const char * type = iot_data_string_map_get_string (map, "type");
+    int state;
+    iot_data_string_map_get_int (map, "state", &state);
+    printf ("Component: %s type: %s state: %s\n", name, type, iot_component_state_name (state));
   }
-  iot_data_free (map);
+  iot_data_free (list);
 
   iot_wait_secs (5u);
 

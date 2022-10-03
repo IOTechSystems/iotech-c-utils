@@ -134,12 +134,21 @@ extern iot_component_t * iot_container_find_component (iot_container_t * cont, c
 extern void iot_container_delete_component (iot_container_t * cont, const char * name);
 
 /**
- * @brief List the components within a container
+ * @brief List state of all components
  *
  * @param cont  Pointer to a container
- * @return      String map of component info, keyed by component name
+ * @return      List of maps of component data, with keys "name", "type", "state" and "config"
  */
 extern iot_data_t * iot_container_list_components (iot_container_t * cont);
+
+/**
+ * @brief Get state of named component
+ *
+ * @param cont  Pointer to a container
+ * @param name  Component name
+ * @return      Data map, with keys "name", "type", "state" and "config"
+ */
+extern iot_data_t * iot_container_get_component_data (iot_container_t * cont, const char * name);
 
 #ifdef __cplusplus
 }
