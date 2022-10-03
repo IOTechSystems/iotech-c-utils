@@ -85,6 +85,18 @@ typedef void * iot_data_list_static_t [4u + 8u/sizeof (void*)];
 */
 #define IOT_DATA_STATIC(s) ((iot_data_t*) (s))
 
+/** Type for set of data string constant values */
+typedef struct iot_data_consts_t
+{
+  iot_data_static_t config;  /**< constant "config" string */
+  iot_data_static_t name;    /**< constant "name" string */
+  iot_data_static_t state;   /**< constant "state" string */
+  iot_data_static_t type;    /**< constant "type" string */
+} iot_data_consts_t;
+
+/** Set of constant data stringvalues */
+extern iot_data_consts_t iot_data_consts;
+
 /**
  * Type for data map iterator structure. Do not use struct members directly.
  */
