@@ -148,7 +148,7 @@ extern iot_data_t * iot_container_list_components (iot_container_t * cont);
  * @param name  Component name
  * @return      Data map, with keys "name", "type", "state" and "config"
  */
-extern iot_data_t * iot_container_get_component_data (iot_container_t * cont, const char * name);
+extern iot_data_t * iot_container_component_read (iot_container_t * cont, const char * name);
 
 #ifdef __cplusplus
 }

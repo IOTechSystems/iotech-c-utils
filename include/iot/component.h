@@ -254,6 +254,14 @@ extern const iot_component_factory_t * iot_component_factory_find (const char * 
  */
 extern const char * iot_component_state_name (iot_component_state_t state);
 
+/**
+ * @brief Get state of component
+ *
+ * @param component  Pointer to component
+ * @return           Data map, with keys "name", "type", "state" and "config"
+ */
+extern iot_data_t * iot_component_read (iot_component_t * component);
+
 #ifdef __cplusplus
 }
 #endif
