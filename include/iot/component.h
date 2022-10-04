@@ -260,7 +260,7 @@ extern const char * iot_component_state_name (iot_component_state_t state);
  * @param component  Pointer to component
  * @return           Data map, with keys "name", "type", "state" and "config"
  */
-extern iot_data_t * iot_component_read (const iot_component_t * component);
+extern iot_data_t * iot_component_read (iot_component_t * component);
 
 #ifdef __cplusplus
 }
