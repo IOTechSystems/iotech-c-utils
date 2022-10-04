@@ -433,7 +433,7 @@ iot_data_t * iot_container_list_components (iot_container_t * cont)
   iot_data_list_iter (cont->components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
-    iot_data_list_tail_push (list, iot_component_read (iot_data_list_iter_pointer_value (&iter)));
+    iot_data_list_tail_push (list, iot_component_read ((iot_component_t*) iot_data_list_iter_pointer_value (&iter)));
   }
   pthread_rwlock_unlock (&cont->lock);
   return list;
