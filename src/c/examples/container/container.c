@@ -37,9 +37,8 @@ int main (void)
     const iot_data_t * map = iot_data_list_iter_value  (&iter);
     const char * name = iot_data_string_map_get_string (map, "name");
     const char * type = iot_data_string_map_get_string (map, "type");
-    int state;
-    iot_data_string_map_get_int (map, "state", &state);
-    printf ("Component: %s type: %s state: %s\n", name, type, iot_component_state_name (state));
+    const char * state = iot_data_string_map_get_string (map, "state");
+    printf ("Component: %s type: %s state: %s\n", name, type, state);
   }
   iot_data_free (list);
 

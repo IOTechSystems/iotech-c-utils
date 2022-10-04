@@ -320,3 +320,4 @@
 - `iot_schedule_reset` function updated to take a start delay parameter
 - Support added for optional component callback, invoked when all components running
 - Component configuration cache added
+- `iot_container_get_component_data` function added to return metadata about a named component
