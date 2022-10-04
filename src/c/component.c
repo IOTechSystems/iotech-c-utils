@@ -130,7 +130,7 @@ bool iot_component_set_starting (iot_component_t * component)
   return iot_component_set_state (component, IOT_COMPONENT_STARTING);
 }
 
-extern iot_data_t * iot_component_read (const iot_component_t * component)
+extern iot_data_t * iot_component_read (iot_component_t * component)
 {
   assert (component);
   iot_data_t * data = iot_data_alloc_map (IOT_DATA_STRING);

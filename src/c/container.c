@@ -446,7 +446,7 @@ iot_data_t * iot_container_component_read (iot_container_t * cont, const char * 
   if (name)
   {
     pthread_rwlock_rdlock (&cont->lock);
-    const iot_component_t * comp = iot_container_find_component_locked (cont, name);
+    iot_component_t * comp = (iot_component_t*) iot_container_find_component_locked (cont, name);
     if (comp) data = iot_component_read (comp);
     pthread_rwlock_unlock (&cont->lock);
   }
