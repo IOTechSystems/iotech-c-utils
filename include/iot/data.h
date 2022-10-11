@@ -88,10 +88,11 @@ typedef void * iot_data_list_static_t [4u + 8u/sizeof (void*)];
 /** Type for set of data string constant values */
 typedef struct iot_data_consts_t
 {
-  iot_data_static_t config;  /**< constant "config" string */
-  iot_data_static_t name;    /**< constant "name" string */
-  iot_data_static_t state;   /**< constant "state" string */
-  iot_data_static_t type;    /**< constant "type" string */
+  iot_data_static_t category; /**< constant "category" string */
+  iot_data_static_t config;   /**< constant "config" string */
+  iot_data_static_t name;     /**< constant "name" string */
+  iot_data_static_t state;    /**< constant "state" string */
+  iot_data_static_t type;     /**< constant "type" string */
 } iot_data_consts_t;
 
 /** Set of constant data stringvalues */

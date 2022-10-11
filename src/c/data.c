@@ -47,7 +47,7 @@ static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int1
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
 static _Thread_local bool iot_data_alloc_from_heap = false; /* Thread specific memory allocation policy */
 static iot_data_static_t iot_data_order = { 0 };
-static const char * iot_data_const_strings [] = { "config","name","state","type",NULL };
+static const char * iot_data_const_strings [] = { "category","config","name","state","type",NULL };
 
 iot_data_consts_t iot_data_consts = { 0 };
 
