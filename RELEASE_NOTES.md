@@ -322,3 +322,4 @@
 - Component configuration cache added
 - `iot_container_component_read` function added to return metadata about a named component
 - `iot_component_read` function added to return metadata about a component
+- Support added for setting component categories

@@ -25,6 +25,11 @@ typedef struct iot_container_t iot_container_t;
 /** Type definition for component factory structure */
 typedef struct iot_component_factory_t iot_component_factory_t;
 
+/** Core component category  */
+#define IOT_CATEGORY_CORE "IOT::Core"
+/** User component category  */
+#define IOT_CATEGORY_USER "IOT::User"
+
 /**
  * Component state enumeration
  */
@@ -59,6 +64,7 @@ struct iot_component_factory_t
   iot_component_config_fn_t config_fn;     /**< Pointer to function that handles component configuration */
   iot_component_free_fn_t free_fn;         /**< Pointer to function that handles the freeing of a component */
   iot_component_reconfig_fn_t reconfig_fn; /**< Pointer to function that handles component reconfiguration */
+  const char * const category;             /**< Component category */
   const iot_component_factory_t * next;    /**< Pointer to next component factory structure */
 };
 

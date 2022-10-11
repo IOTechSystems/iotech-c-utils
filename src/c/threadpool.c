@@ -372,7 +372,7 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
 
 const iot_component_factory_t * iot_threadpool_factory (void)
 {
-  static iot_component_factory_t factory = { IOT_THREADPOOL_TYPE, iot_threadpool_config, (iot_component_free_fn_t) iot_threadpool_free, NULL};
+  static iot_component_factory_t factory = { IOT_THREADPOOL_TYPE, iot_threadpool_config, (iot_component_free_fn_t) iot_threadpool_free, NULL, IOT_CATEGORY_CORE, NULL };
   return &factory;
 }
 #endif
