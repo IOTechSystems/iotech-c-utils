@@ -136,10 +136,11 @@ extern void iot_container_delete_component (iot_container_t * cont, const char *
 /**
  * @brief List state of all components
  *
- * @param cont  Pointer to a container
- * @return      List of maps of component data, with keys "name", "type", "state" and "config"
+ * @param cont     Pointer to a container
+ * @param category Category name of component to list. If NULL all components are listed
+ * @return         List of maps of component data, with keys "name", "type", "state" and "config"
  */
-extern iot_data_t * iot_container_list_components (iot_container_t * cont);
+extern iot_data_t * iot_container_list_components (iot_container_t * cont, const char * category);
 
 /**
  * @brief Get state of named component

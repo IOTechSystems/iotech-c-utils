@@ -424,7 +424,7 @@ void iot_container_delete_component (iot_container_t * cont, const char * name)
   pthread_rwlock_unlock (&cont->lock);
 }
 
-iot_data_t * iot_container_list_components (iot_container_t * cont)
+iot_data_t * iot_container_list_components (iot_container_t * cont, const char * category)
 {
   assert (cont);
   iot_data_t * list = iot_data_alloc_list ();
@@ -433,7 +433,11 @@ iot_data_t * iot_container_list_components (iot_container_t * cont)
   iot_data_list_iter (cont->components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
-    iot_data_list_tail_push (list, iot_component_read ((iot_component_t*) iot_data_list_iter_pointer_value (&iter)));
+    const iot_component_t * comp = iot_data_list_iter_pointer_value (&iter);
+    if ((category == NULL) || (strcmp (category, comp->factory->category) == 0)) // Filter on category if set
+    {
+      iot_data_list_tail_push (list, iot_component_read ((iot_component_t*) comp));
+    }
   }
   pthread_rwlock_unlock (&cont->lock);
   return list;

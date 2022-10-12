@@ -29,7 +29,7 @@ int main (void)
   iot_container_start (container);
 
   /* list components state */
-  iot_data_t * list = iot_container_list_components (container);
+  iot_data_t * list = iot_container_list_components (container, NULL);
   iot_data_list_iter_t iter;
   iot_data_list_iter (list, &iter);
   while (iot_data_list_iter_next (&iter))
