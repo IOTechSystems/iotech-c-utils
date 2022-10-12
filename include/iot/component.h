@@ -61,10 +61,10 @@ typedef void (*iot_component_running_fn_t) (iot_component_t * comp, bool timeout
 struct iot_component_factory_t
 {
   const char * const type;                 /**< Indicates the type of a component */
+  const char * const category;             /**< Component category */
   iot_component_config_fn_t config_fn;     /**< Pointer to function that handles component configuration */
   iot_component_free_fn_t free_fn;         /**< Pointer to function that handles the freeing of a component */
   iot_component_reconfig_fn_t reconfig_fn; /**< Pointer to function that handles component reconfiguration */
-  const char * const category;             /**< Component category */
   const iot_component_factory_t * next;    /**< Pointer to next component factory structure */
 };
 
