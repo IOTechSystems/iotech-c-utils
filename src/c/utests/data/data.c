@@ -4973,11 +4973,11 @@ static void test_data_is_nan (void)
   iot_data_free (double_nan);
 
   iot_data_t *float_not_nan = iot_data_alloc_f32 (123.456f);
-  CU_ASSERT (iot_data_is_nan(float_not_nan));
+  CU_ASSERT_FALSE (iot_data_is_nan(float_not_nan));
   iot_data_free (float_not_nan);
 
   iot_data_t *double_not_nan = iot_data_alloc_f64 (123.456);
-  CU_ASSERT (iot_data_is_nan(double_not_nan));
+  CU_ASSERT_FALSE (iot_data_is_nan(double_not_nan));
   iot_data_free (double_not_nan);
 
   iot_data_t *non_float_type = iot_data_alloc_i32 (0);
