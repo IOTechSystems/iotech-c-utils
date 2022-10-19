@@ -4962,6 +4962,29 @@ static void test_binary_to_array (void)
   iot_data_free (binary);
 }
 
+static void test_data_is_nan (void)
+{
+  iot_data_t *float_nan = iot_data_alloc_f32 (NAN);
+  CU_ASSERT (iot_data_is_nan(float_nan));
+  iot_data_free (float_nan);
+
+  iot_data_t *double_nan = iot_data_alloc_f64 (NAN);
+  CU_ASSERT (iot_data_is_nan(double_nan));
+  iot_data_free (double_nan);
+
+  iot_data_t *float_not_nan = iot_data_alloc_f32 (123.456f);
+  CU_ASSERT (iot_data_is_nan(float_not_nan));
+  iot_data_free (float_not_nan);
+
+  iot_data_t *double_not_nan = iot_data_alloc_f64 (123.456);
+  CU_ASSERT (iot_data_is_nan(double_not_nan));
+  iot_data_free (double_not_nan);
+
+  iot_data_t *non_float_type = iot_data_alloc_i32 (0);
+  CU_ASSERT_FALSE (iot_data_is_nan(non_float_type));
+  iot_data_free (non_float_type);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -5122,6 +5145,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "test_update_at", test_update_at);
   CU_add_test (suite, "test_array_to_binary", test_array_to_binary);
   CU_add_test (suite, "test_binary_to_array", test_binary_to_array);
+  CU_add_test (suite, "test_data_is_nan", test_data_is_nan);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif
