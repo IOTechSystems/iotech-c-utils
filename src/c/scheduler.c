@@ -122,9 +122,9 @@ static void * iot_scheduler_thread (void * arg)
     state = scheduler->component.state;
     if (state != IOT_COMPONENT_RUNNING)
     {
-      iot_component_unlock (&scheduler->component);
       iot_log_debug (scheduler->logger, "Scheduler thread %s", (state == IOT_COMPONENT_DELETED) ? "terminating" : "stopping");
       if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
+      iot_component_unlock (&scheduler->component);
       continue; // Wait for thread to be restarted or deleted
     }
 
@@ -191,6 +191,7 @@ static void * iot_scheduler_thread (void * arg)
     nsToTimespec (next, &scheduler->schd_time); /* Calculate next execution time */
     iot_component_unlock (&scheduler->component);
   }
+  iot_component_unlock (&scheduler->component);
   return NULL;
 }
 
