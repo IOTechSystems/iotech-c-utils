@@ -231,6 +231,17 @@ extern bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type);
 extern bool iot_data_is_static (const iot_data_t * data);
 
 /**
+ * @brief Check if data instance has a value of NaN.
+ * 
+ * Floating point values can have a value of NaN. If the data instance is a 
+ * floating point type, then check if the value is NaN.
+ * 
+ * @param data Pointer to data
+ * @return     Whether the data is of the value NaN
+ */
+extern bool iot_data_is_nan (const iot_data_t *data);
+
+/**
  * @brief Get data type code
  *
  * Get the type code of data
