@@ -858,32 +858,34 @@ const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_cmp_fn 
   return element ? element->value : NULL;
 }
 
+static void iot_data_list_remove_element (iot_data_list_t * list, iot_element_t * element)
+{
+  iot_data_t * value = element->value;
+  if (element == list->head) // Remove from head of list
+  {
+    iot_data_list_head_pop ((iot_data_t*) list);
+  }
+  else if (element == list->tail) // Remove from tail of list
+  {
+    iot_data_list_tail_pop ((iot_data_t*) list);
+  }
+  else // Remove from middle of list
+  {
+    element->next->prev = element->prev;
+    element->prev->next = element->next;
+    list->head->length--;
+    list->base.rehash = true;
+    iot_element_free (element);
+  }
+  iot_data_free (value);
+}
+
 extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg)
 {
   assert (list && cmp);
   iot_data_list_t * impl = (iot_data_list_t*) list;
   iot_element_t * element = iot_data_list_find_element (impl, cmp, arg);
-  if (element)
-  {
-    iot_data_t * value = element->value;
-    if (element == impl->head) // Remove from head of list
-    {
-      iot_data_list_head_pop (list);
-    }
-    else if (element == impl->tail) // Remove from tail of list
-    {
-      iot_data_list_tail_pop (list);
-    }
-    else // Remove from middle of list
-    {
-      element->next->prev = element->prev;
-      element->prev->next = element->next;
-      impl->head->length--;
-      iot_element_free (element);
-      list->rehash = true;
-    }
-    iot_data_free (value);
-  }
+  if (element) iot_data_list_remove_element (impl, element);
   return (element != NULL);
 }
 
@@ -943,6 +945,19 @@ iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_
     iter->_element->value = value;
   }
   return res;
+}
+
+bool iot_data_list_iter_remove (iot_data_list_iter_t * iter)
+{
+  assert (iter && iter->_list);
+  iot_data_list_t * impl = (iot_data_list_t*) iter->_list;
+  iot_element_t * element = iter->_element;
+  if (element)
+  {
+    iot_data_list_iter_prev (iter);
+    iot_data_list_remove_element (impl, element);
+  }
+  return element != NULL;
 }
 
 void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value)
