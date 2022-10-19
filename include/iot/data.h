@@ -663,12 +663,19 @@ extern const char * iot_data_list_iter_string_value (const iot_data_list_iter_t 
 /**
  * @brief Get pointer value from the list referenced by an input iterator
  *
- * Get the pointer type value from the list referenced by an input iterator
- *
  * @param iter  Input iterator
  * @return      Pointer type value from the list if iter is valid, NULL otherwise
  */
 extern const void * iot_data_list_iter_pointer_value (const iot_data_list_iter_t * iter);
+
+/**
+ * @brief Remove the data associated with a list iterator. The list iterator is set to
+ * the previous list element.
+ *
+ * @param iter  List iterator
+ * @return      Returns whether iterator was associated with a data value
+ */
+extern bool iot_data_list_iter_remove (iot_data_list_iter_t * iter);
 
 /**
  * @brief Replace the value associated with a list iterator

@@ -324,3 +324,4 @@
 - `iot_component_read` function added to return metadata about a component
 - Support added for setting component categories
 - Added `iot_data_is_nan` utility function
+- Added `iot_data_list_iter_remove` function to remove an element associated with a list iterator
