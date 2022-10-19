@@ -323,4 +323,4 @@
 - `iot_container_component_read` function added to return metadata about a named component
 - `iot_component_read` function added to return metadata about a component
 - Support added for setting component categories
-- Addd `iot_data_is_nan` utility function
+- Added `iot_data_is_nan` utility function
