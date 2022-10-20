@@ -1072,7 +1072,11 @@ bool iot_data_is_nan (const iot_data_t *data)
   assert (data);
   iot_data_type_t type = iot_data_type (data);
   if (type != IOT_DATA_FLOAT32 && type != IOT_DATA_FLOAT64) return false;
+  #ifdef _AZURESPHERE_
+  return type == IOT_DATA_FLOAT32 ? iot_data_f32 (data) == iot_data_f32 (data) : iot_data_f64 (data) == iot_data_f64 (data);
+#else  
   return type == IOT_DATA_FLOAT32 ? isnanf (iot_data_f32 (data)) != 0 : isnan (iot_data_f64 (data)) != 0;
+#endif
 }
 
 static void iot_data_cache_add (iot_data_t * cache, iot_data_t ** data)
