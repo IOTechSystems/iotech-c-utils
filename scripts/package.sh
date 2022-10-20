@@ -97,7 +97,7 @@ case ${SYSTEM} in
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot \
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude lib \
+      --exclude *.so* \
       --depends iotech-iot-${PKG_VER}
 
     rm *.tar.gz
@@ -161,7 +161,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot \
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude lib ${UUID_DEV_DEP:+--depends ${UUID_DEV_DEP}} \
+      --exclude *.so* ${UUID_DEV_DEP:+--depends ${UUID_DEV_DEP}} \
       --depends iotech-iot-${PKG_VER}
 
     rm *.tar.gz
