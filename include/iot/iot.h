@@ -24,6 +24,7 @@
 #include "iot/thread.h"
 #include "iot/json.h"
 #include "iot/scheduler.h"
+#include "iot/util.h"
 
 #ifdef __cplusplus
 extern "C" {

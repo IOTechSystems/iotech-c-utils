@@ -106,6 +106,19 @@ static void test_hash (void)
   CU_ASSERT ( iot_hash_data ((uint8_t*) "binary", strlen ("binary")) == 2016023253)
 }
 
+static void test_uuid_string (void)
+{
+  CU_ASSERT (iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a0115390141"))
+  CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a011539014"))
+  CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07*0774-4a91-a33b-6a0115390141"))
+  CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774*4a91-a33b-6a0115390141"))
+  CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91*a33b-6a0115390141"))
+  CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b*6a0115390141"))
+  CU_ASSERT (! iot_util_string_is_uuid ("j79ebe07-0774-4a91-a33b-6a0115390141"))
+  CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a011539014-"))
+  CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a011539014y"))
+}
+
 #ifdef IOT_HAS_FILE
 
 #define TEST_FILE_NAME "/tmp/iot_test.txt"
@@ -145,6 +158,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "time_nsecs", test_time_nsecs);
   CU_add_test (suite, "wait", test_wait);
   CU_add_test (suite, "hash", test_hash);
+  CU_add_test (suite, "uuid_string", test_uuid_string);
 #ifdef IOT_HAS_FILE
   CU_add_test (suite, "write_file", test_write_file);
   CU_add_test (suite, "read_file", test_read_file);
