@@ -318,3 +318,11 @@
 ## Version 1.4.0
 
 - `iot_schedule_reset` function updated to take a start delay parameter
+- Support added for optional component callback, invoked when all components running
+- Component configuration cache added
+- `iot_container_component_read` function added to return metadata about a named component
+- `iot_component_read` function added to return metadata about a component
+- Support added for setting component categories
+- Added `iot_data_is_nan` utility function
+- Added `iot_data_list_iter_remove` function to remove an element associated with a list iterator
+- Added `iot_util_string_is_uuid` function to check string for UUID format

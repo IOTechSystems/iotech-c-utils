@@ -85,6 +85,19 @@ typedef void * iot_data_list_static_t [4u + 8u/sizeof (void*)];
 */
 #define IOT_DATA_STATIC(s) ((iot_data_t*) (s))
 
+/** Type for set of data string constant values */
+typedef struct iot_data_consts_t
+{
+  iot_data_static_t category; /**< constant "category" string */
+  iot_data_static_t config;   /**< constant "config" string */
+  iot_data_static_t name;     /**< constant "name" string */
+  iot_data_static_t state;    /**< constant "state" string */
+  iot_data_static_t type;     /**< constant "type" string */
+} iot_data_consts_t;
+
+/** Set of constant data stringvalues */
+extern iot_data_consts_t iot_data_consts;
+
 /**
  * Type for data map iterator structure. Do not use struct members directly.
  */
@@ -216,6 +229,17 @@ extern bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type);
  * @return      Whether the data is statically allocated
  */
 extern bool iot_data_is_static (const iot_data_t * data);
+
+/**
+ * @brief Check if data instance has a value of NaN.
+ * 
+ * Floating point values can have a value of NaN. If the data instance is a 
+ * floating point type, then check if the value is NaN.
+ * 
+ * @param data Pointer to data
+ * @return     Whether the data is of the value NaN
+ */
+extern bool iot_data_is_nan (const iot_data_t *data);
 
 /**
  * @brief Get data type code
@@ -639,12 +663,19 @@ extern const char * iot_data_list_iter_string_value (const iot_data_list_iter_t 
 /**
  * @brief Get pointer value from the list referenced by an input iterator
  *
- * Get the pointer type value from the list referenced by an input iterator
- *
  * @param iter  Input iterator
  * @return      Pointer type value from the list if iter is valid, NULL otherwise
  */
 extern const void * iot_data_list_iter_pointer_value (const iot_data_list_iter_t * iter);
+
+/**
+ * @brief Remove the data associated with a list iterator. The list iterator is set to
+ * the previous list element.
+ *
+ * @param iter  List iterator
+ * @return      Returns whether iterator was associated with a data value
+ */
+extern bool iot_data_list_iter_remove (iot_data_list_iter_t * iter);
 
 /**
  * @brief Replace the value associated with a list iterator

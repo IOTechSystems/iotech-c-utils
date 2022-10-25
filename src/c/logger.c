@@ -322,7 +322,15 @@ static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont,
 
 const iot_component_factory_t * iot_logger_factory (void)
 {
-  static iot_component_factory_t factory = { IOT_LOGGER_TYPE, iot_logger_config, (iot_component_free_fn_t) iot_logger_free,  iot_logger_reconfig, NULL };
+  static iot_component_factory_t factory =
+  {
+    IOT_LOGGER_TYPE,
+    IOT_CATEGORY_CORE,
+    iot_logger_config,
+    (iot_component_free_fn_t) iot_logger_free,
+    iot_logger_reconfig,
+    NULL
+  };
   return &factory;
 }
 

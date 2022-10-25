@@ -122,9 +122,9 @@ static void * iot_scheduler_thread (void * arg)
     state = scheduler->component.state;
     if (state != IOT_COMPONENT_RUNNING)
     {
-      iot_component_unlock (&scheduler->component);
       iot_log_debug (scheduler->logger, "Scheduler thread %s", (state == IOT_COMPONENT_DELETED) ? "terminating" : "stopping");
       if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
+      iot_component_unlock (&scheduler->component);
       continue; // Wait for thread to be restarted or deleted
     }
 
@@ -191,6 +191,7 @@ static void * iot_scheduler_thread (void * arg)
     nsToTimespec (next, &scheduler->schd_time); /* Calculate next execution time */
     iot_component_unlock (&scheduler->component);
   }
+  iot_component_unlock (&scheduler->component);
   return NULL;
 }
 
@@ -404,7 +405,15 @@ static iot_component_t * iot_scheduler_config (iot_container_t * cont, const iot
 
 const iot_component_factory_t * iot_scheduler_factory (void)
 {
-  static iot_component_factory_t factory = { IOT_SCHEDULER_TYPE, iot_scheduler_config, (iot_component_free_fn_t) iot_scheduler_free, NULL };
+  static iot_component_factory_t factory =
+  {
+    IOT_SCHEDULER_TYPE,
+    IOT_CATEGORY_CORE,
+    iot_scheduler_config,
+    (iot_component_free_fn_t) iot_scheduler_free,
+    NULL,
+    NULL
+  };
   return &factory;
 }
 

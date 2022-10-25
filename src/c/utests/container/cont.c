@@ -20,6 +20,8 @@ static const char * logger_config =
   "\"Level\":\"Info\""
 "}";
 
+static bool running_called = false;
+
 static int suite_init (void)
 {
   return 0;
@@ -40,13 +42,20 @@ static void test_alloc (void)
   iot_container_free (cont2);
 }
 
+static void test_logger_running_callback (iot_component_t * comp, bool timeout)
+{
+  CU_ASSERT (! timeout)
+  running_called = true;
+}
+
 static void test_add_component (void)
 {
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
-  const iot_component_t * comp = iot_container_find_component (cont, "logger");
+  iot_component_t * comp = iot_container_find_component (cont, "logger");
+
   CU_ASSERT (comp != NULL)
   CU_ASSERT (comp && strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
   CU_ASSERT (comp && strcmp (comp->name, "logger") == 0)
@@ -57,7 +66,6 @@ static void test_add_component (void)
   cmp = iot_config_component (map, "Nope", cont, NULL);
   CU_ASSERT (cmp == NULL)
   iot_data_free (map);
-
   iot_container_free (cont);
 }
 
@@ -70,11 +78,13 @@ static void test_delete_component (void)
 
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp != NULL)
-  iot_component_set_starting (comp);
+  iot_component_set_running_callback (comp, test_logger_running_callback);
+  iot_container_start (cont);
   iot_container_delete_component (cont, "logger");
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp == NULL)
-
+  CU_ASSERT (running_called)
+  iot_container_stop (cont);
   iot_container_free (cont);
 }
 

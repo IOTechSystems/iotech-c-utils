@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2020 IOTech Ltd
+// Copyright (c) 2019-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -18,12 +18,17 @@
 extern "C" {
 #endif
 
-/** Alias for component structure */
+/** Type definition for component structure */
 typedef struct iot_component_t iot_component_t;
-/** Alias for container structure */
+/** Type definition for container structure */
 typedef struct iot_container_t iot_container_t;
-/** Alias for component factory structure */
+/** Type definition for component factory structure */
 typedef struct iot_component_factory_t iot_component_factory_t;
+
+/** Core component category  */
+#define IOT_CATEGORY_CORE "IOT::Core"
+/** User component category  */
+#define IOT_CATEGORY_USER "IOT::User"
 
 /**
  * Component state enumeration
@@ -37,26 +42,18 @@ typedef enum
   IOT_COMPONENT_STARTING = 8u  /**< Starting transient component state */
 } iot_component_state_t;
 
-/**
- * Component info struct
- */
-typedef struct iot_component_info_t
-{
-  char * name;                        /**< The component name */
-  char * type;                        /**< The component type name */
-  iot_component_state_t state;        /**< The component state */
-} iot_component_info_t;
-
-/** Alias for component configuration function pointer */
+/** Type definition for component configuration function pointer */
 typedef iot_component_t * (*iot_component_config_fn_t) (iot_container_t * cont, const iot_data_t * map);
-/** Alias for component reconfiguration function pointer */
+/** Type definition for component reconfiguration function pointer */
 typedef bool (*iot_component_reconfig_fn_t) (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map);
-/** Alias for component start function pointer */
+/** Type definition for component start function pointer */
 typedef void (*iot_component_start_fn_t) (iot_component_t * comp);
-/** Alias for component stop function pointer */
+/** Type definition for component stop function pointer */
 typedef void (*iot_component_stop_fn_t) (iot_component_t * comp);
-/** Alias for component free function pointer */
+/** Type definition for component free function pointer */
 typedef void (*iot_component_free_fn_t) (iot_component_t * comp);
+/** Type definition for component running function pointer */
+typedef void (*iot_component_running_fn_t) (iot_component_t * comp, bool timeout);
 
 /**
  * Component factory structure
@@ -64,6 +61,7 @@ typedef void (*iot_component_free_fn_t) (iot_component_t * comp);
 struct iot_component_factory_t
 {
   const char * const type;                 /**< Indicates the type of a component */
+  const char * const category;             /**< Component category */
   iot_component_config_fn_t config_fn;     /**< Pointer to function that handles component configuration */
   iot_component_free_fn_t free_fn;         /**< Pointer to function that handles the freeing of a component */
   iot_component_reconfig_fn_t reconfig_fn; /**< Pointer to function that handles component reconfiguration */
@@ -81,7 +79,9 @@ struct iot_component_t
   pthread_cond_t cond;                      /**< Synchronisation condition */
   iot_component_start_fn_t start_fn;        /**< Pointer to function that handles starting a component */
   iot_component_stop_fn_t stop_fn;          /**< Pointer to function that handles stopping a component */
+  iot_component_running_fn_t running_fn;    /**< Pointer to function callback made when all components are running */
   atomic_int_fast32_t refs;                 /**< Current reference count */
+  iot_data_t * config;                      /**< Parsed configuration */
   const iot_component_factory_t * factory;  /**< Pointer to component factory structure */
 };
 
@@ -96,6 +96,16 @@ struct iot_component_t
  * @param stop       Function pointer to the component stop function
  */
 extern void iot_component_init (iot_component_t * component, const iot_component_factory_t * factory, iot_component_start_fn_t start, iot_component_stop_fn_t stop);
+
+/**
+ * @brief Set component callback function, called when all container components are up (started)
+ *
+ * The function to register a running callback handler with the component
+ *
+ * @param component  Pointer to the component
+ * @param fn         Function pointer to the component running function
+ */
+ extern void iot_component_set_running_callback (iot_component_t * component, iot_component_running_fn_t fn);
 
 /**
  * @brief Reconfigure component
@@ -249,6 +259,14 @@ extern const iot_component_factory_t * iot_component_factory_find (const char * 
  * @return      Pointer to a constant string representing the state name
  */
 extern const char * iot_component_state_name (iot_component_state_t state);
+
+/**
+ * @brief Get state of component
+ *
+ * @param component  Pointer to component
+ * @return           Data map, with keys "name", "type", "state" and "config"
+ */
+extern iot_data_t * iot_component_read (iot_component_t * component);
 
 #ifdef __cplusplus
 }

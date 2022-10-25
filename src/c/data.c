@@ -46,13 +46,10 @@
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
 static _Thread_local bool iot_data_alloc_from_heap = false; /* Thread specific memory allocation policy */
+static iot_data_static_t iot_data_order = { 0 };
+static const char * iot_data_const_strings [] = { "category","config","name","state","type",NULL };
 
-typedef struct iot_data_consts_t
-{
-  iot_data_static_t order_key;
-} iot_data_consts_t;
-
-static iot_data_consts_t iot_data_consts = { .order_key = { NULL } };
+iot_data_consts_t iot_data_consts = { 0 };
 
 typedef enum iot_node_colour_t
 {
@@ -478,7 +475,10 @@ void iot_data_init (void)
   pthread_mutex_init (&iot_data_mutex, NULL);
   iot_data_block_free (iot_data_block_alloc ());  // Initialize data cache
 #endif
-  iot_data_alloc_const_pointer (&iot_data_consts.order_key, &iot_data_consts.order_key);
+  iot_data_alloc_const_pointer (&iot_data_order, &iot_data_order);
+  const char ** str = iot_data_const_strings;
+  iot_data_static_t * ptr = (iot_data_static_t*) &iot_data_consts;
+  while (*str) iot_data_alloc_const_string (ptr++, *str++);
   atexit (iot_data_fini);
 }
 
@@ -858,32 +858,34 @@ const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_cmp_fn 
   return element ? element->value : NULL;
 }
 
+static void iot_data_list_remove_element (iot_data_list_t * list, iot_element_t * element)
+{
+  iot_data_t * value = element->value;
+  if (element == list->head) // Remove from head of list
+  {
+    iot_data_list_head_pop ((iot_data_t*) list);
+  }
+  else if (element == list->tail) // Remove from tail of list
+  {
+    iot_data_list_tail_pop ((iot_data_t*) list);
+  }
+  else // Remove from middle of list
+  {
+    element->next->prev = element->prev;
+    element->prev->next = element->next;
+    list->head->length--;
+    list->base.rehash = true;
+    iot_element_free (element);
+  }
+  iot_data_free (value);
+}
+
 extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg)
 {
   assert (list && cmp);
   iot_data_list_t * impl = (iot_data_list_t*) list;
   iot_element_t * element = iot_data_list_find_element (impl, cmp, arg);
-  if (element)
-  {
-    iot_data_t * value = element->value;
-    if (element == impl->head) // Remove from head of list
-    {
-      iot_data_list_head_pop (list);
-    }
-    else if (element == impl->tail) // Remove from tail of list
-    {
-      iot_data_list_tail_pop (list);
-    }
-    else // Remove from middle of list
-    {
-      element->next->prev = element->prev;
-      element->prev->next = element->next;
-      impl->head->length--;
-      iot_element_free (element);
-      list->rehash = true;
-    }
-    iot_data_free (value);
-  }
+  if (element) iot_data_list_remove_element (impl, element);
   return (element != NULL);
 }
 
@@ -943,6 +945,19 @@ iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_
     iter->_element->value = value;
   }
   return res;
+}
+
+bool iot_data_list_iter_remove (iot_data_list_iter_t * iter)
+{
+  assert (iter && iter->_list);
+  iot_data_list_t * impl = (iot_data_list_t*) iter->_list;
+  iot_element_t * element = iter->_element;
+  if (element)
+  {
+    iot_data_list_iter_prev (iter);
+    iot_data_list_remove_element (impl, element);
+  }
+  return element != NULL;
 }
 
 void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value)
@@ -1050,6 +1065,14 @@ bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type)
 bool iot_data_is_static (const iot_data_t * data)
 {
   return (data && data->constant);
+}
+
+bool iot_data_is_nan (const iot_data_t *data)
+{
+  assert (data);
+  iot_data_type_t type = iot_data_type (data);
+  if (type != IOT_DATA_FLOAT32 && type != IOT_DATA_FLOAT64) return false;
+  return type == IOT_DATA_FLOAT32 ? iot_data_f32 (data) != iot_data_f32 (data) : iot_data_f64 (data) != iot_data_f64 (data);
 }
 
 static void iot_data_cache_add (iot_data_t * cache, iot_data_t ** data)
@@ -2488,7 +2511,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     }
     case IOT_DATA_MAP:
     {
-      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (iot_data_consts.order_key));
+      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (iot_data_order));
       iot_data_map_iter_t iter;
       iot_data_vector_iter_t vec_iter = { 0 };
       bool first = true;
@@ -2688,7 +2711,7 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
     if (ordered) iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
     iot_data_map_add (map, key, iot_data_value_from_json (tokens, json, ordered, cache));
   }
-  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (iot_data_consts.order_key));
+  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (iot_data_order));
   return map;
 }
 
