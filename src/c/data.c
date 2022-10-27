@@ -2351,7 +2351,18 @@ const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp
 
 static size_t iot_data_repr_size (char c)
 {
-  return (strchr ("\"\\\b\f\n\r\t", c)) ? 2 : ((c >= '\x00' && c <=  '\x1f') ? 6 : 1);
+  static size_t size_map[] =
+  {
+    6, 6, 6, 6, 6, 6, 6, 6, 2, 2, 2, 6, 2, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+    1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+  };
+  return size_map[(uint8_t) c];
 }
 
 static void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required)
@@ -2401,13 +2412,13 @@ static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * a
           *ptr++ = '\\';
           switch (c)
           {
-            case '\"': *ptr++ = '\"'; break;
-            case '\\': *ptr++ = '\\'; break;
             case '\b': *ptr++ = 'b'; break;
             case '\f': *ptr++ = 'f'; break;
             case '\n': *ptr++ = 'n'; break;
             case '\r': *ptr++ = 'r'; break;
             case '\t': *ptr++ = 't'; break;
+            case '\"': *ptr++ = '\"'; break;
+            case '\\': *ptr++ = '\\'; break;
             default: break;
           }
           break;
