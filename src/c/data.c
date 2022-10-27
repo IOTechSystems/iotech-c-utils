@@ -2471,7 +2471,11 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
 
 static void iot_data_dump_ptr (iot_string_holder_t * holder, const void * ptr, const iot_data_type_t type)
 {
-  char buff[IOT_VAL_BUFF_SIZE];
+  if (holder->free < IOT_VAL_BUFF_SIZE)
+  {
+    iot_data_holder_realloc (holder, IOT_VAL_BUFF_SIZE);
+  }
+  char * buff = holder->str + holder->size - holder->free - 1;
   switch (type)
   {
     case IOT_DATA_INT8: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRId8 , *(const int8_t *) ptr); break;
@@ -2489,7 +2493,7 @@ static void iot_data_dump_ptr (iot_string_holder_t * holder, const void * ptr, c
     case IOT_DATA_NULL: strncpy (buff, "null", IOT_VAL_BUFF_SIZE); break;
     default: strncpy (buff, (*(const bool*) ptr) ? "true" : "false", IOT_VAL_BUFF_SIZE); break;
   }
-  iot_data_strcat_escape (holder, buff, false);
+  holder->free -= strlen (buff);
 }
 
 static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data)
