@@ -39,7 +39,7 @@
 #define IOT_DATA_TYPES (IOT_DATA_INVALID + 1)
 #define IOT_MEMORY_BLOCK_SIZE 4096u
 #define IOT_JSON_BUFF_SIZE 512u
-#define IOT_VAL_BUFF_SIZE 128u
+#define IOT_VAL_BUFF_SIZE 31u
 #define IOT_JSON_BUFF_DOUBLING_LIMIT 4096u
 #define IOT_JSON_BUFF_INCREMENT 1024u
 
@@ -2351,7 +2351,18 @@ const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp
 
 static size_t iot_data_repr_size (char c)
 {
-  return (strchr ("\"\\\b\f\n\r\t", c)) ? 2 : ((c >= '\x00' && c <=  '\x1f') ? 6 : 1);
+  static uint8_t size_map[] =
+  {
+    6, 6, 6, 6, 6, 6, 6, 6, 2, 2, 2, 6, 2, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+    1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+  };
+  return size_map[(uint8_t) c];
 }
 
 static void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required)
@@ -2401,13 +2412,13 @@ static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * a
           *ptr++ = '\\';
           switch (c)
           {
-            case '\"': *ptr++ = '\"'; break;
-            case '\\': *ptr++ = '\\'; break;
             case '\b': *ptr++ = 'b'; break;
             case '\f': *ptr++ = 'f'; break;
             case '\n': *ptr++ = 'n'; break;
             case '\r': *ptr++ = 'r'; break;
             case '\t': *ptr++ = 't'; break;
+            case '\"': *ptr++ = '\"'; break;
+            case '\\': *ptr++ = '\\'; break;
             default: break;
           }
           break;
@@ -2460,7 +2471,11 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
 
 static void iot_data_dump_ptr (iot_string_holder_t * holder, const void * ptr, const iot_data_type_t type)
 {
-  char buff[IOT_VAL_BUFF_SIZE];
+  if (holder->free < IOT_VAL_BUFF_SIZE)
+  {
+    iot_data_holder_realloc (holder, IOT_VAL_BUFF_SIZE);
+  }
+  char * buff = holder->str + holder->size - holder->free - 1;
   switch (type)
   {
     case IOT_DATA_INT8: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRId8 , *(const int8_t *) ptr); break;
@@ -2478,7 +2493,7 @@ static void iot_data_dump_ptr (iot_string_holder_t * holder, const void * ptr, c
     case IOT_DATA_NULL: strncpy (buff, "null", IOT_VAL_BUFF_SIZE); break;
     default: strncpy (buff, (*(const bool*) ptr) ? "true" : "false", IOT_VAL_BUFF_SIZE); break;
   }
-  iot_data_strcat_escape (holder, buff, false);
+  holder->free -= strlen (buff);
 }
 
 static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data)
