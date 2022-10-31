@@ -571,7 +571,7 @@ static void test_data_to_json (void)
   iot_data_free (val);
   free (json);
 
-  char buff[10];
+  char buff[32];
   val = iot_data_alloc_bool (true);
   json = iot_data_to_json_with_buffer (val, buff, sizeof (buff));
   CU_ASSERT (json == buff)
