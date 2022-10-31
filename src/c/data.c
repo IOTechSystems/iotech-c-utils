@@ -2351,7 +2351,7 @@ const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp
 
 static size_t iot_data_repr_size (char c)
 {
-  static size_t size_map[] =
+  static uint8_t size_map[] =
   {
     6, 6, 6, 6, 6, 6, 6, 6, 2, 2, 2, 6, 2, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
     1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
