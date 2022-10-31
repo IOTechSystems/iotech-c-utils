@@ -325,3 +325,4 @@
 - Support added for setting component categories
 - Added `iot_data_is_nan` utility function
 - Added `iot_data_list_iter_remove` function to remove an element associated with a list iterator
+- Added `iot_util_string_is_uuid` function to check string for UUID format
