@@ -1368,11 +1368,11 @@ iot_data_t * iot_data_alloc_null (void)
 
 iot_data_t * iot_data_alloc_uuid_string (void)
 {
-  char uuid_str[UUID_STR_LEN];
+  char * uuid_str = malloc (UUID_STR_LEN);
   uuid_t uuid;
   uuid_generate (uuid);
   uuid_unparse (uuid, uuid_str);
-  return iot_data_alloc_string (uuid_str, IOT_DATA_COPY);
+  return iot_data_alloc_string (uuid_str, IOT_DATA_TAKE);
 }
 
 iot_data_t * iot_data_alloc_uuid (void)
