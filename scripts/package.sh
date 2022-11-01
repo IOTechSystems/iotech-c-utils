@@ -88,7 +88,7 @@ case ${SYSTEM} in
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude include --exclude docs --exclude examples --exclude *.a \
+      --exclude include --exclude docs --exclude examples \
       --depends libuuid1
 
     ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
@@ -158,7 +158,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude include --exclude docs --exclude examples --exclude *.a ${UUID_DEP:+--depends ${UUID_DEP}}
+      --exclude include --exclude docs --exclude examples ${UUID_DEP:+--depends ${UUID_DEP}}
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
