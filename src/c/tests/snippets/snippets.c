@@ -13,7 +13,7 @@ iot_component_factory_add (iot_logger_factory ());
 static void snippet2 (void)
 {
 // CUT
-iot_container_config_t config = { .load = iot_file_config_loader, .uri = "config_dir", .save = NULL };
+iot_container_config_t config = { .load = iot_store_config_loader, .uri = "config_dir", .save = NULL };
 iot_container_t * container = iot_container_alloc ("main");
 
 iot_container_config (&config);
