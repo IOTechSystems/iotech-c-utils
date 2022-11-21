@@ -9,14 +9,21 @@
 
 #ifdef IOT_HAS_FILE
 #include "iot/file.h"
-iot_store_read_fn iot_store_reader = iot_file_read_binary;
-iot_store_write_fn iot_store_writer = iot_file_write_binary;
-iot_store_delete_fn iot_store_deleter = iot_file_delete;
+static iot_store_read_fn iot_store_reader = iot_file_read_binary;
+static iot_store_write_fn iot_store_writer = iot_file_write_binary;
+static iot_store_delete_fn iot_store_deleter = iot_file_delete;
 #else
-iot_store_read_fn iot_store_reader = NULL;
-iot_store_write_fn iot_store_writer = NULL;
-iot_store_delete_fn iot_store_deleter = NULL;
+static iot_store_read_fn iot_store_reader = NULL;
+static iot_store_write_fn iot_store_writer = NULL;
+static iot_store_delete_fn iot_store_deleter = NULL;
 #endif
+
+void iot_store_config (iot_store_read_fn read_fn, iot_store_write_fn write_fn, iot_store_delete_fn del_fn)
+{
+  iot_store_reader = read_fn;
+  iot_store_writer = write_fn;
+  iot_store_deleter = del_fn;
+}
 
 char * iot_store_read (const char * path)
 {
