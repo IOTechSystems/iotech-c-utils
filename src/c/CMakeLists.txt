@@ -42,7 +42,7 @@ if ("${LINUX_SYS}" STREQUAL "AzureSphere")
 endif ()
 
 # Set files to compile
-set (C_FILES iot.c data.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c util.c store.c file.c)
+set (C_FILES data.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c util.c store.c file.c)
 if (IOT_BUILD_XML)
   set (C_FILES ${C_FILES} yxml.c)
 endif ()
