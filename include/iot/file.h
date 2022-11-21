@@ -14,6 +14,8 @@
 
 #include "iot/os.h"
 
+#ifdef IOT_HAS_FILE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,5 +55,6 @@ extern bool iot_file_write_binary (const char * path, const uint8_t * binary, si
 
 #ifdef __cplusplus
 }
+#endif
 #endif
 #endif
