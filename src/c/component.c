@@ -135,11 +135,11 @@ extern iot_data_t * iot_component_read (iot_component_t * component)
   assert (component);
   iot_data_t * data = iot_data_alloc_map (IOT_DATA_STRING);
   pthread_mutex_lock (&component->mutex);
-  iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.name), iot_data_alloc_string (component->name, IOT_DATA_REF));
-  iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.type), iot_data_alloc_string (component->factory->type, IOT_DATA_REF));
-  iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.state), iot_data_alloc_string (iot_component_state_name (component->state), IOT_DATA_REF));
-  iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.config), iot_data_add_ref (component->config));
-  if (component->factory->category) iot_data_map_add (data, IOT_DATA_STATIC (iot_data_consts.category), iot_data_alloc_string (component->factory->category, IOT_DATA_REF));
+  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.name), iot_data_alloc_string (component->name, IOT_DATA_REF));
+  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.type), iot_data_alloc_string (component->factory->type, IOT_DATA_REF));
+  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.state), iot_data_alloc_string (iot_component_state_name (component->state), IOT_DATA_REF));
+  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.config), iot_data_add_ref (component->config));
+  if (component->factory->category) iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.category), iot_data_alloc_string (component->factory->category, IOT_DATA_REF));
   pthread_mutex_unlock (&component->mutex);
   return data;
 }

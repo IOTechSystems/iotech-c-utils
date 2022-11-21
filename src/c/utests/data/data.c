@@ -4033,7 +4033,7 @@ static void test_data_const_string (void)
   static const char * str = "Hello";
   iot_data_t * data = iot_data_alloc_const_string (&block, str);
   CU_ASSERT (iot_data_string (data) == str)
-  CU_ASSERT (data == IOT_DATA_STATIC (block))
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
   CU_ASSERT (iot_data_is_static (data))
   iot_data_free (data);
   iot_data_free (data);
@@ -4044,7 +4044,7 @@ static void test_data_const_ui64 (void)
   static iot_data_static_t block;
   iot_data_t * data = iot_data_alloc_const_ui64 (&block, 222u);
   CU_ASSERT (iot_data_ui64 (data) == 222u)
-  CU_ASSERT (data == IOT_DATA_STATIC (block))
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
   CU_ASSERT (iot_data_is_static (data))
   iot_data_free (data);
   iot_data_free (data);
@@ -4056,7 +4056,7 @@ static void test_data_const_pointer (void)
   static const void * ptr = &block;
   iot_data_t * data = iot_data_alloc_const_pointer (&block, ptr);
   CU_ASSERT (iot_data_pointer (data) == ptr)
-  CU_ASSERT (data == IOT_DATA_STATIC (block))
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
   CU_ASSERT (iot_data_is_static (data))
   iot_data_free (data);
   iot_data_free (data);
@@ -4072,7 +4072,7 @@ static void test_data_const_list (void)
   iot_data_t * str = iot_data_alloc_const_string (&block3, "test");
   CU_ASSERT (iot_data_list_length (list) == 0u)
   CU_ASSERT (iot_data_type (list) == IOT_DATA_LIST)
-  CU_ASSERT (list == IOT_DATA_STATIC (block))
+  CU_ASSERT (list == IOT_DATA_STATIC (&block))
   CU_ASSERT (iot_data_is_static (list))
   iot_data_list_tail_push (list, ptr);
   CU_ASSERT (iot_data_list_length (list) == 1u)
@@ -4087,7 +4087,7 @@ static void test_data_const_list (void)
   iot_data_t * list_non_static = iot_data_alloc_const_list (&block_non_static);
   CU_ASSERT (iot_data_list_length (list_non_static) == 0u)
   CU_ASSERT (iot_data_type (list_non_static) == IOT_DATA_LIST)
-  CU_ASSERT (list_non_static == IOT_DATA_STATIC (block_non_static))
+  CU_ASSERT (list_non_static == IOT_DATA_STATIC (&block_non_static))
   CU_ASSERT (iot_data_is_static (list_non_static))
   iot_data_list_tail_push (list_non_static, str);
   CU_ASSERT (iot_data_list_length (list_non_static) == 1u)

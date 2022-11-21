@@ -1645,7 +1645,7 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
   {
     iot_data_static_t skey;
     iot_data_alloc_const_string (&skey, key);
-    ret = iot_data_map_remove (map, IOT_DATA_STATIC (skey));
+    ret = iot_data_map_remove (map, IOT_DATA_STATIC (&skey));
   }
   return ret;
 }
@@ -1708,7 +1708,7 @@ const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char *
   assert (map && key);
   iot_data_static_t skey;
   iot_data_alloc_const_string (&skey, key);
-  return iot_data_map_get (map, IOT_DATA_STATIC (skey));
+  return iot_data_map_get (map, IOT_DATA_STATIC (&skey));
 }
 
 const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key)
@@ -2538,7 +2538,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     }
     case IOT_DATA_MAP:
     {
-      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (iot_data_order));
+      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (&iot_data_order));
       iot_data_map_iter_t iter;
       iot_data_vector_iter_t vec_iter = { 0 };
       bool first = true;
@@ -2738,7 +2738,7 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
     if (ordered) iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
     iot_data_map_add (map, key, iot_data_value_from_json (tokens, json, ordered, cache));
   }
-  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (iot_data_order));
+  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (&iot_data_order));
   return map;
 }
 
