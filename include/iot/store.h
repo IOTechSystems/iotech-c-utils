@@ -26,7 +26,7 @@ typedef bool (*iot_store_write_fn) (const char * path, const uint8_t * binary, s
 typedef bool (*iot_store_delete_fn) (const char * path);
 
 /**
- * @brief Configure store to use given functions for read, write and delete implementation.
+ * @brief Configure store to use given functions for read, write and delete implementation
  *
  * @param read_fn  Read function pointer
  * @param write_fn Write function pointer
@@ -35,7 +35,7 @@ typedef bool (*iot_store_delete_fn) (const char * path);
 extern void iot_store_config (iot_store_read_fn read_fn, iot_store_write_fn write_fn, iot_store_delete_fn del_fn);
 
 /**
- * @brief Load string from store path. Returns store contents as a NULL terminated string.
+ * @brief Load string from store path, returns store contents as a NULL terminated string
  *
  * @param path  Path to data in store
  * @return      String loaded from the store or NULL if data not found (client needs to free)
@@ -43,7 +43,7 @@ extern void iot_store_config (iot_store_read_fn read_fn, iot_store_write_fn writ
 extern char * iot_store_read (const char * path);
 
 /**
- * @brief Writes a NULL terminated string to a store, overwriting any existing contents.
+ * @brief Writes a NULL terminated string to a store, overwriting any existing contents
  *
  * @param path  Path to to write data in store
  * @param str   String to write
@@ -60,7 +60,7 @@ extern bool iot_store_write (const char * path, const char * str);
 extern bool iot_store_delete (const char * path);
 
 /**
- * @brief Load binary data from a store, retuning data and length.
+ * @brief Load binary data from a store, retuning data and length
  *
  * @param path  Path to read data in store
  * @param len   Length of returned binary array
