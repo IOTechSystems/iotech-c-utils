@@ -45,7 +45,7 @@ extern char * iot_store_read (const char * path);
 /**
  * @brief Writes a NULL terminated string to a store, overwriting any existing contents
  *
- * @param path  Path to to write data in store
+ * @param path  Path to write data in store
  * @param str   String to write
  * @return      Whether the string was successfully written to the store path
  */
@@ -71,7 +71,7 @@ extern uint8_t * iot_store_read_binary (const char * path, size_t * len);
 /**
  * @brief Write binary data to a store, overwriting any existing contents
  *
- * @param path   Path to to write data in store
+ * @param path   Path to write data in store
  * @param binary The binary array to be written
  * @param len    Length of binary array to be written
  * @return       Whether the binary was successfully written to the store
