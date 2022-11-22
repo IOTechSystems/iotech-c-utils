@@ -95,7 +95,7 @@ typedef struct iot_data_consts_t
   iot_data_static_t type;     /**< constant "type" string */
 } iot_data_consts_t;
 
-/** Set of constant data stringvalues */
+/** Set of constant data string values */
 extern iot_data_consts_t iot_data_consts;
 
 /**

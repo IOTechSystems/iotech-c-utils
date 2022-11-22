@@ -32,7 +32,7 @@ int main (int argc, char ** argv)
       for (int i = 0; i < 1000; i++)
       {
         json = iot_data_to_json (map);
-        ((volatile char*) json)[0] = json[0]; // prevent json beeing optimised out 
+        ((volatile char*) json)[0] = json[0]; // prevent json being optimised out
         free (json);
       }
       iot_data_free (map);

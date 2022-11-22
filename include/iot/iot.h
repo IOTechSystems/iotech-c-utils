@@ -26,5 +26,6 @@
 #include "iot/scheduler.h"
 #include "iot/util.h"
 #include "iot/store.h"
+#include "iot/file.h"
 
 #endif
