@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2022
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
