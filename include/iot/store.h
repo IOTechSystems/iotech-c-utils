@@ -79,23 +79,32 @@ extern uint8_t * iot_store_read_binary (const char * path, size_t * len);
 extern bool iot_store_write_binary (const char * path, const uint8_t * binary, size_t len);
 
 /**
- * @brief Load configuration from store
+ * @brief Load JSON configuration from store
  *
  * @param name  Name of the configuration
  * @param uri   URI for configuration
- * @return      Configuration string from store
+ * @return      JSON Configuration string from store
  */
-extern char * iot_store_config_loader (const char * name, const char * uri);
+extern char * iot_store_config_load (const char * name, const char * uri);
 
 /**
- * @brief Save configuration to store
+ * @brief Save JSON configuration to store
  *
  * @param name   Name of the configuration
  * @param uri    URI for configuration
  * @param config Configuration string to save
- * @return       Whether configuration saved successfully
+ * @return       Whether configuration was saved
  */
-extern bool iot_store_config_saver (const char * name, const char * uri, const char * config);
+extern bool iot_store_config_save (const char * name, const char * uri, const char * config);
+
+/**
+ * @brief Delete JSON configuration from store
+ *
+ * @param name  Name of the configuration
+ * @param uri   URI for configuration
+ * @return      Whether configuration was deleted
+ */
+extern bool iot_store_config_delete (const char * name, const char * uri);
 
 #ifdef __cplusplus
 }

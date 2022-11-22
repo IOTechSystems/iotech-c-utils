@@ -65,11 +65,11 @@ static char * iot_store_config_path (const char * name, const char * uri)
     strcat (path, "/");
   }
   strcat (path, name);
-  strcat (path, ".json"); // FIXME - not generic
+  strcat (path, ".json");
   return path;
 }
 
-char * iot_store_config_loader (const char * name, const char * uri)
+char * iot_store_config_load (const char * name, const char * uri)
 {
   char * path = iot_store_config_path (name, uri);
   char * ret = iot_store_read (path);
@@ -77,10 +77,18 @@ char * iot_store_config_loader (const char * name, const char * uri)
   return ret;
 }
 
-bool iot_store_config_saver (const char * name, const char * uri, const char * config)
+bool iot_store_config_save (const char * name, const char * uri, const char * config)
 {
   char * path = iot_store_config_path (name, uri);
   bool ok = iot_store_write (path, config);
+  free (path);
+  return ok;
+}
+
+bool iot_store_config_delete (const char * name, const char * uri)
+{
+  char * path = iot_store_config_path (name, uri);
+  bool ok = iot_store_delete (path);
   free (path);
   return ok;
 }

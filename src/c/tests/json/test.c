@@ -39,7 +39,7 @@ int main (int argc, char ** argv)
     }
     else if (argc == 3)
     {
-      iot_store_config_saver (argv[2], ".", json);
+      iot_store_config_save (argv[2], ".", json);
       free (json);
     }
   }
