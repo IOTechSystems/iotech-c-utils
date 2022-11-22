@@ -15,6 +15,7 @@ The following Utilities are provided:
 * Hash generation
 * Time stamp
 * Base64 encode/decode
+* Persistence
 
 ## License
 [Apache-2.0](LICENSE)

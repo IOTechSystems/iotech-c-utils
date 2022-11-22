@@ -238,7 +238,6 @@ static iot_data_value_base_t iot_data_bool_true = { .value.bl = true, .base.type
 static iot_data_value_base_t iot_data_bool_false = { .value.bl = false, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
 static iot_data_value_base_t iot_data_null = { .base.type = IOT_DATA_NULL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
 
-extern void iot_data_init (void);
 extern void iot_data_map_dump (iot_data_t * map);
 static iot_data_t * iot_data_value_from_json (iot_json_tok_t ** tokens, const char * json, bool ordered, iot_data_t * cache);
 static void iot_node_free (iot_data_map_t * map, iot_node_t * node);
@@ -247,6 +246,8 @@ static iot_node_t * iot_node_prev (iot_node_t * iter);
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
 static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
 static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key);
+
+__attribute__((constructor)) static void iot_data_init (void);
 
 uint32_t iot_data_type_size (iot_data_type_t type)
 {
@@ -449,7 +450,7 @@ static void iot_data_fini (void)
 #endif
 }
 
-void iot_data_init (void)
+static void iot_data_init (void)
 {
 /*
   printf ("sizeof (iot_data_t): %zu\n", sizeof (iot_data_t));
@@ -1340,6 +1341,17 @@ iot_data_t * iot_data_alloc_ui64 (uint64_t val)
   return (iot_data_t*) data;
 }
 
+iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_t val)
+{
+  iot_data_value_base_t * bval = (iot_data_value_base_t*) data;
+  memset (data, 0, sizeof (*data));
+  iot_data_block_init (&bval->base, IOT_DATA_UINT64);
+  bval->value.ui64 = val;
+  bval->base.hash = (uint32_t) val;
+  bval->base.constant = true;
+  return (iot_data_t*) data;
+}
+
 iot_data_t * iot_data_alloc_f32 (float val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT32, false);
@@ -1633,7 +1645,7 @@ bool iot_data_string_map_remove (iot_data_t * map, const char * key)
   {
     iot_data_static_t skey;
     iot_data_alloc_const_string (&skey, key);
-    ret = iot_data_map_remove (map, IOT_DATA_STATIC (skey));
+    ret = iot_data_map_remove (map, IOT_DATA_STATIC (&skey));
   }
   return ret;
 }
@@ -1696,7 +1708,7 @@ const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char *
   assert (map && key);
   iot_data_static_t skey;
   iot_data_alloc_const_string (&skey, key);
-  return iot_data_map_get (map, IOT_DATA_STATIC (skey));
+  return iot_data_map_get (map, IOT_DATA_STATIC (&skey));
 }
 
 const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key)
@@ -2526,7 +2538,7 @@ static void iot_data_dump (iot_string_holder_t * holder, const iot_data_t * data
     }
     case IOT_DATA_MAP:
     {
-      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (iot_data_order));
+      const iot_data_t * ordering = iot_data_get_metadata (data, IOT_DATA_STATIC (&iot_data_order));
       iot_data_map_iter_t iter;
       iot_data_vector_iter_t vec_iter = { 0 };
       bool first = true;
@@ -2726,7 +2738,7 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
     if (ordered) iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
     iot_data_map_add (map, key, iot_data_value_from_json (tokens, json, ordered, cache));
   }
-  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (iot_data_order));
+  if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (&iot_data_order));
   return map;
 }
 

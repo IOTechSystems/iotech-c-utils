@@ -396,6 +396,18 @@ extern iot_data_t * iot_data_alloc_i64 (int64_t val);
 extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
 
 /**
+ * @brief Allocate constant uint64 data
+ *
+ * The function to allocate data for a constant uint64, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        uint64 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_t val);
+
+/**
  * @brief Allocate memory for data_type float
  *
  * The function to allocate memory for data_type float
@@ -468,7 +480,7 @@ extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_
  *
  * @param data       Address of static storage for data
  * @param str        Constant string value.
- * @return           Pointer to the allocated data (same address as the static storge)
+ * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str);
 
@@ -504,7 +516,7 @@ extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn
  *
  * @param data       Address of static storage for data
  * @param ptr        Constant pointer value.
- * @return           Pointer to the allocated data (same address as the static storge)
+ * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_pointer (iot_data_static_t * data, const void * ptr);
 
@@ -524,7 +536,7 @@ extern iot_data_t * iot_data_alloc_list (void);
  * not be deleted.
  *
  * @param data       Address of static storage for data
- * @return           Pointer to the allocated data (same address as the static storge)
+ * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_list (iot_data_list_static_t * data);
 

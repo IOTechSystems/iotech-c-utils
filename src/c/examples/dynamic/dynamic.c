@@ -17,7 +17,7 @@ int main (int argc, char ** argv)
 
   /* Create a config to load component configuration data from files */
 
-  iot_container_config_t config = { .load = iot_file_config_loader, .uri = argv[1], .save = NULL };
+  iot_container_config_t config = { .load = iot_store_config_load, .uri = argv[1], .save = NULL };
   iot_container_t * container = iot_container_alloc ("main");
 
   iot_container_config (&config);

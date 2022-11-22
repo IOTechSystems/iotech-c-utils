@@ -38,7 +38,7 @@ int main (int argc, char ** argv)
   for (count = 1; count < argc; count++)
   {
     printf ("Loading JSON file: %s\n", argv[count]);
-    json = iot_file_read (argv[count]);
+    json = iot_store_read (argv[count]);
     map = iot_data_from_json (json);
     free (json);
     iot_data_compress_with_cache (map, cache);
