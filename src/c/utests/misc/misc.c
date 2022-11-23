@@ -126,13 +126,13 @@ static void test_uuid_string (void)
 static void test_write_file (void)
 {
   const char * str = "Hello";
-  bool file_write_ok = iot_file_write (TEST_FILE_NAME, str);
+  bool file_write_ok = iot_store_write (TEST_FILE_NAME, str);
   CU_ASSERT (file_write_ok)
 }
 
 static void test_read_file (void)
 {
-  char * ret = iot_file_read (TEST_FILE_NAME);
+  char * ret = iot_store_read (TEST_FILE_NAME);
   CU_ASSERT (ret != NULL)
   if (ret)
   {
@@ -144,7 +144,7 @@ static void test_read_file (void)
 
 static void test_delete_file (void)
 {
-  CU_ASSERT (iot_file_delete (TEST_FILE_NAME))
+  CU_ASSERT (iot_store_delete (TEST_FILE_NAME))
 }
 
 #endif

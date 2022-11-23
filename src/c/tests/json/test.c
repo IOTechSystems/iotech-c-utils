@@ -18,7 +18,7 @@ int main (int argc, char ** argv)
   }
   else
   {
-    char * json = iot_file_read (argv[1]);
+    char * json = iot_store_read (argv[1]);
     if (json == NULL)
     {
       fprintf (stderr, "Failed to read file: %s\n", argv[1]);
@@ -32,14 +32,14 @@ int main (int argc, char ** argv)
       for (int i = 0; i < 1000; i++)
       {
         json = iot_data_to_json (map);
-        ((volatile char*) json)[0] = json[0]; // prevent json beeing optimised out 
+        ((volatile char*) json)[0] = json[0]; // prevent json being optimised out
         free (json);
       }
       iot_data_free (map);
     }
     else if (argc == 3)
     {
-      iot_file_config_saver (argv[2], ".", json);
+      iot_store_config_save (argv[2], ".", json);
       free (json);
     }
   }
