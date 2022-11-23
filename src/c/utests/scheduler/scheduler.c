@@ -432,7 +432,7 @@ static void cunit_scheduler_rate (bool concurrent)
   }
   else
   {
-    CU_ASSERT (atomic_load (&sum_test) < 21u)
+    CU_ASSERT (atomic_load (&sum_test) <= 21u)
   }
 }
 
