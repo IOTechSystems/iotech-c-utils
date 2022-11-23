@@ -61,10 +61,12 @@ static inline bool iot_schedule_dec_ref (iot_schedule_t * schedule)
 
 static void iot_schedule_free (iot_schedule_t * schedule)
 {
-  if (!iot_schedule_dec_ref(schedule)) return;
-  (schedule->free_cb) ? schedule->free_cb (schedule->arg) : 0;
-  iot_threadpool_free (schedule->threadpool);
-  free (schedule);
+  if (iot_schedule_dec_ref (schedule))
+  {
+    (schedule->free_cb) ? schedule->free_cb (schedule->arg) : 0;
+    iot_threadpool_free (schedule->threadpool);
+    free (schedule);
+  }
 }
 
 static inline void iot_schedule_update_start (iot_schedule_t * schedule, uint64_t start)
@@ -189,7 +191,10 @@ static void * iot_scheduler_thread (void * arg)
       else
       {
         iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " as thread", current->id);
-        iot_thread_create (NULL, schedule_fn, current, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger);
+        if (!iot_thread_create (NULL, schedule_fn, current, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger))
+        {
+          iot_schedule_dec_ref (current);
+        }
       }
 
       /* Recalculate the next start time for the schedule */
