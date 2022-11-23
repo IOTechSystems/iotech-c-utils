@@ -21,6 +21,23 @@ extern "C" {
 #endif
 
 /**
+ * @brief Load string from file path, returns file contents as a NULL terminated string
+ *
+ * @param path  File path
+ * @return      String loaded from the file or NULL if file not found (client needs to free)
+ */
+extern char * iot_file_read (const char * path);
+
+/**
+ * @brief Writes a NULL terminated string to a file, overwriting any existing contents
+ *
+ * @param path  File path
+ * @param str   String to write
+ * @return      Whether the string was successfully written to the file
+ */
+
+extern bool iot_file_write (const char * path, const char * str);
+/**
  * @brief Delete a file
  *
  * Function to delete a file

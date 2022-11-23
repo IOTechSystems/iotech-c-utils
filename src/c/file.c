@@ -70,13 +70,15 @@ extern bool iot_file_delete (const char * path)
 
 #else // _AZURESPHERE_
 
-extern bool iot_file_delete (const char * path)
+bool iot_file_delete (const char * path)
 {
+  assert (path);
   return (remove (path) == 0);
 }
 
 uint8_t * iot_file_read_binary (const char * path, size_t * len)
 {
+  assert (path);
   uint8_t * ret = NULL;
   size_t size = 0;
 
@@ -102,11 +104,12 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
 
 bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
 {
+  assert (path && binary);
   bool ok = false;
   char tmp_path[PATH_MAX];
   strncpy (tmp_path, path, PATH_MAX - 5);
   strcat (tmp_path, ".new");
-  FILE * fd = fopen (tmp_path, "w");
+  FILE *fd = fopen (tmp_path, "w");
   if (fd)
   {
     ok = (fwrite (binary, len, 1u, fd) == 1u);
@@ -114,6 +117,18 @@ bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t le
     if (ok) rename (tmp_path, path);
   }
   return ok;
+}
+
+char * iot_file_read (const char *path)
+{
+  assert (path);
+  return (char *) iot_file_read_binary (path, NULL);
+}
+
+bool iot_file_write (const char * path, const char * str)
+{
+  assert (str);
+  return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
 
 #endif
