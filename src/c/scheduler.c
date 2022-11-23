@@ -37,6 +37,7 @@ struct iot_schedule_t
   iot_data_t * self;                 /* Data pointer wrapper for schedule */
   atomic_uint_fast64_t dropped;      /* Number of events dropped */
   bool scheduled;                    /* A flag to indicate schedule status */
+  bool concurrent;                   /* Whether a schedule can be concurrently executed */
   iot_data_static_t self_static;     /* Block for constant pointer IOT data */
   atomic_int_fast32_t refs;          /* Current reference count */
 };
@@ -136,6 +137,12 @@ static void * schedule_fn (void *data)
   return ret_data;
 }
 
+void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable)
+{
+  assert (schedule);
+  schedule->concurrent = enable;
+}
+
 /* Scheduler thread function */
 static void * iot_scheduler_thread (void * arg)
 {
@@ -163,31 +170,38 @@ static void * iot_scheduler_thread (void * arg)
     iot_schedule_t * current = iot_schedule_queue_next (queue);
     if (current && current->start < iot_time_nsecs ()) // If a schedule and ready to run
     {
-      /* Notify that the schedule is about to run */
-      if (current->run_cb) current->run_cb (current->arg);
-      /* Post the work to the thread pool or run as thread */
-      iot_schedule_add_ref (current);
-      if (current->threadpool)
+      if (current->concurrent || (atomic_load (&current->refs) == 1u)) // Check for concurrency
       {
-        iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " from threadpool", current->id);
-        if (! iot_threadpool_try_work (current->threadpool, schedule_fn, current, current->priority))
+        /* Notify that the schedule is about to run */
+        if (current->run_cb) current->run_cb (current->arg);
+        /* Post the work to the thread pool or run as thread */
+        iot_schedule_add_ref (current);
+        if (current->threadpool)
         {
-          iot_schedule_dec_ref (current);
-          /* Notify that the run is aborted */
-          if (current->abort_cb) current->abort_cb (current->arg);
-          if (atomic_fetch_add (&current->dropped, 1u) == 0)
+          iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " from threadpool", current->id);
+          if (!iot_threadpool_try_work (current->threadpool, schedule_fn, current, current->priority))
           {
-            iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
+            iot_schedule_dec_ref (current);
+            /* Notify that the run is aborted */
+            if (current->abort_cb) current->abort_cb (current->arg);
+            if (atomic_fetch_add (&current->dropped, 1u) == 0)
+            {
+              iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
+            }
+          }
+        }
+        else
+        {
+          iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " as thread", current->id);
+          if (!iot_thread_create (NULL, schedule_fn, current, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger))
+          {
+            iot_schedule_dec_ref (current);
           }
         }
       }
       else
       {
-        iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " as thread", current->id);
-        if (!iot_thread_create (NULL, schedule_fn, current, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger))
-        {
-          iot_schedule_dec_ref (current);
-        }
+        iot_log_trace (scheduler->logger, "Skipping schedule #%" PRIu64 " as running", current->id);
       }
 
       /* Recalculate the next start time for the schedule */
