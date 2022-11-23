@@ -418,7 +418,7 @@ static void cunit_scheduler_rate (bool concurrent)
   iot_threadpool_t *pool = iot_threadpool_alloc (4u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_schedule_t *sched = iot_schedule_create (scheduler, do_sum_100, NULL, NULL, IOT_MS_TO_NS (50u), 0, 0, pool, -1);
-  if (concurrent) iot_schedule_set_concurrent (sched);
+  iot_schedule_set_concurrent (sched, concurrent);
   CU_ASSERT (iot_schedule_add (scheduler, sched));
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);

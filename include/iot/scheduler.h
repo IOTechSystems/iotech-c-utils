@@ -123,8 +123,9 @@ extern iot_schedule_t * iot_schedule_create
  * @brief Enable concurrent execution of a schedule
  *
  * @param schedule Pointer to the schedule
+ * @param enable   Whether to enable concurrent schedule execution
  */
-extern void iot_schedule_set_concurrent (iot_schedule_t * schedule);
+extern void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable);
 
 /**
  * @brief  Add a schedule to the queue

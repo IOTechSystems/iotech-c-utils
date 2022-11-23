@@ -126,10 +126,10 @@ static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
   ts->tv_nsec = (long) IOT_NS_REMAINING (ns);
 }
 
-void iot_schedule_set_concurrent (iot_schedule_t * schedule)
+void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable)
 {
   assert (schedule);
-  schedule->concurrent = true;
+  schedule->concurrent = enable;
 }
 
 static void * schedule_fn (void * data)
