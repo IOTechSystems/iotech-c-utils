@@ -38,6 +38,7 @@ struct iot_schedule_t
   atomic_uint_fast64_t dropped;      /* Number of events dropped */
   bool scheduled;                    /* A flag to indicate schedule status */
   iot_data_static_t self_static;     /* Block for constant pointer IOT data */
+  atomic_int_fast32_t refs;          /* Current reference count */
 };
 
 struct iot_scheduler_t
@@ -48,6 +49,28 @@ struct iot_scheduler_t
   iot_logger_t * logger;          /* Optional logger */
   struct timespec schd_time;      /* Time for next schedule */
 };
+
+static inline void iot_schedule_add_ref (iot_schedule_t * schedule)
+{
+  atomic_fetch_add (&schedule->refs, 1u);
+}
+
+static inline bool iot_schedule_dec_ref (iot_schedule_t * schedule)
+{
+  return (atomic_fetch_sub (&schedule->refs, 1u) <= 1u);
+}
+
+static void iot_schedule_free (iot_schedule_t * schedule)
+{
+  if (iot_schedule_dec_ref (schedule))
+  {
+    (schedule->freefn) ? schedule->freefn (schedule->arg) : 0;
+    iot_threadpool_free (schedule->threadpool);
+    iot_data_free (schedule->id_key);
+    iot_data_free (schedule->start_key);
+    free (schedule);
+  }
+}
 
 static inline void iot_schedule_update_start (iot_schedule_t * schedule, uint64_t start)
 {
@@ -105,6 +128,14 @@ static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
   ts->tv_nsec = (long) IOT_NS_REMAINING (ns);
 }
 
+static void * schedule_fn (void *data)
+{
+  iot_schedule_t *schedule = data;
+  void *ret_data = schedule->function(schedule->arg);
+  iot_schedule_free (schedule);
+  return ret_data;
+}
+
 /* Scheduler thread function */
 static void * iot_scheduler_thread (void * arg)
 {
@@ -135,11 +166,13 @@ static void * iot_scheduler_thread (void * arg)
       /* Notify that the schedule is about to run */
       if (current->run_cb) current->run_cb (current->arg);
       /* Post the work to the thread pool or run as thread */
+      iot_schedule_add_ref (current);
       if (current->threadpool)
       {
         iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " from threadpool", current->id);
-        if (! iot_threadpool_try_work (current->threadpool, current->function, current->arg, current->priority))
+        if (! iot_threadpool_try_work (current->threadpool, schedule_fn, current, current->priority))
         {
+          iot_schedule_dec_ref (current);
           /* Notify that the run is aborted */
           if (current->abort_cb) current->abort_cb (current->arg);
           if (atomic_fetch_add (&current->dropped, 1u) == 0)
@@ -151,7 +184,10 @@ static void * iot_scheduler_thread (void * arg)
       else
       {
         iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " as thread", current->id);
-        iot_thread_create (NULL, current->function, current->arg, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger);
+        if (!iot_thread_create (NULL, schedule_fn, current, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger))
+        {
+          iot_schedule_dec_ref (current);
+        }
       }
 
       /* Recalculate the next start time for the schedule */
@@ -219,15 +255,6 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
   iot_component_set_stopped (&scheduler->component);
 }
 
-static void iot_schedule_free (iot_schedule_t * schedule)
-{
-  (schedule->freefn) ? schedule->freefn (schedule->arg) : 0;
-  iot_threadpool_free (schedule->threadpool);
-  iot_data_free (schedule->id_key);
-  iot_data_free (schedule->start_key);
-  free (schedule);
-}
-
 /* Create a schedule and insert it into the idle queue */
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t start, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
@@ -247,6 +274,7 @@ iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_
   schedule->id_key = iot_data_alloc_ui64 (schedule->id);
   schedule->self = iot_data_alloc_const_pointer (&(schedule->self_static), schedule);
   schedule->start_key = iot_data_alloc_ui64 (schedule->start);
+  atomic_store (&schedule->refs, 1u);
   iot_log_trace (scheduler->logger, "iot_schedule_create #%" PRIu64 " (period: %" PRId64 " repeat: %" PRId64 ")", schedule->id, period, repeat);
   iot_threadpool_add_ref (pool);
   iot_component_lock (&scheduler->component);
