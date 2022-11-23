@@ -38,7 +38,7 @@ typedef struct iot_thread_t
   uint16_t id;                       // Thread number
   pthread_t tid;                     // Thread id
   struct iot_threadpool_t * pool;    // Thread pool
-  bool pending_delete;               // Finalise threadpool deletion on thread exit
+  bool pending_delete;               // Finalise thread pool deletion on thread exit
   bool deleted;                      // Mark thread as exited
 } iot_thread_t;
 
@@ -90,7 +90,7 @@ static void * iot_threadpool_thread (void * arg)
 #ifdef IOT_HAS_PRCTL
   prctl (PR_SET_NAME, name);
 #endif
-  iot_log_debug (pool->logger, "Thread %s starting", name);
+  iot_log_debug (pool->logger, "Thread %s #" PRIu16 " starting", name, th->id);
 
   atomic_fetch_add (&pool->created, 1u);
   while (true)
