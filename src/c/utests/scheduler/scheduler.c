@@ -405,6 +405,43 @@ static void cunit_scheduler_setfreefn (void)
 
 }
 
+static void * scheduler_delete_with_user_data_do_work (void * arg)
+{
+  iot_wait_secs(2); //do some work
+  uint64_t *arg2 = arg;
+  (*arg2)++;
+  return NULL;
+}
+
+static void scheduler_delete_with_user_data_free (void *data)
+{
+  free (data);
+}
+
+static void cunit_scheduler_delete_with_user_data (void)
+{
+  uint64_t *arg = calloc (1, sizeof(*arg));
+  iot_scheduler_t * scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, NULL);
+  iot_schedule_t * sched1 = iot_schedule_create (
+    scheduler,
+    scheduler_delete_with_user_data_do_work,
+    scheduler_delete_with_user_data_free,
+    arg,
+    10,
+    0,
+    0,
+    NULL,
+    -1
+  );
+  CU_ASSERT_TRUE (iot_schedule_add (scheduler, sched1));
+  iot_scheduler_start (scheduler);
+  iot_wait_secs (1);
+  iot_schedule_delete (scheduler, sched1);
+  iot_wait_secs (2);
+  iot_scheduler_stop (scheduler);
+  iot_scheduler_free (scheduler);
+}
+
 extern void cunit_scheduler_test_init ()
 {
   CU_pSuite suite = CU_add_suite ("scheduler", suite_init, suite_clean);
@@ -419,5 +456,6 @@ extern void cunit_scheduler_test_init ()
   CU_add_test (suite, "scheduler_reset", cunit_scheduler_reset);
   CU_add_test (suite, "scheduler_setpriority", cunit_scheduler_setpriority);
   CU_add_test (suite, "scheduler_freefn", cunit_scheduler_setfreefn);
+  CU_add_test (suite, "scheduler_delete_with_user_data", cunit_scheduler_delete_with_user_data);
 }
 
