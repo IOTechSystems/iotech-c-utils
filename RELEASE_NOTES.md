@@ -329,3 +329,4 @@
 - Added `iot_data_alloc_const_ui64` function to allocate const uint64_t data value
 - Persistent store abstractions refactored into store.h
 - File store functions refactored into file.h
+- Update to by default serialize schedule execution. Can be overridden with a new `iot_schedule_set_concurrent` function
