@@ -62,6 +62,14 @@ typedef void (*iot_schedule_free_fn_t) (void * arg);
 extern iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t * logger);
 
 /**
+   * @brief Enable concurrent execution of a schedule
+   *
+   * @param schedule Pointer to the schedule
+   * @param enable   Whether to enable concurrent schedule execution
+   */
+extern void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable);
+
+/**
  * @brief Increment the scheduler reference count
  *
  * @param scheduler  Pointer to the scheduler

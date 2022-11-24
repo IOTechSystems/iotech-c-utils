@@ -171,3 +171,7 @@
 ## Version 1.2.7
 
 - Support custom loggers with associated state
+
+## Version 1.2.8
+
+- Update to by default serialize schedule execution. Can be overridden with a new `iot_schedule_set_concurrent` function

@@ -69,6 +69,14 @@ static void * do_work5 (void *in)
   return NULL;
 }
 
+static void * do_sum_100 (void * in)
+{
+  (void) in;
+  iot_wait_msecs (100u);
+  atomic_fetch_add (&sum_test, 1u);
+  return NULL;
+}
+
 static void * do_count (void *in)
 {
   (void) in;
@@ -442,6 +450,40 @@ static void cunit_scheduler_delete_with_user_data (void)
   iot_scheduler_free (scheduler);
 }
 
+static void cunit_scheduler_rate (bool concurrent)
+{
+  reset_counters ();
+  iot_threadpool_t *pool = iot_threadpool_alloc (4u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_schedule_t *sched = iot_schedule_create (scheduler, do_sum_100, NULL, NULL, IOT_MS_TO_NS (50u), 0, 0, pool, -1);
+  iot_schedule_set_concurrent (sched, concurrent);
+  CU_ASSERT (iot_schedule_add (scheduler, sched));
+  iot_threadpool_start (pool);
+  iot_scheduler_start (scheduler);
+  iot_wait_secs (2);
+  iot_scheduler_stop (scheduler);
+  iot_threadpool_free (pool);
+  iot_scheduler_free (scheduler);
+  if (concurrent)
+  {
+    CU_ASSERT (atomic_load (&sum_test) > 21u)
+  }
+  else
+  {
+    CU_ASSERT (atomic_load (&sum_test) <= 21u)
+  }
+}
+
+static void cunit_scheduler_concurrent (void)
+{
+  cunit_scheduler_rate (true);
+}
+
+static void cunit_scheduler_serialized (void)
+{
+  cunit_scheduler_rate (false);
+}
+
 extern void cunit_scheduler_test_init ()
 {
   CU_pSuite suite = CU_add_suite ("scheduler", suite_init, suite_clean);
@@ -456,6 +498,8 @@ extern void cunit_scheduler_test_init ()
   CU_add_test (suite, "scheduler_reset", cunit_scheduler_reset);
   CU_add_test (suite, "scheduler_setpriority", cunit_scheduler_setpriority);
   CU_add_test (suite, "scheduler_freefn", cunit_scheduler_setfreefn);
+  CU_add_test (suite, "scheduler_concurrent", cunit_scheduler_concurrent);
+  CU_add_test (suite, "scheduler_serialized", cunit_scheduler_serialized);
   CU_add_test (suite, "scheduler_delete_with_user_data", cunit_scheduler_delete_with_user_data);
 }
 
