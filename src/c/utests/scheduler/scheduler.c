@@ -426,13 +426,14 @@ static void cunit_scheduler_rate (bool concurrent)
   iot_scheduler_stop (scheduler);
   iot_threadpool_free (pool);
   iot_scheduler_free (scheduler);
+  uint32_t sum = atomic_load (&sum_test);
   if (concurrent)
   {
-    CU_ASSERT (atomic_load (&sum_test) > 21u)
+    CU_ASSERT (sum > 21u)
   }
   else
   {
-    CU_ASSERT (atomic_load (&sum_test) <= 21u)
+    CU_ASSERT (sum <= 21u)
   }
 }
 

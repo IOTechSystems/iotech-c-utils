@@ -34,7 +34,7 @@ struct iot_schedule_t
   uint64_t id;                       /* Schedule unique id */
   _Atomic uint64_t dropped;          /* Number of events dropped */
   bool scheduled;                    /* A flag to indicate schedule status */
-  bool concurrent;                   /* Whether a schedule can be concurrently executed */
+  _Atomic bool concurrent;           /* Whether a schedule can be concurrently executed */
   iot_data_static_t start_key;       /* Data wrapper for schedule start time used as key for queue map */
   iot_data_static_t id_key;          /* Data wrapper for schedule id used as key for idle map */
   iot_data_static_t self_static;     /* Data wrapper for self pointer used as value for idle and queue maps */
@@ -129,7 +129,7 @@ static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
 void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable)
 {
   assert (schedule);
-  schedule->concurrent = enable;
+  atomic_store (&schedule->concurrent, enable);
 }
 
 static void * schedule_fn (void * data)
@@ -167,7 +167,7 @@ static void * iot_scheduler_thread (void * arg)
     iot_schedule_t * current = iot_schedule_queue_next (queue);
     if (current && current->start < iot_time_nsecs ()) // If a schedule and ready to run
     {
-      if (current->concurrent || (atomic_load (&current->refs) == 1u)) // Check for concurrent execution
+      if (atomic_load (&current->concurrent) || (atomic_load (&current->refs) == 1u)) // Check for concurrent execution
       {
         /* Notify that the schedule is about to run */
         if (current->run_cb)
