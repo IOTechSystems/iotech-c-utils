@@ -37,7 +37,7 @@ struct iot_schedule_t
   iot_data_t * self;                 /* Data pointer wrapper for schedule */
   _Atomic uint64_t dropped;          /* Number of events dropped */
   bool scheduled;                    /* A flag to indicate schedule status */
-  bool concurrent;                   /* Whether a schedule can be concurrently executed */
+  _Atomic bool concurrent;           /* Whether a schedule can be concurrently executed */
   iot_data_static_t self_static;     /* Block for constant pointer IOT data */
   atomic_int_fast32_t refs;          /* Current reference count */
 };
@@ -140,7 +140,7 @@ static void * schedule_fn (void *data)
 void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable)
 {
   assert (schedule);
-  schedule->concurrent = enable;
+  atomic_store (&schedule->concurrent, enable);
 }
 
 /* Scheduler thread function */
@@ -170,7 +170,7 @@ static void * iot_scheduler_thread (void * arg)
     iot_schedule_t * current = iot_schedule_queue_next (queue);
     if (current && current->start < iot_time_nsecs ()) // If a schedule and ready to run
     {
-      if (current->concurrent || (atomic_load (&current->refs) == 1u)) // Check for concurrent execution
+      if (atomic_load (&current->concurrent) || (atomic_load (&current->refs) == 1u)) // Check for concurrent execution
       {
         /* Notify that the schedule is about to run */
         if (current->run_cb)
