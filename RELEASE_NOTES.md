@@ -314,3 +314,7 @@
 ## Version 1.3.4
 
 - Support added for RISC-V on 32/64 bit OE and Intel Pathfinder targets (rv64i, rv32i, rv64id, rv32id)
+
+## Version 1.3.5
+
+- Update to by default serialize schedule execution. Can be overridden with a new `iot_schedule_set_concurrent` function
