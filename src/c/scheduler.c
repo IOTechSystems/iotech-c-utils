@@ -173,7 +173,12 @@ static void * iot_scheduler_thread (void * arg)
       if (atomic_load (&current->concurrent) || (atomic_load (&current->refs) == 1u)) // Check for concurrency
       {
         /* Notify that the schedule is about to run */
-        if (current->run_cb) current->run_cb (current->arg);
+        if (current->run_cb)
+        {
+          iot_component_unlock (&scheduler->component);
+          current->run_cb (current->arg);
+          iot_component_lock (&scheduler->component);
+        }
         /* Post the work to the thread pool or run as thread */
         iot_schedule_add_ref (current);
         if (current->threadpool)
@@ -183,7 +188,12 @@ static void * iot_scheduler_thread (void * arg)
           {
             iot_schedule_dec_ref (current);
             /* Notify that the run is aborted */
-            if (current->abort_cb) current->abort_cb (current->arg);
+            if (current->abort_cb)
+            {
+              iot_component_unlock (&scheduler->component);
+              current->abort_cb (current->arg);
+              iot_component_lock (&scheduler->component);
+            }
             if (atomic_fetch_add (&current->dropped, 1u) == 0)
             {
               iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
