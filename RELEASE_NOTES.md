@@ -326,3 +326,7 @@
 - Added `iot_data_is_nan` utility function
 - Added `iot_data_list_iter_remove` function to remove an element associated with a list iterator
 - Added `iot_util_string_is_uuid` function to check string for UUID format
+- Added `iot_data_alloc_const_ui64` function to allocate const uint64_t data value
+- Persistent store abstractions refactored into store.h
+- File store functions refactored into file.h
+- Update to by default serialize schedule execution. Can be overridden with a new `iot_schedule_set_concurrent` function

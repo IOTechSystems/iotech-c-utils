@@ -13,7 +13,7 @@ int main (int argc, char ** argv)
     fprintf (stderr, "Usage: test <profile file>\n");
     exit (-1);
   }
-  char * profile = iot_file_read (argv[1]);
+  char * profile = iot_store_read (argv[1]);
   if (profile == NULL)
   {
     fprintf (stderr, "Failed to read file: %s\n", argv[1]);

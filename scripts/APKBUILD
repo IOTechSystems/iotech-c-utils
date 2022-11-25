@@ -21,6 +21,7 @@ package() {
   then
     mkdir -p ${dest}/lib
     cp -P ${base}/lib/lib*.so* ${dest}/lib
+    cp -P ${base}/lib/lib*.a ${dest}/lib
     chmod 755 ${dest}/lib/*
   fi
   if [ x${DEV} == "x-dev" -o x${DEV} == "x-dbg" ]

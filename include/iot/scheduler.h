@@ -97,7 +97,7 @@ extern void iot_scheduler_start (iot_scheduler_t * scheduler);
  *
  * @param  schd               Pointer to a scheduler
  * @param  func               The function that should be called when the schedule is triggered
- * @param  free_func          The function to free the arg parameter when scheduler is deleted, could be NULL
+ * @param  free_func          The function to free the arg parameter when scheduler is deleted, can be NULL
  * @param  arg                The argument to be passed to the function
  * @param  period             The period of the schedule (in nanoseconds)
  * @param  delay              The time delay before the schedule is first triggered (in nanoseconds)
@@ -107,14 +107,32 @@ extern void iot_scheduler_start (iot_scheduler_t * scheduler);
  * @return iot_schedule       Pointer to the created schedule, NULL on error
  */
 extern iot_schedule_t * iot_schedule_create
-  (iot_scheduler_t * schd, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t delay, uint64_t repeat, iot_threadpool_t * pool, int priority);
+(
+  iot_scheduler_t * schd,
+  iot_schedule_fn_t func,
+  iot_schedule_free_fn_t free_func,
+  void * arg,
+  uint64_t period,
+  uint64_t delay,
+  uint64_t repeat,
+  iot_threadpool_t * pool,
+  int priority
+);
+
+/**
+ * @brief Enable concurrent execution of a schedule
+ *
+ * @param schedule Pointer to the schedule
+ * @param enable   Whether to enable concurrent schedule execution
+ */
+extern void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable);
 
 /**
  * @brief  Add a schedule to the queue
  *
  * @code
  *
- *    bool return = iot_schedule_add(myScheduler, mySchedule);
+ *    bool return = iot_schedule_add (myScheduler, mySchedule);
  *
  * @endcode
  *
@@ -153,6 +171,7 @@ extern bool iot_schedule_remove (iot_scheduler_t * scheduler, iot_schedule_t * s
  * @param  schedule   Pointer to the schedule to be reset
  */
 extern void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule, uint64_t delay);
+
 /**
  * @brief  Add callback function to be invoked when a schedule is run
  *

@@ -1,79 +1,17 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2022
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "iot/iot.h"
+#include "iot/file.h"
 #include <limits.h>
+
+#ifdef IOT_HAS_FILE
 #ifdef _AZURESPHERE_
 #include <applibs/log.h>
 #include <applibs/storage.h>
-#endif
-
-__attribute__((constructor)) static void iot_init (void);
-__attribute__((destructor)) static void iot_fini (void);
-
-extern void iot_data_init (void);
-
-static void iot_init (void)
-{
-  iot_data_init ();
-}
-
-static void iot_fini (void)
-{
-  // Placeholder for any required global cleanup
-}
-
-#ifdef IOT_HAS_FILE
-
-static char * iot_file_config_path (const char * name, const char * uri)
-{
-  assert (name);
-  char *  path = malloc (strlen (name) + (uri ? (strlen (uri) + 7) : 6));
-  path[0] = '\0';
-  if (uri)
-  {
-    strcpy (path, uri);
-    strcat (path, "/");
-  }
-  strcat (path, name);
-  strcat (path, ".json");
-  return path;
-}
-
-char * iot_file_config_loader (const char * name, const char * uri)
-{
-  char * path = iot_file_config_path (name, uri);
-  char * ret = iot_file_read (path);
-  free (path);
-  return ret;
-}
-
-bool iot_file_config_saver (const char * name, const char * uri, const char * config)
-{
-  char * path = iot_file_config_path (name, uri);
-  bool ok = iot_file_write (path, config);
-  free (path);
-  return ok;
-}
-
-char * iot_file_read (const char * path)
-{
-  assert (path);
-  return (char*) iot_file_read_binary (path, NULL);
-}
-
-extern bool iot_file_write (const char * path, const char * str)
-{
-  assert (path && str);
-  return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
-}
-
-#ifdef _AZURESPHERE_
-
 #define IOT_MALLOC_BLOCK_SIZE 512
 
 uint8_t * iot_file_read_binary (const char * path, size_t * len)
@@ -130,15 +68,17 @@ extern bool iot_file_delete (const char * path)
   return (Storage_DeleteMutableFile () == 0);
 }
 
-#else
+#else // _AZURESPHERE_
 
-extern bool iot_file_delete (const char * path)
+bool iot_file_delete (const char * path)
 {
+  assert (path);
   return (remove (path) == 0);
 }
 
 uint8_t * iot_file_read_binary (const char * path, size_t * len)
 {
+  assert (path);
   uint8_t * ret = NULL;
   size_t size = 0;
 
@@ -164,11 +104,12 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
 
 bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
 {
+  assert (path && binary);
   bool ok = false;
   char tmp_path[PATH_MAX];
   strncpy (tmp_path, path, PATH_MAX - 5);
   strcat (tmp_path, ".new");
-  FILE * fd = fopen (tmp_path, "w");
+  FILE *fd = fopen (tmp_path, "w");
   if (fd)
   {
     ok = (fwrite (binary, len, 1u, fd) == 1u);
@@ -176,6 +117,18 @@ bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t le
     if (ok) rename (tmp_path, path);
   }
   return ok;
+}
+
+char * iot_file_read (const char *path)
+{
+  assert (path);
+  return (char *) iot_file_read_binary (path, NULL);
+}
+
+bool iot_file_write (const char * path, const char * str)
+{
+  assert (str);
+  return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
 
 #endif
