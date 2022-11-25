@@ -388,7 +388,7 @@ for (t in targets)
   def arch = getArchParam ()
   def systems = systemMap["${target}"]
 
-  if (("${arch}" == target || "${arch}" == 'all') && (systems.count ("${sys}") != 0 || "${sys}" == 'all'))
+  if (("${arch}" == target || "${arch}" == 'all') && ("${sys}" == 'all' || systems.count ("${sys}") != 0))
   {
     buildMap[target] = { buildStages (target, systems) }
   }
