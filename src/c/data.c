@@ -1662,7 +1662,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   }
 }
 
-void iot_data_map_add_map (iot_data_t * map, const iot_data_t * add)
+void iot_data_map_merge (iot_data_t * map, const iot_data_t * add)
 {
   assert (map && (map->type == IOT_DATA_MAP) && add && (add->type == IOT_DATA_MAP));
   assert (map->key_type == IOT_DATA_MULTI || (map->key_type == add->key_type));
