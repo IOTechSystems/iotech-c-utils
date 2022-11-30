@@ -1089,6 +1089,14 @@ extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void *
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
 /**
+ * @brief Add contents of one map to another. Key types must be compatible.
+ *
+ * @param map  Map to which new map contents are added
+ * @param add  Map containing contents to be added
+ */
+extern void iot_data_map_add_map (iot_data_t * map, const iot_data_t * add);
+
+/**
  * @brief Remove a value by key from a map
  *
  * The function to remove a key-value pair from a map by key

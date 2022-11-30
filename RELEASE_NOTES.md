@@ -330,3 +330,4 @@
 - Persistent store abstractions refactored into store.h
 - File store functions refactored into file.h
 - Update to by default serialize schedule execution. Can be overridden with a new `iot_schedule_set_concurrent` function
+- Added `iot_data_map_add_map` function to add one maps contents to another
