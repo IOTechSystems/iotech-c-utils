@@ -5010,6 +5010,7 @@ static void test_data_map_merge (void)
   iot_data_string_map_add (add, "Five", iot_data_alloc_ui32 (5u));
 
   iot_data_map_merge (map, add);
+  iot_data_map_merge (map, NULL);
 
   CU_ASSERT (iot_data_map_size (map) == 5u)
   const iot_data_t * val = iot_data_string_map_get (map, "Three");

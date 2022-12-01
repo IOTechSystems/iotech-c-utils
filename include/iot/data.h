@@ -1092,7 +1092,7 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
  * @brief Merge the contents of one map into another. Key types must be compatible.
  *
  * @param map  Map to which new map contents are added
- * @param add  Map containing contents to be merged
+ * @param add  Map containing contents to be merged, can be NULL
  */
 extern void iot_data_map_merge (iot_data_t * map, const iot_data_t * add);
 
