@@ -1667,7 +1667,7 @@ void iot_data_map_merge (iot_data_t * map, const iot_data_t * add)
   assert (map && (map->type == IOT_DATA_MAP));
   if (add)
   {
-    assert (add && (add->type == IOT_DATA_MAP));
+    assert (add->type == IOT_DATA_MAP);
     assert (map->key_type == IOT_DATA_MULTI || (map->key_type == add->key_type));
     iot_data_map_iter_t iter;
     iot_data_map_iter (add, &iter);
