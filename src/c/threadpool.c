@@ -90,7 +90,7 @@ static void * iot_threadpool_thread (void * arg)
 #ifdef IOT_HAS_PRCTL
   prctl (PR_SET_NAME, name);
 #endif
-  iot_log_debug (pool->logger, "Thread %s #" PRIu16 " starting", name, th->id);
+  iot_log_debug (pool->logger, "Thread %s #%" PRIu16 " starting", name, th->id);
 
   atomic_fetch_add (&pool->created, 1u);
   while (true)
