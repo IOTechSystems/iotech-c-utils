@@ -8,19 +8,12 @@
 #include "iot/config.h"
 #include "iot/logger.h"
 #include "iot/time.h"
+#include "iot/uuid.h"
 #include "data.h"
 #include "CUnit.h"
 #include <float.h>
 #include <math.h>
 
-#ifdef IOT_HAS_UUID
-#include <uuid/uuid.h>
-#ifndef UUID_STR_LEN
-#define UUID_STR_LEN 37
-#endif
-#else
-#include "iot/uuid.h"
-#endif
 
 static int suite_init (void)
 {
@@ -3656,7 +3649,7 @@ static void test_data_alloc_uuid (void)
   iot_data_free (data);
   data = iot_data_alloc_uuid ();
   CU_ASSERT (iot_data_type (data) == IOT_DATA_ARRAY)
-  CU_ASSERT (iot_data_array_size (data) == sizeof (uuid_t))
+  CU_ASSERT (iot_data_array_size (data) == sizeof (iot_uuid_t))
   iot_data_free (data);
 }
 

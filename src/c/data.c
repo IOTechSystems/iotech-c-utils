@@ -7,20 +7,12 @@
 #include "iot/json.h"
 #include "iot/base64.h"
 #include "iot/hash.h"
+#include "iot/uuid.h"
 #include <stdarg.h>
 #include <math.h>
 #include <float.h>
 
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
-
-#ifdef IOT_HAS_UUID
-#include <uuid/uuid.h>
-#ifndef UUID_STR_LEN
-#define UUID_STR_LEN 37
-#endif
-#else
-#include "iot/uuid.h"
-#endif
 
 #ifdef IOT_HAS_XML
 #include "yxml.h"
@@ -1380,18 +1372,18 @@ iot_data_t * iot_data_alloc_null (void)
 
 iot_data_t * iot_data_alloc_uuid_string (void)
 {
-  char uuid_str [UUID_STR_LEN];
-  uuid_t uuid;
-  uuid_generate (uuid);
-  uuid_unparse (uuid, uuid_str);
-  return iot_data_alloc_string (uuid_str, IOT_DATA_COPY);
+  char *uuid_str = malloc (UUID_STR_LEN);
+  iot_uuid_t uuid;
+  iot_uuid_generate (uuid);
+  iot_uuid_unparse (uuid, uuid_str);
+  return iot_data_alloc_string (uuid_str, IOT_DATA_TAKE);
 }
 
 iot_data_t * iot_data_alloc_uuid (void)
 {
-  uuid_t uuid;
-  uuid_generate (uuid);
-  return iot_data_alloc_array (uuid, sizeof (uuid_t), IOT_DATA_UINT8, IOT_DATA_COPY);
+  iot_uuid_t uuid;
+  iot_uuid_generate (uuid);
+  return iot_data_alloc_array (uuid, sizeof (iot_uuid_t), IOT_DATA_UINT8, IOT_DATA_COPY);
 }
 
 iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str)
