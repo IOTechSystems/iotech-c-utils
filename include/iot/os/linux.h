@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 IOTech Ltd
+// Copyright (c) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,7 +19,6 @@
 #define IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
 #define IOT_HAS_PRCTL
 #define IOT_HAS_FILE
-#define IOT_HAS_UUID
 
 #ifdef _REDHAT_SEAWOLF_
 #undef IOT_HAS_CPU_AFFINITY
@@ -36,12 +35,10 @@
 #undef IOT_HAS_CPU_AFFINITY
 #undef IOT_HAS_PTHREAD_MUTEXATTR_SETPROTOCOL
 #undef IOT_HAS_PRCTL
-#undef IOT_HAS_UUID
 #endif
 
 #ifdef _YOCTO_MUSL_
 #undef IOT_HAS_CPU_AFFINITY
-#undef IOT_HAS_UUID
 #endif
 
 #endif

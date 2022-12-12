@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 IOTech
+// Copyright (c) 2021-2022 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -33,7 +33,7 @@ static void uuid_init (void)
   uuid_initialized = true;
 }
 
-void uuid_generate (uuid_t out)
+void iot_uuid_generate (iot_uuid_t out)
 {
   union { uint8_t b[16]; uint64_t word[2]; } s;
   assert (out);
@@ -47,7 +47,7 @@ void uuid_generate (uuid_t out)
   memcpy (out, s.b, sizeof (s.b));
 }
 
-void uuid_unparse (const uuid_t uuid, char * out)
+void iot_uuid_unparse (const iot_uuid_t uuid, char * out)
 {
   for (unsigned i = 0; i < 16; i++)
   {
