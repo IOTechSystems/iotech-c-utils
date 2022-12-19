@@ -41,9 +41,12 @@ bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont
   {
     const iot_container_config_t * config = iot_container_get_config ();
     iot_data_map_merge (component->config, map);
-    char * json = iot_data_to_json (component->config);
-    (config->save) (component->name, config->uri, json);
-    free (json);
+    if (config->save)
+    {
+      char * json = iot_data_to_json (component->config);
+      (config->save) (component->name, config->uri, json);
+      free (json);
+    }
   }
   return ok;
 }
