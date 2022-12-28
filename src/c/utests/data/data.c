@@ -8,19 +8,12 @@
 #include "iot/config.h"
 #include "iot/logger.h"
 #include "iot/time.h"
+#include "iot/uuid.h"
 #include "data.h"
 #include "CUnit.h"
 #include <float.h>
 #include <math.h>
 
-#ifdef IOT_HAS_UUID
-#include <uuid/uuid.h>
-#ifndef UUID_STR_LEN
-#define UUID_STR_LEN 37
-#endif
-#else
-#include "iot/uuid.h"
-#endif
 
 static int suite_init (void)
 {
@@ -3656,7 +3649,7 @@ static void test_data_alloc_uuid (void)
   iot_data_free (data);
   data = iot_data_alloc_uuid ();
   CU_ASSERT (iot_data_type (data) == IOT_DATA_ARRAY)
-  CU_ASSERT (iot_data_array_size (data) == sizeof (uuid_t))
+  CU_ASSERT (iot_data_array_size (data) == sizeof (iot_uuid_t))
   iot_data_free (data);
 }
 
@@ -4998,6 +4991,28 @@ static void test_data_map_int (void)
   iot_data_free (map);
 }
 
+static void test_data_map_merge (void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * add = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (map, "One", iot_data_alloc_ui32 (1u));
+  iot_data_string_map_add (map, "Two", iot_data_alloc_ui32 (2u));
+  iot_data_string_map_add (map, "Three", iot_data_alloc_ui32 (33u));
+  iot_data_string_map_add (add, "Three", iot_data_alloc_ui32 (3u));
+  iot_data_string_map_add (add, "Four", iot_data_alloc_ui32 (4u));
+  iot_data_string_map_add (add, "Five", iot_data_alloc_ui32 (5u));
+
+  iot_data_map_merge (map, add);
+  iot_data_map_merge (map, NULL);
+
+  CU_ASSERT (iot_data_map_size (map) == 5u)
+  const iot_data_t * val = iot_data_string_map_get (map, "Three");
+  CU_ASSERT (val && (iot_data_ui32 (val) == 3u))
+
+  iot_data_free (map);
+  iot_data_free (add);
+}
+
 static void test_array_to_binary (void)
 {
  uint8_t data [4] = { 1, 2, 3, 4 };
@@ -5020,23 +5035,23 @@ static void test_binary_to_array (void)
 static void test_data_is_nan (void)
 {
   iot_data_t *float_nan = iot_data_alloc_f32 (NAN);
-  CU_ASSERT (iot_data_is_nan(float_nan));
+  CU_ASSERT (iot_data_is_nan (float_nan));
   iot_data_free (float_nan);
 
   iot_data_t *double_nan = iot_data_alloc_f64 (NAN);
-  CU_ASSERT (iot_data_is_nan(double_nan));
+  CU_ASSERT (iot_data_is_nan (double_nan));
   iot_data_free (double_nan);
 
   iot_data_t *float_not_nan = iot_data_alloc_f32 (123.456f);
-  CU_ASSERT_FALSE (iot_data_is_nan(float_not_nan));
+  CU_ASSERT_FALSE (iot_data_is_nan (float_not_nan));
   iot_data_free (float_not_nan);
 
   iot_data_t *double_not_nan = iot_data_alloc_f64 (123.456);
-  CU_ASSERT_FALSE (iot_data_is_nan(double_not_nan));
+  CU_ASSERT_FALSE (iot_data_is_nan (double_not_nan));
   iot_data_free (double_not_nan);
 
   iot_data_t *non_float_type = iot_data_alloc_i32 (0);
-  CU_ASSERT_FALSE (iot_data_is_nan(non_float_type));
+  CU_ASSERT_FALSE (iot_data_is_nan (non_float_type));
   iot_data_free (non_float_type);
 }
 
@@ -5184,6 +5199,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_compress", test_data_compress);
   CU_add_test (suite, "data_map_number", test_data_map_number);
   CU_add_test (suite, "data_map_int", test_data_map_int);
+  CU_add_test (suite, "data_map_merge", test_data_map_merge);
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
   CU_add_test (suite, "data_vector_to_vector", test_data_vector_to_vector);
   CU_add_test (suite, "data_nested_vector_to_array", test_data_nested_vector_to_array);

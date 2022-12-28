@@ -1,10 +1,10 @@
 //
-// Copyright (c) 2021 IOTech Ltd
+// Copyright (c) 2021-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-#ifndef UUID_H
-#define UUID_H
+#ifndef IOT_UUID_H
+#define IOT_UUID_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,10 +12,10 @@ extern "C" {
 
 #define UUID_STR_LEN 37
 
-typedef unsigned char uuid_t[16];
+typedef unsigned char iot_uuid_t[16];
 
-extern void uuid_generate (uuid_t out);
-extern void uuid_unparse (const uuid_t uuid, char * out);
+extern void iot_uuid_generate (iot_uuid_t out);
+extern void iot_uuid_unparse (const iot_uuid_t uuid, char * out);
 
 #ifdef __cplusplus
 }

@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "iot/container.h"
 #include "iot/component.h"
 #include "iot/thread.h"
 
@@ -33,8 +34,21 @@ void iot_component_set_running_callback (iot_component_t * component, iot_compon
 
 bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont, const iot_data_t * map)
 {
+  bool ok = true;
   assert (component && cont && map);
-  return (component->factory && component->factory->reconfig_fn) ? (component->factory->reconfig_fn) (component, cont, map) : false;
+  if (component->factory->reconfig_fn) ok = (component->factory->reconfig_fn) (component, cont, map);
+  if (ok)
+  {
+    const iot_container_config_t * config = iot_container_get_config ();
+    iot_data_map_merge (component->config, map);
+    if (config->save)
+    {
+      char * json = iot_data_to_json (component->config);
+      (config->save) (component->name, config->uri, json);
+      free (json);
+    }
+  }
+  return ok;
 }
 
 void iot_component_fini (iot_component_t * component)

@@ -69,13 +69,13 @@ case ${SYSTEM} in
     chmod 0644 /iotech-iot/scripts/apk.key
     printf '%s' "PACKAGER_PRIVKEY=/iotech-iot/scripts/apk.key" >> /etc/abuild.conf
     export DEV=
-    export DEPS=libuuid
+    export DEPS=
     build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dev
     export DEPS="iotech-iot-${PKG_VER}"
     build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dbg
-    export DEPS=libuuid
+    export DEPS=
     build_apk "${BROOT}/debug" "iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH}"
     ;;
   debian*|ubuntu*)
@@ -88,8 +88,7 @@ case ${SYSTEM} in
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude include --exclude docs --exclude examples \
-      --depends libuuid1
+      --exclude include --exclude docs --exclude examples
 
     ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
@@ -110,7 +109,6 @@ case ${SYSTEM} in
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends libuuid1 \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm *.tar.gz
@@ -136,17 +134,12 @@ case ${SYSTEM} in
     case ${SYSTEM} in
       photon-40)
         RPM_DIST=ph4
-        UUID_DEV_DEP=util-linux-devel
       ;;
       fedora-36)
         RPM_DIST=fc36
-        UUID_DEP=libuuid
-        UUID_DEV_DEP=libuuid-devel
       ;;
       opensuse-15.*)
         FPM=fpm.ruby2.5
-        UUID_DEP=libuuid1
-        UUID_DEV_DEP=libuuid-devel
       ;;
     esac
 
@@ -158,7 +151,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude include --exclude docs --exclude examples ${UUID_DEP:+--depends ${UUID_DEP}}
+      --exclude include --exclude docs --exclude examples
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
@@ -166,7 +159,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --exclude lib ${UUID_DEV_DEP:+--depends ${UUID_DEV_DEP}} \
+      --exclude lib \
       --depends iotech-iot-${PKG_VER}
 
     rm *.tar.gz
@@ -179,7 +172,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev ${UUID_DEV_DEP:+--depends ${UUID_DEV_DEP}}
+      --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm *.tar.gz
     ;;
