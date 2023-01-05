@@ -317,6 +317,7 @@
 
 ## Version 1.4.0
 
+- Support removed for Alpine Linux version 3.17
 - `iot_schedule_reset` function updated to take a start delay parameter
 - Support added for optional component callback, invoked when all components running
 - Component configuration cache added
