@@ -33,8 +33,7 @@ def buildStage (systems, arch)
     def system = systems[i]
     if ("${sys}" == "${system}" || "${sys}" == 'all')
     {
-      withCredentials
-      ([
+      withCredentials ([
         file (credentialsId: 'AlpinePackagerRSAPrivateKey', variable: 'AlpinePackagerRSAPrivateKey'),
         file (credentialsId: 'AlpinePackagerRSAPublicKey', variable: 'AlpinePackagerRSAPublicKey')
       ])
