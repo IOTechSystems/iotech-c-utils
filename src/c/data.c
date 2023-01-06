@@ -20,7 +20,7 @@
 #define YXML_BUFF_SIZE 512
 #endif
 
-#if defined (_GNU_SOURCE) || defined (_ALPINE_)
+#if (defined (_GNU_SOURCE) || defined (_ALPINE_)) && !defined (__arm__)
 #define IOT_HAS_SPINLOCK
 #endif
 
@@ -295,6 +295,8 @@ static void * iot_data_block_alloc (void)
     pthread_spin_lock (&iot_data_slock);
     if (allocate) iot_data_cache = new_data_cache;
   }
+#else
+  if (allocate) iot_data_cache = new_data_cache;
 #endif
   data = iot_data_cache;
   iot_data_cache = data->next;
