@@ -168,7 +168,7 @@ def publishAdvancedMetrics (system, arch)
 
 def publishDebs (arch)
 {
-  def debs_x86_64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-11','debian-10','azuresphere-12','azuresphere-12-2204',yocto-riscv']
+  def debs_x86_64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-11','debian-10','azuresphere-12','azuresphere-12-2204','yocto-riscv']
   def debs_arm64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-11','debian-10']
   def debs_arm32 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-11','debian-10']
   def debs_x86 = ['debian-11','debian-10']
