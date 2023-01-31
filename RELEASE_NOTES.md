@@ -333,3 +333,7 @@
 - Update to by default serialize schedule execution. Can be overridden with a new `iot_schedule_set_concurrent` function
 - Added `iot_data_map_merge` function to merge one maps contents into another
 - Updated `iot_component_reconfig` function to store updated configuration
+
+## Version 1.4.1
+
+- Support removed for Pathfinder for RISC-V as no longer supported by Intel
