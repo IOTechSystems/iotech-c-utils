@@ -26,10 +26,14 @@ static uint64_t xorshift128plus (uint64_t *s)
 
 static void uuid_init (void)
 {
+#ifdef __APPLE__
+  arc4random_buf (uuid_seed, sizeof (uuid_seed));
+#else
   while (getrandom (uuid_seed, sizeof (uuid_seed), 0) != sizeof (uuid_seed))
   {
     iot_wait_usecs (RAND_READ_DELAY);
   }
+#endif
   uuid_initialized = true;
 }
 

@@ -144,6 +144,9 @@ typedef void (*iot_data_free_fn) (void * ptr);
 /** Type for data update function pointer */
 typedef iot_data_t * (*iot_data_update_fn) (const iot_data_t * data, void * arg);
 
+/** Function to compare string data with a string value */
+extern iot_data_cmp_fn iot_data_string_cmp;
+
 /**
  * @brief Set on a per thread basis allocation policy for data (cache or heap)
  *

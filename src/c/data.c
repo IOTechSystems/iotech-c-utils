@@ -241,6 +241,13 @@ static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * k
 
 __attribute__((constructor)) static void iot_data_init (void);
 
+static bool iot_data_string_cmp_fn (const iot_data_t * data, const void * arg)
+{
+  assert (data);
+  return (arg && (data->type == IOT_DATA_STRING) && (strcmp (iot_data_string (data), (const char *) arg) == 0));
+}
+iot_data_cmp_fn iot_data_string_cmp = iot_data_string_cmp_fn;
+
 uint32_t iot_data_type_size (iot_data_type_t type)
 {
   return (type <= IOT_DATA_BINARY) ? iot_data_type_sizes[type] : 0u;

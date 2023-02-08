@@ -1972,7 +1972,9 @@ static void test_data_vector_find (void)
   iot_data_vector_add (vector, 1, elem1);
   iot_data_vector_add (vector, 2, elem2);
   CU_ASSERT (iot_data_vector_find (vector, string_match, "test1") == elem1)
-  CU_ASSERT (iot_data_vector_find (vector, string_match, "foo") == NULL)
+  CU_ASSERT (iot_data_vector_find (vector, iot_data_string_cmp, "test1") == elem1)
+  CU_ASSERT (iot_data_vector_find (vector, iot_data_string_cmp, "foo") == NULL)
+  CU_ASSERT (iot_data_vector_find (vector, iot_data_string_cmp, NULL) == NULL)
   iot_data_free (vector);
 }
 
