@@ -120,12 +120,26 @@ extern iot_schedule_t * iot_schedule_create
 );
 
 /**
- * @brief Enable concurrent execution of a schedule
+ * @brief Enable concurrent execution of a schedule. Synchronous schedules
+ * cannot be made concurrent.
  *
  * @param schedule Pointer to the schedule
  * @param enable   Whether to enable concurrent schedule execution
  */
 extern void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable);
+
+/**
+ * @brief Enable synchronous execution of a schedule, where the main scheduling thread
+ * also executes the schedule function. Note that for repewated schedules, the repeat
+ * interval is calculated after the scheduled function has been called.
+ * Concurrent schedules cannot be made synchronous, as all synchronous schedules
+ * are serialised.
+ *
+ * @param schedule Pointer to the schedule
+ * @param enable   Whether to enable synchronous schedule execution
+ * @return         Whether schedule made synchronous
+ */
+extern bool iot_schedule_set_sync (iot_schedule_t * schedule, bool enable);
 
 /**
  * @brief  Add a schedule to the queue

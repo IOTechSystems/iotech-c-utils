@@ -33,8 +33,9 @@ struct iot_schedule_t
   uint64_t repeat;                   /* The number of repetitions, 0 == infinite */
   uint64_t id;                       /* Schedule unique id */
   _Atomic uint64_t dropped;          /* Number of events dropped */
-  bool scheduled;                    /* A flag to indicate schedule status */
   _Atomic bool concurrent;           /* Whether a schedule can be concurrently executed */
+  _Atomic bool sync;                 /* Whether schedule called synchronously by the scheduler thread */
+  bool scheduled;                    /* A flag to indicate schedule status */
   iot_data_static_t start_key;       /* Data wrapper for schedule start time used as key for queue map */
   iot_data_static_t id_key;          /* Data wrapper for schedule id used as key for idle map */
   iot_data_static_t self_static;     /* Data wrapper for self pointer used as value for idle and queue maps */
@@ -129,7 +130,16 @@ static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
 void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable)
 {
   assert (schedule);
-  atomic_store (&schedule->concurrent, enable);
+  bool ok = !(enable && atomic_load (&schedule->sync)); // Synchronous schedules can't run concurrently
+  if (ok) atomic_store (&schedule->concurrent, enable);
+}
+
+bool iot_schedule_set_sync (iot_schedule_t * schedule, bool enable)
+{
+  assert (schedule);
+  bool ok = !(enable && atomic_load (&schedule->concurrent)); // Concurrent schedules can't run synchronously
+  if (ok) atomic_store (&schedule->sync, enable);
+  return ok;
 }
 
 static void * schedule_fn (void * data)
@@ -178,8 +188,12 @@ static void * iot_scheduler_thread (void * arg)
           current->run_cb (current->arg);
           iot_component_lock (&scheduler->component);
         }
-        /* Post the work to the thread pool or run as thread */
-        if (current->threadpool)
+        if (atomic_load (&current->sync)) // Run schedule directly
+        {
+          iot_log_trace (scheduler->logger, "Running sync schedule #%" PRIu64 "", current->id);
+          schedule_fn (current);
+        }
+        else if (current->threadpool) // Run schedule from threadpool
         {
           iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " from threadpool", current->id);
           if (! iot_threadpool_try_work (current->threadpool, schedule_fn, current, current->priority))
@@ -199,7 +213,7 @@ static void * iot_scheduler_thread (void * arg)
             iot_schedule_free (current);
           }
         }
-        else
+        else // Run schedule in new thread
         {
           iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " as thread", current->id);
           if (!iot_thread_create (NULL, schedule_fn, current, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger))
@@ -218,23 +232,16 @@ static void * iot_scheduler_thread (void * arg)
       {
         /* Recalculate the next start time for the schedule */
         next = current->period + iot_time_nsecs ();
-        if (current->repeat > 0u) // Repetitive schedule
+
+        if ((current->repeat > 0u) && (--(current->repeat) == 0u)) // Last repetition
         {
-          if (--(current->repeat) == 0u) // Last repetition
-          {
-            iot_log_trace (scheduler->logger, "Schedule #%" PRIu64 " now idle", current->id);
-            iot_schedule_queue_remove (scheduler, current);
-            iot_schedule_idle_add (scheduler, current);
-          }
-          else
-          {
-            iot_log_trace (scheduler->logger, "Re-queue repeating schedule #%" PRIu64, current->id);
-            iot_schedule_queue_update (scheduler, current, next);
-          }
+          iot_log_trace (scheduler->logger, "Schedule #%" PRIu64 " now idle", current->id);
+          iot_schedule_queue_remove (scheduler, current);
+          iot_schedule_idle_add (scheduler, current);
         }
         else
         {
-          iot_log_trace (scheduler->logger, "Re-schedule infinite schedule #%" PRIu64, current->id);
+          iot_log_trace (scheduler->logger, "Re-queue repeating schedule #%" PRIu64, current->id);
           iot_schedule_queue_update (scheduler, current, next);
         }
       }
