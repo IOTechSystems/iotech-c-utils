@@ -130,7 +130,7 @@ extern void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable)
 
 /**
  * @brief Enable synchronous execution of a schedule, where the main scheduling thread
- * also executes the schedule function. Note that for repewated schedules, the repeat
+ * also executes the schedule function. Note that for repeated schedules, the repeat
  * interval is calculated after the scheduled function has been called.
  * Concurrent schedules cannot be made synchronous, as all synchronous schedules
  * are serialised.
