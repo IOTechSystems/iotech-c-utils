@@ -359,6 +359,64 @@ static void test_data_from_xml (void)
 }
 #endif
 
+#ifdef IOT_HAS_CBOR
+static void test_data_to_cbor (void)
+{
+  iot_data_t *map = test_sample_map1 ();
+  iot_data_t *cbor = iot_data_to_cbor (map);
+  CU_ASSERT (cbor != NULL)
+  if (cbor)
+  {
+    // printf ("CBOR: %s\n", iot_data_to_json (cbor));
+    // printf ("CBOR hash: %u\n", iot_data_hash (cbor));
+    CU_ASSERT (iot_data_hash (cbor) == 2529945693U)
+  }
+  iot_data_free (cbor);
+  iot_data_free (map);
+
+  map = test_sample_map2 ();
+  cbor = iot_data_to_cbor (map);
+  CU_ASSERT (cbor != NULL)
+  if (cbor)
+  {
+    // printf ("CBOR: %s\n", iot_data_to_json (cbor));
+    // printf ("CBOR hash: %u\n", iot_data_hash (cbor));
+    CU_ASSERT (iot_data_hash (cbor) == 2695702783U)
+  }
+  iot_data_free (cbor);
+  iot_data_free (map);
+
+  // Test different int sizes - CBOR uses variable length encoding
+
+  map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (map, "1", iot_data_alloc_ui64 (12));
+  iot_data_string_map_add (map, "2", iot_data_alloc_ui64 (123));
+  iot_data_string_map_add (map, "3", iot_data_alloc_ui64 (1234));
+  iot_data_string_map_add (map, "4", iot_data_alloc_ui64 (123456));
+  iot_data_string_map_add (map, "5", iot_data_alloc_ui64 (12345678901));
+  iot_data_string_map_add (map, "6", iot_data_alloc_i64 (12));
+  iot_data_string_map_add (map, "7", iot_data_alloc_i64 (123));
+  iot_data_string_map_add (map, "8", iot_data_alloc_i64 (1234));
+  iot_data_string_map_add (map, "9", iot_data_alloc_i64 (123456));
+  iot_data_string_map_add (map, "10", iot_data_alloc_i64 (12345678901));
+  iot_data_string_map_add (map, "11", iot_data_alloc_i64 (-12));
+  iot_data_string_map_add (map, "12", iot_data_alloc_i64 (-123));
+  iot_data_string_map_add (map, "13", iot_data_alloc_i64 (-1234));
+  iot_data_string_map_add (map, "14", iot_data_alloc_i64 (-123456));
+  iot_data_string_map_add (map, "15", iot_data_alloc_i64 (-12345678901));
+  cbor = iot_data_to_cbor (map);
+  CU_ASSERT (cbor != NULL)
+  if (cbor)
+  {
+    // printf ("CBOR: %s\n", iot_data_to_json (cbor));
+    // printf ("CBOR hash: %u\n", iot_data_hash (cbor));
+    CU_ASSERT (iot_data_hash (cbor) == 2072572302U)
+  }
+  iot_data_free (cbor);
+  iot_data_free (map);
+}
+#endif
+
 void cunit_data_io_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data-io", suite_init, suite_clean);
@@ -369,5 +427,8 @@ void cunit_data_io_test_init (void)
   CU_add_test (suite, "data_from_json3", test_data_from_json3);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
+#endif
+#ifdef IOT_HAS_CBOR
+  CU_add_test (suite, "data_to_cbor", test_data_to_cbor);
 #endif
 }

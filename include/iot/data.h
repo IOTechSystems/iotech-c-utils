@@ -1940,6 +1940,31 @@ extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool or
  */
 extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool ordered, iot_data_t * cache);
 
+#ifdef IOT_HAS_CBOR
+/**
+ * @brief  Convert data to CBOR block
+ *
+ * The function to convert data to cbor.
+ *
+ * @param  data  Input data
+ * @return       CBOR in an IOT_DATA_BINARY
+ */
+extern iot_data_t * iot_data_to_cbor (const iot_data_t * data);
+
+/**
+ * @brief  Convert data to CBOR block with initial buffer size
+ *
+ * The function to convert data to cbor. An initial buffer size
+ * is provided to eliminate memory reallocation as the required buffer
+ * size increases.
+ *
+ * @param  data  Input data
+ * @param  size  Initial size of output buffer
+ * @return       CBOR in an IOT_DATA_BINARY
+ */
+extern iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size);
+
+#endif
 #ifdef IOT_HAS_XML
 /**
  * @brief Convert XML to iot_data_t type
