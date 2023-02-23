@@ -1,6 +1,7 @@
 add_subdirectory (json)
 add_subdirectory (logger)
 add_subdirectory (data)
+add_subdirectory (data-io)
 add_subdirectory (threadpool)
 add_subdirectory (misc)
 add_subdirectory (scheduler)

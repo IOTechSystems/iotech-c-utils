@@ -10,6 +10,7 @@
 #include "../container/cont.h"
 #include "../logger/logger.h"
 #include "../data/data.h"
+#include "../data-io/data-io.h"
 #include "../threadpool/threadpool.h"
 #include "../misc/misc.h"
 #include "../../cunit/Basic.h"
@@ -66,6 +67,7 @@ int main (int argc, char* argv[])
   cunit_logger_test_init ();
   cunit_json_test_init ();
   cunit_data_test_init ();
+  cunit_data_io_test_init ();
   cunit_threadpool_test_init ();
   cunit_scheduler_test_init ();
   cunit_base64_test_init ();
