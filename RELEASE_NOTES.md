@@ -339,3 +339,7 @@
 - Support removed for Pathfinder for RISC-V as no longer supported by Intel
 - Added `iot_schedule_set_sync` function to support synchronous schedule execution
 - Added string comparison function `iot_data_string_cmp`
+
+## Version 1.4.2
+
+- Added CBOR export
