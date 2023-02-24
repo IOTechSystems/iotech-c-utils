@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2022 IOTech Ltd
+// Copyright (c) 2019-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -1979,6 +1979,20 @@ extern iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_
  * @return       A iot_data map if input string is a XML string, NULL otherwise.
  */
 extern iot_data_t * iot_data_from_xml (const char * xml);
+#endif
+
+#ifdef IOT_HAS_YAML
+/**
+ * @brief Convert YAML to iot_data_t type
+ *
+ * The function to convert input YAML string to iot_data. The conversion results
+ * in a map, vector or simple type depending on the YAML content.
+ *
+ * @param  yaml       Input YAML string
+ * @param  exception  If a parse error occurs, on exit this will hold a string describing the problem
+ * @return            A iot_data element if input string is a YAML string, NULL otherwise.
+ */
+extern iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t **exception);
 #endif
 
 /**

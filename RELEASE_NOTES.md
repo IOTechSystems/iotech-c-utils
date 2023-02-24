@@ -343,3 +343,4 @@
 ## Version 1.4.2
 
 - Added CBOR export
+- Added YAML reading function `iot_data_from_yaml`

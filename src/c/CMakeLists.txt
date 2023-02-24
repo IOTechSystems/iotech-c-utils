@@ -41,6 +41,10 @@ if ("${LINUX_SYS}" STREQUAL "AzureSphere")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_AZURESPHERE_")
 endif ()
 
+if (IOT_BUILD_YAML)
+  set (LINK_LIBRARIES ${LINK_LIBRARIES} yaml)
+endif ()
+
 # Set files to compile
 set (C_FILES data.c data-io.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c util.c store.c file.c uuid.c)
 if (IOT_BUILD_XML)
