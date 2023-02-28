@@ -14,12 +14,6 @@
 
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
 
-#ifdef IOT_HAS_XML
-#include "yxml.h"
-#define YXML_PARSER_BUFF_SIZE 4096
-#define YXML_BUFF_SIZE 512
-#endif
-
 #if (defined (_GNU_SOURCE) || defined (_ALPINE_)) && !defined (__arm__)
 #define IOT_HAS_SPINLOCK
 #endif
@@ -30,10 +24,9 @@
 
 #define IOT_DATA_TYPES (IOT_DATA_INVALID + 1)
 #define IOT_MEMORY_BLOCK_SIZE 4096u
-#define IOT_JSON_BUFF_SIZE 512u
 #define IOT_VAL_BUFF_SIZE 31u
-#define IOT_JSON_BUFF_DOUBLING_LIMIT 4096u
-#define IOT_JSON_BUFF_INCREMENT 1024u
+#define IOT_STR_BUFF_DOUBLING_LIMIT 4096u
+#define IOT_STR_BUFF_INCREMENT 1024u
 
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
@@ -84,13 +77,6 @@ typedef struct iot_data_vector_t
   uint32_t size;
   iot_data_t ** values;
 } iot_data_vector_t;
-
-typedef struct iot_string_holder_t
-{
-  char * str;
-  size_t size;
-  size_t free;
-} iot_string_holder_t;
 
 typedef struct iot_node_t
 {
@@ -2366,16 +2352,16 @@ static size_t iot_data_repr_size (char c)
   return size_map[(uint8_t) c];
 }
 
-static void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required)
+void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required)
 {
-  size_t inc = holder->size > IOT_JSON_BUFF_DOUBLING_LIMIT ? IOT_JSON_BUFF_INCREMENT : holder->size;
+  size_t inc = holder->size > IOT_STR_BUFF_DOUBLING_LIMIT ? IOT_STR_BUFF_INCREMENT : holder->size;
   if (inc < required) inc = required;
   holder->size += inc;
   holder->free += inc;
   holder->str = realloc (holder->str, holder->size);
 }
 
-static void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape)
+void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape)
 {
   size_t len = strlen (add);
   size_t adj_len = len;
