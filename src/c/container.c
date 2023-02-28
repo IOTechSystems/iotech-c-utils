@@ -61,7 +61,7 @@ static iot_data_t * iot_component_config_to_map (const char * config, iot_logger
   iot_data_t * map = NULL;
   char * str = iot_config_substitute_env (config, logger);
   if (str) map = iot_data_from_json (str);
-  if (map && iot_data_map_key_is_of_type (map, IOT_DATA_STRING))
+  if (map == NULL || ! iot_data_map_key_is_of_type (map, IOT_DATA_STRING))
   {
     iot_log_error (logger, "iot_component_config_to_map: Invalid JSON configuration");
     iot_data_free (map);
