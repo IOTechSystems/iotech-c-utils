@@ -10,12 +10,12 @@
 
 static iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **exception);
 
-static iot_data_t * iot_data_string_from_yaml (yaml_event_t *event)
+static iot_data_t * iot_data_string_from_yaml (const yaml_event_t *event)
 {
   return iot_data_alloc_string ((const char *)event->data.scalar.value, IOT_DATA_COPY);
 }
 
-static iot_data_t * iot_data_value_from_yaml (yaml_event_t *event)
+static iot_data_t * iot_data_value_from_yaml (const yaml_event_t *event)
 {
   iot_data_t *ret = NULL;
   const char *val = (const char *)event->data.scalar.value;
@@ -119,7 +119,7 @@ static iot_data_t * iot_data_vector_from_yaml (yaml_parser_t *parser, iot_data_t
   }
 }
 
-iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **exception)
+static iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **exception)
 {
   yaml_event_t event;
   bool done = false;

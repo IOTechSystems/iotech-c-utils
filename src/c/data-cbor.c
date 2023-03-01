@@ -241,5 +241,13 @@ iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size)
   holder.size = size;
   holder.index = 0;
   iot_data_dump_cbor (&holder, data);
-  return iot_data_alloc_binary (holder.data, holder.index, IOT_DATA_TAKE);
+  if (holder.index <= UINT32_MAX)
+  {
+    return iot_data_alloc_binary (holder.data, holder.index, IOT_DATA_TAKE);
+  }
+  else
+  {
+    free (holder.data);
+    return NULL;
+  }
 }
