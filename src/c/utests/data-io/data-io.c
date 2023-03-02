@@ -417,6 +417,50 @@ static void test_data_to_cbor (void)
 }
 #endif
 
+#ifdef IOT_HAS_YAML
+static void test_data_from_yaml (void)
+{
+  iot_data_t * yaml;
+  iot_data_t * ex;
+  char * json;
+  const char * test_yaml = "name: \"Example Sensor\"\n"
+    "manufacturer: \"IoTechSystems\"\n"
+    "labels:\n"
+    "  - \"sensor\"\n\n"
+    "resources:\n"
+    "  -\n"
+    "    name: Switch\n"
+    "    get:\n"
+    "    - { index: 1, operation: \"get\", object: \"Switch\", parameter: \"Switch\", property: \"value\" }\n"
+    "    set:\n"
+    "    - { index: 1, operation: \"set\", object: \"Switch\", parameter: \"Switch\", property: \"value\" }\n\n"
+    "commands:\n"
+    "  -\n"
+    "    name: SensorOne\n"
+    "    isVisible: true\n"
+    "    get:\n"
+    "        path: \"/api/v1/device/{deviceId}/SensorOne\"\n"
+    "        responses:\n"
+    "          -\n"
+    "            code: 200\n"
+    "            description: \"Get the SensorOne reading.\"\n"
+    "            expectedValues: [\"SensorOne\"]\n"
+    "          -\n"
+    "            code: 503\n"
+    "            description: \"service unavailable\"\n"
+    "            expectedValues: []";
+  const char * expected = "{\"commands\":[{\"get\":{\"path\":\"/api/v1/device/{deviceId}/SensorOne\",\"responses\":[{\"code\":200,\"description\":\"Get the SensorOne reading.\",\"expectedValues\":[\"SensorOne\"]},{\"code\":503,\"description\":\"service unavailable\",\"expectedValues\":[]}]},\"isVisible\":true,\"name\":\"SensorOne\"}],\"labels\":[\"sensor\"],\"manufacturer\":\"IoTechSystems\",\"name\":\"Example Sensor\",\"resources\":[{\"get\":[{\"index\":1,\"object\":\"Switch\",\"operation\":\"get\",\"parameter\":\"Switch\",\"property\":\"value\"}],\"name\":\"Switch\",\"set\":[{\"index\":1,\"object\":\"Switch\",\"operation\":\"set\",\"parameter\":\"Switch\",\"property\":\"value\"}]}]}";
+
+  yaml = iot_data_from_yaml (test_yaml, &ex);
+  CU_ASSERT (yaml != NULL)
+  json = iot_data_to_json (yaml);
+  CU_ASSERT (json != NULL)
+  if (json) CU_ASSERT (strcmp (json, expected) == 0)
+  free (json);
+  iot_data_free (yaml);
+}
+#endif
+
 void cunit_data_io_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data-io", suite_init, suite_clean);
@@ -430,5 +474,8 @@ void cunit_data_io_test_init (void)
 #endif
 #ifdef IOT_HAS_CBOR
   CU_add_test (suite, "data_to_cbor", test_data_to_cbor);
+#endif
+#ifdef IOT_HAS_YAML
+  CU_add_test (suite, "data_from_yaml", test_data_from_yaml);
 #endif
 }

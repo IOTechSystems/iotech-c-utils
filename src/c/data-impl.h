@@ -36,6 +36,17 @@ struct iot_data_t
   bool rehash : 1;
 };
 
+typedef struct iot_string_holder_t
+{
+  char * str;
+  size_t size;
+  size_t free;
+} iot_string_holder_t;
+
+void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required);
+
+void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape);
+
 extern iot_data_static_t iot_data_order;
 
 #endif
