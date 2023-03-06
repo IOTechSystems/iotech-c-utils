@@ -135,6 +135,9 @@ typedef struct iot_data_array_iter_t
   uint32_t _index;                         /**< Index of the given data array */
 } iot_data_array_iter_t;
 
+/** Type for altering behavior of data equal function pointer */
+typedef int (*iot_data_equal_fn) (const iot_data_t * data1,const iot_data_t * data2);
+
 /** Type for data comparison function pointer */
 typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 
@@ -146,6 +149,9 @@ typedef iot_data_t * (*iot_data_update_fn) (const iot_data_t * data, void * arg)
 
 /** Function to compare string data with a string value */
 extern iot_data_cmp_fn iot_data_string_cmp;
+
+/** Function to compare two integer values regardless of datatype **/
+extern iot_data_equal_fn iot_data_raw_int_cmp;
 
 /**
  * @brief Set on a per thread basis allocation policy for data (cache or heap)
@@ -1988,18 +1994,20 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
  *
  * @param  data1 Input data1 (can be NULL)
  * @param  data2 Input data2 (can be NULL)
+ * @param  equal_fn Function to alter behavior of equal function (can be NULL)
  * @return       'true' if data1 & data2 are equal, 'false' otherwise
  */
-extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
+extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2, iot_data_equal_fn equal_fn);
 
 /**
  * @brief Compare two data instances, returning whether the fist is less than, equal to or greater than the second
  *
  * @param  data1 Input data1 (can be NULL)
  * @param  data2 Input data2 (can be NULL)
+ * @param  equal_fn Function to alter behavior of equal function (can be NULL)
  * @return       Returns zero if data1 equals data2, a value less than zero data1 less than data2, a value greater than zero if data1 greater than data2
  */
-extern int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2);
+extern int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2, iot_data_equal_fn equal_fn);
 
 /**
  * @brief Copy data
