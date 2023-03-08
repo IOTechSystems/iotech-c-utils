@@ -633,11 +633,12 @@ bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
     case IOT_DATA_FLOAT32:
     case IOT_DATA_FLOAT64:
     {
-      float_t data1_f64;
-      float_t data2_f64;
+      double epsilon = 0.00001;
+      double data1_f64;
+      double data2_f64;
       iot_data_cast (data1, IOT_DATA_FLOAT64, &data1_f64);
       iot_data_cast (data2, IOT_DATA_FLOAT64, &data2_f64);
-      return (data1_f64 == data2_f64);
+      return (fabs (data1_f64 - data2_f64) < epsilon) ? true : false;
     }
     case IOT_DATA_BOOL:
       return (((const iot_data_value_t*) data1)->value.bl == ((const iot_data_value_t*) data2)->value.bl);

@@ -1450,7 +1450,6 @@ static void test_data_raw_equal_different_types (void)
   data2 = iot_data_alloc_i8(1);
 
   CU_ASSERT (iot_data_equal_raw (data1, data2))
-
   iot_data_increment (data1);
   CU_ASSERT (!iot_data_equal_raw (data1, data2))
   iot_data_free (data1);
@@ -1484,8 +1483,10 @@ static void test_data_raw_equal_different_types (void)
   iot_data_increment (data1);
   CU_ASSERT (!iot_data_equal_raw (data1, data2))
   iot_data_free (data1);
+  iot_data_free (data2);
 
-  data1 = iot_data_alloc_ui64 (1);
+  data1 = iot_data_alloc_f64 (1.123);
+  data2 = iot_data_alloc_f32 (1.123);
   CU_ASSERT (iot_data_equal_raw (data1, data2))
   iot_data_increment (data1);
   CU_ASSERT (!iot_data_equal_raw (data1, data2))
