@@ -352,8 +352,14 @@ void iot_container_start (iot_container_t * cont)
 
 void iot_container_stop (iot_container_t * cont)
 {
-  pthread_rwlock_rdlock (&cont->lock);
   iot_data_list_iter_t iter;
+  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_list_iter (cont->components, &iter);
+  while (iot_data_list_iter_prev (&iter))
+  {
+    iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
+    if (comp->stopping_fn) (comp->stopping_fn) (comp);
+  }
   iot_data_list_iter (cont->components, &iter);
   while (iot_data_list_iter_prev (&iter))
   {

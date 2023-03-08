@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2020-2023
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -21,6 +21,7 @@ static const char * logger_config =
 "}";
 
 static bool running_called = false;
+static bool stopping_called = false;
 
 static int suite_init (void)
 {
@@ -46,6 +47,11 @@ static void test_logger_running_callback (iot_component_t * comp, bool timeout)
 {
   CU_ASSERT (! timeout)
   running_called = true;
+}
+
+static void test_logger_stopping_callback (iot_component_t * comp)
+{
+  stopping_called = true;
 }
 
 static void test_add_component (void)
@@ -79,12 +85,14 @@ static void test_delete_component (void)
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp != NULL)
   iot_component_set_running_callback (comp, test_logger_running_callback);
+  iot_component_set_stopping_callback (comp, test_logger_stopping_callback);
   iot_container_start (cont);
+  CU_ASSERT (running_called)
+  iot_container_stop (cont);
+  CU_ASSERT (stopping_called)
   iot_container_delete_component (cont, "logger");
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp == NULL)
-  CU_ASSERT (running_called)
-  iot_container_stop (cont);
   iot_container_free (cont);
 }
 

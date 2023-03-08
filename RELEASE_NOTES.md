@@ -347,3 +347,4 @@
 ## Version 1.5.0
 
 - Added YAML reading function `iot_data_from_yaml`
+- Added component stopping callback support (called by container before components stopped)
