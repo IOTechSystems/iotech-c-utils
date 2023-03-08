@@ -658,7 +658,7 @@ bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
     }
     case IOT_DATA_VECTOR:
     {
-      int ret = 0;
+      bool ret = true;
       uint32_t size1 = ((const iot_data_vector_t*) data1)->size;
       uint32_t size2 = ((const iot_data_vector_t*) data2)->size;
       if (size1 != size2) return size1 < size2 ? -1 : 1;
@@ -678,7 +678,7 @@ bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
     }
     case IOT_DATA_LIST:
     {
-      int ret = 0;
+      bool ret = true;
       uint32_t len1 = iot_data_list_length (data1);
       uint32_t len2 = iot_data_list_length (data2);
       if (len1 != len2) return len1 < len2 ? -1 : 1;
@@ -698,7 +698,7 @@ bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
     }
     case IOT_DATA_MAP:
     {
-      int ret = 0;
+      bool ret = true;
       uint32_t size1 = ((const iot_data_map_t*) data1)->size;
       uint32_t size2 = ((const iot_data_map_t*) data2)->size;
       if (size1 != size2) return size1 < size2 ? -1 : 1;
