@@ -1497,7 +1497,7 @@ iot_data_t * iot_data_alloc_const_pointer (iot_data_static_t * data, const void 
   memset (data, 0, sizeof (*data));
   iot_data_block_init (&val->base, IOT_DATA_POINTER);
   val->value = (void*) ptr;
-  val->base.hash =  (uint32_t) (intptr_t) ptr;
+  val->base.hash = (uint32_t) (intptr_t) ptr;
   val->base.constant = true;
   return (iot_data_t*) val;
 }
