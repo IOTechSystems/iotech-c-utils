@@ -28,8 +28,14 @@ void iot_component_init (iot_component_t * component, const iot_component_factor
 
 void iot_component_set_running_callback (iot_component_t * component, iot_component_running_fn_t fn)
 {
-  assert (component && fn);
+  assert (component);
   component->running_fn = fn;
+}
+
+void iot_component_set_stopping_callback (iot_component_t * component, iot_component_stopping_fn_t fn)
+{
+  assert (component);
+  component->stopping_fn = fn;
 }
 
 bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont, const iot_data_t * map)

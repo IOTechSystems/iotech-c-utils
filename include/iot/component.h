@@ -54,6 +54,8 @@ typedef void (*iot_component_stop_fn_t) (iot_component_t * comp);
 typedef void (*iot_component_free_fn_t) (iot_component_t * comp);
 /** Type definition for component running function pointer */
 typedef void (*iot_component_running_fn_t) (iot_component_t * comp, bool timeout);
+/** Type definition for component stopping function pointer */
+typedef void (*iot_component_stopping_fn_t) (iot_component_t * comp);
 
 /**
  * Component factory structure
@@ -80,6 +82,7 @@ struct iot_component_t
   iot_component_start_fn_t start_fn;        /**< Pointer to function that handles starting a component */
   iot_component_stop_fn_t stop_fn;          /**< Pointer to function that handles stopping a component */
   iot_component_running_fn_t running_fn;    /**< Pointer to function callback made when all components are running */
+  iot_component_stopping_fn_t stopping_fn;  /**< Pointer to function callback made before components are stopped */
   atomic_int_fast32_t refs;                 /**< Current reference count */
   iot_data_t * config;                      /**< Parsed configuration */
   const iot_component_factory_t * factory;  /**< Pointer to component factory structure */
@@ -106,6 +109,16 @@ extern void iot_component_init (iot_component_t * component, const iot_component
  * @param fn         Function pointer to the component running function
  */
  extern void iot_component_set_running_callback (iot_component_t * component, iot_component_running_fn_t fn);
+
+ /**
+ * @brief Set component callback function, called before all container components are stopped
+ *
+ * The function to register a running callback handler with the component
+ *
+ * @param component  Pointer to the component
+ * @param fn         Function pointer to the component stopping function
+ */
+ extern void iot_component_set_stopping_callback (iot_component_t * component, iot_component_stopping_fn_t fn);
 
 /**
  * @brief Reconfigure component
@@ -193,7 +206,7 @@ extern bool iot_component_set_starting (iot_component_t * component);
  * @param states     Logical OR of states on which to wait
  * @return           State of the component that resulted in unblocking (one of states)
  */
-extern iot_component_state_t iot_component_wait  (iot_component_t * component, uint32_t states);
+extern iot_component_state_t iot_component_wait (iot_component_t * component, uint32_t states);
 
 /**
  * @brief Block until the component state is changed to states
@@ -211,7 +224,7 @@ extern iot_component_state_t iot_component_wait  (iot_component_t * component, u
  * @param states     Component state(s) to check for unblocking
  * @return           State of the component that resulted in unblocking
  */
-extern iot_component_state_t iot_component_wait_and_lock  (iot_component_t * component, uint32_t states);
+extern iot_component_state_t iot_component_wait_and_lock (iot_component_t * component, uint32_t states);
 
 /**
  * @brief Acquire lock on the component
