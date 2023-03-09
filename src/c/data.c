@@ -611,6 +611,7 @@ bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 
 bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
 {
+  if (data1 == NULL || data2 == NULL) return data1 == data2;
   if (data1 == data2) return true;
   switch (data1->type)
   {
@@ -644,7 +645,7 @@ bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
     case IOT_DATA_POINTER:
       return (((const iot_data_pointer_t*) data1)->value == ((const iot_data_pointer_t*) data2)->value);
     case IOT_DATA_STRING:
-      return ((strcmp (((const iot_data_value_t*) data1)->value.str, ((const iot_data_value_t*) data2)->value.str) == 0));
+      return (strcmp (((const iot_data_value_t*) data1)->value.str, ((const iot_data_value_t*) data2)->value.str) == 0);
     case IOT_DATA_NULL: return false;
     case IOT_DATA_BINARY:
     case IOT_DATA_ARRAY:
