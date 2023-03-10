@@ -161,6 +161,13 @@ static void cunit_logger_selfstart (void)
   iot_logger_free (logger);
 }
 
+static void cunit_logger_format (void)
+{
+  iot_logger_t *logger = iot_logger_alloc ("MyLogger", IOT_LOG_INFO, true);
+  iot_log_info (logger, "INFO: %s %u", "testarg", 1234);
+  iot_logger_free (logger);
+}
+
 void cunit_logger_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("logger", suite_init, suite_clean);
@@ -175,4 +182,5 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_start_stop", cunit_logger_start_stop);
   CU_add_test (suite, "logger_refcount", cunit_logger_refcount);
   CU_add_test (suite, "logger_selfstart", cunit_logger_selfstart);
+  CU_add_test (suite, "logger_format", cunit_logger_format);
 }
