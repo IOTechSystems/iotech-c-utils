@@ -604,15 +604,14 @@ int iot_data_compare (const iot_data_t * v1, const iot_data_t * v2)
     (((const iot_data_value_t*) v1)->value.ui64 < ((const iot_data_value_t*) v2)->value.ui64) ? -1 : 1;
 }
 
-bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
-{
-  return ((iot_data_hash (v1) == iot_data_hash (v2)) && iot_data_compare (v1, v2) == 0);
-}
-
-bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
+static bool iot_data_equality_check (const iot_data_t * data1, const iot_data_t * data2, bool raw_value)
 {
   if (data1 == NULL || data2 == NULL) return data1 == data2;
   if (data1 == data2) return true;
+  if (!raw_value)
+  {
+    if (data1->type != data2->type) return false;
+  }
   switch (data1->type)
   {
     case IOT_DATA_INT8:
@@ -721,6 +720,16 @@ bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
     default: break;
   }
   return (((const iot_data_value_t*) data1)->value.ui64 == ((const iot_data_value_t*) data2)->value.ui64);
+}
+
+bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
+{
+  return ((iot_data_hash (v1) == iot_data_hash (v2)) && iot_data_equality_check (v1, v2, false));
+}
+
+bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
+{
+  return iot_data_equality_check (data1, data2, true);
 }
 
 static bool iot_data_cast_val (const iot_data_union_t in, void * out, iot_data_type_t in_type, iot_data_type_t out_type)
