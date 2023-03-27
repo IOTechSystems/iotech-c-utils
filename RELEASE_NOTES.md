@@ -349,4 +349,4 @@
 - Added YAML reading function `iot_data_from_yaml`
 - Added component stopping callback support (called by container before components stopped)
 - Support removed for Alpine 3.15 and Ubuntu 18.04
-- Added function `iot_data_binary_from_string` to convert binray data to string data
+- Added function `iot_data_binary_from_string` to convert binary data to string data
