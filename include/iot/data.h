@@ -763,6 +763,12 @@ extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_dat
 extern void iot_data_binary_to_array (iot_data_t * data);
 
 /**
+ * @brief Create binary from string data
+ * @param data       Pointer to the string data
+ */
+extern iot_data_t * iot_data_binary_from_string (const iot_data_t * data);
+
+/**
  * @brief Convert a binary to an array
  * @param data       Pointer to the binary to be converted
  */

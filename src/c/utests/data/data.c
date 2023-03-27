@@ -3404,6 +3404,17 @@ static void test_data_binary (void)
   iot_data_free (bin);
 }
 
+static void test_data_binary_from_string (void)
+{
+  iot_data_t * str = iot_data_alloc_string ("Hello", IOT_DATA_COPY);
+  iot_data_t * bin = iot_data_binary_from_string (str);
+  const char * ptr = iot_data_address (bin);
+  const char * ptr2 = iot_data_string (str);
+  CU_ASSERT (strcmp (ptr, ptr2) == 0)
+  iot_data_free (str);
+  iot_data_free (bin);
+}
+
 static void test_data_alloc_heap (void)
 {
   iot_data_alloc_heap (true);
@@ -4759,6 +4770,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_type_string", test_data_type_string);
   CU_add_test (suite, "data_array_key", test_data_array_key);
   CU_add_test (suite, "data_binary", test_data_binary);
+  CU_add_test (suite, "data_binary_from_string", test_data_binary_from_string);
   CU_add_test (suite, "data_array_iter_next", test_data_array_iter_next);
   CU_add_test (suite, "data_array_iter_prev", test_data_array_iter_prev);
   CU_add_test (suite, "data_array_iter_uint8", test_data_array_iter_uint8);
