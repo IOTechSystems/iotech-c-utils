@@ -1441,7 +1441,7 @@ extern iot_data_t * iot_data_binary_from_string (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_STRING));
   const char * ptr = iot_data_string (data);
-  return iot_data_alloc_binary (strdup (ptr), strlen (ptr) + 1u, IOT_DATA_COPY);
+  return iot_data_alloc_binary ((void*) ptr, strlen (ptr) + 1u, IOT_DATA_COPY);
 }
 
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)
