@@ -769,6 +769,12 @@ extern void iot_data_binary_to_array (iot_data_t * data);
 extern iot_data_t * iot_data_binary_from_string (const iot_data_t * data);
 
 /**
+ * @brief Create string from binary data
+ * @param data       Pointer to the binary data
+ */
+extern iot_data_t * iot_data_string_from_binary (const iot_data_t * data);
+
+/**
  * @brief Convert a binary to an array
  * @param data       Pointer to the binary to be converted
  */

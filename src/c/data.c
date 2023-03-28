@@ -1444,6 +1444,16 @@ extern iot_data_t * iot_data_binary_from_string (const iot_data_t * data)
   return iot_data_alloc_binary ((void*) ptr, strlen (ptr) + 1u, IOT_DATA_COPY);
 }
 
+extern iot_data_t * iot_data_string_from_binary (const iot_data_t * data)
+{
+  assert (data && (data->type == IOT_DATA_BINARY));
+  uint32_t len = iot_data_array_length (data);
+  char * str = malloc (len + 1u);
+  memcpy (str, iot_data_address (data), len);
+  str[len] = '\0';
+  return iot_data_alloc_string (str, IOT_DATA_TAKE);
+}
+
 extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data_type_t type, iot_data_ownership_t ownership)
 {
   assert ((type <= IOT_DATA_BOOL) && ((length > 0 && data != NULL) || length == 0));
