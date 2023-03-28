@@ -350,3 +350,4 @@
 - Added component stopping callback support (called by container before components stopped)
 - Support removed for Alpine 3.15 and Ubuntu 18.04
 - Added function `iot_data_binary_from_string` to create binary data from string data
+- Added function `iot_data_string_from_binary` to create string data from binary data
