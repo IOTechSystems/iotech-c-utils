@@ -1146,6 +1146,13 @@ static void test_data_equal_array (void)
 
   CU_ASSERT (iot_data_equal (array1, array2))
   CU_ASSERT (iot_data_equal_raw (array1, array2))
+
+  iot_data_free (array1);
+  array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT16, IOT_DATA_REF);
+
+  CU_ASSERT (!iot_data_equal (array1, array2))
+  CU_ASSERT (iot_data_equal_raw (array1, array2))
+
   iot_data_free (array1);
   iot_data_free (array2);
 }
@@ -1523,10 +1530,12 @@ static void test_data_raw_equal_different_types (void)
   iot_data_free (data2);
 
   data1 = iot_data_alloc_f64 (1.123);
-  data2 = iot_data_alloc_f32 (1.123);
+  data2 = iot_data_alloc_f32 (1.123f);
   CU_ASSERT (iot_data_equal_raw (data1, data2))
+  CU_ASSERT (iot_data_equal_raw (data2, data1))
   iot_data_increment (data1);
   CU_ASSERT (!iot_data_equal_raw (data1, data2))
+  CU_ASSERT (!iot_data_equal_raw (data2, data1))
   iot_data_free (data1);
   iot_data_free (data2);
 }
@@ -4077,9 +4086,12 @@ static void test_data_vector_hash (void)
 
 static void data_compare_check (iot_data_t * v1, iot_data_t * v1b, iot_data_t * v2)
 {
-  CU_ASSERT (iot_data_compare (v1, v2) < 0)
-  CU_ASSERT (iot_data_compare (v2, v1) > 0)
-  CU_ASSERT (iot_data_compare (v1, v1b) == 0)
+  CU_ASSERT (iot_data_compare_check (v1, v2, false) < 0)
+  CU_ASSERT (iot_data_compare_check (v2, v1, false) > 0)
+  CU_ASSERT (iot_data_compare_check (v1, v1b, false) == 0)
+  CU_ASSERT (iot_data_compare_check (v1, v2, true) < 0)
+  CU_ASSERT (iot_data_compare_check (v2, v1, true) > 0)
+  CU_ASSERT (iot_data_compare_check (v1, v1b, true) == 0)
   iot_data_free (v1);
   iot_data_free (v2);
   iot_data_free (v1b);
@@ -4106,8 +4118,10 @@ static void test_data_compare (void)
   data_compare_check (iot_data_alloc_bool (false), iot_data_alloc_bool (false),iot_data_alloc_bool (true));
   data_compare_check (iot_data_alloc_pointer ((void*) 0, NULL), iot_data_alloc_pointer ((void*) 0, NULL),iot_data_alloc_pointer ((void*) 2, NULL));
   data_compare_check (iot_data_alloc_string ("a", IOT_DATA_COPY), iot_data_alloc_string ("a", IOT_DATA_COPY),iot_data_alloc_string ("b", IOT_DATA_COPY));
-  CU_ASSERT (iot_data_compare (NULL, NULL) == 0)
-  CU_ASSERT (iot_data_compare (iot_data_alloc_null (), iot_data_alloc_null ()) == 0)
+  CU_ASSERT (iot_data_compare_check (NULL, NULL, false) == 0)
+  CU_ASSERT (iot_data_compare_check (iot_data_alloc_null (), iot_data_alloc_null (), false) == 0)
+  CU_ASSERT (iot_data_compare_check (NULL, NULL, true) == 0)
+  CU_ASSERT (iot_data_compare_check (iot_data_alloc_null (), iot_data_alloc_null (), true) == 0)
   data_compare_check (NULL, NULL, iot_data_alloc_null ());
   data_compare_check (iot_data_alloc_binary (bin1, sizeof (bin1), IOT_DATA_REF), iot_data_alloc_binary (bin1b, sizeof (bin1b), IOT_DATA_REF), iot_data_alloc_binary (bin2, sizeof (bin2), IOT_DATA_REF));
   v1 = iot_data_alloc_vector (1u);
@@ -4134,7 +4148,8 @@ static void test_data_compare (void)
   data_compare_check (v1, v1b, v2);
   v1 = iot_data_alloc_null ();
   v1b = iot_data_alloc_null ();
-  CU_ASSERT (iot_data_compare (v1, v1b) == 0)
+  CU_ASSERT (iot_data_compare_check (v1, v1b, false) == 0)
+  CU_ASSERT (iot_data_compare_check (v1, v1b, true) == 0)
 }
 
 static void test_data_vector_to_array (void)
