@@ -1763,6 +1763,12 @@ const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_
   return ((data && (iot_data_type (data) == IOT_DATA_MAP)) ? data : NULL);
 }
 
+const iot_data_t * iot_data_map_get_array (const iot_data_t * map, const iot_data_t * key)
+{
+  const iot_data_t * data = iot_data_map_get (map, key);
+  return ((data && (iot_data_type (data) == IOT_DATA_ARRAY)) ? data : NULL);
+}
+
 const iot_data_t * iot_data_map_get_list (const iot_data_t * map, const iot_data_t * key)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
