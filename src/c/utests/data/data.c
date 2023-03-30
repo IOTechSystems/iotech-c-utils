@@ -2413,6 +2413,36 @@ static void test_data_map_remove (void)
   free (str);
 }
 
+static void test_data_map_get_list (void)
+{
+  iot_data_t * list_key = iot_data_alloc_string ("list", IOT_DATA_REF);
+  iot_data_t * string_key = iot_data_alloc_string ("str", IOT_DATA_REF);
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_map_add (map, string_key, iot_data_alloc_string ("string", IOT_DATA_REF));
+  iot_data_map_add (map, list_key, list);
+  const iot_data_t * found = iot_data_map_get_list (map, list_key);
+  CU_ASSERT (found == list)
+  found = iot_data_map_get_list (map, string_key);
+  CU_ASSERT (found == NULL)
+  iot_data_free (map);
+}
+
+static void test_data_map_get_array (void)
+{
+  iot_data_t * array_key = iot_data_alloc_string ("array", IOT_DATA_REF);
+  iot_data_t * string_key = iot_data_alloc_string ("str", IOT_DATA_REF);
+  iot_data_t * array = iot_data_alloc_array (NULL, 0u, IOT_DATA_UINT32, IOT_DATA_REF);
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_map_add (map, string_key, iot_data_alloc_string ("string", IOT_DATA_REF));
+  iot_data_map_add (map, array_key, array);
+  const iot_data_t * found = iot_data_map_get_array (map, array_key);
+  CU_ASSERT (found == array)
+  found = iot_data_map_get_list (map, string_key);
+  CU_ASSERT (found == NULL)
+  iot_data_free (map);
+}
+
 static void test_data_map_iter_replace (void)
 {
   iot_data_map_iter_t it;
@@ -4812,6 +4842,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_map_get", test_map_get);
   CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);
   CU_add_test (suite, "data_map_remove", test_data_map_remove);
+  CU_add_test (suite, "data_map_get_list", test_data_map_get_list);
+  CU_add_test (suite, "data_map_get_array", test_data_map_get_array);
   CU_add_test (suite, "data_string_vector", test_data_string_vector);
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_infinite", test_data_infinite);

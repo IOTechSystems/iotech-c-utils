@@ -1294,6 +1294,17 @@ extern const iot_data_t * iot_data_map_get_vector (const iot_data_t * map, const
 extern const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_t * key);
 
 /**
+ * @brief Get array corresponding to key from a string map
+ *
+ * The function to get an array corresponding to key from the map, if the type value is not IOT_DATA_ARRAY then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             Array found by key in the map. NULL if not found or not an array
+ */
+extern const iot_data_t * iot_data_map_get_array (const iot_data_t * map, const iot_data_t * key);
+
+/**
  * @brief Get list corresponding to key from a map
  *
  * The function to get a list corresponding to key from the map, if the type value is not IOT_DATA_LIST then NULL is returned
