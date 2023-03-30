@@ -2438,7 +2438,7 @@ static void test_data_map_get_array (void)
   iot_data_map_add (map, array_key, array);
   const iot_data_t * found = iot_data_map_get_array (map, array_key);
   CU_ASSERT (found == array)
-  found = iot_data_map_get_list (map, string_key);
+  found = iot_data_map_get_array (map, string_key);
   CU_ASSERT (found == NULL)
   iot_data_free (map);
 }
