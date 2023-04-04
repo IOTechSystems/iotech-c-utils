@@ -4780,6 +4780,49 @@ static void test_binary_to_array (void)
   iot_data_free (binary);
 }
 
+static void test_binary_take (void)
+{
+  // Buffer not taken as referenced in binary
+  uint32_t len;
+  uint16_t buff [2u] = { 0u };
+  iot_data_t * bin = iot_data_alloc_binary (buff, sizeof (buff), IOT_DATA_REF);
+  void * ptr = iot_data_binary_take (bin, &len);
+  printf ("Length : %d\n", len);
+  CU_ASSERT (len == 4)
+  CU_ASSERT (ptr != buff)
+  iot_data_free (bin);
+  free (ptr);
+
+  // Buffer taken from binary
+  void * alloced = malloc (5u);
+  bin = iot_data_alloc_binary (alloced, 5u, IOT_DATA_TAKE);
+  ptr = iot_data_binary_take (bin, &len);
+  CU_ASSERT (len == 5)
+  CU_ASSERT (ptr == alloced)
+  iot_data_free (bin);
+  free (ptr);
+
+  // Buffer taken from binary
+  bin = iot_data_alloc_binary (buff, sizeof (buff), IOT_DATA_COPY);
+  alloced = (void*) iot_data_address (bin);
+  ptr = iot_data_binary_take (bin, &len);
+  CU_ASSERT (len == 4)
+  CU_ASSERT (ptr == alloced)
+  iot_data_free (bin);
+  free (ptr);
+
+  // Buffer not taken as binary ref counted
+  bin = iot_data_alloc_binary (buff, sizeof (buff), IOT_DATA_COPY);
+  iot_data_add_ref (bin);
+  alloced = (void*) iot_data_address (bin);
+  ptr = iot_data_binary_take (bin, &len);
+  CU_ASSERT (len == 4)
+  CU_ASSERT (ptr != alloced)
+  iot_data_free (bin);
+  iot_data_free (bin);
+  free (ptr);
+}
+
 static void test_data_is_nan (void)
 {
   iot_data_t *float_nan = iot_data_alloc_f32 (NAN);
@@ -4958,14 +5001,15 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "array_dimensions", test_array_dimensions);
   CU_add_test (suite, "vector_dimensions", test_vector_dimensions);
   CU_add_test (suite, "data_map_iter_start_end", test_data_map_iter_start_end);
-  CU_add_test (suite, "test_shallow_copy_map", test_shallow_copy_map);
-  CU_add_test (suite, "test_shallow_copy_vector", test_shallow_copy_vector);
-  CU_add_test (suite, "test_shallow_copy_list", test_shallow_copy_list);
-  CU_add_test (suite, "test_get_at", test_get_at);
-  CU_add_test (suite, "test_add_at", test_add_at);
-  CU_add_test (suite, "test_remove_at", test_remove_at);
-  CU_add_test (suite, "test_update_at", test_update_at);
-  CU_add_test (suite, "test_array_to_binary", test_array_to_binary);
-  CU_add_test (suite, "test_binary_to_array", test_binary_to_array);
-  CU_add_test (suite, "test_data_is_nan", test_data_is_nan);
+  CU_add_test (suite, "shallow_copy_map", test_shallow_copy_map);
+  CU_add_test (suite, "shallow_copy_vector", test_shallow_copy_vector);
+  CU_add_test (suite, "shallow_copy_list", test_shallow_copy_list);
+  CU_add_test (suite, "get_at", test_get_at);
+  CU_add_test (suite, "add_at", test_add_at);
+  CU_add_test (suite, "remove_at", test_remove_at);
+  CU_add_test (suite, "update_at", test_update_at);
+  CU_add_test (suite, "array_to_binary", test_array_to_binary);
+  CU_add_test (suite, "binary_to_array", test_binary_to_array);
+  CU_add_test (suite, "binary_take", test_binary_take);
+  CU_add_test (suite, "data_is_nan", test_data_is_nan);
 }

@@ -1425,6 +1425,27 @@ extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_dat
   return bin;
 }
 
+extern void * iot_data_binary_take (iot_data_t * data, uint32_t * len)
+{
+  void * ret;
+  assert (data && len && (data->type == IOT_DATA_BINARY || data->type == IOT_DATA_ARRAY));
+  iot_data_array_t * array = (iot_data_array_t*) data;
+  *len = iot_data_array_size (data);
+  if (array->base.release && (atomic_load (&(data)->refs) == 1u))
+  {
+    ret = array->data;
+    array->data = NULL;
+    array->length = 0u;
+  }
+  else
+  {
+    ret = malloc (array->length);
+    memcpy (ret, array->data, *len);
+  }
+  return ret;
+}
+
+
 extern void iot_data_array_to_binary (iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_BINARY) && data->element_type == IOT_DATA_UINT8);

@@ -757,6 +757,14 @@ extern iot_data_t * iot_data_list_head_pop (iot_data_t * list);
 extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_data_ownership_t ownership);
 
 /**
+ * @brief Take buffer from a Binary or an Array. If internal buffer cannot be taken (is referenced or shared) a copy is returned
+ * @param data       Pointer to the binary or array
+ * @param len        Pointer to the returned buffer length
+ * @return           Binary or Array data buffer
+ */
+extern void * iot_data_binary_take (iot_data_t * data, uint32_t * len);
+
+/**
  * @brief Convert an array to a binary
  * @param data       Pointer to the array to be converted
  */
