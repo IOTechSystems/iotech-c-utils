@@ -713,7 +713,7 @@ int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2, bool r
     int64_t data2_i64;
     if (iot_data_cast (v1, IOT_DATA_INT64, &data1_i64)  && iot_data_cast (v2, IOT_DATA_INT64, &data2_i64))
     {
-      if (data1_ui64 == data2_ui64)
+      if (data1_i64 == data2_i64)
         return 0;
     }
   }
