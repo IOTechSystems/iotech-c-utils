@@ -503,7 +503,7 @@ extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data, const 
   return (data && data->base.meta && key) ? iot_data_map_get (data->base.meta, key): NULL;
 }
 
-int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2, bool raw)
+static int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2, bool raw)
 {
   if (v1 == v2) return 0;
   if (v1 == NULL || v2 == NULL) return (v1 == NULL) ? -1 : 1;
@@ -723,7 +723,12 @@ int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2, bool r
 
 bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 {
-  return ((iot_data_hash (v1) == iot_data_hash (v2)) && (iot_data_compare_check (v1, v2, false) == 0));
+  return ((iot_data_hash (v1) == iot_data_hash (v2)) && (iot_data_compare (v1, v2) == 0));
+}
+
+int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2)
+{
+  return (iot_data_compare_check (data1, data2, false));
 }
 
 bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
