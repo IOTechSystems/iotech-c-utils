@@ -578,10 +578,10 @@ int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2, bool r
         double_t f2;
         iot_data_cast (v1, IOT_DATA_FLOAT64, &f1);
         iot_data_cast (v2, IOT_DATA_FLOAT64, &f2);
-        if ( fabs (f1 - f2) < 0.00001)
+        if (f1 == f2)
           return 0;
         else
-          return ( f1 < f2) ? -1 : 1;
+          return (f1 < f2) ? -1 : 1;
       }
       return (((const iot_data_value_t *) v1)->value.f32 == ((const iot_data_value_t *) v2)->value.f32) ? 0 :
              (((const iot_data_value_t *) v1)->value.f32 < ((const iot_data_value_t *) v2)->value.f32) ? -1 : 1;
@@ -594,10 +594,10 @@ int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2, bool r
         double_t f2;
         iot_data_cast (v1, IOT_DATA_FLOAT64, &f1);
         iot_data_cast (v2, IOT_DATA_FLOAT64, &f2);
-        if (fabs (f1 - f2) < 0.00001)
+        if (f1 == f2)
           return 0;
         else
-          return ( f1 < f2) ? -1 : 1;
+          return (f1 < f2) ? -1 : 1;
       }
       return (((const iot_data_value_t *) v1)->value.f64 == ((const iot_data_value_t *) v2)->value.f64) ? 0 :
              (((const iot_data_value_t *) v1)->value.f64 < ((const iot_data_value_t *) v2)->value.f64) ? -1 : 1;
