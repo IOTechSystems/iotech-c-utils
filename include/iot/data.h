@@ -1992,7 +1992,6 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
  */
 extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 
-
 /**
  * @brief Check for equality of 2 iot_data types regardless of the value datatype
  *
@@ -2012,6 +2011,15 @@ extern bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * dat
  * @return       Returns zero if data1 equals data2, a value less than zero data1 less than data2, a value greater than zero if data1 greater than data2
  */
 extern int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2);
+
+/**
+ * @brief Compare two data instances regardless of value datatype, returning whether the fist is less than, equal to or greater than the second
+ *
+ * @param  data1 Input data1 (can be NULL)
+ * @param  data2 Input data2 (can be NULL)
+ * @return       Returns zero if data1 equals data2, a value less than zero data1 less than data2, a value greater than zero if data1 greater than data2
+ */
+extern int iot_data_compare_raw (const iot_data_t * data1, const iot_data_t * data2);
 
 /**
  * @brief Copy data

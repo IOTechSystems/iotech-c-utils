@@ -721,19 +721,24 @@ static int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2,
   return iot_data_compare_check (v1, v2, false);
 }
 
-bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
-{
-  return ((iot_data_hash (v1) == iot_data_hash (v2)) && (iot_data_compare (v1, v2) == 0));
-}
-
 int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2)
 {
   return (iot_data_compare_check (data1, data2, false));
 }
 
+int iot_data_compare_raw (const iot_data_t * data1, const iot_data_t * data2)
+{
+  return (iot_data_compare_check (data1, data2, true));
+}
+
+bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
+{
+  return ((iot_data_hash (v1) == iot_data_hash (v2)) && (iot_data_compare (v1, v2) == 0));
+}
+
 bool iot_data_equal_raw (const iot_data_t * data1, const iot_data_t * data2)
 {
-  return (iot_data_compare_check (data1, data2, true) == 0);
+  return (iot_data_compare_raw (data1, data2) == 0);
 }
 
 static bool iot_data_cast_val (const iot_data_union_t in, void * out, iot_data_type_t in_type, iot_data_type_t out_type)
