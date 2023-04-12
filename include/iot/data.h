@@ -1112,6 +1112,19 @@ extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void *
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
 /**
+ * @brief Add key-value pair to a map if key not already in use
+ *
+ * The function to add a key-value pair to a map if key not already in use
+ *
+ * @param map  Map to add a new key-value pair
+ * @param key  Input key
+ * @param val  Input value
+ * @return     Whether key-value pair has been added
+ * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
+ */
+extern bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * val);
+
+/**
  * @brief Merge the contents of one map into another. Key types must be compatible.
  *
  * @param map  Map to which new map contents are added

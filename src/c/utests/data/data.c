@@ -4062,6 +4062,25 @@ static void test_data_compare (void)
   CU_ASSERT (iot_data_compare (v1, v1b) == 0)
 }
 
+static void test_data_map_add_unused (void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * val = iot_data_alloc_ui32 (1u);
+  iot_data_string_map_add (map, "One", val);
+  val = iot_data_alloc_ui32 (2u);
+  iot_data_t * key = iot_data_alloc_string ("Two", IOT_DATA_REF);
+  bool added = iot_data_map_add_unused (map, key, val);
+  CU_ASSERT (added)
+  val = iot_data_alloc_ui32 (3u);
+  key = iot_data_alloc_string ("Two", IOT_DATA_REF);
+  added = iot_data_map_add_unused (map, key, val);
+  CU_ASSERT (! added)
+  CU_ASSERT (iot_data_map_size (map) == 2)
+  iot_data_free (val);
+  iot_data_free (key);
+  iot_data_free (map);
+}
+
 static void test_data_vector_to_array (void)
 {
   iot_data_t * vector = iot_data_alloc_vector (3u);
@@ -4886,6 +4905,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);
   CU_add_test (suite, "data_map_remove", test_data_map_remove);
   CU_add_test (suite, "data_map_get_list", test_data_map_get_list);
+  CU_add_test (suite, "data_map_add_unused", test_data_map_add_unused);
   CU_add_test (suite, "data_map_get_array", test_data_map_get_array);
   CU_add_test (suite, "data_string_vector", test_data_string_vector);
   CU_add_test (suite, "data_address", test_data_address);
