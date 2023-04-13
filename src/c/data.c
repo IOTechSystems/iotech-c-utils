@@ -666,7 +666,7 @@ static int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2,
   }
   RAW:
 
-  if (v1->type <= IOT_DATA_UINT64 & v2->type <= IOT_DATA_UINT64)
+  if (v1->type <= IOT_DATA_UINT64 && v2->type <= IOT_DATA_UINT64)
   {
     uint64_t data1_ui64;
     uint64_t data2_ui64;
