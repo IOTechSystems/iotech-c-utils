@@ -1659,6 +1659,21 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   }
 }
 
+bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * val)
+{
+  assert (map && key && val);
+  assert (map->type == IOT_DATA_MAP);
+  assert (key->type == map->key_type || map->key_type == IOT_DATA_MULTI);
+  assert (map->element_type == val->type || map->element_type == IOT_DATA_MULTI);
+  bool add = iot_node_find (((const iot_data_map_t*) map)->tree, key) == NULL;
+  if (add)
+  {
+    iot_node_add ((iot_data_map_t *) map, key, val);
+    ((iot_data_map_t *) map)->size++;
+  }
+  return add;
+}
+
 void iot_data_map_merge (iot_data_t * map, const iot_data_t * add)
 {
   assert (map && (map->type == IOT_DATA_MAP));
