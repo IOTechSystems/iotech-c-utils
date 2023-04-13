@@ -3063,7 +3063,7 @@ static inline iot_node_t * iot_node_find (const iot_node_t * node, const iot_dat
 {
   while (node)
   {
-    int cmp = iot_data_compare_check (node->key, key, false);
+    int cmp = iot_data_compare (node->key, key);
     if (cmp == 0) break;
     node = (cmp > 0) ? node->left : node->right;
   }
@@ -3078,11 +3078,11 @@ static void iot_node_insert (iot_data_map_t * map, iot_data_t * key, iot_data_t 
   while (x)
   {
     y = x;
-    x = (iot_data_compare_check (key, x->key, false) < 0) ? x->left : x->right;
+    x = (iot_data_compare (key, x->key) < 0) ? x->left : x->right;
   }
   node->parent = y;
   if (y == NULL) map->tree = node;
-  else if (iot_data_compare_check (key, y->key, false) < 0) y->left = node;
+  else if (iot_data_compare (key, y->key) < 0) y->left = node;
   else y->right = node;
 
   if (node->parent)
