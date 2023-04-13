@@ -700,7 +700,7 @@ static int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2,
         return (f1 < f2) ? -1 : 1;
     }
   }
-    return iot_data_compare_check (v1, v2, false);
+  return iot_data_compare_check (v1, v2, false);
 }
 
 int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2)
