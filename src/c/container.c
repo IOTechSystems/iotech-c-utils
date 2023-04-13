@@ -341,6 +341,12 @@ void iot_container_start (iot_container_t * cont)
   while (iot_data_list_iter_next (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
+    if (comp->starting_fn) (comp->starting_fn) (comp);
+  }
+  iot_data_list_iter (cont->components, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     (comp->start_fn) (comp);
 #if defined (_AZURESPHERE_) && ! defined (NDEBUG)
     Log_Debug ("iot_container_start: %s (Total Memory: %" PRIu32 " kB)\n", comp->name, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
