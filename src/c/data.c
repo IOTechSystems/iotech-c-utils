@@ -512,7 +512,7 @@ static int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2,
     if (v1->type != v2->type) return (v1->type < v2->type) ? -1 : 1;
   }
 
-  if (raw && (v1->type <= IOT_DATA_UINT64) && (v1->type != v2->type)) goto RAW;
+  if (raw && (v1->type <= IOT_DATA_FLOAT64) && (v1->type != v2->type)) goto RAW;
 
   switch (v1->type)
   {
@@ -558,33 +558,11 @@ static int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2,
     }
     case IOT_DATA_FLOAT32:
     {
-      if (raw && (v1->type != v2->type))
-      {
-        double_t f1;
-        double_t f2;
-        iot_data_cast (v1, IOT_DATA_FLOAT64, &f1);
-        iot_data_cast (v2, IOT_DATA_FLOAT64, &f2);
-        if (f1 == f2)
-          return 0;
-        else
-          return (f1 < f2) ? -1 : 1;
-      }
       return (((const iot_data_value_t *) v1)->value.f32 == ((const iot_data_value_t *) v2)->value.f32) ? 0 :
              (((const iot_data_value_t *) v1)->value.f32 < ((const iot_data_value_t *) v2)->value.f32) ? -1 : 1;
     }
     case IOT_DATA_FLOAT64:
     {
-      if (raw && (v1->type != v2->type))
-      {
-        double_t f1;
-        double_t f2;
-        iot_data_cast (v1, IOT_DATA_FLOAT64, &f1);
-        iot_data_cast (v2, IOT_DATA_FLOAT64, &f2);
-        if (f1 == f2)
-          return 0;
-        else
-          return (f1 < f2) ? -1 : 1;
-      }
       return (((const iot_data_value_t *) v1)->value.f64 == ((const iot_data_value_t *) v2)->value.f64) ? 0 :
              (((const iot_data_value_t *) v1)->value.f64 < ((const iot_data_value_t *) v2)->value.f64) ? -1 : 1;
     }
@@ -687,24 +665,42 @@ static int iot_data_compare_check (const iot_data_t * v1, const iot_data_t * v2,
     default: break;
   }
   RAW:
-  uint64_t data1_ui64;
-  uint64_t data2_ui64;
-  if (iot_data_cast (v1, IOT_DATA_UINT64, &data1_ui64)  && iot_data_cast (v2, IOT_DATA_UINT64, &data2_ui64))
+
+  if (v1->type <= IOT_DATA_UINT64 & v2->type <= IOT_DATA_UINT64)
   {
-    if (data1_ui64 == data2_ui64)
-      return 0;
-  }
-  else
-  {
-    int64_t data1_i64;
-    int64_t data2_i64;
-    if (iot_data_cast (v1, IOT_DATA_INT64, &data1_i64)  && iot_data_cast (v2, IOT_DATA_INT64, &data2_i64))
+    uint64_t data1_ui64;
+    uint64_t data2_ui64;
+    if (iot_data_cast (v1, IOT_DATA_UINT64, &data1_ui64)  && iot_data_cast (v2, IOT_DATA_UINT64, &data2_ui64))
     {
-      if (data1_i64 == data2_i64)
+      if (data1_ui64 == data2_ui64)
         return 0;
     }
+    else
+    {
+      int64_t data1_i64;
+      int64_t data2_i64;
+      if (iot_data_cast (v1, IOT_DATA_INT64, &data1_i64)  && iot_data_cast (v2, IOT_DATA_INT64, &data2_i64))
+      {
+        if (data1_i64 == data2_i64)
+          return 0;
+      }
+    }
   }
-  return iot_data_compare_check (v1, v2, false);
+  else if (v1->type == IOT_DATA_FLOAT64 || v1->type == IOT_DATA_FLOAT32 || v2->type == IOT_DATA_FLOAT64 || v2->type == IOT_DATA_FLOAT32)
+  {
+    if (raw && (v1->type != v2->type))
+    {
+      double_t f1;
+      double_t f2;
+      iot_data_cast (v1, IOT_DATA_FLOAT64, &f1);
+      iot_data_cast (v2, IOT_DATA_FLOAT64, &f2);
+      if (f1 == f2)
+        return 0;
+      else
+        return (f1 < f2) ? -1 : 1;
+    }
+  }
+    return iot_data_compare_check (v1, v2, false);
 }
 
 int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2)
