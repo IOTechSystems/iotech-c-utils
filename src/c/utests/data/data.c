@@ -3440,7 +3440,7 @@ static void test_data_binary_from_string (void)
   iot_data_t * bin = iot_data_binary_from_string (str);
   const char * bptr = iot_data_address (bin);
   const char * sptr = iot_data_string (str);
-  CU_ASSERT (strcmp (sptr, bptr) == 0)
+  CU_ASSERT (memcmp (sptr, bptr, 5u) == 0)
   iot_data_free (str);
   iot_data_free (bin);
 }
