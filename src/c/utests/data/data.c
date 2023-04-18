@@ -1151,7 +1151,7 @@ static void test_data_equal_array (void)
   array1 = iot_data_alloc_array (data, sizeof (data), IOT_DATA_UINT16, IOT_DATA_REF);
 
   CU_ASSERT (!iot_data_equal (array1, array2))
-  CU_ASSERT (iot_data_equal_value (array1, array2))
+  CU_ASSERT (!iot_data_equal_value (array1, array2))
 
   iot_data_free (array1);
   iot_data_free (array2);
@@ -1490,8 +1490,8 @@ static void test_data_raw_equal_different_types (void)
 {
   iot_data_t * data1;
   iot_data_t * data2;
-  data1 = iot_data_alloc_ui8(1);
-  data2 = iot_data_alloc_i8(1);
+  data1 = iot_data_alloc_ui8 (1);
+  data2 = iot_data_alloc_i8 (1);
 
   CU_ASSERT (iot_data_equal_value (data1, data2))
   iot_data_increment (data1);
@@ -1530,13 +1530,13 @@ static void test_data_raw_equal_different_types (void)
   iot_data_free (data2);
 
   data1 = iot_data_alloc_i64 (INT64_MAX);
-  data1 = iot_data_alloc_ui64 (UINT64_MAX);
+  data2 = iot_data_alloc_ui64 (UINT64_MAX);
   CU_ASSERT (!iot_data_equal_value (data1, data2))
   iot_data_free (data1);
   iot_data_free (data2);
 
   data1 = iot_data_alloc_i64 (INT64_MIN);
-  data1 = iot_data_alloc_ui64 (0);
+  data2 = iot_data_alloc_ui64 (0);
   CU_ASSERT (!iot_data_equal_value (data1, data2))
   iot_data_free (data1);
   iot_data_free (data2);
