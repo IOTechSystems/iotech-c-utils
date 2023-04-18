@@ -771,7 +771,7 @@ extern void * iot_data_binary_take (iot_data_t * data, uint32_t * len);
 extern void iot_data_binary_to_array (iot_data_t * data);
 
 /**
- * @brief Create binary from string data
+ * @brief Create binary from string data (NULL string terminator is ignored)
  * @param data       Pointer to the string data
  */
 extern iot_data_t * iot_data_binary_from_string (const iot_data_t * data);
