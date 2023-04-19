@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:kinetic
 ENV SYSTEM="ubuntu-22.04"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 ENV DEBIAN_FRONTEND=noninteractive
