@@ -2005,8 +2005,8 @@ extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 extern bool iot_data_equal_value (const iot_data_t * data1, const iot_data_t * data2);
 
 /**
- * @brief Compare two data instances, returning whether the fist is less than, equal to or greater than the second.
- *        Both types must the same for values to compare equal.
+ * @brief Compare two data instances, returning whether the first is less than, equal to or greater than the second.
+ *        Both types must be the same for values to compare equal.
  *
  * @param  data1 Input data1 (can be NULL)
  * @param  data2 Input data2 (can be NULL)
@@ -2015,7 +2015,7 @@ extern bool iot_data_equal_value (const iot_data_t * data1, const iot_data_t * d
 extern int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2);
 
 /**
- * @brief Compare two data instances, returning whether the fist is less than, equal to or greater than the second. Different integer
+ * @brief Compare two data instances, returning whether the first is less than, equal to or greater than the second. Different integer
  * or floating types are compared by value.
  *
  * @param  data1 Input data1 (can be NULL)
