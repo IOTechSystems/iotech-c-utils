@@ -343,3 +343,4 @@
 ## Version 1.4.2
 
 - Added CBOR export
+- Added `iot_data_equal_value` and `iot_data_compare_value` functions for value based data comparison
