@@ -206,6 +206,29 @@ static bool iot_data_string_cmp_fn (const iot_data_t * data, const void * arg)
 }
 iot_data_cmp_fn iot_data_string_cmp = iot_data_string_cmp_fn;
 
+bool iot_data_get_tag (const iot_data_t * data, iot_data_tag_t tag)
+{
+  assert (data && (tag == IOT_DATA_TAG_USER1 || tag == IOT_DATA_TAG_USER2));
+  return (tag == IOT_DATA_TAG_USER1) ? data->tag1 : data->tag2;
+}
+
+bool iot_data_set_tag (iot_data_t * data, iot_data_tag_t tag, bool value)
+{
+  bool old;
+  assert (data && (tag == IOT_DATA_TAG_USER1 || tag == IOT_DATA_TAG_USER2));
+  if (tag == IOT_DATA_TAG_USER1)
+  {
+    old = data->tag1;
+    data->tag1 = value;
+  }
+  else
+  {
+    old = data->tag2;
+    data->tag2 = value;
+  }
+  return old;
+}
+
 uint32_t iot_data_type_size (iot_data_type_t type)
 {
   return (type <= IOT_DATA_BINARY) ? iot_data_type_sizes[type] : 0u;

@@ -4845,24 +4845,41 @@ static void test_binary_take (void)
 static void test_data_is_nan (void)
 {
   iot_data_t *float_nan = iot_data_alloc_f32 (NAN);
-  CU_ASSERT (iot_data_is_nan (float_nan));
+  CU_ASSERT (iot_data_is_nan (float_nan))
   iot_data_free (float_nan);
 
   iot_data_t *double_nan = iot_data_alloc_f64 (NAN);
-  CU_ASSERT (iot_data_is_nan (double_nan));
+  CU_ASSERT (iot_data_is_nan (double_nan))
   iot_data_free (double_nan);
 
   iot_data_t *float_not_nan = iot_data_alloc_f32 (123.456f);
-  CU_ASSERT_FALSE (iot_data_is_nan (float_not_nan));
+  CU_ASSERT_FALSE (iot_data_is_nan (float_not_nan))
   iot_data_free (float_not_nan);
 
   iot_data_t *double_not_nan = iot_data_alloc_f64 (123.456);
-  CU_ASSERT_FALSE (iot_data_is_nan (double_not_nan));
+  CU_ASSERT_FALSE (iot_data_is_nan (double_not_nan))
   iot_data_free (double_not_nan);
 
   iot_data_t *non_float_type = iot_data_alloc_i32 (0);
-  CU_ASSERT_FALSE (iot_data_is_nan (non_float_type));
+  CU_ASSERT_FALSE (iot_data_is_nan (non_float_type))
   iot_data_free (non_float_type);
+}
+
+static void test_data_tags (void)
+{
+  bool old;
+  iot_data_t * data = iot_data_alloc_ui32 (0u);
+  CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER1))
+  CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  old = iot_data_set_tag (data, IOT_DATA_TAG_USER1, true);
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER1))
+  CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT_FALSE (old)
+  old = iot_data_set_tag (data, IOT_DATA_TAG_USER2, true);
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT_FALSE (old)
+  iot_data_free (data);
 }
 
 void cunit_data_test_init (void)
@@ -5032,4 +5049,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "binary_to_array", test_binary_to_array);
   CU_add_test (suite, "binary_take", test_binary_take);
   CU_add_test (suite, "data_is_nan", test_data_is_nan);
+  CU_add_test (suite, "data_tags", test_data_tags);
 }

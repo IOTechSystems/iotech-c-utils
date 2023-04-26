@@ -57,6 +57,12 @@ typedef enum iot_data_ownership_t
   IOT_DATA_REF = 2u    /**< Data is referenced and never freed */
 } iot_data_ownership_t;
 
+typedef enum iot_data_tag_t
+{
+  IOT_DATA_TAG_USER1 = 1u,  /**< Identifier for user tag 1 */
+  IOT_DATA_TAG_USER2 = 2u,  /**< Identifier for user tag 2 */
+} iot_data_tag_t;
+
 /** Opaque iot data structure */
 typedef struct iot_data_t iot_data_t;
 
@@ -2221,6 +2227,25 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
  *
  */
 extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_t * path, iot_data_update_fn fn, void * arg);
+
+/**
+ * @brief Returns the value of a boolean user tag
+ *
+ * @param data   The data instance
+ * @param tag    The tag identifier (two supported)
+ * @return       The boolean value of the tag
+ */
+extern bool iot_data_get_tag (const iot_data_t * data, iot_data_tag_t tag);
+
+/**
+ * @brief Sets the value of a boolean user tag
+ *
+ * @param data   The data instance
+ * @param tag    The tag identifier (two supported)
+ * @param value  The boolean value to set the tag
+ * @return       The old boolean value of the tag
+ */
+extern bool iot_data_set_tag (iot_data_t * data, iot_data_tag_t tag, bool value);
 
 #ifdef __cplusplus
 }
