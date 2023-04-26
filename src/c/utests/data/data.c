@@ -2283,7 +2283,7 @@ static void test_list_iter_remove (void)
   CU_ASSERT (! iot_data_list_iter_remove (&iter)) // Iterator not set
   iot_data_list_iter_next (&iter); // Iterator to first element
   iot_data_list_iter_next (&iter); // Iterator to second element
-  CU_ASSERT (iot_data_list_iter_remove (&iter)); // Remove second element
+  CU_ASSERT (iot_data_list_iter_remove (&iter)) // Remove second element
   CU_ASSERT (iot_data_list_length (list) == 2u)
 
   iot_data_list_iter (list, &iter);
@@ -4876,7 +4876,7 @@ static void test_data_tags (void)
   CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
   CU_ASSERT_FALSE (old)
   old = iot_data_set_tag (data, IOT_DATA_TAG_USER2, true);
-  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER1))
   CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
   CU_ASSERT_FALSE (old)
   iot_data_free (data);
