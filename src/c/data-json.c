@@ -169,18 +169,18 @@ static void iot_data_dump_json (iot_string_holder_t * holder, const iot_data_t *
   }
 }
 
-char * iot_data_to_json (const iot_data_t * data)
+extern char * iot_data_to_json (const iot_data_t * data)
 {
   return iot_data_to_json_with_size (data, IOT_JSON_BUFF_SIZE);
 }
 
-char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size)
+extern char * iot_data_to_json_with_size (const iot_data_t * data, uint32_t size)
 {
   assert (data && size > 0);
   return iot_data_to_json_with_buffer (data, malloc (size), size);
 }
 
-char * iot_data_to_json_with_buffer (const iot_data_t * data, char * buff, uint32_t size)
+extern char * iot_data_to_json_with_buffer (const iot_data_t * data, char * buff, uint32_t size)
 {
   iot_string_holder_t holder;
   assert (data && buff && size > 0);
@@ -334,17 +334,17 @@ static iot_data_t * iot_data_value_from_json (iot_json_tok_t ** tokens, const ch
   return data;
 }
 
-iot_data_t * iot_data_from_json (const char * json)
+extern iot_data_t * iot_data_from_json (const char * json)
 {
   return iot_data_from_json_with_cache (json, false, NULL);
 }
 
-iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered)
+extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered)
 {
   return iot_data_from_json_with_cache (json, ordered, NULL);
 }
 
-iot_data_t * iot_data_from_json_with_cache (const char * json, bool ordered, iot_data_t * cache)
+extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool ordered, iot_data_t * cache)
 {
   iot_data_t * data = NULL;
   const char * ptr = json;

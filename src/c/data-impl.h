@@ -34,6 +34,8 @@ struct iot_data_t
   bool constant : 1;
   bool composed : 1;
   bool rehash : 1;
+  bool tag1 : 1;
+  bool tag2 : 1;
 };
 
 typedef struct iot_string_holder_t
