@@ -77,11 +77,15 @@ static iot_data_t * iot_component_config_to_map (const char * config, iot_logger
 
 static void iot_component_create (iot_container_t * cont, const char *cname, const iot_component_factory_t * factory, const char * config)
 {
+  iot_log_debug (cont->logger, "%s:%d:%s entry cname %s", __FILE__, __LINE__, __func__, cname);
   iot_component_t * comp = NULL;
   iot_data_t * map = iot_component_config_to_map (config, cont->logger);
+  iot_log_debug (cont->logger, "%s:%d:%s map %p", __FILE__, __LINE__, __func__, map);
 
   if (map == NULL) goto ERROR;
+  iot_log_debug (cont->logger, "%s:%d:%s before config %p", __FILE__, __LINE__, __func__, factory->config_fn);
   comp = (factory->config_fn) (cont, map);
+  iot_log_debug (cont->logger, "%s:%d:%s cname %s comp %p", __FILE__, __LINE__, __func__, cname, comp);
   if (comp == NULL)
   {
     iot_data_free (map);
@@ -90,6 +94,7 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
   comp->config = map;
   comp->name = strdup (cname);
   comp->factory = factory;
+  iot_log_debug (cont->logger, "%s:%d:%s cname %s comp %p", __FILE__, __LINE__, __func__, cname, comp);
   iot_data_list_head_push (cont->components, iot_data_alloc_pointer (comp, iot_component_free));
 #if defined (_AZURESPHERE_) && ! defined (NDEBUG)
   Log_Debug ("iot_component_create: %s (Total Memory: %" PRIu32 " kB)\n", cname, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
@@ -98,6 +103,7 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
 ERROR:
 
   if (comp == NULL) iot_log_warn (cont->logger, "Container: %s Failed to create component: %s", cont->name, cname);
+  iot_log_debug (cont->logger, "%s:%d:%s exit cname %s", __FILE__, __LINE__, __func__, cname);
 }
 
 static const iot_component_factory_t * iot_component_factory_find_locked (const char * type)
@@ -168,16 +174,21 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
 
 static bool iot_container_typed_load (iot_container_t * cont, const char * cname, const char * ctype)
 {
+  iot_log_debug (cont->logger, "%s:%d:%s entry cname %s ctype %s", __FILE__, __LINE__, __func__, cname, ctype);
   bool result = iot_container_find_component_locked (cont, cname);
   if (!result)
   {
     const iot_component_factory_t *factory = iot_component_factory_find (ctype);
+    iot_log_debug (cont->logger, "%s:%d:%s factory %p", __FILE__, __LINE__, __func__, factory);
     if (factory)
     {
       char * config = (iot_config->load) (cname, iot_config->uri);
+      iot_log_debug (cont->logger, "%s:%d:%s config %s", __FILE__, __LINE__, __func__, config);
       if (config)
       {
+        iot_log_debug (cont->logger, "%s:%d:%s before create %s", __FILE__, __LINE__, __func__, cname);
         iot_component_create (cont, cname, factory, config);
+        iot_log_debug (cont->logger, "%s:%d:%s after create %s", __FILE__, __LINE__, __func__, cname);
         free (config);
       }
       result = true;
