@@ -137,13 +137,16 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
     const char * factory = iot_data_string_map_get_string (cmap, "Factory");
     if (library && factory)
     {
+      iot_log_debug (cont->logger, "%s:%d:%s library %s factory %s", __FILE__, __LINE__, __func__, library, factory);
       void *handle = dlopen (library, RTLD_LAZY);
       if (handle)
       {
         const iot_component_factory_t *(*factory_fn) (void) = dlsym (handle, factory);
         if (factory_fn)
         {
+          iot_log_debug (cont->logger, "%s:%d:%s library before factory fn", __FILE__, __LINE__, __func__);
           result = factory_fn ();
+          iot_log_debug (cont->logger, "%s:%d:%s library after factory fn", __FILE__, __LINE__, __func__);
           iot_component_factory_add (result);
         }
         else
@@ -252,6 +255,7 @@ bool iot_container_init (iot_container_t * cont)
 {
   assert (iot_config && cont);
 
+  iot_log_debug (cont->logger, "%s:%d:%s entry", __FILE__, __LINE__, __func__, cname);
   char * config = (iot_config->load) (cont->name, iot_config->uri);
   iot_data_t * map = iot_component_config_to_map (config, cont->logger);
   free (config);
@@ -270,7 +274,10 @@ bool iot_container_init (iot_container_t * cont)
     {
       cname = iot_data_map_iter_string_key (&iter);
       ctype = iot_data_map_iter_string_value (&iter);
+      iot_log_debug (cont->logger, "%s:%d:%s cname %s", __FILE__, __LINE__, __func__, cname);
+      iot_log_debug (cont->logger, "%s:%d:%s ctype %s", __FILE__, __LINE__, __func__, ctype);
       config = (iot_config->load) (cname, iot_config->uri);
+      iot_log_debug (cont->logger, "%s:%d:%s config %s", __FILE__, __LINE__, __func__, config);
 
       if ((iot_component_factory_find (ctype) == NULL) && config)
       {

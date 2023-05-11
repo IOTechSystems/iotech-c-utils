@@ -21,7 +21,7 @@ extern "C" {
 /** Logger component name */
 #define IOT_LOGGER_TYPE "IOT::Logger"
 /** Default log level warning */
-#define IOT_LOGLEVEL_DEFAULT IOT_LOG_WARN
+#define IOT_LOGLEVEL_DEFAULT IOT_LOG_DEBUG
 /** Maximum log message size */
 #define IOT_LOG_MSG_MAX 1024
 
