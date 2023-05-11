@@ -945,6 +945,17 @@ extern iot_data_t * iot_data_alloc_from_strings (const char * type, const char *
 extern iot_data_t * iot_data_alloc_array_from_base64 (const char * value);
 
 /**
+ * @brief Get the value of the element at the given index
+ *
+ * This function returns the address of the array element at the given index
+ *
+ * @param array  Input array
+ * @param index  Index in array
+ * @return       Pointer to the element at the given index in the array
+ */
+void * iot_data_array_get(const iot_data_t * array, uint32_t index);
+
+/**
  * @brief Increment data value by 1
  *
  * The function to increment the value by 1
