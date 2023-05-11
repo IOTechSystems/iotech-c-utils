@@ -255,7 +255,7 @@ bool iot_container_init (iot_container_t * cont)
 {
   assert (iot_config && cont);
 
-  iot_log_debug (cont->logger, "%s:%d:%s entry", __FILE__, __LINE__, __func__, cname);
+  iot_log_debug (cont->logger, "%s:%d:%s entry", __FILE__, __LINE__, __func__);
   char * config = (iot_config->load) (cont->name, iot_config->uri);
   iot_data_t * map = iot_component_config_to_map (config, cont->logger);
   free (config);
