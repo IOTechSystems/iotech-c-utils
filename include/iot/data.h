@@ -12,8 +12,8 @@
  * @brief IOTech Data Representation API
  */
 
-#include "iot/os.h"
 #include "iot/defs.h"
+#include "iot/os.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,15 +52,15 @@ typedef enum iot_data_type_t
  */
 typedef enum iot_data_ownership_t
 {
-  IOT_DATA_COPY = 0u,  /**< Data is copied and copy freed when no longer used */
-  IOT_DATA_TAKE = 1u,  /**< Data is taken and freed when no longer used */
-  IOT_DATA_REF = 2u    /**< Data is referenced and never freed */
+  IOT_DATA_COPY = 0u, /**< Data is copied and copy freed when no longer used */
+  IOT_DATA_TAKE = 1u, /**< Data is taken and freed when no longer used */
+  IOT_DATA_REF = 2u   /**< Data is referenced and never freed */
 } iot_data_ownership_t;
 
 typedef enum iot_data_tag_t
 {
-  IOT_DATA_TAG_USER1 = 1u,  /**< Identifier for user tag 1 */
-  IOT_DATA_TAG_USER2 = 2u,  /**< Identifier for user tag 2 */
+  IOT_DATA_TAG_USER1 = 1u, /**< Identifier for user tag 1 */
+  IOT_DATA_TAG_USER2 = 2u, /**< Identifier for user tag 2 */
 } iot_data_tag_t;
 
 /** Opaque iot data structure */
@@ -71,25 +71,25 @@ typedef struct iot_data_t iot_data_t;
 */
 typedef struct iot_typecode_t
 {
-  iot_data_type_t type;          /**< Core data type */
-  iot_data_type_t element_type;  /**< Element type for Array, Map, Vector and List */
-  iot_data_type_t key_type;      /**< Key type for map */
+  iot_data_type_t type;         /**< Core data type */
+  iot_data_type_t element_type; /**< Element type for Array, Map, Vector and List */
+  iot_data_type_t key_type;     /**< Key type for map */
 } iot_typecode_t;
 
 /**
 * Type for simple data type static allocation
 */
-typedef void * iot_data_static_t [2u + 16u/sizeof (void*)];
+typedef void * iot_data_static_t[2u + 16u / sizeof (void *)];
 
 /**
 * Type for list type static allocation
 */
-typedef void * iot_data_list_static_t [4u + 8u/sizeof (void*)];
+typedef void * iot_data_list_static_t[4u + 8u / sizeof (void *)];
 
 /**
 * Macro to cast static data instance (iot_data_static_t) to a iot_data_t pointer
 */
-#define IOT_DATA_STATIC(s) ((iot_data_t*) (s))
+#define IOT_DATA_STATIC(s) ((iot_data_t *) (s))
 
 /** Type for set of data string constant values */
 typedef struct iot_data_consts_t
@@ -109,9 +109,9 @@ extern iot_data_consts_t iot_data_consts;
  */
 typedef struct iot_data_map_iter_t
 {
-  const struct iot_data_map_t * _map;   /**< Pointer to data map structure */
-  struct iot_node_t * _node;            /**< Pointer to map node structure */
-  uint32_t _count;                      /**< Position counter */
+  const struct iot_data_map_t * _map; /**< Pointer to data map structure */
+  struct iot_node_t * _node;          /**< Pointer to map node structure */
+  uint32_t _count;                    /**< Position counter */
 } iot_data_map_iter_t;
 
 /**
@@ -119,8 +119,8 @@ typedef struct iot_data_map_iter_t
  */
 typedef struct iot_data_vector_iter_t
 {
-  const struct iot_data_vector_t * _vector;  /**< Pointer to data vector structure */
-  uint32_t _index;                           /**< Index of the given vector */
+  const struct iot_data_vector_t * _vector; /**< Pointer to data vector structure */
+  uint32_t _index;                          /**< Index of the given vector */
 } iot_data_vector_iter_t;
 
 /**
@@ -128,8 +128,8 @@ typedef struct iot_data_vector_iter_t
  */
 typedef struct iot_data_list_iter_t
 {
-  const struct iot_data_list_t * _list;  /**< Pointer to data list structure */
-  struct iot_element_t * _element;       /**< Pointer to list element structure */
+  const struct iot_data_list_t * _list; /**< Pointer to data list structure */
+  struct iot_element_t * _element;      /**< Pointer to list element structure */
 } iot_data_list_iter_t;
 
 /**
@@ -137,8 +137,8 @@ typedef struct iot_data_list_iter_t
  */
 typedef struct iot_data_array_iter_t
 {
-  const struct iot_data_array_t * _array;  /**< Pointer to data array structure */
-  uint32_t _index;                         /**< Index of the given data array */
+  const struct iot_data_array_t * _array; /**< Pointer to data array structure */
+  uint32_t _index;                        /**< Index of the given data array */
 } iot_data_array_iter_t;
 
 /** Type for data comparison function pointer */
@@ -248,7 +248,7 @@ extern bool iot_data_is_static (const iot_data_t * data);
  * @param data Pointer to data
  * @return     Whether the data is of the value NaN
  */
-extern bool iot_data_is_nan (const iot_data_t *data);
+extern bool iot_data_is_nan (const iot_data_t * data);
 
 /**
  * @brief Get data type code
@@ -943,6 +943,17 @@ extern iot_data_t * iot_data_alloc_from_strings (const char * type, const char *
  * @return       Pointer to the allocated memory of byte array, NULL on error
  */
 extern iot_data_t * iot_data_alloc_array_from_base64 (const char * value);
+
+/**
+ * @brief Get the value of the element at the given index
+ *
+ * This function returns the address of the array element at the given index
+ *
+ * @param array  Input array
+ * @param index  Index in array
+ * @return       Pointer to the element at the given index in the array
+ */
+void * iot_data_array_get (const iot_data_t * array, uint32_t index);
 
 /**
  * @brief Increment data value by 1
@@ -1752,7 +1763,7 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
  * @param value New value to store in the map
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
-extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t *value);
+extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t * value);
 
 /**
  * @brief Get Key from the map referenced by an input iterator
@@ -1880,7 +1891,7 @@ extern const void * iot_data_vector_iter_pointer_value (const iot_data_vector_it
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
 
-extern iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t *value);
+extern iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t * value);
 
 /**
  * @brief Get the value as string type from the vector at an index referenced by iterator
@@ -2042,7 +2053,7 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
  * @param  exception  If a parse error occurs, on exit this will hold a string describing the problem
  * @return            A iot_data element if input string is a YAML string, NULL otherwise.
  */
-extern iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t **exception);
+extern iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t ** exception);
 #endif
 
 /**
