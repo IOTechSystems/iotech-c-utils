@@ -1558,7 +1558,7 @@ iot_data_t * iot_data_alloc_array_from_base64 (const char * value)
   return result;
 }
 
-void * iot_data_array_get(const iot_data_t * array, uint32_t index)
+void * iot_data_array_get (const iot_data_t * array, uint32_t index)
 {
   const iot_data_array_t * arr = (const iot_data_array_t*) array;
   assert (array && (array->type == IOT_DATA_ARRAY));
