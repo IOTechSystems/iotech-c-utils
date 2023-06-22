@@ -10,6 +10,6 @@ COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
 COPY scripts /iotech-iot/scripts/
 RUN /iotech-iot/scripts/add_deb_repo.sh
-RUN apt update && apt-get install -y cmake3
+RUN apt-get update && apt-get install -y cmake3
 WORKDIR /iotech-iot
 ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/linux.sh", "-utest", "-examples"]
