@@ -357,3 +357,4 @@
 - Added function `iot_data_map_add_unused` to add a value to a map if key unused
 - Added functions `iot_data_get_tag` and `iot_data_set_tag` to support lightweight user data tagging
 - Added function `iot_data_array_get` to access array elements without an iterator
+- Added `iot_data_equal_value` and `iot_data_compare_value` functions for value based data comparison
