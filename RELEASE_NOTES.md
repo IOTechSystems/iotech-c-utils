@@ -358,3 +358,4 @@
 - Added functions `iot_data_get_tag` and `iot_data_set_tag` to support lightweight user data tagging
 - Added function `iot_data_array_get` to access array elements without an iterator
 - Added `iot_data_equal_value` and `iot_data_compare_value` functions for value based data comparison
+- Updated `iot_data_type` function to return IOT_DATA_INVALID when passed a NULL data pointer (previously would assert)

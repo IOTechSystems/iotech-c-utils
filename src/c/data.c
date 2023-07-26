@@ -1104,8 +1104,7 @@ iot_data_t * iot_data_list_head_pop (iot_data_t * list)
 
 iot_data_type_t iot_data_type (const iot_data_t * data)
 {
-  assert (data);
-  return data->type;
+  return data ? data->type : IOT_DATA_INVALID;
 }
 
 bool iot_data_is_of_type (const iot_data_t * data, iot_data_type_t type)
@@ -1118,9 +1117,8 @@ bool iot_data_is_static (const iot_data_t * data)
   return (data && data->constant);
 }
 
-bool iot_data_is_nan (const iot_data_t *data)
+bool iot_data_is_nan (const iot_data_t * data)
 {
-  assert (data);
   iot_data_type_t type = iot_data_type (data);
   if (type != IOT_DATA_FLOAT32 && type != IOT_DATA_FLOAT64) return false;
   return type == IOT_DATA_FLOAT32 ? iot_data_f32 (data) != iot_data_f32 (data) : iot_data_f64 (data) != iot_data_f64 (data);
@@ -1841,7 +1839,7 @@ const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char *
 const char * iot_data_map_get_string (const iot_data_t * map, const iot_data_t * key)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
+  return (iot_data_type (data) == IOT_DATA_STRING) ? iot_data_string (data) : NULL;
 }
 
 bool iot_data_map_get_number (const iot_data_t * map, const iot_data_t * key, iot_data_type_t type, void * val)
@@ -1859,61 +1857,61 @@ extern bool iot_data_map_get_int (const iot_data_t * map, const iot_data_t * key
 int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * key, int64_t default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_INT64)) ? iot_data_i64 (data) : default_val;
+  return (iot_data_type (data) == IOT_DATA_INT64) ? iot_data_i64 (data) : default_val;
 }
 
 uint64_t iot_data_map_get_ui64 (const iot_data_t * map, const iot_data_t * key, uint64_t default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_UINT64)) ? iot_data_ui64 (data) : default_val;
+  return (iot_data_type (data) == IOT_DATA_UINT64) ? iot_data_ui64 (data) : default_val;
 }
 
 bool iot_data_map_get_bool (const iot_data_t * map, const iot_data_t * key, bool default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_BOOL)) ? iot_data_bool (data) : default_val;
+  return (iot_data_type (data) == IOT_DATA_BOOL) ? iot_data_bool (data) : default_val;
 }
 
 double iot_data_map_get_f64 (const iot_data_t * map, const iot_data_t * key, double default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_FLOAT64)) ? iot_data_f64 (data) : default_val;
+  return (iot_data_type (data) == IOT_DATA_FLOAT64) ? iot_data_f64 (data) : default_val;
 }
 
 const void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_POINTER)) ? iot_data_pointer (data) : NULL);
+  return (iot_data_type (data) == IOT_DATA_POINTER) ? iot_data_pointer (data) : NULL;
 }
 
 const iot_data_t * iot_data_map_get_vector (const iot_data_t * map, const iot_data_t * key)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_VECTOR)) ? data : NULL);
+  return (iot_data_type (data) == IOT_DATA_VECTOR) ? data : NULL;
 }
 
 const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_t * key)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_MAP)) ? data : NULL);
+  return (iot_data_type (data) == IOT_DATA_MAP) ? data : NULL;
 }
 
 const iot_data_t * iot_data_map_get_array (const iot_data_t * map, const iot_data_t * key)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_ARRAY)) ? data : NULL);
+  return (iot_data_type (data) == IOT_DATA_ARRAY) ? data : NULL;
 }
 
 const iot_data_t * iot_data_map_get_list (const iot_data_t * map, const iot_data_t * key)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_LIST)) ? data : NULL);
+  return (iot_data_type (data) == IOT_DATA_LIST) ? data : NULL;
 }
 
 const char * iot_data_string_map_get_string (const iot_data_t * map, const char * key)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_STRING)) ? iot_data_string (data) : NULL;
+  return (iot_data_type (data) == IOT_DATA_STRING) ? iot_data_string (data) : NULL;
 }
 
 bool iot_data_string_map_get_number (const iot_data_t * map, const char * key, iot_data_type_t type, void * val)
@@ -1931,49 +1929,49 @@ extern bool iot_data_string_map_get_int (const iot_data_t * map, const char * ke
 int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char * key, int64_t default_val)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_INT64)) ? iot_data_i64 (data) : default_val;
+  return (iot_data_type (data) == IOT_DATA_INT64) ? iot_data_i64 (data) : default_val;
 }
 
 uint64_t iot_data_string_map_get_ui64 (const iot_data_t * map, const char * key, uint64_t default_val)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_UINT64)) ? iot_data_ui64 (data) : default_val;
+  return (iot_data_type (data) == IOT_DATA_UINT64) ? iot_data_ui64 (data) : default_val;
 }
 
 bool iot_data_string_map_get_bool (const iot_data_t * map, const char * key, bool default_val)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_BOOL)) ? iot_data_bool (data) : default_val;
+  return (iot_data_type (data) == IOT_DATA_BOOL) ? iot_data_bool (data) : default_val;
 }
 
 double iot_data_string_map_get_f64 (const iot_data_t * map, const char * key, double default_val)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return (data && (iot_data_type (data) == IOT_DATA_FLOAT64)) ? iot_data_f64 (data) : default_val;
+  return (iot_data_type (data) == IOT_DATA_FLOAT64) ? iot_data_f64 (data) : default_val;
 }
 
 const void * iot_data_string_map_get_pointer (const iot_data_t * map, const char * key)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_POINTER)) ? iot_data_pointer (data) : NULL);
+  return (iot_data_type (data) == IOT_DATA_POINTER) ? iot_data_pointer (data) : NULL;
 }
 
 const iot_data_t * iot_data_string_map_get_vector (const iot_data_t * map, const char * key)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_VECTOR)) ? data : NULL);
+  return (iot_data_type (data) == IOT_DATA_VECTOR) ? data : NULL;
 }
 
 const iot_data_t * iot_data_string_map_get_map (const iot_data_t * map, const char * key)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_MAP)) ? data : NULL);
+  return (iot_data_type (data) == IOT_DATA_MAP) ? data : NULL;
 }
 
 const iot_data_t * iot_data_string_map_get_list (const iot_data_t * map, const char * key)
 {
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  return ((data && (iot_data_type (data) == IOT_DATA_LIST)) ? data : NULL);
+  return (iot_data_type (data) == IOT_DATA_LIST) ? data : NULL;
 }
 
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)

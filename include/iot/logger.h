@@ -30,12 +30,12 @@ extern "C" {
  */
 typedef enum iot_loglevel_t
 {
-  IOT_LOG_NONE = 0,   /**< No logging */
-  IOT_LOG_ERROR,      /**< Error logging */
-  IOT_LOG_WARN,       /**< Warning and Error logging */
-  IOT_LOG_INFO,       /**< Information, Warning and Error logging */
-  IOT_LOG_DEBUG,      /**< Debug, Information, Warning and Error logging */
-  IOT_LOG_TRACE       /**< Trace, Debug, Information, Warning and Error logging */
+  IOT_LOG_NONE = 0,      /**< No logging */
+  IOT_LOG_ERROR = 1u,    /**< Error logging */
+  IOT_LOG_WARN = 2u,     /**< Warning and Error logging */
+  IOT_LOG_INFO = 3u,     /**< Information, Warning and Error logging */
+  IOT_LOG_DEBUG = 4u,    /**< Debug, Information, Warning and Error logging */
+  IOT_LOG_TRACE = 5u     /**< Trace, Debug, Information, Warning and Error logging */
 } iot_loglevel_t;
 
 /**
