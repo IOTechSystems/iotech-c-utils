@@ -18,7 +18,7 @@ static const iot_data_t * iot_config_get_type (const iot_data_t * map, const cha
 {
   assert (map && key);
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  if ((data == NULL) || (iot_data_type (data) != type))
+  if (iot_data_type (data) != type)
   {
     if (logger == NULL) logger = iot_logger_default ();
     iot_log_error (logger, "Failed to resolve %s configuration value for: %s", iot_data_type_string (type), key);

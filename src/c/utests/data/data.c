@@ -147,6 +147,7 @@ static void test_data_types (void)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_LIST)
   CU_ASSERT (iot_data_type_size (iot_data_type (data)) == 0u)
   iot_data_free (data);
+  CU_ASSERT (iot_data_type (NULL) == IOT_DATA_INVALID)
 }
 
 static void test_data_array_key (void)
@@ -186,6 +187,7 @@ static void test_data_array_get_uint8 (void)
   {
     CU_ASSERT (*(uint8_t *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 
 static void test_data_array_get_int8 (void)
@@ -197,6 +199,7 @@ static void test_data_array_get_int8 (void)
   {
     CU_ASSERT (*(int8_t *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 
 static void test_data_array_get_uint16 (void)
@@ -208,6 +211,7 @@ static void test_data_array_get_uint16 (void)
   {
     CU_ASSERT (*(uint16_t *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 static void test_data_array_get_int16 (void)
 {
@@ -218,6 +222,7 @@ static void test_data_array_get_int16 (void)
   {
     CU_ASSERT (*(int16_t *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 
 static void test_data_array_get_int32 (void)
@@ -229,6 +234,7 @@ static void test_data_array_get_int32 (void)
   {
     CU_ASSERT (*(int32_t *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 static void test_data_array_get_uint32 (void)
 {
@@ -239,6 +245,7 @@ static void test_data_array_get_uint32 (void)
   {
     CU_ASSERT (*(uint32_t *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 static void test_data_array_get_int64 (void)
 {
@@ -249,6 +256,7 @@ static void test_data_array_get_int64 (void)
   {
     CU_ASSERT (*(int64_t *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 static void test_data_array_get_uint64 (void)
 {
@@ -259,6 +267,7 @@ static void test_data_array_get_uint64 (void)
   {
     CU_ASSERT (*(uint64_t *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 static void test_data_array_get_float32 (void)
 {
@@ -268,7 +277,9 @@ static void test_data_array_get_float32 (void)
   {
     CU_ASSERT (*(float *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
+
 static void test_data_array_get_float64 (void)
 {
   double data[4] = {0.0, 1.0, 2.0, 3.0};
@@ -278,6 +289,7 @@ static void test_data_array_get_float64 (void)
   {
     CU_ASSERT (*(double *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 
 static void test_data_array_get_bool (void)
@@ -289,6 +301,7 @@ static void test_data_array_get_bool (void)
   {
     CU_ASSERT (*(bool *) iot_data_array_get (array, i) == data[i])
   }
+  iot_data_free (array);
 }
 
 static void test_data_array_iter_next (void)
@@ -343,7 +356,6 @@ static void test_data_array_iter_prev (void)
     CU_ASSERT (*((uint8_t *) iot_data_array_iter_value (&array_iter)) == data[index])
     index--;
   }
-
   iot_data_free (array);
 }
 
@@ -363,7 +375,6 @@ static void test_data_array_iter_uint8 (void)
     CU_ASSERT (*((uint8_t *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -383,7 +394,6 @@ static void test_data_array_iter_int8 (void)
     CU_ASSERT (*((int8_t *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -403,7 +413,6 @@ static void test_data_array_iter_uint16 (void)
     CU_ASSERT (*((uint16_t *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -443,7 +452,6 @@ static void test_data_array_iter_int32 (void)
     CU_ASSERT (*((int32_t *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -463,7 +471,6 @@ static void test_data_array_iter_uint32 (void)
     CU_ASSERT (*((uint32_t *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -484,7 +491,6 @@ static void test_data_array_iter_int64 (void)
     CU_ASSERT (*((int64_t *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -505,7 +511,6 @@ static void test_data_array_iter_uint64 (void)
     CU_ASSERT (*((uint64_t *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -525,7 +530,6 @@ static void test_data_array_iter_float32 (void)
     CU_ASSERT (*((float *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -545,7 +549,6 @@ static void test_data_array_iter_float64 (void)
     CU_ASSERT (*((double *) iot_data_array_iter_value (&array_iter)) == data[index])
     index++;
   }
-
   iot_data_free (array);
 }
 
@@ -568,7 +571,6 @@ static void test_data_array_iter_bool (void)
     index++;
   }
   CU_ASSERT (!has_next)
-
   iot_data_free (array);
 }
 

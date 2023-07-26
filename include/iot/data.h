@@ -214,7 +214,7 @@ extern void iot_data_free (iot_data_t * data);
  * The function to return the basic data type for the data
  *
  * @param data  Pointer to data
- * @return      Datatype from the enum defined in iot_data_type_t
+ * @return      Datatype from the enum defined in iot_data_type_t. Returns IOT_DATA_INVALID if data pointer is NULL
  */
 extern iot_data_type_t iot_data_type (const iot_data_t * data);
 
@@ -960,7 +960,7 @@ void * iot_data_array_get (const iot_data_t * array, uint32_t index);
  *
  * The function to increment the value by 1
  *
- * @param data  Value to increment. Applicable for integer and float data_types
+ * @param data  Value to increment. Applicable for integer and float data types
  */
 extern void iot_data_increment (iot_data_t * data);
 
@@ -969,7 +969,7 @@ extern void iot_data_increment (iot_data_t * data);
  *
  * The function to decrement the value by 1
  *
- * @param data  Value to decrement. Applicable for integer and float data_types
+ * @param data  Value to decrement. Applicable for integer and float data types
  */
 extern void iot_data_decrement (iot_data_t * data);
 
