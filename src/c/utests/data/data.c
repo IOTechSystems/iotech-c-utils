@@ -4057,6 +4057,39 @@ static void test_data_const_ui64 (void)
   iot_data_free (data);
 }
 
+static void test_data_const_ui32 (void)
+{
+  static iot_data_static_t block;
+  iot_data_t * data = iot_data_alloc_const_ui32 (&block, 111u);
+  CU_ASSERT (iot_data_ui32 (data) == 111u)
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
+static void test_data_const_ui16 (void)
+{
+  static iot_data_static_t block;
+  iot_data_t * data = iot_data_alloc_const_ui16 (&block, 444u);
+  CU_ASSERT (iot_data_ui16 (data) == 444u)
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
+static void test_data_const_ui8 (void)
+{
+  static iot_data_static_t block;
+  iot_data_t * data = iot_data_alloc_const_ui8 (&block, 88u);
+  CU_ASSERT (iot_data_ui8 (data) == 88u)
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
 static void test_data_const_pointer (void)
 {
   static iot_data_static_t block;
@@ -5300,6 +5333,9 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_cast", test_data_cast);
   CU_add_test (suite, "data_const_string", test_data_const_string);
   CU_add_test (suite, "data_const_ui64", test_data_const_ui64);
+  CU_add_test (suite, "data_const_ui32", test_data_const_ui32);
+  CU_add_test (suite, "data_const_ui18", test_data_const_ui16);
+  CU_add_test (suite, "data_const_ui8", test_data_const_ui8);
   CU_add_test (suite, "data_const_pointer", test_data_const_pointer);
   CU_add_test (suite, "data_const_list", test_data_const_list);
   CU_add_test (suite, "data_const_types", test_data_const_types);

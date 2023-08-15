@@ -359,3 +359,7 @@
 - Added function `iot_data_array_get` to access array elements without an iterator
 - Added `iot_data_equal_value` and `iot_data_compare_value` functions for value based data comparison
 - Updated `iot_data_type` function to return IOT_DATA_INVALID when passed a NULL data pointer (previously would assert)
+- Added `iot_data_alloc_const_ui32` function to allocate const uint32_t data value
+- Added `iot_data_alloc_const_ui16` function to allocate const uint16_t data value
+- Added `iot_data_alloc_const_ui8` function to allocate const uint8_t data value
+- Added `iot_data_map_iter_bool_value` function to return a boolean value from a data map iterator
