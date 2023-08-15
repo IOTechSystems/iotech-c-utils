@@ -417,6 +417,42 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
 extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_t val);
 
 /**
+ * @brief Allocate constant uint32 data
+ *
+ * The function to allocate data for a constant uint32, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        uint32 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_t val);
+
+/**
+ * @brief Allocate constant uint16 data
+ *
+ * The function to allocate data for a constant uint16, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        uint16 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_t val);
+
+/**
+ * @brief Allocate constant uint8 data
+ *
+ * The function to allocate data for a constant uint8, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        uint8 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t val);
+
+/**
  * @brief Allocate memory for data_type float
  *
  * The function to allocate memory for data_type float
@@ -672,9 +708,9 @@ extern bool iot_data_list_iter_prev (iot_data_list_iter_t * iter);
 extern const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t * iter);
 
 /**
- * @brief Get the string value from the list referenced by an input iterator
+ * @brief Get the string value from the list referenced by an iterator
  *
- * Get string type value from the list referenced by an input iterator
+ * Get string type value from the list referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      String type value if iter is valid, NULL otherwise
@@ -682,7 +718,7 @@ extern const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t *
 extern const char * iot_data_list_iter_string_value (const iot_data_list_iter_t * iter);
 
 /**
- * @brief Get pointer value from the list referenced by an input iterator
+ * @brief Get pointer value from the list referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      Pointer type value from the list if iter is valid, NULL otherwise
@@ -1735,7 +1771,7 @@ extern bool iot_data_map_iter_has_next (const iot_data_map_iter_t * iter);
 extern bool iot_data_map_iter_prev (iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Key from the map referenced by an input iterator
+ * @brief Get Key from the map referenced by an iterator
  *
  * The function to get the key in a map referenced by the iterator
  *
@@ -1745,7 +1781,7 @@ extern bool iot_data_map_iter_prev (iot_data_map_iter_t * iter);
 extern const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Value from the map referenced by an input iterator
+ * @brief Get Value from the map referenced by an iterator
  *
  * The function to get the value from the map referenced by the iterator
  *
@@ -1755,7 +1791,7 @@ extern const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * ite
 extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Replace Value from the map referenced by an input iterator
+ * @brief Replace Value from the map referenced by an iterator
  *
  * The function to replace the value from the map referenced by the iterator
  *
@@ -1766,9 +1802,9 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
 extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t * value);
 
 /**
- * @brief Get Key from the map referenced by an input iterator
+ * @brief Get Key from the map referenced by an iterator
  *
- * The function to get string type key from the map referenced by an input iterator
+ * The function to get string type key from the map referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      String type key if iter is valid, NULL otherwise
@@ -1776,9 +1812,9 @@ extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t *
 extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get string value from the map referenced by an input iterator
+ * @brief Get string value from the map referenced by an iterator
  *
- * The function to get the string type value from the map referenced by an input iterator
+ * The function to get the string value from the map referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      String type value from the map if iter is valid, NULL otherwise
@@ -1786,14 +1822,24 @@ extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * it
 extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get pointer value from the map referenced by an input iterator
+ * @brief Get pointer value from the map referenced by an iterator
  *
- * The function to get the pointer type value from the map referenced by an input iterator
+ * The function to get the pointer value from the map referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      Pointer type value from the map if iter is valid, NULL otherwise
  */
 extern const void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter);
+
+/**
+ * @brief Get boolean value from the map referenced by an iterator
+ *
+ * The function to get the boolean value from the map referenced by an iterator
+ *
+ * @param iter  Input iterator
+ * @return      Boolean value from the map if iter is valid, FALSE otherwise
+ */
+extern bool iot_data_map_iter_bool_value (const iot_data_map_iter_t * iter);
 
 /**
  * @brief Initialise iterator to the start of a vector
@@ -1861,9 +1907,9 @@ extern uint32_t iot_data_vector_iter_index (const iot_data_vector_iter_t * iter)
 extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter_t * iter);
 
 /**
- * @brief Get the string value from the vector referenced by an input iterator
+ * @brief Get the string value from the vector referenced by an iterator
  *
- * Get string type value from the vector referenced by an input iterator
+ * Get string type value from the vector referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      String type value if iter is valid, NULL otherwise
@@ -1871,9 +1917,9 @@ extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter
 extern const char * iot_data_vector_iter_string_value (const iot_data_vector_iter_t * iter);
 
 /**
- * @brief Get pointer value from the vector referenced by an input iterator
+ * @brief Get pointer value from the vector referenced by an iterator
  *
- * Get the pointer type value from the vector referenced by an input iterator
+ * Get the pointer type value from the vector referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      Pointer type value from the vector if iter is valid, NULL otherwise

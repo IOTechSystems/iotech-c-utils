@@ -1389,14 +1389,45 @@ iot_data_t * iot_data_alloc_ui64 (uint64_t val)
   return (iot_data_t*) data;
 }
 
-iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_t val)
+static inline iot_data_value_base_t * iot_data_alloc_const_base (iot_data_static_t * data, iot_data_type_t type)
 {
+  assert (data);
   iot_data_value_base_t * bval = (iot_data_value_base_t*) data;
   memset (data, 0, sizeof (*data));
-  iot_data_block_init (&bval->base, IOT_DATA_UINT64);
+  iot_data_block_init (&bval->base, type);
+  bval->base.constant = true;
+  return bval;
+}
+
+iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_t val)
+{
+  iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_UINT64);
   bval->value.ui64 = val;
   bval->base.hash = (uint32_t) val;
-  bval->base.constant = true;
+  return (iot_data_t*) data;
+}
+
+iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_t val)
+{
+  iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_UINT32);
+  bval->value.ui32 = val;
+  bval->base.hash = val;
+  return (iot_data_t*) data;
+}
+
+iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_t val)
+{
+  iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_UINT16);
+  bval->value.ui16 = val;
+  bval->base.hash = val;
+  return (iot_data_t*) data;
+}
+
+iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t val)
+{
+  iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_UINT8);
+  bval->value.ui8 = val;
+  bval->base.hash = val;
   return (iot_data_t*) data;
 }
 
@@ -2357,6 +2388,12 @@ const void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter)
 {
   assert (iter);
   return (iter->_node) ? iot_data_pointer (iot_data_map_iter_value (iter)) : NULL;
+}
+
+bool iot_data_map_iter_bool_value (const iot_data_map_iter_t * iter)
+{
+  assert (iter);
+  return (iter->_node) ? iot_data_bool (iot_data_map_iter_value (iter)) : false;
 }
 
 void iot_data_array_iter (const iot_data_t * array, iot_data_array_iter_t * iter)
