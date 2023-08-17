@@ -1,0 +1,10 @@
+FROM alpine:3.18
+ENV SYSTEM="alpine-3.18"
+LABEL MAINTAINER="IOTech <support@iotechsys.com>"
+RUN apk add --update --no-cache build-base wget git gcc cmake make yaml-dev alpine-sdk
+COPY VERSION /iotech-iot/
+COPY src /iotech-iot/src/
+COPY include /iotech-iot/include/
+COPY scripts /iotech-iot/scripts/
+WORKDIR /iotech-iot
+ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/linux.sh", "-utest", "-examples"]

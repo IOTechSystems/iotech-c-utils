@@ -317,7 +317,7 @@
 
 ## Version 1.4.0
 
-- Support removed for Alpine Linux version 3.17
+- Support removed for Alpine Linux version 3.15
 - `iot_schedule_reset` function updated to take a start delay parameter
 - Support added for optional component callback, invoked when all components running
 - Component configuration cache added
@@ -350,6 +350,7 @@
 - Added component stopping callback support (called by container before components stopped)
 - Added component starting callback support (called by container before components started)
 - Support removed for Alpine 3.15
+- Support removed for Alpine 3.18
 - Added function `iot_data_binary_from_string` to create binary data from string data
 - Added function `iot_data_map_get_array` to find an array in a map
 - Added function `iot_data_string_from_binary` to create string data from binary data
