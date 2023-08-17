@@ -349,8 +349,8 @@
 - Added YAML reading function `iot_data_from_yaml`
 - Added component stopping callback support (called by container before components stopped)
 - Added component starting callback support (called by container before components started)
-- Support removed for Alpine 3.15
-- Support removed for Alpine 3.18
+- Support removed for Alpine Linux 3.15
+- Support added for Alpine Linux 3.18
 - Added function `iot_data_binary_from_string` to create binary data from string data
 - Added function `iot_data_map_get_array` to find an array in a map
 - Added function `iot_data_string_from_binary` to create string data from binary data
