@@ -41,7 +41,7 @@ typedef struct iot_logger_impl_t
   volatile iot_loglevel_t save;       // Last saved log level
   char * name;                        // Name of logger
   iot_log_function_t impl;            // Log implementation function
-  iot_log_free_fn_t freectx;          // Fucntion to free log context
+  iot_log_free_fn_t freectx;          // Function to free log context
   void *ctx;                          // Context for custom loggers
   struct iot_logger_impl_t * next;    // Pointer to next logger (can be chained in config)
   char buff [IOT_LOG_MSG_MAX];        // Log format buffer
@@ -69,7 +69,7 @@ iot_logger_t * iot_logger_default (void)
 
 void iot_log__va_log (iot_logger_t * l, iot_loglevel_t level, const char* fmt, va_list args)
 {
-  iot_logger_impl_t *logger = (iot_logger_impl_t *)l;
+  iot_logger_impl_t *logger = (iot_logger_impl_t*) l;
   char str[1024];
   vsnprintf (str, sizeof (str), fmt, args);
   uint64_t ts = iot_time_usecs ();
@@ -98,6 +98,7 @@ iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level,
 {
   assert (name && impl);
   iot_logger_impl_t * logger = calloc (1, sizeof (*logger));
+  iot_logger_add_ref (next);
   logger->impl = impl;
   logger->name = strdup (name);
   logger->save = level;
@@ -120,6 +121,7 @@ void iot_logger_free (iot_logger_t * logger)
   if (impl && (impl != &iot_logger_dfl) && iot_component_dec_ref (&logger->component))
   {
     free (impl->name);
+    iot_logger_free (impl->next);
     if (impl->freectx) (impl->freectx) (impl->ctx);
     iot_component_fini (&logger->component);
     free (logger);
@@ -199,7 +201,7 @@ static void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t t
 
 static void iot_logger_udp_ctx_free (void *ctx)
 {
-  iot_logger_udp_ctx_t *udp = (iot_logger_udp_ctx_t *)ctx;
+  const iot_logger_udp_ctx_t *udp = (iot_logger_udp_ctx_t*) ctx;
   close (udp->sock);
   free (ctx);
 }
@@ -265,9 +267,17 @@ iot_loglevel_t iot_logger_level_from_string (const char *name)
   return level;
 }
 
-const char *iot_logger_level_to_string (iot_loglevel_t level)
+const char * iot_logger_level_to_string (iot_loglevel_t level)
 {
   return iot_log_levels[level];
+}
+
+void iot_logger_set_next (iot_logger_t * logger, iot_logger_t * next)
+{
+  iot_logger_impl_t * logimpl = (iot_logger_impl_t*) logger;
+  if (logimpl->next) iot_logger_free (logimpl->next);
+  iot_logger_add_ref (next);
+  logimpl->next = (iot_logger_impl_t*) next;
 }
 
 #ifdef IOT_BUILD_COMPONENTS

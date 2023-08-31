@@ -199,7 +199,6 @@ extern void iot_logger_set_level (iot_logger_t *logger, iot_loglevel_t level);
  * @param str level string
  * @return log level corresponding to the string, or IOT_LOGLEVEL_DEFAULT
  */
-
 extern iot_loglevel_t iot_logger_level_from_string (const char * str);
 
 /**
@@ -207,8 +206,14 @@ extern iot_loglevel_t iot_logger_level_from_string (const char * str);
  * @param level log level
  * @return string corresponding to level
  */
-
 extern const char * iot_logger_level_to_string (iot_loglevel_t level);
+
+/**
+ * @brief Add next logger to a logger (for chained logging)
+ * @param logger Logger
+ * @param next Next logger
+ */
+extern void iot_logger_set_next (iot_logger_t * logger, iot_logger_t * next);
 
 /**
  * @brief Create Logger component factory
