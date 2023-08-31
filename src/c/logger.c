@@ -121,7 +121,7 @@ void iot_logger_free (iot_logger_t * logger)
   if (impl && (impl != &iot_logger_dfl) && iot_component_dec_ref (&logger->component))
   {
     free (impl->name);
-    iot_logger_free (impl->next);
+    iot_logger_free ((iot_logger_t*) impl->next);
     if (impl->freectx) (impl->freectx) (impl->ctx);
     iot_component_fini (&logger->component);
     free (logger);
@@ -275,7 +275,7 @@ const char * iot_logger_level_to_string (iot_loglevel_t level)
 void iot_logger_set_next (iot_logger_t * logger, iot_logger_t * next)
 {
   iot_logger_impl_t * logimpl = (iot_logger_impl_t*) logger;
-  if (logimpl->next) iot_logger_free (logimpl->next);
+  iot_logger_free ((iot_logger_t*) logimpl->next);
   iot_logger_add_ref (next);
   logimpl->next = (iot_logger_impl_t*) next;
 }

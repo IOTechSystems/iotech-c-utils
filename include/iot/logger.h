@@ -162,14 +162,13 @@ extern iot_logger_t * iot_logger_default (void);
  */
 extern void iot_log__log (iot_logger_t * logger, iot_loglevel_t level, ...);
 
-/*
- * @breif Log message format string and arguments with a specified log level
+/**
+ * @brief Log message format string and arguments with a specified log level
  *
  * @param logger  Pointer to the logger component
  * @param level   Log level for this entry
  * @param fmt     Format string for logging
  * @param args    va list arguments for logging
- *
  */
 extern void iot_log__va_log (iot_logger_t * logger, iot_loglevel_t level, const char* fmt, va_list args);
 
