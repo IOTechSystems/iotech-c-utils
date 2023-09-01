@@ -57,10 +57,11 @@ typedef enum iot_data_ownership_t
   IOT_DATA_REF = 2u   /**< Data is referenced and never freed */
 } iot_data_ownership_t;
 
+/** Enum type for data tags */
 typedef enum iot_data_tag_t
 {
   IOT_DATA_TAG_USER1 = 1u, /**< Identifier for user tag 1 */
-  IOT_DATA_TAG_USER2 = 2u, /**< Identifier for user tag 2 */
+  IOT_DATA_TAG_USER2 = 2u  /**< Identifier for user tag 2 */
 } iot_data_tag_t;
 
 /** Opaque iot data structure */
