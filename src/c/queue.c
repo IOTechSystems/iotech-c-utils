@@ -88,7 +88,7 @@ iot_data_t *iot_queue_dequeue (iot_queue_t *q)
 bool iot_queue_try_enqueue (iot_queue_t *q, iot_data_t *element)
 {
   bool result = false;
-  assert (q);
+  assert (q && element);
   pthread_mutex_lock (&q->mtx);
   if (q->maxsize == 0 || iot_data_list_length (q->queue) < q->maxsize)
   {
@@ -102,7 +102,7 @@ bool iot_queue_try_enqueue (iot_queue_t *q, iot_data_t *element)
 
 void iot_queue_enqueue (iot_queue_t *q, iot_data_t *element)
 {
-  assert (q);
+  assert (q && element);
   pthread_mutex_lock (&q->mtx);
   while (q->maxsize && iot_data_list_length (q->queue) >= q->maxsize)
   {
