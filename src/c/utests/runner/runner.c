@@ -17,6 +17,7 @@
 #include "../../cunit/Automated.h"
 #include "../scheduler/scheduler.h"
 #include "../base64/base64.h"
+#include "../queue/queue.h"
 
 static void usage (void)
 {
@@ -71,6 +72,7 @@ int main (int argc, char* argv[])
   cunit_threadpool_test_init ();
   cunit_scheduler_test_init ();
   cunit_base64_test_init ();
+  cunit_queue_test_init ();
 
   CU_set_error_action (error_action);
 

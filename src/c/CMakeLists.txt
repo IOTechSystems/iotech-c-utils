@@ -46,7 +46,7 @@ if (IOT_BUILD_YAML)
 endif ()
 
 # Set files to compile
-set (C_FILES data.c data-json.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c util.c store.c file.c uuid.c)
+set (C_FILES data.c data-json.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c util.c store.c file.c uuid.c queue.c)
 if (IOT_BUILD_XML)
   set (C_FILES ${C_FILES} yxml.c data-xml.c)
 endif ()
