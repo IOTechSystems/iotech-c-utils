@@ -140,7 +140,7 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
   {
     const char * start = str;
     const char * end;
-    char key [IOT_MAX_ENV_LEN];
+    char * key;
 
     holder.size = strlen (str);
     holder.parsed = malloc (holder.size);
@@ -152,17 +152,18 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
         if ((end = strchr (start, '}'))) // Look for "}"
         {
           size_t len = (size_t) ((end - start) - 2);
-          strncpy (key, start + 2, len);
-          key[len] = '\0';
+          key = strndup( start + 2, len);
           const char * env = getenv (key);
           if (env)
           {
+            free (key);
             iot_update_parsed (&holder, env, strlen (env));
           }
           else
           {
             if (logger == NULL) logger = iot_logger_default ();
             iot_log_error (logger, "Unable to resolve environment variable: %s", key);
+            free (key);
             free (holder.parsed);
             goto FAIL;
           }
