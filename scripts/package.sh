@@ -18,6 +18,10 @@ do
       ROOT=$1
       shift 1
     ;;
+    -32bit)
+      shift 1
+      FPM_ARGS="-a i386"
+    ;;
     *)
       shift 1
     ;;
@@ -82,7 +86,7 @@ case ${SYSTEM} in
     OS_ARCH=$(dpkg --print-architecture)
     cd ${ROOT}/${BARCH}/release
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
+    ${FPM} ${FPM_ARGS} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -90,7 +94,7 @@ case ${SYSTEM} in
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
+    ${FPM} ${FPM_ARGS} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -103,7 +107,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
+    ${FPM} ${FPM_ARGS} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
