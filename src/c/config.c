@@ -118,8 +118,6 @@ iot_component_t * iot_config_component (const iot_data_t * map, const char * key
   return comp;
 }
 
-#define IOT_MAX_ENV_LEN 64
-
 static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, size_t len)
 {
   holder->len += len;
