@@ -22,10 +22,16 @@ def buildStage (systems, arch)
   def nat = getNativeParam ()
   def sq = getSonarQubeParam ()
   def sonar = 'false'
+  def b32 = getBuild32Param ()
+  def build32 = 'false'
 
   if (("${sq}" == 'true' || env.BRANCH_NAME.startsWith ('PR')) && ("${sys}" == 'ubuntu-22.04') && ("${arch}" == 'x86_64'))
   {
     sonar = 'true'
+  }
+  if (("${b32}" == 'true') && ("${sys}" == 'ubuntu-22.04') && ("${arch}" == 'x86_64'))
+  {
+    build32 = 'true'
   }
 
   for (int i = 0; i < systems.size(); ++i)
@@ -64,7 +70,7 @@ def buildStage (systems, arch)
         }
         else
         {
-          sh (script: "./scripts/docker.sh ${system} ${arch} ${board} ${sonar} ${env.BRANCH_NAME}")
+          sh (script: "./scripts/docker.sh ${system} ${arch} ${board} ${build32} ${sonar} ${env.BRANCH_NAME}")
         }
       }
     }
@@ -378,6 +384,16 @@ def String getSonarQubeParam ()
   return ret
 }
 
+def String getBuild32Param ()
+{
+  def ret = "${params.Build32}"
+  if ("${ret}" == 'null')
+  {
+    ret = 'false'
+  }
+  return ret
+}
+
 buildMap = [:]
 for (t in targets)
 {
@@ -413,6 +429,7 @@ pipeline
     choice (name: 'Target', choices: ['None','frdm_k64f','qemu_x86','riscv64-oe','riscv32-oe','acrn','all'], description: 'Target System')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
     booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-22.04 x86_64)')
+    booleanParam (name: 'Build32', defaultValue: false, description: 'Run 32-bit build on 64-bit host (only for ubuntu-22.04 x86_64)')
   }
   stages { stage ('All') { steps { script { parallel buildMap }}}}
 }

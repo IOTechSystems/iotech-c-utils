@@ -36,6 +36,12 @@ do
       LCOV=true
       shift 1
     ;;
+    -32bit)
+      EXTRA_CMAKE_FLAGS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32"
+      EXTRA_PKG_FLAGS="-32bit"
+      EXTRA_MAKE_FLAGS="-e FLAGS=-m32"
+      shift 1
+    ;;
     -barch)
       shift 1
       BARCH=$1
@@ -71,7 +77,7 @@ fi
 
 mkdir -p ${BROOT}/release
 cd ${BROOT}/release
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release ${EXTRA_CMAKE_FLAGS} ${ROOT}/src
 make 2>&1 | tee release.log
 make package
 
@@ -79,16 +85,16 @@ make package
 
 mkdir -p ${BROOT}/debug
 cd ${BROOT}/debug
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Debug ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Debug ${EXTRA_CMAKE_FLAGS} ${ROOT}/src
 make 2>&1 | tee debug.log
 make package
 
-"${ROOT}/scripts/package.sh" -root ${ROOT} -barch ${BARCH}
+"${ROOT}/scripts/package.sh" -root ${ROOT} -barch ${BARCH} ${EXTRA_PKG_FLAGS}
 
 # Build examples with makefiles
 
 cd ${ROOT}/src/c/examples
-make -e IOT_INCLUDE_DIR=${ROOT}/include -e IOT_LIB_DIR=${BROOT}/release/c
+make ${EXTRA_MAKE_FLAGS} -e IOT_INCLUDE_DIR=${ROOT}/include -e IOT_LIB_DIR=${BROOT}/release/c
 
 run_examples ()
 {
@@ -128,7 +134,7 @@ then
 
   mkdir -p ${BROOT}/lcov
   cd ${BROOT}/lcov
-  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON ${ROOT}/src
+  cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DIOT_BUILD_LCOV=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON ${EXTRA_CMAKE_FLAGS} ${ROOT}/src
   ${SONAR_WRAPPER} make
 
   cd ${BROOT}/lcov/c/examples
