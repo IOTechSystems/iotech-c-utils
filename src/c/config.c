@@ -152,7 +152,7 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
         if ((end = strchr (start, '}'))) // Look for "}"
         {
           start += 2;
-          if (start == end)
+          if (start == end) // Checks edge case of ${}
           {
             iot_log_error (logger, "${}: bad substitution");
             goto FAIL;
