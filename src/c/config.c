@@ -165,8 +165,7 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
           }
           else
           {
-            if (logger == NULL)
-            { logger = iot_logger_default (); }
+            if (logger == NULL) logger = iot_logger_default ();
             iot_log_error (logger, "Unable to resolve environment variable: %s", start);
             free (holder.parsed);
             goto FAIL;
