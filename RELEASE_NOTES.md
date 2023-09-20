@@ -317,6 +317,7 @@
 
 ## Version 1.4.0
 
+- Support removed for Alpine Linux version 3.15
 - `iot_schedule_reset` function updated to take a start delay parameter
 - Support added for optional component callback, invoked when all components running
 - Component configuration cache added
@@ -332,3 +333,35 @@
 - Update to by default serialize schedule execution. Can be overridden with a new `iot_schedule_set_concurrent` function
 - Added `iot_data_map_merge` function to merge one maps contents into another
 - Updated `iot_component_reconfig` function to store updated configuration
+
+## Version 1.4.1
+
+- Support removed for Pathfinder for RISC-V as no longer supported by Intel
+- Added `iot_schedule_set_sync` function to support synchronous schedule execution
+- Added string comparison function `iot_data_string_cmp`
+
+## Version 1.4.2
+
+- Added CBOR export
+
+## Version 1.5.0
+
+- Added YAML reading function `iot_data_from_yaml`
+- Added component stopping callback support (called by container before components stopped)
+- Added component starting callback support (called by container before components started)
+- Support removed for Alpine Linux 3.15
+- Support added for Alpine Linux 3.18
+- Added function `iot_data_binary_from_string` to create binary data from string data
+- Added function `iot_data_map_get_array` to find an array in a map
+- Added function `iot_data_string_from_binary` to create string data from binary data
+- Added function `iot_data_binary_take` to take buffer from binary data
+- Added function `iot_data_map_add_unused` to add a value to a map if key unused
+- Added functions `iot_data_get_tag` and `iot_data_set_tag` to support lightweight user data tagging
+- Added function `iot_data_array_get` to access array elements without an iterator
+- Added functions `iot_data_equal_value` and `iot_data_compare_value` for value based data comparison
+- Updated function `iot_data_type` to return IOT_DATA_INVALID when passed a NULL data pointer (previously would assert)
+- Added function `iot_data_alloc_const_ui32` to allocate const uint32_t data value
+- Added function `iot_data_alloc_const_ui16` to allocate const uint16_t data value
+- Added function `iot_data_alloc_const_ui8` to allocate const uint8_t data value
+- Added function `iot_data_map_iter_bool_value` to return a boolean value from a data map iterator
+- Added function `iot_logger_set_next` to set logger delegate

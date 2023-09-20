@@ -61,6 +61,12 @@ static iot_data_t * iot_component_config_to_map (const char * config, iot_logger
   iot_data_t * map = NULL;
   char * str = iot_config_substitute_env (config, logger);
   if (str) map = iot_data_from_json (str);
+  if (map == NULL || ! iot_data_map_key_is_of_type (map, IOT_DATA_STRING))
+  {
+    iot_log_error (logger, "iot_component_config_to_map: Invalid JSON configuration");
+    iot_data_free (map);
+    map = NULL;
+  }
   free (str);
   return map;
 }
@@ -335,6 +341,12 @@ void iot_container_start (iot_container_t * cont)
   while (iot_data_list_iter_next (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
+    if (comp->starting_fn) (comp->starting_fn) (comp);
+  }
+  iot_data_list_iter (cont->components, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     (comp->start_fn) (comp);
 #if defined (_AZURESPHERE_) && ! defined (NDEBUG)
     Log_Debug ("iot_container_start: %s (Total Memory: %" PRIu32 " kB)\n", comp->name, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
@@ -346,8 +358,14 @@ void iot_container_start (iot_container_t * cont)
 
 void iot_container_stop (iot_container_t * cont)
 {
-  pthread_rwlock_rdlock (&cont->lock);
   iot_data_list_iter_t iter;
+  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_list_iter (cont->components, &iter);
+  while (iot_data_list_iter_prev (&iter))
+  {
+    iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
+    if (comp->stopping_fn) (comp->stopping_fn) (comp);
+  }
   iot_data_list_iter (cont->components, &iter);
   while (iot_data_list_iter_prev (&iter))
   {

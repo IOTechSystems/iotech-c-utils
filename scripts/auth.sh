@@ -7,6 +7,7 @@ SQ=$2
 case "${SYS}" in
   alpine*)
     cp "${AlpinePackagerRSAPrivateKey}" scripts/apk.key
+    cp "${AlpinePackagerRSAPublicKey}" scripts/apk.key.pub
   ;;
   ubuntu-22.04)
     if [ "${SQ}" = "true" ]
