@@ -140,7 +140,6 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
   {
     const char * start = str;
     char * end;
-    char * key;
 
     holder.size = strlen (str);
     holder.parsed = malloc (holder.size);
