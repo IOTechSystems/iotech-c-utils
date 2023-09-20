@@ -149,18 +149,19 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
     {
       if (start[0] == '$' && start[1] == '{') // Look for "${"
       {
-        if (start[2] == '}')
-        {
-          iot_log_error (logger, "${}: bad substitution in config");
-          goto FAIL;
-        }
         if ((end = strchr (start, '}'))) // Look for "}"
         {
-          start = start + 2;
+          start += 2;
+          if (start == end)
+          {
+            iot_log_error (logger, "${}: bad substitution");
+            goto FAIL;
+          }
           *end = '\0';
           const char *env = getenv (start);
           if (env)
           {
+            *end = '}';
             iot_update_parsed (&holder, env, strlen (env));
           }
           else
@@ -171,7 +172,6 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
             free (holder.parsed);
             goto FAIL;
           }
-          *end = '}';
           start = end + 1;
           continue;
         }
