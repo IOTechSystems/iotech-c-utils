@@ -169,7 +169,7 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
             goto FAIL;
           }
           const char *env;
-          memcpy (key + 2, start, len);
+          memcpy (key, start + 2, len);
           key[len] = '\0';
           env = getenv (key);
           if (env)
