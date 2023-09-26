@@ -151,7 +151,7 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
       {
         if (end = strchr (start, '}')) // Look for "}" and ensure it's not ${}
         {
-          if (end != start+2)
+          if (end == start+2)
           {
             if (logger == NULL)
             { logger = iot_logger_default (); }
