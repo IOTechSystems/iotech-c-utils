@@ -153,7 +153,7 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
         {
           size_t len = (size_t) ((end - start) - 2);
           const char *env;
-          if (len > IOT_MAX_ENV_LEN)
+          if (len >= IOT_MAX_ENV_LEN)
           {
             char *oversizedKey = NULL;
             oversizedKey = malloc (len + 1);
