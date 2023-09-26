@@ -149,25 +149,29 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
     {
       if (start[0] == '$' && start[1] == '{') // Look for "${"
       {
-        if ((end = strchr (start, '}')) != start + 2) // Look for "}" and ensure it's not ${}
+        if (end = strchr (start, '}')) // Look for "}" and ensure it's not ${}
         {
+          if (end != start+2)
+          {
+            if (logger == NULL)
+            { logger = iot_logger_default (); }
+            iot_log_error (logger, "${}: bad substitution");
+            free (holder.parsed);
+            goto FAIL;
+          }
           size_t len = (size_t) ((end - start) - 2);
-          const char *env;
           if (len >= IOT_MAX_ENV_LEN)
           {
-            char *oversizedKey = NULL;
-            oversizedKey = malloc (len + 1);
-            memcpy (oversizedKey, start + 2, len);
-            oversizedKey[len] = '\0';
-            env = getenv (oversizedKey);
-            free (oversizedKey);
+            if (logger == NULL)
+            { logger = iot_logger_default (); }
+            iot_log_error (logger, "environment variable is greater than max length of %d: %s",IOT_MAX_ENV_LEN, key);
+            free (holder.parsed);
+            goto FAIL;
           }
-          else
-          {
-            memcpy (key, start + 2, len);
-            key[len] = '\0';
-            env = getenv (key);
-          }
+          const char *env;
+          memcpy (key, start, len);
+          key[len] = '\0';
+          env = getenv (key);
           if (env)
           {
             iot_update_parsed (&holder, env, strlen (env));
