@@ -151,7 +151,7 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
       {
         if (end = strchr (start, '}')) // Look for "}" and ensure it's not ${}
         {
-          if (end == start+2)
+          if (end == start + 2)
           {
             if (logger == NULL)
             { logger = iot_logger_default (); }
@@ -164,12 +164,12 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
           {
             if (logger == NULL)
             { logger = iot_logger_default (); }
-            iot_log_error (logger, "environment variable is greater than max length of %d: %s",IOT_MAX_ENV_LEN, key);
+            iot_log_error (logger, "environment variable is greater than max length of %d: %s", IOT_MAX_ENV_LEN, key);
             free (holder.parsed);
             goto FAIL;
           }
           const char *env;
-          memcpy (key, start, len);
+          memcpy (key + 2, start, len);
           key[len] = '\0';
           env = getenv (key);
           if (env)
