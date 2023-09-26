@@ -30,12 +30,12 @@ extern "C" {
  */
 typedef enum iot_loglevel_t
 {
-  IOT_LOG_NONE = 0,   /**< No logging */
-  IOT_LOG_ERROR,      /**< Error logging */
-  IOT_LOG_WARN,       /**< Warning and Error logging */
-  IOT_LOG_INFO,       /**< Information, Warning and Error logging */
-  IOT_LOG_DEBUG,      /**< Debug, Information, Warning and Error logging */
-  IOT_LOG_TRACE       /**< Trace, Debug, Information, Warning and Error logging */
+  IOT_LOG_NONE = 0,      /**< No logging */
+  IOT_LOG_ERROR = 1u,    /**< Error logging */
+  IOT_LOG_WARN = 2u,     /**< Warning and Error logging */
+  IOT_LOG_INFO = 3u,     /**< Information, Warning and Error logging */
+  IOT_LOG_DEBUG = 4u,    /**< Debug, Information, Warning and Error logging */
+  IOT_LOG_TRACE = 5u     /**< Trace, Debug, Information, Warning and Error logging */
 } iot_loglevel_t;
 
 /**
@@ -162,6 +162,16 @@ extern iot_logger_t * iot_logger_default (void);
  */
 extern void iot_log__log (iot_logger_t * logger, iot_loglevel_t level, ...);
 
+/**
+ * @brief Log message format string and arguments with a specified log level
+ *
+ * @param logger  Pointer to the logger component
+ * @param level   Log level for this entry
+ * @param fmt     Format string for logging
+ * @param args    va list arguments for logging
+ */
+extern void iot_log__va_log (iot_logger_t * logger, iot_loglevel_t level, const char* fmt, va_list args);
+
 /** Log trace macro */
 #define iot_log_trace(l,...) if ((l) && (l)->level >= IOT_LOG_TRACE) iot_log__log ((l), IOT_LOG_TRACE, __VA_ARGS__)
 /** Log info macro */
@@ -188,7 +198,6 @@ extern void iot_logger_set_level (iot_logger_t *logger, iot_loglevel_t level);
  * @param str level string
  * @return log level corresponding to the string, or IOT_LOGLEVEL_DEFAULT
  */
-
 extern iot_loglevel_t iot_logger_level_from_string (const char * str);
 
 /**
@@ -196,8 +205,14 @@ extern iot_loglevel_t iot_logger_level_from_string (const char * str);
  * @param level log level
  * @return string corresponding to level
  */
-
 extern const char * iot_logger_level_to_string (iot_loglevel_t level);
+
+/**
+ * @brief Add next logger to a logger (for chained logging)
+ * @param logger Logger
+ * @param next Next logger
+ */
+extern void iot_logger_set_next (iot_logger_t * logger, iot_logger_t * next);
 
 /**
  * @brief Create Logger component factory

@@ -1,9 +1,9 @@
 #!/usr/bin/env groovy
 
-systems_x86_64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.16','alpine-3.15','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40','zephyr-2.3','clearlinux','azuresphere-12','yocto-riscv'] as String[]
-systems_arm64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.16','alpine-3.15','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40'] as String[]
-systems_arm32 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.16','alpine-3.15','debian-11','debian-10','opensuse-15.4'] as String[]
-systems_x86 = ['alpine-3.16','alpine-3.15','debian-11','debian-10']
+systems_x86_64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.18','alpine-3.17','alpine-3.16','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40','zephyr-2.3','clearlinux','azuresphere-15','yocto-riscv'] as String[]
+systems_arm64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.18','alpine-3.17','alpine-3.16','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40'] as String[]
+systems_arm32 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.18','alpine-3.17','alpine-3.16','debian-11','debian-10','opensuse-15.4'] as String[]
+systems_x86 = ['alpine-3.18','alpine-3.17','alpine-3.16','debian-11','debian-10']
 targets = ['x86_64','arm64','arm32','x86'] as String[]
 arch_system_map = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32, x86: systems_x86]
 releaseType = ['None':'dev', 'Release':'release', 'Development':'dev']
@@ -33,7 +33,10 @@ def buildStage (systems, arch)
     def system = systems[i]
     if ("${sys}" == "${system}" || "${sys}" == 'all')
     {
-      withCredentials ([file (credentialsId: 'AlpinePackagerRSAPrivateKey', variable: 'AlpinePackagerRSAPrivateKey')])
+      withCredentials ([
+        file (credentialsId: 'AlpinePackagerRSAPrivateKey', variable: 'AlpinePackagerRSAPrivateKey'),
+        file (credentialsId: 'AlpinePackagerRSAPublicKey', variable: 'AlpinePackagerRSAPublicKey')
+      ])
       {
         sh (script: "./scripts/auth.sh ${system} ${sonar}")
       }
@@ -165,13 +168,13 @@ def publishAdvancedMetrics (system, arch)
 
 def publishDebs (arch)
 {
-  def debs_x86_64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-11','debian-10','azuresphere-12','yocto-riscv']
+  def debs_x86_64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-11','debian-10','azuresphere-15','yocto-riscv']
   def debs_arm64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-11','debian-10']
   def debs_arm32 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-11','debian-10']
   def debs_x86 = ['debian-11','debian-10']
   def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32, x86: debs_x86]
   def deb_archs = [x86_64: 'amd64', arm64: 'arm64', arm32: 'armhf', x86: 'i386']
-  def deb_name = ['ubuntu-22.04':'jammy','ubuntu-20.04':'focal','ubuntu-18.04':'bionic','debian-11':'bullseye','debian-10':'buster','azuresphere-12':'focal','yocto-riscv':'jammy']
+  def deb_name = ['ubuntu-22.04':'jammy','ubuntu-20.04':'focal','ubuntu-18.04':'bionic','debian-11':'bullseye','debian-10':'buster','azuresphere-15':'jammy','yocto-riscv':'jammy']
   def debs = deb_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
@@ -200,14 +203,14 @@ def publishDebs (arch)
 
 def publishApks (arch)
 {
-  def apks_x86_64 = ['alpine-3.16','alpine-3.15']
-  def apks_arm64 = ['alpine-3.16','alpine-3.15']
-  def apks_arm32 = ['alpine-3.16','alpine-3.15']
-  def apks_x86 = ['alpine-3.16','alpine-3.15']
+  def apks_x86_64 = ['alpine-3.18','alpine-3.17','alpine-3.16']
+  def apks_arm64 = ['alpine-3.18','alpine-3.17','alpine-3.16']
+  def apks_arm32 = ['alpine-3.18','alpine-3.17','alpine-3.16']
+  def apks_x86 = ['alpine-3.18','alpine-3.17','alpine-3.16']
   def apk_lists = [x86_64: apks_x86_64, arm64: apks_arm64, arm32: apks_arm32, x86: apks_x86]
   def apk_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', x86: 'x86']
   def host_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', x86: 'x86']
-  def apk_vers = ['alpine-3.16':'v3.16','alpine-3.15':'v3.15']
+  def apk_vers = ['alpine-3.18':'v3.18','alpine-3.17':'v3.17','alpine-3.16':'v3.16']
   def apk_arch = apk_archs[arch]
   def harch = host_archs[arch]
   def apks = apk_lists[arch]
@@ -405,9 +408,9 @@ pipeline
   parameters
   {
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
-    choice (name: 'System', choices: ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.15','alpine-3.16','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40','zephyr-2.3','clearlinux','azuresphere-12','yocto-riscv','all'], description: 'System to Build')
+    choice (name: 'System', choices: ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.18','alpine-3.17','alpine-3.16','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40','zephyr-2.3','clearlinux','azuresphere-15','yocto-riscv','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','x86','arm64','arm32','all'], description: 'Build Host Architecture')
-    choice (name: 'Target', choices: ['None','frdm_k64f','qemu_x86','riscv64-oe','riscv32-oe','riscv64-musl-rv64i','riscv64-musl-rv64id','riscv32-musl-rv32i','riscv32-musl-rv32id','acrn','all'], description: 'Target System')
+    choice (name: 'Target', choices: ['None','frdm_k64f','qemu_x86','riscv64-oe','riscv32-oe','acrn','all'], description: 'Target System')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
     booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-22.04 x86_64)')
   }
