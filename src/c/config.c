@@ -142,6 +142,8 @@ static char *cleanup_and_return (char *result, iot_parsed_holder_t *holder, iot_
     }
     iot_log_error(logger, msg);
     free (holder->parsed);
+    free (result);
+    return NULL;
   }
   return result;
 }
@@ -200,5 +202,5 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
     result = holder.parsed;
   }
 
-  cleanup_and_return (result, &holder, logger, NULL);
+  return cleanup_and_return (result, &holder, logger, NULL);
 }
