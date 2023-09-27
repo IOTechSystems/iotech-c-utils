@@ -167,33 +167,30 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
       if (start[0] == '$' && start[1] == '{')
       {
         end = strchr (start, '}');
-        if (end)
+        if (!end || end == start + 2)
         {
-          if (end == start + 2)
-          {
-            return cleanup_and_return (result, &holder, logger, "${}: bad substitution in config");
-          }
-          size_t len = (size_t) ((end - start) - 2);
-          if (len >= IOT_MAX_ENV_LEN)
-          {
-            return cleanup_and_return (result, &holder, logger,
-                                       "environment variable is greater than max length of 64 in config");
-          }
-          const char *env;
-          memcpy (key, start + 2, len);
-          key[len] = '\0';
-          env = getenv (key);
-          if (env)
-          {
-            iot_update_parsed (&holder, env, strlen (env));
-          }
-          else
-          {
-            return cleanup_and_return (result, &holder, logger, "Unable to resolve environment variable in config");
-          }
-          start = end + 1;
-          continue;
+          return cleanup_and_return (result, &holder, logger, "${}: bad substitution in config");
         }
+        size_t len = (size_t) ((end - start) - 2);
+        if (len >= IOT_MAX_ENV_LEN)
+        {
+          return cleanup_and_return (result, &holder, logger,
+                                     "environment variable is greater than max length of 64 in config");
+        }
+        const char *env;
+        memcpy (key, start + 2, len);
+        key[len] = '\0';
+        env = getenv (key);
+        if (env)
+        {
+          iot_update_parsed (&holder, env, strlen (env));
+        }
+        else
+        {
+          return cleanup_and_return (result, &holder, logger, "Unable to resolve environment variable in config");
+        }
+        start = end + 1;
+        continue;
       }
       iot_update_parsed (&holder, start, 1u);
       start++;
