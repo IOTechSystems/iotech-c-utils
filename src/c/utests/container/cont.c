@@ -20,6 +20,30 @@ static const char * logger_config =
   "\"Level\":\"Info\""
 "}";
 
+static const char * bad_logger_config_1 =
+  "{"
+  "\"Name\":\"${}\","
+  "\"Level\":\"Info\""
+  "}";
+
+static const char * bad_logger_config_2 =
+  "{"
+  "\"Name\":\"${aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}\","
+  "\"Level\":\"Info\""
+  "}";
+
+static const char * bad_logger_config_3 =
+  "{"
+  "\"Name\":\"${\","
+  "\"Level\":\"Info\""
+  "}";
+
+static const char * bad_logger_config_4 =
+  "{"
+  "\"Name\":\"${I_DO_NOT_EXIST}\","
+  "\"Level\":\"Info\""
+  "}";
+
 static bool running_called = false;
 static bool stopping_called = false;
 
@@ -75,6 +99,20 @@ static void test_add_component (void)
   iot_container_free (cont);
 }
 
+
+static void test_bad_config (void)
+{
+  iot_container_t * cont = iot_container_alloc ("test");
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger1", bad_logger_config_1);
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger2", bad_logger_config_2);
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger3", bad_logger_config_3);
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger4", bad_logger_config_4);
+  iot_component_t * comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL)
+  iot_container_free (cont);
+}
+
 static void test_delete_component (void)
 {
   iot_component_t * comp;
@@ -112,5 +150,6 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "container_alloc", test_alloc);
   CU_add_test (suite, "container_state_name", test_state_name);
   CU_add_test (suite, "container_add_component", test_add_component);
+  CU_add_test (suite, "test_bad_config", test_bad_config);
   CU_add_test (suite, "container_delete_component", test_delete_component);
 }
