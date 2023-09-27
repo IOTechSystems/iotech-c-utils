@@ -136,7 +136,7 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
   char *result = NULL;
   iot_parsed_holder_t holder = {.parsed = NULL, .size = 0, .len = 0};
 
-  if (!str)
+  if (str)
   {
     const char *start = str;
     const char *end;
@@ -147,47 +147,42 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
 
     while (*start)
     {
-      if (start[0] == '$' && start[1] == '{')
+      if (start[0] == '$' && start[1] == '{') // Look for "${"
       {
-        if (end = strchr (start, '}')) // Look for "}" and ensure it's not ${}
+        if ((end = strchr (start, '}'))) // Look for "}"
         {
-          end = strchr (start, '}');
-          if (end == start + 2)
+          if (end == start + 2) // Look for error case "${}"
           {
-            if (logger == NULL)
-            { logger = iot_logger_default (); }
-            iot_log_error (logger, "${}: bad substitution");
+            if (logger == NULL) logger = iot_logger_default ();
+            iot_log_error (logger, "${}: bad substitution in config");
             free (holder.parsed);
             goto FAIL;
           }
           size_t len = (size_t) ((end - start) - 2);
           if (len >= IOT_MAX_ENV_LEN)
           {
-            if (logger == NULL)
-            { logger = iot_logger_default (); }
-            iot_log_error (logger, "environment variable is greater than max length of %d: %s", IOT_MAX_ENV_LEN, key);
+            if (logger == NULL) logger = iot_logger_default ();
+            iot_log_error (logger, "Environment variable name is greater than max length of %d", IOT_MAX_ENV_LEN-1);
             free (holder.parsed);
             goto FAIL;
           }
-          const char *env;
-          memcpy (key, start + 2, len);
+          strncpy (key, start + 2, len);
           key[len] = '\0';
-          env = getenv (key);
+          const char *env = getenv (key);
           if (env)
           {
             iot_update_parsed (&holder, env, strlen (env));
           }
           else
           {
-            if (logger == NULL)
-            { logger = iot_logger_default (); }
+            if (logger == NULL) logger = iot_logger_default ();
             iot_log_error (logger, "Unable to resolve environment variable: %s", key);
             free (holder.parsed);
             goto FAIL;
           }
+          start = end + 1;
+          continue;
         }
-        start = end + 1;
-        continue;
       }
       iot_update_parsed (&holder, start, 1u);
       start++;
@@ -196,6 +191,6 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
     result = holder.parsed;
   }
 
-  FAIL:
+FAIL:
   return result;
 }

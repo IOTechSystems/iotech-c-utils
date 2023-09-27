@@ -100,7 +100,7 @@ static void test_add_component (void)
 }
 
 
-static void test_bad_config (void)
+static void test_bad_env_vars_in_config (void) // Tests bad environment variable in config don't crash the program
 {
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
@@ -157,6 +157,7 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "container_alloc", test_alloc);
   CU_add_test (suite, "container_state_name", test_state_name);
   CU_add_test (suite, "container_add_component", test_add_component);
-  CU_add_test (suite, "test_bad_config", test_bad_config);
   CU_add_test (suite, "container_delete_component", test_delete_component);
+  CU_add_test (suite, "bad_enviroment_variables_in_config", test_bad_env_vars_in_config);
+
 }
