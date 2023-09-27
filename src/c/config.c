@@ -4,6 +4,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include <stdarg.h>
 #include "iot/config.h"
 #include "iot/container.h"
 
@@ -131,18 +132,17 @@ static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, s
 
 #define IOT_MAX_ENV_LEN 64
 
-static char *cleanup_and_return (char *result, iot_parsed_holder_t *holder, iot_logger_t *logger, ...)
+static char *cleanup_and_return (char *result, iot_parsed_holder_t *holder, iot_logger_t *logger, char* msg)
 {
-  va_list vaList;
-  if (logger == NULL)
+  if (!result)
   {
-    logger = iot_logger_default ();
+    if (logger == NULL)
+    {
+      logger = iot_logger_default ();
+    }
+    iot_log_error(logger, msg);
+    free (holder->parsed);
   }
-  if (vaList)
-  {
-    iot_log_error(logger, vaList);
-  }
-  free (holder->parsed);
   return result;
 }
 
@@ -187,8 +187,7 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
           }
           else
           {
-            return cleanup_and_return (result, &holder, logger, "Unable to resolve environment variable in config: %a",
-                                       key);
+            return cleanup_and_return (result, &holder, logger, "Unable to resolve environment variable in config");
           }
           start = end + 1;
           continue;
