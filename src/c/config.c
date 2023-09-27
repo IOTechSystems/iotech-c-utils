@@ -132,7 +132,7 @@ static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, s
 
 #define IOT_MAX_ENV_LEN 64
 
-static char *cleanup_and_return (char *result, iot_parsed_holder_t *holder, iot_logger_t *logger, char *msg)
+static char *iot_config_substitute_env_return (char *result, iot_parsed_holder_t *holder, iot_logger_t *logger, char *msg)
 {
   if (!result)
   {
@@ -150,12 +150,12 @@ static char *cleanup_and_return (char *result, iot_parsed_holder_t *holder, iot_
 
 char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
 {
-  char *result = NULL;
-  iot_parsed_holder_t holder = {.parsed = NULL, .size = 0, .len = 0};
   if (!str)
   {
     return NULL;
   }
+  char *result = NULL;
+  iot_parsed_holder_t holder = {.parsed = NULL, .size = 0, .len = 0};
   const char *start = str;
   const char *end;
   char key[IOT_MAX_ENV_LEN];
@@ -170,13 +170,13 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
       end = strchr (start, '}');
       if (!end || end == start + 2)
       {
-        return cleanup_and_return (result, &holder, logger, "${}: bad substitution in config");
+        return iot_config_substitute_env_return (result, &holder, logger, "${}: bad substitution in config");
       }
       size_t len = (size_t) ((end - start) - 2);
       if (len >= IOT_MAX_ENV_LEN)
       {
-        return cleanup_and_return (result, &holder, logger,
-                                   "environment variable is greater than max length of 64 in config");
+        return iot_config_substitute_env_return (result, &holder, logger,
+                                                 "environment variable is greater than max length of 64 in config");
       }
       const char *env;
       memcpy (key, start + 2, len);
@@ -188,7 +188,7 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
       }
       else
       {
-        return cleanup_and_return (result, &holder, logger, "Unable to resolve environment variable in config");
+        return iot_config_substitute_env_return (result, &holder, logger, "Unable to resolve environment variable in config");
       }
       start = end + 1;
       continue;
@@ -199,5 +199,5 @@ char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
   iot_update_parsed (&holder, start, 1u);
   result = holder.parsed;
 
-  return cleanup_and_return (result, &holder, logger, NULL);
+  return iot_config_substitute_env_return (result, &holder, logger, NULL);
 }
