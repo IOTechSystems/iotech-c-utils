@@ -4,7 +4,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <stdarg.h>
 #include "iot/config.h"
 #include "iot/container.h"
 
@@ -119,6 +118,8 @@ iot_component_t * iot_config_component (const iot_data_t * map, const char * key
   return comp;
 }
 
+#define IOT_MAX_ENV_LEN 64
+
 static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, size_t len)
 {
   holder->len += len;
@@ -130,74 +131,71 @@ static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, s
   memcpy (holder->parsed + holder->len - len, str, len);
 }
 
-#define IOT_MAX_ENV_LEN 64
-
-static char *iot_config_substitute_env_return (char *result, iot_parsed_holder_t *holder, iot_logger_t *logger, char *msg)
-{
-  if (!result)
-  {
-    if (logger == NULL)
-    {
-      logger = iot_logger_default ();
-    }
-    iot_log_error(logger, msg);
-    free (holder->parsed);
-    free (result);
-    return NULL;
-  }
-  return result;
-}
-
 char *iot_config_substitute_env (const char *str, iot_logger_t *logger)
 {
-  if (!str)
-  {
-    return NULL;
-  }
   char *result = NULL;
   iot_parsed_holder_t holder = {.parsed = NULL, .size = 0, .len = 0};
-  const char *start = str;
-  const char *end;
-  char key[IOT_MAX_ENV_LEN];
 
-  holder.size = strlen (str);
-  holder.parsed = malloc (holder.size);
-
-  while (*start)
+  if (!str)
   {
-    if (start[0] == '$' && start[1] == '{')
+    const char *start = str;
+    const char *end;
+    char key[IOT_MAX_ENV_LEN];
+
+    holder.size = strlen (str);
+    holder.parsed = malloc (holder.size);
+
+    while (*start)
     {
-      end = strchr (start, '}');
-      if (!end || end == start + 2)
+      if (start[0] == '$' && start[1] == '{')
       {
-        return iot_config_substitute_env_return (result, &holder, logger, "${}: bad substitution in config");
+        if (end = strchr (start, '}')) // Look for "}" and ensure it's not ${}
+        {
+          end = strchr (start, '}');
+          if (end == start + 2)
+          {
+            if (logger == NULL)
+            { logger = iot_logger_default (); }
+            iot_log_error (logger, "${}: bad substitution");
+            free (holder.parsed);
+            goto FAIL;
+          }
+          size_t len = (size_t) ((end - start) - 2);
+          if (len >= IOT_MAX_ENV_LEN)
+          {
+            if (logger == NULL)
+            { logger = iot_logger_default (); }
+            iot_log_error (logger, "environment variable is greater than max length of %d: %s", IOT_MAX_ENV_LEN, key);
+            free (holder.parsed);
+            goto FAIL;
+          }
+          const char *env;
+          memcpy (key, start + 2, len);
+          key[len] = '\0';
+          env = getenv (key);
+          if (env)
+          {
+            iot_update_parsed (&holder, env, strlen (env));
+          }
+          else
+          {
+            if (logger == NULL)
+            { logger = iot_logger_default (); }
+            iot_log_error (logger, "Unable to resolve environment variable: %s", key);
+            free (holder.parsed);
+            goto FAIL;
+          }
+        }
+        start = end + 1;
+        continue;
       }
-      size_t len = (size_t) ((end - start) - 2);
-      if (len >= IOT_MAX_ENV_LEN)
-      {
-        return iot_config_substitute_env_return (result, &holder, logger,
-                                                 "environment variable is greater than max length of 64 in config");
-      }
-      const char *env;
-      memcpy (key, start + 2, len);
-      key[len] = '\0';
-      env = getenv (key);
-      if (env)
-      {
-        iot_update_parsed (&holder, env, strlen (env));
-      }
-      else
-      {
-        return iot_config_substitute_env_return (result, &holder, logger, "Unable to resolve environment variable in config");
-      }
-      start = end + 1;
-      continue;
+      iot_update_parsed (&holder, start, 1u);
+      start++;
     }
     iot_update_parsed (&holder, start, 1u);
-    start++;
+    result = holder.parsed;
   }
-  iot_update_parsed (&holder, start, 1u);
-  result = holder.parsed;
 
-  return iot_config_substitute_env_return (result, &holder, logger, NULL);
+  FAIL:
+  return result;
 }

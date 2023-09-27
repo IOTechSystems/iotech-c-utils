@@ -104,11 +104,18 @@ static void test_bad_config (void)
 {
   iot_container_t * cont = iot_container_alloc ("test");
   iot_component_factory_add (iot_logger_factory ());
-  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger1", bad_logger_config_1);
-  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger2", bad_logger_config_2);
-  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger3", bad_logger_config_3);
-  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger4", bad_logger_config_4);
-  iot_component_t * comp = iot_container_find_component (cont, "logger");
+  iot_component_t * comp;
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", bad_logger_config_1);
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL)
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", bad_logger_config_2);
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL)
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", bad_logger_config_3);
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL)
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", bad_logger_config_4);
+  comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp == NULL)
   iot_container_free (cont);
 }
