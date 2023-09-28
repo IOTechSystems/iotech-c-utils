@@ -5187,6 +5187,18 @@ static void test_data_tags (void)
   iot_data_free (data);
 }
 
+static void test_data_block (void)
+{
+  uint32_t size = iot_data_block_size ();
+  uint8_t * ptr = iot_data_block_alloc ();
+  for (uint8_t i = 0; i < size; i++) // Valgrind check
+  {
+    ptr[i] = 0u;
+  }
+  CU_ASSERT (size > 0)
+  iot_data_block_free (ptr);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -5371,4 +5383,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "binary_take", test_binary_take);
   CU_add_test (suite, "data_is_nan", test_data_is_nan);
   CU_add_test (suite, "data_tags", test_data_tags);
+  CU_add_test (suite, "data_block", test_data_block);
 }
