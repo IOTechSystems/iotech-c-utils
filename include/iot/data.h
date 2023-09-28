@@ -80,12 +80,12 @@ typedef struct iot_typecode_t
 /**
 * Type for simple data type static allocation
 */
-typedef void * iot_data_static_t[2u + 16u / sizeof (void *)];
+typedef void * iot_data_static_t[2u + 16u / sizeof (void*)];
 
 /**
 * Type for list type static allocation
 */
-typedef void * iot_data_list_static_t[4u + 8u / sizeof (void *)];
+typedef void * iot_data_list_static_t[4u + 8u / sizeof (void*)];
 
 /**
 * Macro to cast static data instance (iot_data_static_t) to a iot_data_t pointer
@@ -2327,6 +2327,24 @@ extern bool iot_data_get_tag (const iot_data_t * data, iot_data_tag_t tag);
  * @return       The old boolean value of the tag
  */
 extern bool iot_data_set_tag (iot_data_t * data, iot_data_tag_t tag, bool value);
+
+/**
+ * @brief Returns the size in bytes of an allocated/cached memory block
+ * @return       The size of a memory block
+ */
+extern uint32_t iot_data_block_size (void);
+
+/**
+ * @brief Returns a memory block
+ * @return       Pointer to a memory block
+ */
+extern void * iot_data_block_alloc (void);
+
+/**
+ * @brief Frees a memory block
+ * @param ptr Pointer to the memory block to be freed
+ */
+extern void iot_data_block_free (void * ptr);
 
 #ifdef __cplusplus
 }

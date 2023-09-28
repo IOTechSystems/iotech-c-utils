@@ -246,7 +246,12 @@ bool iot_data_alloc_heap (bool set)
   return old;
 }
 
-static void * iot_data_block_alloc (void)
+extern uint32_t iot_data_block_size (void)
+{
+  return IOT_DATA_BLOCK_SIZE;
+}
+
+extern void * iot_data_block_alloc (void)
 {
   iot_block_t * data;
 #ifdef IOT_DATA_CACHE
@@ -305,7 +310,7 @@ static void * iot_data_block_alloc (void)
   return data;
 }
 
-static inline void iot_data_block_free (iot_block_t * block)
+extern void iot_data_block_free (void  * ptr)
 {
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
@@ -320,6 +325,7 @@ static inline void iot_data_block_free (iot_block_t * block)
 #else
   pthread_mutex_lock (&iot_data_mutex);
 #endif
+  iot_block_t * block = ptr;
   block->next = iot_data_cache;
   iot_data_cache = block;
 #ifdef IOT_HAS_SPINLOCK
@@ -328,7 +334,7 @@ static inline void iot_data_block_free (iot_block_t * block)
   pthread_mutex_unlock (&iot_data_mutex);
 #endif
 #else
-  free (block);
+  free (ptr);
 #endif
 }
 
@@ -380,7 +386,7 @@ uint32_t iot_data_hash (const iot_data_t * data)
 
 static inline void iot_element_free (iot_element_t * element)
 {
-  (element->heap) ? free (element) : iot_data_block_free ((iot_block_t*) element);
+  (element->heap) ? free (element) : iot_data_block_free (element);
 }
 
 static iot_element_t * iot_element_alloc (void)
@@ -393,7 +399,7 @@ static iot_element_t * iot_element_alloc (void)
 
 static inline void iot_data_block_free_data (iot_data_t * data)
 {
-  (data->heap) ? free (data) : iot_data_block_free ((iot_block_t*) data);
+  (data->heap) ? free (data) : iot_data_block_free (data);
 }
 
 static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
@@ -1209,7 +1215,7 @@ void iot_data_free (iot_data_t * data)
         iot_data_value_t * val = (iot_data_value_t*) data;
         if (data->release && (val->value.str != val->buff))
         {
-          data->release_block ? iot_data_block_free ((iot_block_t*) val->value.str) : free (val->value.str);
+          data->release_block ? iot_data_block_free (val->value.str) : free (val->value.str);
         }
         break;
       }
@@ -1660,7 +1666,7 @@ void * iot_data_array_get (const iot_data_t * array, uint32_t index)
   const iot_data_array_t * arr = (const iot_data_array_t*) array;
   assert (array && (array->type == IOT_DATA_ARRAY));
   assert (index < arr->length);
-  return (uint8_t*) (arr->data) + (index) * iot_data_type_sizes[arr->base.element_type];
+  return (uint8_t*) (arr->data) + (index * iot_data_type_sizes[arr->base.element_type]);
 }
 
 int8_t iot_data_i8 (const iot_data_t * data)
@@ -2946,7 +2952,7 @@ static void iot_node_delete (iot_node_t * node)
 {
   iot_data_free (node->key);
   iot_data_free (node->value);
-  (node->heap) ? free (node) : iot_data_block_free ((iot_block_t*) node);
+  (node->heap) ? free (node) : iot_data_block_free (node);
 }
 
 static inline iot_node_t * iot_node_minimum (iot_node_t * node)
