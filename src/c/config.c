@@ -162,7 +162,7 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
           if (len >= IOT_MAX_ENV_LEN)
           {
             if (logger == NULL) logger = iot_logger_default ();
-            iot_log_error (logger, "Environment variable name is greater than max length of %d", IOT_MAX_ENV_LEN-1);
+            iot_log_error (logger, "Environment variable name is greater than max length of %d", IOT_MAX_ENV_LEN - 1);
             free (holder.parsed);
             goto FAIL;
           }
