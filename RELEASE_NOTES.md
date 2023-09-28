@@ -365,3 +365,9 @@
 - Added function `iot_data_alloc_const_ui8` to allocate const uint8_t data value
 - Added function `iot_data_map_iter_bool_value` to return a boolean value from a data map iterator
 - Added function `iot_logger_set_next` to set logger delegate
+
+- Added functions for small memory block allocation
+
+* `iot_data_block_size`
+* `iot_data_block_alloc`
+* `iot_data_block_free`
