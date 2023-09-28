@@ -131,10 +131,10 @@ static void iot_update_parsed (iot_parsed_holder_t * holder, const char * str, s
   memcpy (holder->parsed + holder->len - len, str, len);
 }
 
-char * iot_config_substitute_env (const char *str, iot_logger_t *logger)
+char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
 {
   char * result = NULL;
-  iot_parsed_holder_t holder = {.parsed = NULL, .size = 0, .len = 0};
+  iot_parsed_holder_t holder = { .parsed = NULL, .size = 0, .len = 0 };
 
   if (str)
   {
