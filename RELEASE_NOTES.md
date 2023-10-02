@@ -371,3 +371,5 @@
 * `iot_data_block_size`
 * `iot_data_block_alloc`
 * `iot_data_block_free`
+
+- Support added for Debian 12
