@@ -5190,13 +5190,15 @@ static void test_data_tags (void)
 static void test_data_block (void)
 {
   uint32_t size = iot_data_block_size ();
-  uint8_t * ptr = iot_data_block_alloc ();
+  uint8_t * ptr = iot_data_block_alloc (size);
   for (uint8_t i = 0; i < size; i++) // Valgrind check
   {
     ptr[i] = 0u;
   }
   CU_ASSERT (size > 0)
   iot_data_block_free (ptr);
+  ptr = iot_data_block_alloc (size + 1);
+  CU_ASSERT_PTR_NULL (ptr)
 }
 
 void cunit_data_test_init (void)

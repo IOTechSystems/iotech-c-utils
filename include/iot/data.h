@@ -2336,9 +2336,10 @@ extern uint32_t iot_data_block_size (void);
 
 /**
  * @brief Returns a memory block
- * @return       Pointer to a memory block
+ * @param size   Required block size
+ * @return       Pointer to a memory block, or NULL if requested size is greater than block size
  */
-extern void * iot_data_block_alloc (void);
+extern void * iot_data_block_alloc (size_t size);
 
 /**
  * @brief Frees a memory block

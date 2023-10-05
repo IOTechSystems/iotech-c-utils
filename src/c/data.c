@@ -251,7 +251,7 @@ extern uint32_t iot_data_block_size (void)
   return IOT_DATA_BLOCK_SIZE;
 }
 
-extern void * iot_data_block_alloc (void)
+static void * iot_data_alloc_block (void)
 {
   iot_block_t * data;
 #ifdef IOT_DATA_CACHE
@@ -308,6 +308,11 @@ extern void * iot_data_block_alloc (void)
   data = calloc (1, IOT_DATA_BLOCK_SIZE);
 #endif
   return data;
+}
+
+extern void * iot_data_block_alloc (size_t size)
+{
+  return (size <= IOT_DATA_BLOCK_SIZE) ? iot_data_alloc_block () : NULL;
 }
 
 extern void iot_data_block_free (void  * ptr)
@@ -392,7 +397,7 @@ static inline void iot_element_free (iot_element_t * element)
 static iot_element_t * iot_element_alloc (void)
 {
   bool heap = iot_data_alloc_from_heap;
-  iot_element_t * element = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
+  iot_element_t * element = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_alloc_block ();
   element->heap = heap;
   return element;
 }
@@ -413,7 +418,7 @@ static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
 static void * iot_data_block_alloc_data (iot_data_type_t type)
 {
   bool heap = iot_data_alloc_from_heap;
-  iot_data_t * data = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
+  iot_data_t * data = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_alloc_block ();
   data->heap = heap;
   data->composed = IOT_DATA_IS_COMPOSED_TYPE (type);
   iot_data_block_init (data, type);
@@ -1517,7 +1522,7 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
     }
     else if (len < IOT_DATA_BLOCK_SIZE) // If less than size of block save in block
     {
-      data->value.str = iot_data_block_alloc ();
+      data->value.str = iot_data_alloc_block ();
       strcpy (data->value.str, val);
       data->base.release_block = true;
     }
@@ -2939,7 +2944,7 @@ static inline iot_node_t * iot_node_sibling (const iot_node_t * node)
 static inline iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key, iot_data_t * value)
 {
   bool heap = iot_data_alloc_from_heap;
-  iot_node_t * node = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_block_alloc ();
+  iot_node_t * node = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_alloc_block ();
   node->heap = heap;
   node->value = value;
   node->key = key;
