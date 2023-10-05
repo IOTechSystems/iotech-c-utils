@@ -472,7 +472,7 @@ static void iot_data_init (void)
   pthread_spin_init (&iot_data_slock, 0);
 #endif
   pthread_mutex_init (&iot_data_mutex, NULL);
-  iot_data_block_free (iot_data_block_alloc ());  // Initialize data cache
+  iot_data_block_free (iot_data_alloc_block ());  // Initialize data cache
 #endif
   iot_data_alloc_const_pointer (&iot_data_order, &iot_data_order);
   const char ** str = iot_data_const_strings;
