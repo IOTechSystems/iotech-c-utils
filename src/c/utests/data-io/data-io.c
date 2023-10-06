@@ -129,7 +129,8 @@ static const char * test_config =
     "\"Vector\":[ \"A\",\"B\"],"
     "\"DB\":0.5,"
     "\"Escaped\":\"Double \\\" Quote\","
-    "\"Unicode\":\"\\u0003HELLO\\u0006HI\""
+    "\"Unicode\":\"\\u0003HELLO\\u0006HI\","
+    "\"Unicode2\":\"\\u003cAngled\\u003e\""
   "}";
 
 static void test_data_from_json (void)
@@ -242,6 +243,8 @@ static void test_data_from_json (void)
 
   const char * ustr = iot_data_string_map_get_string (map, "Unicode");
   CU_ASSERT (strcmp (ustr, "\003HELLO\006HI") == 0)
+  const char *u2str = iot_data_string_map_get_string (map, "Unicode2");
+  CU_ASSERT (strcmp (u2str, "<Angled>") == 0)
   iot_data_free (map);
 
   iot_data_t * cache = iot_data_alloc_map (IOT_DATA_STRING);
