@@ -3295,6 +3295,8 @@ static void iot_node_dump (iot_node_t * node, const char * msg)
   }
 }
 
+#endif
+
 extern void iot_data_map_dump (iot_data_t * map)
 {
   iot_data_map_t * mp = (iot_data_map_t*) map;
@@ -3302,4 +3304,54 @@ extern void iot_data_map_dump (iot_data_t * map)
   iot_node_dump (mp->tree, "Root");
 }
 
-#endif
+inline bool iot_data_is_arraykind (const iot_data_t *data)
+{
+  return (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_LIST || data->type == IOT_DATA_ARRAY) ? true : false;
+}
+
+#define ARRAYKIND_ITER_SWITCH(iter, vector_case, array_case, list_case)\
+switch ((iter)->_type)                                                                \
+{                                                                                     \
+  case IOT_DATA_VECTOR:                                                               \
+  {                                                                                   \
+    vector_case;                                                                      \
+  }                                                                                   \
+    break;                                                                            \
+  case IOT_DATA_ARRAY:                                                                \
+  {                                                                                   \
+    array_case;                                                                       \
+  }                                                                                   \
+    break;                                                                            \
+  case IOT_DATA_LIST:                                                                 \
+  {                                                                                   \
+    list_case;                                                                        \
+  }                                                                                   \
+    break;                                                                            \
+  default:                                                                            \
+    assert (false);                                                                   \
+}
+
+void iot_data_arraykind_iter (const iot_data_t * arraykind, iot_data_arraykind_iter_t *iter)
+{
+  memset (iter, 0, sizeof(*iter));
+  iter->_type = arraykind->type;
+  ARRAYKIND_ITER_SWITCH(
+    iter,
+    iot_data_vector_iter (arraykind, &iter->_iter.vector);,
+    iot_data_array_iter (arraykind, &iter->_iter.array);,
+    iot_data_list_iter (arraykind, &iter->_iter.list.iter);
+  );
+
+  iot_data_t data;
+  data.base
+}
+
+bool iot_data_arraykind_iter_next (iot_data_arraykind_iter_t *iter)
+{
+  ARRAYKIND_ITER_SWITCH(
+    iter,
+    return iot_data_vector_iter_next (&iter->_iter.vector);,
+    return iot_data_array_iter_next (&iter->_iter.array);,
+    return iot_data_list_iter_next (&iter->_iter.list.iter);
+  );
+}
