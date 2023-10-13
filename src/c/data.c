@@ -3349,6 +3349,9 @@ bool iot_data_arraykind_iter_next (iot_data_arraykind_iter_t *iter)
     iter,
     return iot_data_vector_iter_next (&iter->_iter.vector);,
     return iot_data_array_iter_next (&iter->_iter.array);,
-    return iot_data_list_iter_next (&iter->_iter.list.iter);
+    {
+      iter->_iter.list.index++;
+      return iot_data_list_iter_next (&iter->_iter.list.iter);
+    }
   );
 }
