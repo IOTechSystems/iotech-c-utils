@@ -3295,14 +3295,14 @@ static void iot_node_dump (iot_node_t * node, const char * msg)
   }
 }
 
-#endif
-
 extern void iot_data_map_dump (iot_data_t * map)
 {
   iot_data_map_t * mp = (iot_data_map_t*) map;
   printf ("\nMap size: %d\n", iot_data_map_size (map));
   iot_node_dump (mp->tree, "Root");
 }
+
+#endif
 
 inline bool iot_data_is_arraykind (const iot_data_t *data)
 {
