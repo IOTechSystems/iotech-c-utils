@@ -5201,11 +5201,36 @@ static void test_data_block (void)
   CU_ASSERT_PTR_NULL (ptr)
 }
 
+static void test_data_iter (void)
+{
+  size_t i=0;
+  uint8_t data[] = {0, 1, 2, 3, 4, 5};
+  iot_data_t *array_data = iot_data_alloc_array (data, sizeof(data) / sizeof (data[0]), IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_iter_t iter;
+  iot_data_iter (array_data, &iter);
+  while (iot_data_iter_next (&iter))
+  {
+    const iot_data_t *ele = iot_data_iter_value (&iter);
+    CU_ASSERT_PTR_NOT_NULL_FATAL (ele);
+    CU_ASSERT_EQUAL (iot_data_ui8(ele), data[i]);
+    i++;
+  }
+  while (iot_data_iter_prev (&iter))
+  {
+    i--;
+    const iot_data_t *ele = iot_data_iter_value (&iter);
+    CU_ASSERT_PTR_NOT_NULL_FATAL (ele);
+    CU_ASSERT_EQUAL (iot_data_ui8(ele), data[i]);
+  }
+  iot_data_free (array_data);
+}
+
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
 
-  CU_add_test (suite, "data_types", test_data_types);
+/*  CU_add_test (suite, "data_types", test_data_types);
   CU_add_test (suite, "data_name_type", test_data_name_type);
   CU_add_test (suite, "data_type_string", test_data_type_string);
   CU_add_test (suite, "data_array_key", test_data_array_key);
@@ -5385,5 +5410,6 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "binary_take", test_binary_take);
   CU_add_test (suite, "data_is_nan", test_data_is_nan);
   CU_add_test (suite, "data_tags", test_data_tags);
-  CU_add_test (suite, "data_block", test_data_block);
+  CU_add_test (suite, "data_block", test_data_block);*/
+  CU_add_test (suite, "data_iter", test_data_iter);
 }

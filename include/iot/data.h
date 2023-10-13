@@ -143,20 +143,23 @@ typedef struct iot_data_array_iter_t
 } iot_data_array_iter_t;
 
 /**
- * Alias for generic array kind iterator structure. Do not use struct members directly.
+ * Alias for generic iterator structure. Do not use struct members directly.
  */
-typedef struct iot_data_arraykind_iter_t
+typedef struct iot_data_iter_t
 {
-  iot_data_type_t _type;
-  union {
+  uint8_t _type;
+  union
+  {
     iot_data_vector_iter_t vector;
-    struct {
-      iot_data_list_iter_t iter;
-      uint32_t index;
-    } list;
-    iot_data_array_iter_t array;
+    iot_data_list_iter_t list;
+    struct
+    {
+      iot_data_array_iter_t iter;
+      iot_data_static_t val;
+    } array;
+    iot_data_map_iter_t map;
   } _iter;
-} iot_data_arraykind_iter_t;
+} iot_data_iter_t;
 
 /** Type for data comparison function pointer */
 typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
@@ -1981,117 +1984,61 @@ extern const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * 
  */
 extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg);
 
-extern bool iot_data_is_arraykind (const iot_data_t *data);
+extern bool iot_data_is_iterable (const iot_data_t *data);
 
 /**
- * @brief Initialise iterator to the start of a arraykind
+ * @brief Initialise iterator to the start of a iterable
  *
- * The function initialises an iterator to point to the first element of a arraykind. Note that
- * the iterator is unsafe in that the arraykind cannot be modified when being iterated, other
- * than by using the iot_data_arraykind_iter_replace_value function.
+ * The function initialises an iterator to point to the first element of an iterable. Note that
+ * the iterator is unsafe in that the iterable cannot be modified when being iterated.
  *
- * @param arraykind Input arraykind
+ * @param iterable Input iterable
  * @param iter   Input iterator
  */
-extern void iot_data_arraykind_iter (const iot_data_t * arraykind, iot_data_arraykind_iter_t * iter);
+extern void iot_data_iter (const iot_data_t * iterable, iot_data_iter_t * iter);
 
 /**
- * @brief Iterate to next arraykind element
+ * @brief Iterate to next iterable element
  *
- * The function to set the iterator to point to the next element in an arraykind. On reaching the end of the arraykind,
- * the iterator is set to point to the first element in the arraykind.
+ * The function to set the iterator to point to the next element in an iterable. On reaching the end of the iterable,
+ * the iterator is set to point to the first element in the iterable.
  *
  * @param  iter  Input iterator
- * @return       Returns whether the iterator is still valid (has not passed end of the arraykind)
+ * @return       Returns whether the iterator is still valid (has not passed end of the iterable)
  */
-extern bool iot_data_arraykind_iter_next (iot_data_arraykind_iter_t * iter);
+extern bool iot_data_iter_next (iot_data_iter_t * iter);
 
 /**
- * @brief Returns whether a arraykind iterator has a next element
+ * @brief Returns whether a iterable iterator has a next element
  *
  * The function returns whether the iterator next function will return a value
  *
  * @param iter  Input iterator
  * @return      Whether the iterator has a next element
  */
-extern bool iot_data_arraykind_iter_has_next (const iot_data_arraykind_iter_t * iter);
+extern bool iot_data_iter_has_next (const iot_data_iter_t * iter);
 
 /**
- * @brief Iterate to previous arraykind element
+ * @brief Iterate to previous iterable element
  *
- * The function to set the iterator to point to the previous element in an arraykind. On reaching the start of the arraykind,
- * the iterator is set to point to the last element in the arraykind.
+ * The function to set the iterator to point to the previous element in an iterable. On reaching the start of the iterable,
+ * the iterator is set to point to the last element in the iterable.
  *
  * @param  iter  Input iterator
- * @return       Returns whether the iterator is still valid (has not passed start of the arraykind)
+ * @return       Returns whether the iterator is still valid (has not passed start of the iterable)
  */
-extern bool iot_data_arraykind_iter_prev (iot_data_arraykind_iter_t * iter);
+extern bool iot_data_iter_prev (iot_data_iter_t * iter);
 
 /**
- * @brief Get arraykind index referenced by the iterator
+ * @brief Get the value from the iterable at an index referenced by iterator
  *
- * The function to return the index of an arraykind referenced by iterator
+ * The function to return the value from the iterable at an index referenced by iterator. If iterator index exceeds
+ * size of an iterable, NULL is returned
  *
  * @param  iter  Input iterator
- * @return       Index of an arraykind, referenced by iterator
+ * @return       Pointer to a data value from the iterable index pointed by iterator if valid, NULL otherwise
  */
-extern uint32_t iot_data_arraykind_iter_index (const iot_data_arraykind_iter_t * iter);
-
-/**
- * @brief Get the value from the arraykind at an index referenced by iterator
- *
- * The function to return the value from the arraykind at an index referenced by iterator. If iterator index exceeds
- * size of an arraykind, NULL is returned
- *
- * @param  iter  Input iterator
- * @return       Pointer to a data value from the arraykind index pointed by iterator if valid, NULL otherwise
- */
-extern const iot_data_t * iot_data_arraykind_iter_value (const iot_data_arraykind_iter_t * iter);
-
-/**
- * @brief Get the string value from the arraykind referenced by an iterator
- *
- * Get string type value from the arraykind referenced by an iterator
- *
- * @param iter  Input iterator
- * @return      String type value if iter is valid, NULL otherwise
- */
-extern const char * iot_data_arraykind_iter_string_value (const iot_data_arraykind_iter_t * iter);
-
-/**
- * @brief Get pointer value from the arraykind referenced by an iterator
- *
- * Get the pointer type value from the arraykind referenced by an iterator
- *
- * @param iter  Input iterator
- * @return      Pointer type value from the arraykind if iter is valid, NULL otherwise
- */
-extern const void * iot_data_arraykind_iter_pointer_value (const iot_data_arraykind_iter_t * iter);
-
-/**
- * @brief Replace Value from the arraykind at the index referenced by iterator
- *
- * The function to replace the value in the the arraykind at an index referenced by iterator. If iterator index exceeds
- * the size of an arraykind, no replacement is made and NULL is returned.
- *
- * @param iter  Input iterator
- * @param value New value to store in the arraykind
- * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
- */
-
-extern iot_data_t * iot_data_arraykind_iter_replace_value (const iot_data_arraykind_iter_t * iter, iot_data_t * value);
-
-/**
- * @brief Get the value as string type from the arraykind at an index referenced by iterator
- *
- * The function to return the value of string type from the arraykind at an index referenced by iterator. If iterator index exceeds
- * size of an arraykind, NULL is returned
- *
- * @param  iter  Input iterator
- * @return       Value of string type from the arraykind index pointed by iterator if valid, NULL otherwise
- */
-extern const char * iot_data_arraykind_iter_string (const iot_data_arraykind_iter_t * iter);
-
+extern const iot_data_t * iot_data_iter_value (const iot_data_iter_t * iter);
 
 /**
  * @brief  Convert data to json string
