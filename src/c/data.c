@@ -3341,9 +3341,6 @@ void iot_data_arraykind_iter (const iot_data_t * arraykind, iot_data_arraykind_i
     iot_data_array_iter (arraykind, &iter->_iter.array);,
     iot_data_list_iter (arraykind, &iter->_iter.list.iter);
   );
-
-  iot_data_t data;
-  data.base
 }
 
 bool iot_data_arraykind_iter_next (iot_data_arraykind_iter_t *iter)
