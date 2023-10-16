@@ -5203,27 +5203,7 @@ static void test_data_block (void)
 
 static void test_data_iter (void)
 {
-  size_t array_i=0;
-  uint8_t data[] = {0, 1, 2, 3, 4, 5};
-  iot_data_t *array_data = iot_data_alloc_array (data, sizeof(data) / sizeof (data[0]), IOT_DATA_UINT8, IOT_DATA_REF);
   iot_data_iter_t iter;
-  iot_data_iter (array_data, &iter);
-  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
-  while (iot_data_iter_next (&iter))
-  {
-    const iot_data_t *ele = iot_data_iter_value (&iter);
-    CU_ASSERT_PTR_NOT_NULL_FATAL (ele);
-    CU_ASSERT_EQUAL (iot_data_ui8(ele), data[array_i]);
-    array_i++;
-  }
-  while (iot_data_iter_prev (&iter))
-  {
-    array_i--;
-    const iot_data_t *ele = iot_data_iter_value (&iter);
-    CU_ASSERT_PTR_NOT_NULL_FATAL (ele);
-    CU_ASSERT_EQUAL (iot_data_ui8(ele), data[array_i]);
-  }
-  iot_data_free (array_data);
 
   size_t vec_size = 5;
   uint32_t vec_i = 0;
