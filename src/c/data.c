@@ -3303,3 +3303,85 @@ extern void iot_data_map_dump (iot_data_t * map)
 }
 
 #endif
+
+void iot_data_iter (const iot_data_t * data, iot_data_iter_t *iter)
+{
+  iter->_type = data->type;
+  switch (iter->_type)
+  {
+    case IOT_DATA_VECTOR:
+      iot_data_vector_iter (data, &iter->_iter.vector);
+      break;
+    case IOT_DATA_MAP:
+      iot_data_map_iter (data, &iter->_iter.map);
+      break;
+    case IOT_DATA_LIST:
+      iot_data_list_iter (data, &iter->_iter.list);
+      break;
+    default:
+      assert (false);
+  }
+}
+
+bool iot_data_iter_next (iot_data_iter_t * iter)
+{
+  switch (iter->_type)
+  {case IOT_DATA_VECTOR:
+      return iot_data_vector_iter_next (&iter->_iter.vector);
+    case IOT_DATA_MAP:
+      return iot_data_map_iter_next (&iter->_iter.map);
+    case IOT_DATA_LIST:
+      return iot_data_list_iter_next ( &iter->_iter.list);
+    default:
+      assert (false);
+      return false;
+  }
+}
+
+bool iot_data_iter_has_next (const iot_data_iter_t * iter)
+{
+  switch (iter->_type)
+  {
+    case IOT_DATA_VECTOR:
+      return iot_data_vector_iter_has_next (&iter->_iter.vector);
+    case IOT_DATA_MAP:
+      return iot_data_map_iter_has_next (&iter->_iter.map);
+    case IOT_DATA_LIST:
+      return iot_data_list_iter_has_next ( &iter->_iter.list);
+    default:
+      assert (false);
+      return false;
+  }
+}
+
+bool iot_data_iter_prev (iot_data_iter_t * iter)
+{
+  switch (iter->_type)
+  {
+    case IOT_DATA_VECTOR:
+      return iot_data_vector_iter_prev (&iter->_iter.vector);
+    case IOT_DATA_MAP:
+      return iot_data_map_iter_prev (&iter->_iter.map);
+    case IOT_DATA_LIST:
+      return iot_data_list_iter_prev ( &iter->_iter.list);
+    default:
+      assert (false);
+      return false;
+  }
+}
+
+const iot_data_t *iot_data_iter_value (const iot_data_iter_t * iter)
+{
+  switch (iter->_type)
+  {
+    case IOT_DATA_VECTOR:
+      return iot_data_vector_iter_value (&iter->_iter.vector);
+    case IOT_DATA_MAP:
+      return iot_data_map_iter_value (&iter->_iter.map);
+    case IOT_DATA_LIST:
+      return iot_data_list_iter_value ( &iter->_iter.list);
+    default:
+      assert (false);
+      return NULL;
+  }
+}

@@ -5201,6 +5201,87 @@ static void test_data_block (void)
   CU_ASSERT_PTR_NULL (ptr)
 }
 
+static void test_data_iter (void)
+{
+  iot_data_iter_t iter;
+
+  size_t vec_size = 5;
+  uint32_t vec_i = 0;
+  iot_data_t *vector_data = iot_data_alloc_vector (vec_size);
+  for (size_t i=0; i<vec_size;i++)
+  {
+    iot_data_vector_add (vector_data, i, iot_data_alloc_ui32 (i));
+  }
+
+  iot_data_iter (vector_data, &iter);
+  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
+  while (iot_data_iter_next (&iter))
+  {
+    const iot_data_t *ele = iot_data_iter_value (&iter);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
+    CU_ASSERT_EQUAL(iot_data_ui32 (ele), vec_i);
+    vec_i++;
+  }
+  while (iot_data_iter_prev (&iter))
+  {
+    vec_i--;
+    const iot_data_t *ele = iot_data_iter_value (&iter);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
+    CU_ASSERT_EQUAL(iot_data_ui32 (ele), vec_i);
+  }
+  iot_data_free (vector_data);
+
+  size_t list_size = 5;
+  uint32_t list_i = 0;
+  iot_data_t *list_data = iot_data_alloc_list ();
+  for (size_t i=0; i<list_size;i++)
+  {
+    iot_data_list_head_push (list_data, iot_data_alloc_ui32 (i));
+  }
+
+  iot_data_iter (list_data, &iter);
+  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
+  while (iot_data_iter_next (&iter))
+  {
+    const iot_data_t *ele = iot_data_iter_value (&iter);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
+    CU_ASSERT_EQUAL(iot_data_ui32 (ele), list_i);
+    list_i++;
+  }
+  while (iot_data_iter_prev (&iter))
+  {
+    list_i--;
+    const iot_data_t *ele = iot_data_iter_value (&iter);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
+    CU_ASSERT_EQUAL(iot_data_ui32 (ele), list_i);
+  }
+
+  size_t map_size = 5;
+  uint32_t map_i = 0;
+  iot_data_t *map_data = iot_data_alloc_map (IOT_DATA_UINT32);
+  for (size_t i=0; i<map_size;i++)
+  {
+    iot_data_map_add (map_data, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
+  }
+
+  iot_data_iter (map_data, &iter);
+  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
+  while (iot_data_iter_next (&iter))
+  {
+    const iot_data_t *ele = iot_data_iter_value (&iter);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
+    CU_ASSERT_EQUAL(iot_data_ui32 (ele), map_i);
+    map_i++;
+  }
+  while (iot_data_iter_prev (&iter))
+  {
+    map_i--;
+    const iot_data_t *ele = iot_data_iter_value (&iter);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
+    CU_ASSERT_EQUAL(iot_data_ui32 (ele), map_i);
+  }
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -5386,4 +5467,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_is_nan", test_data_is_nan);
   CU_add_test (suite, "data_tags", test_data_tags);
   CU_add_test (suite, "data_block", test_data_block);
+  CU_add_test (suite, "data_iter", test_data_iter);
 }

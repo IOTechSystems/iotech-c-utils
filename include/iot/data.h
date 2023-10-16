@@ -142,6 +142,20 @@ typedef struct iot_data_array_iter_t
   uint32_t _index;                        /**< Index of the given data array */
 } iot_data_array_iter_t;
 
+/**
+ * Alias for generic iterator structure. Do not use struct members directly.
+ */
+typedef struct iot_data_iter_t
+{
+  iot_data_type_t _type;
+  union
+  {
+    iot_data_vector_iter_t vector;
+    iot_data_list_iter_t list;
+    iot_data_map_iter_t map;
+  } _iter;
+} iot_data_iter_t;
+
 /** Type for data comparison function pointer */
 typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
 
@@ -1964,6 +1978,60 @@ extern const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * 
  * @return        Pointer to the first element for which the comparison function return true, NULL otherwise
  */
 extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg);
+
+/**
+ * @brief Initialise iterator to the start of a iterable
+ *
+ * The function initialises an iterator to point to the first element of an iterable. Note that
+ * the iterator is unsafe in that the iterable cannot be modified when being iterated.
+ *
+ * @param iterable Input iterable
+ * @param iter   Input iterator
+ */
+extern void iot_data_iter (const iot_data_t * iterable, iot_data_iter_t * iter);
+
+/**
+ * @brief Iterate to next iterable element
+ *
+ * The function to set the iterator to point to the next element in an iterable. On reaching the end of the iterable,
+ * the iterator is set to point to the first element in the iterable.
+ *
+ * @param  iter  Input iterator
+ * @return       Returns whether the iterator is still valid (has not passed end of the iterable)
+ */
+extern bool iot_data_iter_next (iot_data_iter_t * iter);
+
+/**
+ * @brief Returns whether a iterable iterator has a next element
+ *
+ * The function returns whether the iterator next function will return a value
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_iter_has_next (const iot_data_iter_t * iter);
+
+/**
+ * @brief Iterate to previous iterable element
+ *
+ * The function to set the iterator to point to the previous element in an iterable. On reaching the start of the iterable,
+ * the iterator is set to point to the last element in the iterable.
+ *
+ * @param  iter  Input iterator
+ * @return       Returns whether the iterator is still valid (has not passed start of the iterable)
+ */
+extern bool iot_data_iter_prev (iot_data_iter_t * iter);
+
+/**
+ * @brief Get the value from the iterable at an index referenced by iterator
+ *
+ * The function to return the value from the iterable at an index referenced by iterator. If iterator index exceeds
+ * size of an iterable, NULL is returned
+ *
+ * @param  iter  Input iterator
+ * @return       Pointer to a data value from the iterable index pointed by iterator if valid, NULL otherwise
+ */
+extern const iot_data_t * iot_data_iter_value (const iot_data_iter_t * iter);
 
 /**
  * @brief  Convert data to json string
