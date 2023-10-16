@@ -3306,7 +3306,6 @@ extern void iot_data_map_dump (iot_data_t * map)
 
 void iot_data_iter (const iot_data_t * data, iot_data_iter_t *iter)
 {
-  memset (iter, 0, sizeof(*iter));
   iter->_type = data->type;
   switch (iter->_type)
   {
