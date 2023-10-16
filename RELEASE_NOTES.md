@@ -373,3 +373,4 @@
 * `iot_data_block_free`
 
 - Support added for Debian 12
+- Added `iot_data_iter_t` to allow for iteration over generic iterable types

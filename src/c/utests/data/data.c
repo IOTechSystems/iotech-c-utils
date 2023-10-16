@@ -5208,6 +5208,7 @@ static void test_data_iter (void)
   iot_data_t *array_data = iot_data_alloc_array (data, sizeof(data) / sizeof (data[0]), IOT_DATA_UINT8, IOT_DATA_REF);
   iot_data_iter_t iter;
   iot_data_iter (array_data, &iter);
+  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
   while (iot_data_iter_next (&iter))
   {
     const iot_data_t *ele = iot_data_iter_value (&iter);
@@ -5233,6 +5234,7 @@ static void test_data_iter (void)
   }
 
   iot_data_iter (vector_data, &iter);
+  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
   while (iot_data_iter_next (&iter))
   {
     const iot_data_t *ele = iot_data_iter_value (&iter);
@@ -5258,6 +5260,7 @@ static void test_data_iter (void)
   }
 
   iot_data_iter (list_data, &iter);
+  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
   while (iot_data_iter_next (&iter))
   {
     const iot_data_t *ele = iot_data_iter_value (&iter);
@@ -5282,6 +5285,7 @@ static void test_data_iter (void)
   }
 
   iot_data_iter (map_data, &iter);
+  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
   while (iot_data_iter_next (&iter))
   {
     const iot_data_t *ele = iot_data_iter_value (&iter);
@@ -5297,7 +5301,6 @@ static void test_data_iter (void)
     CU_ASSERT_EQUAL(iot_data_ui32 (ele), map_i);
   }
 }
-
 
 void cunit_data_test_init (void)
 {
