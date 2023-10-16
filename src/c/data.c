@@ -3306,7 +3306,7 @@ extern void iot_data_map_dump (iot_data_t * map)
 
 inline bool iot_data_is_iterable (const iot_data_t *data)
 {
-  return (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_MAP || data->type == IOT_DATA_LIST || data->type == IOT_DATA_ARRAY) ? true : false;
+  return (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_MAP || data->type == IOT_DATA_LIST) ? true : false;
 }
 
 void iot_data_iter (const iot_data_t * data, iot_data_iter_t *iter)
@@ -3325,9 +3325,6 @@ void iot_data_iter (const iot_data_t * data, iot_data_iter_t *iter)
     case IOT_DATA_LIST:
       iot_data_list_iter (data, &iter->_iter.list);
       break;
-    case IOT_DATA_ARRAY:
-      iot_data_array_iter (data, &iter->_iter.array.iter);
-      break;
     default:
       assert (false);
   }
@@ -3342,8 +3339,6 @@ bool iot_data_iter_next (iot_data_iter_t * iter)
       return iot_data_map_iter_next (&iter->_iter.map);
     case IOT_DATA_LIST:
       return iot_data_list_iter_next ( &iter->_iter.list);
-    case IOT_DATA_ARRAY:
-      return iot_data_array_iter_next ( &iter->_iter.array.iter);
     default:
       assert (false);
       return false;
@@ -3360,8 +3355,6 @@ bool iot_data_iter_has_next (const iot_data_iter_t * iter)
       return iot_data_map_iter_has_next (&iter->_iter.map);
     case IOT_DATA_LIST:
       return iot_data_list_iter_has_next ( &iter->_iter.list);
-    case IOT_DATA_ARRAY:
-      return iot_data_array_iter_has_next ( &iter->_iter.array.iter);
     default:
       assert (false);
       return false;
@@ -3378,8 +3371,6 @@ bool iot_data_iter_prev (iot_data_iter_t * iter)
       return iot_data_map_iter_prev (&iter->_iter.map);
     case IOT_DATA_LIST:
       return iot_data_list_iter_prev ( &iter->_iter.list);
-    case IOT_DATA_ARRAY:
-      return iot_data_array_iter_prev ( &iter->_iter.array.iter);
     default:
       assert (false);
       return false;
@@ -3396,17 +3387,6 @@ const iot_data_t *iot_data_iter_value (const iot_data_iter_t * iter)
       return iot_data_map_iter_value (&iter->_iter.map);
     case IOT_DATA_LIST:
       return iot_data_list_iter_value ( &iter->_iter.list);
-    case IOT_DATA_ARRAY:
-    {
-      const void *val = iot_data_array_iter_value ( &iter->_iter.array.iter);
-      const struct iot_data_array_t *array = iter->_iter.array.iter._array;
-      iot_data_value_base_t *bval = iot_data_alloc_const_base (&((iot_data_iter_t *)iter)->_iter.array.val, array->base.element_type);
-      iot_data_t *ret = (iot_data_t *) bval;
-      memcpy (&bval->value, val, iot_data_type_sizes[array->base.element_type]);
-      bool cast_ok = iot_data_cast (ret, IOT_DATA_UINT32, &bval->base.hash);
-      assert (cast_ok);
-      return ret;
-    }
     default:
       assert (false);
       return NULL;

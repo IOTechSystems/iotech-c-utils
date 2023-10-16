@@ -155,7 +155,7 @@ typedef struct iot_data_iter_t
     struct
     {
       iot_data_array_iter_t iter;
-      iot_data_static_t val;
+      iot_data_t *val;
     } array;
     iot_data_map_iter_t map;
   } _iter;
