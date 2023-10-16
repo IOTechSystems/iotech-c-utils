@@ -152,11 +152,6 @@ typedef struct iot_data_iter_t
   {
     iot_data_vector_iter_t vector;
     iot_data_list_iter_t list;
-    struct
-    {
-      iot_data_array_iter_t iter;
-      iot_data_t *val;
-    } array;
     iot_data_map_iter_t map;
   } _iter;
 } iot_data_iter_t;
