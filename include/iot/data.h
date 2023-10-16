@@ -147,7 +147,7 @@ typedef struct iot_data_array_iter_t
  */
 typedef struct iot_data_iter_t
 {
-  uint8_t _type;
+  iot_data_type_t _type;
   union
   {
     iot_data_vector_iter_t vector;
