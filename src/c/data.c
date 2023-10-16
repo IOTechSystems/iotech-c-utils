@@ -3304,15 +3304,9 @@ extern void iot_data_map_dump (iot_data_t * map)
 
 #endif
 
-inline bool iot_data_is_iterable (const iot_data_t *data)
-{
-  return (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_MAP || data->type == IOT_DATA_LIST) ? true : false;
-}
-
 void iot_data_iter (const iot_data_t * data, iot_data_iter_t *iter)
 {
   memset (iter, 0, sizeof(*iter));
-  assert (iot_data_is_iterable (data));
   iter->_type = data->type;
   switch (iter->_type)
   {

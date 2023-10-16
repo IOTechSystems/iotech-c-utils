@@ -1984,8 +1984,6 @@ extern const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * 
  */
 extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg);
 
-extern bool iot_data_is_iterable (const iot_data_t *data);
-
 /**
  * @brief Initialise iterator to the start of a iterable
  *
