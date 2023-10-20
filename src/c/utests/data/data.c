@@ -4057,11 +4057,33 @@ static void test_data_const_ui64 (void)
   iot_data_free (data);
 }
 
+static void test_data_const_i64 (void)
+{
+  static iot_data_static_t block;
+  iot_data_t * data = iot_data_alloc_const_i64 (&block, -222);
+  CU_ASSERT (iot_data_i64 (data) == -222)
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
 static void test_data_const_ui32 (void)
 {
   static iot_data_static_t block;
   iot_data_t * data = iot_data_alloc_const_ui32 (&block, 111u);
   CU_ASSERT (iot_data_ui32 (data) == 111u)
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
+static void test_data_const_i32 (void)
+{
+  static iot_data_static_t block;
+  iot_data_t * data = iot_data_alloc_const_i32 (&block, -111);
+  CU_ASSERT (iot_data_i32 (data) == -111)
   CU_ASSERT (data == IOT_DATA_STATIC (&block))
   CU_ASSERT (iot_data_is_static (data))
   iot_data_free (data);
@@ -4079,11 +4101,33 @@ static void test_data_const_ui16 (void)
   iot_data_free (data);
 }
 
+static void test_data_const_i16 (void)
+{
+  static iot_data_static_t block;
+  iot_data_t * data = iot_data_alloc_const_i16 (&block, -444);
+  CU_ASSERT (iot_data_i16 (data) == -444)
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
 static void test_data_const_ui8 (void)
 {
   static iot_data_static_t block;
   iot_data_t * data = iot_data_alloc_const_ui8 (&block, 88u);
   CU_ASSERT (iot_data_ui8 (data) == 88u)
+  CU_ASSERT (data == IOT_DATA_STATIC (&block))
+  CU_ASSERT (iot_data_is_static (data))
+  iot_data_free (data);
+  iot_data_free (data);
+}
+
+static void test_data_const_i8 (void)
+{
+  static iot_data_static_t block;
+  iot_data_t * data = iot_data_alloc_const_i8 (&block, -88);
+  CU_ASSERT (iot_data_i8 (data) == -88)
   CU_ASSERT (data == IOT_DATA_STATIC (&block))
   CU_ASSERT (iot_data_is_static (data))
   iot_data_free (data);
@@ -4136,7 +4180,6 @@ static void test_data_const_list (void)
   iot_data_free (list_non_static);
   iot_data_free (list_non_static);
 }
-
 
 static void test_data_const_types (void)
 {
@@ -5208,78 +5251,80 @@ static void test_data_iter (void)
   size_t vec_size = 5;
   uint32_t vec_i = 0;
   iot_data_t *vector_data = iot_data_alloc_vector (vec_size);
-  for (size_t i=0; i<vec_size;i++)
+  for (size_t i = 0; i < vec_size; i++)
   {
     iot_data_vector_add (vector_data, i, iot_data_alloc_ui32 (i));
   }
 
   iot_data_iter (vector_data, &iter);
-  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
+  CU_ASSERT_TRUE (iot_data_iter_has_next (&iter))
   while (iot_data_iter_next (&iter))
   {
     const iot_data_t *ele = iot_data_iter_value (&iter);
-    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
-    CU_ASSERT_EQUAL(iot_data_ui32 (ele), vec_i);
+    CU_ASSERT_PTR_NOT_NULL_FATAL (ele)
+    CU_ASSERT_EQUAL (iot_data_ui32 (ele), vec_i)
     vec_i++;
   }
   while (iot_data_iter_prev (&iter))
   {
     vec_i--;
     const iot_data_t *ele = iot_data_iter_value (&iter);
-    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
-    CU_ASSERT_EQUAL(iot_data_ui32 (ele), vec_i);
+    CU_ASSERT_PTR_NOT_NULL_FATAL (ele)
+    CU_ASSERT_EQUAL (iot_data_ui32 (ele), vec_i)
   }
   iot_data_free (vector_data);
 
   size_t list_size = 5;
   uint32_t list_i = 0;
-  iot_data_t *list_data = iot_data_alloc_list ();
-  for (size_t i=0; i<list_size;i++)
+  iot_data_t * list_data = iot_data_alloc_list ();
+  for (size_t i = 0; i < list_size; i++)
   {
     iot_data_list_head_push (list_data, iot_data_alloc_ui32 (i));
   }
 
   iot_data_iter (list_data, &iter);
-  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
+  CU_ASSERT_TRUE (iot_data_iter_has_next (&iter))
   while (iot_data_iter_next (&iter))
   {
     const iot_data_t *ele = iot_data_iter_value (&iter);
-    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
-    CU_ASSERT_EQUAL(iot_data_ui32 (ele), list_i);
+    CU_ASSERT_PTR_NOT_NULL_FATAL (ele)
+    CU_ASSERT_EQUAL (iot_data_ui32 (ele), list_i)
     list_i++;
   }
   while (iot_data_iter_prev (&iter))
   {
     list_i--;
     const iot_data_t *ele = iot_data_iter_value (&iter);
-    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
-    CU_ASSERT_EQUAL(iot_data_ui32 (ele), list_i);
+    CU_ASSERT_PTR_NOT_NULL_FATAL (ele)
+    CU_ASSERT_EQUAL (iot_data_ui32 (ele), list_i)
   }
+  iot_data_free (list_data);
 
   size_t map_size = 5;
   uint32_t map_i = 0;
   iot_data_t *map_data = iot_data_alloc_map (IOT_DATA_UINT32);
-  for (size_t i=0; i<map_size;i++)
+  for (size_t i = 0; i < map_size; i++)
   {
     iot_data_map_add (map_data, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
   }
 
   iot_data_iter (map_data, &iter);
-  CU_ASSERT_TRUE(iot_data_iter_has_next (&iter));
+  CU_ASSERT_TRUE (iot_data_iter_has_next (&iter))
   while (iot_data_iter_next (&iter))
   {
     const iot_data_t *ele = iot_data_iter_value (&iter);
-    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
-    CU_ASSERT_EQUAL(iot_data_ui32 (ele), map_i);
+    CU_ASSERT_PTR_NOT_NULL_FATAL (ele)
+    CU_ASSERT_EQUAL (iot_data_ui32 (ele), map_i)
     map_i++;
   }
   while (iot_data_iter_prev (&iter))
   {
     map_i--;
     const iot_data_t *ele = iot_data_iter_value (&iter);
-    CU_ASSERT_PTR_NOT_NULL_FATAL(ele);
-    CU_ASSERT_EQUAL(iot_data_ui32 (ele), map_i);
+    CU_ASSERT_PTR_NOT_NULL_FATAL (ele)
+    CU_ASSERT_EQUAL (iot_data_ui32 (ele), map_i)
   }
+  iot_data_free (map_data);
 }
 
 void cunit_data_test_init (void)
@@ -5431,6 +5476,10 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_const_ui32", test_data_const_ui32);
   CU_add_test (suite, "data_const_ui18", test_data_const_ui16);
   CU_add_test (suite, "data_const_ui8", test_data_const_ui8);
+  CU_add_test (suite, "data_const_i64", test_data_const_i64);
+  CU_add_test (suite, "data_const_i32", test_data_const_i32);
+  CU_add_test (suite, "data_const_i18", test_data_const_i16);
+  CU_add_test (suite, "data_const_i8", test_data_const_i8);
   CU_add_test (suite, "data_const_pointer", test_data_const_pointer);
   CU_add_test (suite, "data_const_list", test_data_const_list);
   CU_add_test (suite, "data_const_types", test_data_const_types);

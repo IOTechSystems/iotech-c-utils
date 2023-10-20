@@ -432,6 +432,18 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
 extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_t val);
 
 /**
+ * @brief Allocate constant int64 data
+ *
+ * The function to allocate data for a constant int64, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int64 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i64 (iot_data_static_t * data, int64_t val);
+
+/**
  * @brief Allocate constant uint32 data
  *
  * The function to allocate data for a constant uint32, using fixed static storage, so need
@@ -442,6 +454,18 @@ extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_
  * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_t val);
+
+/**
+ * @brief Allocate constant int32 data
+ *
+ * The function to allocate data for a constant int32, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int32 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i32 (iot_data_static_t * data, int32_t val);
 
 /**
  * @brief Allocate constant uint16 data
@@ -456,6 +480,18 @@ extern iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_
 extern iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_t val);
 
 /**
+ * @brief Allocate constant int16 data
+ *
+ * The function to allocate data for a constant int16, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int16 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i16 (iot_data_static_t * data, int16_t val);
+
+/**
  * @brief Allocate constant uint8 data
  *
  * The function to allocate data for a constant uint8, using fixed static storage, so need
@@ -466,6 +502,18 @@ extern iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_
  * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t val);
+
+/**
+ * @brief Allocate constant int8 data
+ *
+ * The function to allocate data for a constant uint8, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int8 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t val);
 
 /**
  * @brief Allocate memory for data_type float
