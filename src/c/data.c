@@ -2781,7 +2781,7 @@ extern iot_data_t * iot_data_shallow_copy (const iot_data_t * src)
   {
     case IOT_DATA_MAP:
     {
-      result = iot_data_alloc_map (iot_data_map_key_type (src));
+      result = iot_data_alloc_typed_map (iot_data_map_key_type (src), iot_data_map_type (src));
       iot_data_map_iter_t iter;
       iot_data_map_iter (src, &iter);
       while (iot_data_map_iter_next (&iter))

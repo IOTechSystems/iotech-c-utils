@@ -4907,8 +4907,28 @@ static void test_shallow_copy_map (void)
   CU_ASSERT (copy != NULL)
   CU_ASSERT (copy != map)
   CU_ASSERT (iot_data_type (copy) == IOT_DATA_MAP)
+  CU_ASSERT (iot_data_map_type (copy) == IOT_DATA_MULTI)
+  CU_ASSERT (iot_data_map_key_type (copy) == IOT_DATA_STRING)
   CU_ASSERT (iot_data_equal (copy, map))
   iot_data_map_iter_t iter;
+  iot_data_map_iter (map, &iter);
+  while (iot_data_map_iter_next (&iter))
+  {
+    CU_ASSERT (iot_data_map_iter_value (&iter) == iot_data_map_get (copy, iot_data_map_iter_key (&iter)))
+  }
+  iot_data_free (copy);
+  iot_data_free (map);
+  map = iot_data_alloc_typed_map (IOT_DATA_UINT16, IOT_DATA_POINTER);
+  iot_data_map_add (map, iot_data_alloc_ui16 (1), iot_data_alloc_pointer (&map, NULL));
+  iot_data_map_add (map, iot_data_alloc_ui16 (2), iot_data_alloc_pointer (&copy, NULL));
+  iot_data_map_add (map, iot_data_alloc_ui16 (3), iot_data_alloc_pointer (&iter, NULL));
+  copy = iot_data_shallow_copy (map);
+  CU_ASSERT (copy != NULL)
+  CU_ASSERT (copy != map)
+  CU_ASSERT (iot_data_type (copy) == IOT_DATA_MAP)
+  CU_ASSERT (iot_data_map_type (copy) == IOT_DATA_POINTER)
+  CU_ASSERT (iot_data_map_key_type (copy) == IOT_DATA_UINT16)
+  CU_ASSERT (iot_data_equal (copy, map))
   iot_data_map_iter (map, &iter);
   while (iot_data_map_iter_next (&iter))
   {
