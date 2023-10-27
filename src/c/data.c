@@ -2781,7 +2781,7 @@ extern iot_data_t * iot_data_shallow_copy (const iot_data_t * src)
   {
     case IOT_DATA_MAP:
     {
-      result = iot_data_alloc_typed_map (iot_data_map_key_type (src), iot_data_map_type (src));
+      result = iot_data_alloc_typed_map (src->key_type, src->element_type);
       iot_data_map_iter_t iter;
       iot_data_map_iter (src, &iter);
       while (iot_data_map_iter_next (&iter))
@@ -2793,7 +2793,7 @@ extern iot_data_t * iot_data_shallow_copy (const iot_data_t * src)
     case IOT_DATA_VECTOR:
     {
       uint32_t size = iot_data_vector_size (src);
-      result = iot_data_alloc_vector (size);
+      result = iot_data_alloc_typed_vector (size, src->element_type);
       for (uint32_t i = 0; i < size; i++)
       {
         iot_data_vector_add (result, i, iot_data_add_ref (iot_data_vector_get (src, i)));
@@ -2802,7 +2802,7 @@ extern iot_data_t * iot_data_shallow_copy (const iot_data_t * src)
     }
     case IOT_DATA_LIST:
     {
-      result = iot_data_alloc_list ();
+      result = iot_data_alloc_typed_list (src->element_type);
       iot_data_list_iter_t iter;
       iot_data_list_iter (src, &iter);
       while (iot_data_list_iter_next (&iter))
