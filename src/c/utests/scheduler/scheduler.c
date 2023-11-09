@@ -475,18 +475,12 @@ static void cunit_scheduler_delete_with_user_data (void)
 {
   uint64_t *arg = calloc (1, sizeof(*arg));
   iot_scheduler_t * scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, NULL);
-  iot_schedule_t * sched1 = iot_schedule_create (
-    scheduler,
-    scheduler_delete_with_user_data_do_work,
-    scheduler_delete_with_user_data_free,
-    arg,
-    10,
-    0,
-    0,
-    NULL,
-    -1
+  iot_schedule_t * sched1 = iot_schedule_create
+  (
+    scheduler, scheduler_delete_with_user_data_do_work, scheduler_delete_with_user_data_free,
+    arg, 10, 0, 0, NULL, -1
   );
-  CU_ASSERT_TRUE (iot_schedule_add (scheduler, sched1));
+  CU_ASSERT_TRUE (iot_schedule_add (scheduler, sched1))
   iot_scheduler_start (scheduler);
   iot_wait_secs (1);
   iot_schedule_delete (scheduler, sched1);

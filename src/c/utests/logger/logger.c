@@ -22,6 +22,11 @@ static uint32_t cunit_custom_log_count = 0;
 
 static void cunit_custom_log_fn (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
+  (void) logger;
+  (void) level;
+  (void) timestamp;
+  (void) message;
+  (void) ctx;
   cunit_custom_log_count++;
 }
 

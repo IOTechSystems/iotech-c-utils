@@ -27,7 +27,8 @@ static int suite_clean (void)
 
 static void test_alloc (void)
 {
-  uint32_t size, maxsize;
+  uint32_t size;
+  uint32_t maxsize;
   iot_queue_t *q = iot_queue_alloc (10);
   CU_ASSERT (q != NULL)
   size = iot_queue_size (q);
