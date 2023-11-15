@@ -48,9 +48,9 @@ typedef enum iot_data_type_t
 } __attribute__ ((__packed__)) iot_data_type_t;
 
 /** Macro to determine type for C int */
-#define IOT_DATA_INT_TYPE ((sizeof (int) == sizeof (int64_t)) ? IOT_DATA_INT64 : IOT_DATA_INT32)
+#define IOT_DATA_INT ((sizeof (int) == sizeof (int64_t)) ? IOT_DATA_INT64 : IOT_DATA_INT32)
 /** Macro to determine type for C unsigned */
-#define IOT_DATA_UNSIGNED_TYPE ((sizeof (unsigned) == sizeof (uint64_t)) ? IOT_DATA_UINT64 : IOT_DATA_UINT32)
+#define IOT_DATA_UNSIGNED ((sizeof (unsigned) == sizeof (uint64_t)) ? IOT_DATA_UINT64 : IOT_DATA_UINT32)
 
 /**
  * Data ownership enumeration
