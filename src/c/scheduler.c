@@ -177,7 +177,7 @@ static void * iot_scheduler_thread (void * arg)
     iot_schedule_t * current = iot_schedule_queue_next (queue);
     if (current && current->start < iot_time_nsecs ()) // If a schedule and ready to run
     {
-      bool valid_current = true;
+      bool valid_current = atomic_load(&current->scheduled);
       if (atomic_load (&current->concurrent) || (atomic_load (&current->refs) == 1u)) // Check for concurrent execution
       {
         iot_schedule_add_ref (current);
@@ -187,6 +187,7 @@ static void * iot_scheduler_thread (void * arg)
           iot_component_unlock (&scheduler->component);
           current->run_cb (current->arg);
           iot_component_lock (&scheduler->component);
+          valid_current = atomic_load(&current->scheduled);
         }
         if (atomic_load (&current->sync)) // Run schedule directly
         {
@@ -209,7 +210,7 @@ static void * iot_scheduler_thread (void * arg)
             {
               iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
             }
-            valid_current = atomic_load (&current->refs) > 1u;
+            valid_current = atomic_load (&current->refs) > 1 && atomic_load(&current->scheduled);;
             iot_schedule_free (current);
           }
         }
@@ -233,7 +234,7 @@ static void * iot_scheduler_thread (void * arg)
         /* Recalculate the next start time for the schedule */
         next = current->period + iot_time_nsecs ();
 
-        if (((current->repeat > 0u) && (--(current->repeat) == 0u)) || !current->scheduled) // Last repetition
+        if (((current->repeat > 0u) && (--(current->repeat) == 0u))) // Last repetition
         {
           iot_log_trace (scheduler->logger, "Schedule #%" PRIu64 " now idle", current->id);
           iot_schedule_queue_remove (scheduler, current);
