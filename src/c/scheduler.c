@@ -210,7 +210,7 @@ static void * iot_scheduler_thread (void * arg)
             {
               iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
             }
-            valid_current = atomic_load (&current->refs) > 1 && atomic_load(&current->scheduled);;
+            valid_current = atomic_load (&current->refs) > 1u && atomic_load(&current->scheduled);;
             iot_schedule_free (current);
           }
         }
