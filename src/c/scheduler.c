@@ -98,10 +98,9 @@ static bool iot_schedule_queue_add (iot_scheduler_t * scheduler, iot_schedule_t 
   return iot_schedule_is_next (scheduler->queue, schedule);
 }
 
-static inline void iot_schedule_idle_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
+static inline void iot_schedule_idle_add (iot_scheduler_t * scheduler, const iot_schedule_t * schedule)
 {
   iot_data_map_add (scheduler->idle, IOT_DATA_STATIC (&schedule->id_key), IOT_DATA_STATIC (&schedule->self_static));
-  schedule->scheduled = false;
 }
 
 static inline void iot_schedule_idle_remove (iot_scheduler_t * scheduler, const iot_schedule_t * schedule)
@@ -109,9 +108,10 @@ static inline void iot_schedule_idle_remove (iot_scheduler_t * scheduler, const 
   iot_data_map_remove (scheduler->idle, IOT_DATA_STATIC (&schedule->id_key));
 }
 
-static inline void iot_schedule_queue_remove (iot_scheduler_t * scheduler, const iot_schedule_t * schedule)
+static inline void iot_schedule_queue_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 {
   iot_data_map_remove (scheduler->queue, IOT_DATA_STATIC (&schedule->start_key));
+  schedule->scheduled = false;
 }
 
 static bool iot_schedule_queue_update (iot_scheduler_t * scheduler, iot_schedule_t * schedule, uint64_t next)
@@ -233,7 +233,7 @@ static void * iot_scheduler_thread (void * arg)
         /* Recalculate the next start time for the schedule */
         next = current->period + iot_time_nsecs ();
 
-        if ((current->repeat > 0u) && (--(current->repeat) == 0u)) // Last repetition
+        if (((current->repeat > 0u) && (--(current->repeat) == 0u)) || !current->scheduled) // Last repetition
         {
           iot_log_trace (scheduler->logger, "Schedule #%" PRIu64 " now idle", current->id);
           iot_schedule_queue_remove (scheduler, current);
