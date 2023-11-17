@@ -45,12 +45,14 @@ static void test_alloc (void)
 
 static void test_logger_running_callback (iot_component_t * comp, bool timeout)
 {
+  (void) comp;
   CU_ASSERT (! timeout)
   running_called = true;
 }
 
 static void test_logger_stopping_callback (iot_component_t * comp)
 {
+  (void) comp;
   stopping_called = true;
 }
 
@@ -60,7 +62,7 @@ static void test_add_component (void)
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
-  iot_component_t * comp = iot_container_find_component (cont, "logger");
+  const iot_component_t * comp = iot_container_find_component (cont, "logger");
 
   CU_ASSERT (comp != NULL)
   CU_ASSERT (comp && strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)

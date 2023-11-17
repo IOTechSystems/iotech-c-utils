@@ -187,6 +187,7 @@ static iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **
 
 iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t **exception)
 {
+  assert (yaml);
   iot_data_t *result = NULL;
   yaml_parser_t parser;
   yaml_event_t event;

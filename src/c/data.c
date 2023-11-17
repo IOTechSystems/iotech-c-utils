@@ -9,15 +9,12 @@
 #include "iot/hash.h"
 #include "iot/uuid.h"
 #include <stdarg.h>
-#include <math.h>
 #include <float.h>
 
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
 #define IOT_DATA_IS_FLOAT_TYPE(t) ((t) == IOT_DATA_FLOAT32 || (t) == IOT_DATA_FLOAT64)
 #define IOT_DATA_IS_INT_TYPE(t) ((t) >= IOT_DATA_INT8 && (t) <= IOT_DATA_UINT64)
-#define IOT_DATA_IS_INT_OR_FLOAT_TYPE(t) ((t) >= IOT_DATA_INT8 && (t) <= IOT_DATA_FLOAT64)
 #define IOT_DATA_IS_SIGNED_TYPE(t) ((t) == IOT_DATA_INT8 || (t) == IOT_DATA_INT16 || (t) == IOT_DATA_INT32 || (t) == IOT_DATA_INT64)
-#define IOT_DATA_IS_UNSIGNED_TYPE(t) ((t) == IOT_DATA_UINT8 || (t) == IOT_DATA_UINT16 || (t) == IOT_DATA_UINT32 || (t) == IOT_DATA_UINT64)
 
 #if (defined (_GNU_SOURCE) || defined (_ALPINE_)) && !defined (__arm__)
 #define IOT_HAS_SPINLOCK
@@ -175,7 +172,8 @@ _Static_assert (sizeof (iot_element_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_element bi
 _Static_assert (sizeof (iot_data_static_t) == sizeof (iot_data_value_base_t), "iot_data_static not equal to iot_data_value_base");
 _Static_assert (sizeof (iot_data_list_static_t) == sizeof (iot_data_list_t), "iot_data_list_static not equal to iot_data_list");
 _Static_assert (sizeof (iot_data_struct_dummy_t) == 2 * sizeof (iot_data_static_t), "iot_data_static_t structs not aligned for iot_data_static_t");
-_Static_assert (sizeof (int) == sizeof (int32_t) || sizeof (int) == sizeof (int64_t), "int not a uint32_t or int64_t");
+_Static_assert (sizeof (int) == sizeof (int32_t) || sizeof (int) == sizeof (int64_t), "int not int32_t or int64_t");
+_Static_assert (sizeof (unsigned) == sizeof (uint32_t) || sizeof (unsigned) == sizeof (uint64_t), "unsigned not uint32_t or uint64_t");
 
 // Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
 
@@ -450,7 +448,7 @@ static void iot_data_fini (void)
 
 static void iot_data_init (void)
 {
-/*
+#ifdef IOT_DEBUG_SIZE
   printf ("sizeof (iot_data_t): %zu\n", sizeof (iot_data_t));
   printf ("sizeof (iot_data_value_t): %zu\n", sizeof (iot_data_value_t));
   printf ("sizeof (iot_data_map_t): %zu\n", sizeof (iot_data_map_t));
@@ -466,7 +464,7 @@ static void iot_data_init (void)
   printf ("sizeof (iot_data_list_static_t): %zu\n", sizeof (iot_data_list_static_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-*/
+#endif
 #ifdef IOT_DATA_CACHE
 #ifdef IOT_HAS_SPINLOCK
   pthread_spin_init (&iot_data_slock, 0);
@@ -674,8 +672,9 @@ static int iot_data_cmp (const iot_data_t * v1, const iot_data_t * v2, bool by_v
       iot_data_vector_iter_t iter2;
       iot_data_vector_iter (v1, &iter1);
       iot_data_vector_iter (v2, &iter2);
-      while (iot_data_vector_iter_next (&iter1) && iot_data_vector_iter_next (&iter2))
+      while (iot_data_vector_iter_next (&iter1))
       {
+        iot_data_vector_iter_next (&iter2);
         ret = iot_data_cmp (iot_data_vector_iter_value (&iter1), iot_data_vector_iter_value (&iter2), by_value);
         if (ret != 0) break;
       }
@@ -694,8 +693,9 @@ static int iot_data_cmp (const iot_data_t * v1, const iot_data_t * v2, bool by_v
       iot_data_list_iter_t iter2;
       iot_data_list_iter (v1, &iter1);
       iot_data_list_iter (v2, &iter2);
-      while (iot_data_list_iter_next (&iter1) && iot_data_list_iter_next (&iter2))
+      while (iot_data_list_iter_next (&iter1))
       {
+        iot_data_list_iter_next (&iter2);
         ret = iot_data_cmp (iot_data_list_iter_value (&iter1), iot_data_list_iter_value (&iter2), by_value);
         if (ret != 0) break;
       }
@@ -714,8 +714,9 @@ static int iot_data_cmp (const iot_data_t * v1, const iot_data_t * v2, bool by_v
       iot_data_map_iter_t iter2;
       iot_data_map_iter (v1, &iter1);
       iot_data_map_iter (v2, &iter2);
-      while (iot_data_map_iter_next (&iter1) && iot_data_map_iter_next (&iter2))
+      while (iot_data_map_iter_next (&iter1))
       {
+        iot_data_map_iter_next (&iter2);
         ret = iot_data_cmp (iot_data_map_iter_key (&iter1), iot_data_map_iter_key (&iter2), by_value);
         if (ret != 0) break;
         ret = iot_data_cmp (iot_data_map_iter_value (&iter1), iot_data_map_iter_value (&iter2), by_value);

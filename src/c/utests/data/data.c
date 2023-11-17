@@ -5191,20 +5191,20 @@ static void test_binary_take (void)
 
   // Buffer taken from binary
   bin = iot_data_alloc_binary (buff, sizeof (buff), IOT_DATA_COPY);
-  alloced = (void *) iot_data_address (bin);
+  const void * addr =iot_data_address (bin);
   ptr = iot_data_binary_take (bin, &len);
   CU_ASSERT (len == 4)
-  CU_ASSERT (ptr == alloced)
+  CU_ASSERT (ptr == addr)
   iot_data_free (bin);
   free (ptr);
 
   // Buffer not taken as binary ref counted
   bin = iot_data_alloc_binary (buff, sizeof (buff), IOT_DATA_COPY);
   iot_data_add_ref (bin);
-  alloced = (void *) iot_data_address (bin);
+  addr = iot_data_address (bin);
   ptr = iot_data_binary_take (bin, &len);
   CU_ASSERT (len == 4)
-  CU_ASSERT (ptr != alloced)
+  CU_ASSERT (ptr != addr)
   iot_data_free (bin);
   iot_data_free (bin);
   free (ptr);
@@ -5268,10 +5268,10 @@ static void test_data_iter (void)
 {
   iot_data_iter_t iter;
 
-  size_t vec_size = 5;
-  uint32_t vec_i = 0;
+  uint32_t vec_size = 5u;
+  uint32_t vec_i = 0u;
   iot_data_t *vector_data = iot_data_alloc_vector (vec_size);
-  for (size_t i = 0; i < vec_size; i++)
+  for (uint32_t  i = 0u; i < vec_size; i++)
   {
     iot_data_vector_add (vector_data, i, iot_data_alloc_ui32 (i));
   }
@@ -5294,10 +5294,10 @@ static void test_data_iter (void)
   }
   iot_data_free (vector_data);
 
-  size_t list_size = 5;
-  uint32_t list_i = 0;
+  uint32_t list_size = 5u;
+  uint32_t list_i = 0u;
   iot_data_t * list_data = iot_data_alloc_list ();
-  for (size_t i = 0; i < list_size; i++)
+  for (uint32_t  i = 0u; i < list_size; i++)
   {
     iot_data_list_head_push (list_data, iot_data_alloc_ui32 (i));
   }
@@ -5320,10 +5320,10 @@ static void test_data_iter (void)
   }
   iot_data_free (list_data);
 
-  size_t map_size = 5;
-  uint32_t map_i = 0;
+  uint32_t  map_size = 5u;
+  uint32_t map_i = 0u;
   iot_data_t *map_data = iot_data_alloc_map (IOT_DATA_UINT32);
-  for (size_t i = 0; i < map_size; i++)
+  for (uint32_t i = 0u; i < map_size; i++)
   {
     iot_data_map_add (map_data, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
   }
