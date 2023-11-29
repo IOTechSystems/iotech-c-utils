@@ -98,10 +98,9 @@ static bool iot_schedule_queue_add (iot_scheduler_t * scheduler, iot_schedule_t 
   return iot_schedule_is_next (scheduler->queue, schedule);
 }
 
-static inline void iot_schedule_idle_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
+static inline void iot_schedule_idle_add (iot_scheduler_t * scheduler, const iot_schedule_t * schedule)
 {
   iot_data_map_add (scheduler->idle, IOT_DATA_STATIC (&schedule->id_key), IOT_DATA_STATIC (&schedule->self_static));
-  schedule->scheduled = false;
 }
 
 static inline void iot_schedule_idle_remove (iot_scheduler_t * scheduler, const iot_schedule_t * schedule)
@@ -109,9 +108,10 @@ static inline void iot_schedule_idle_remove (iot_scheduler_t * scheduler, const 
   iot_data_map_remove (scheduler->idle, IOT_DATA_STATIC (&schedule->id_key));
 }
 
-static inline void iot_schedule_queue_remove (iot_scheduler_t * scheduler, const iot_schedule_t * schedule)
+static inline void iot_schedule_queue_remove (iot_scheduler_t * scheduler, iot_schedule_t * schedule)
 {
   iot_data_map_remove (scheduler->queue, IOT_DATA_STATIC (&schedule->start_key));
+  schedule->scheduled = false;
 }
 
 static bool iot_schedule_queue_update (iot_scheduler_t * scheduler, iot_schedule_t * schedule, uint64_t next)
@@ -177,7 +177,7 @@ static void * iot_scheduler_thread (void * arg)
     iot_schedule_t * current = iot_schedule_queue_next (queue);
     if (current && current->start < iot_time_nsecs ()) // If a schedule and ready to run
     {
-      bool valid_current = true;
+      bool valid_current = atomic_load (&current->scheduled);
       if (atomic_load (&current->concurrent) || (atomic_load (&current->refs) == 1u)) // Check for concurrent execution
       {
         iot_schedule_add_ref (current);
@@ -187,6 +187,7 @@ static void * iot_scheduler_thread (void * arg)
           iot_component_unlock (&scheduler->component);
           current->run_cb (current->arg);
           iot_component_lock (&scheduler->component);
+          valid_current = atomic_load (&current->scheduled);
         }
         if (atomic_load (&current->sync)) // Run schedule directly
         {
@@ -209,7 +210,7 @@ static void * iot_scheduler_thread (void * arg)
             {
               iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
             }
-            valid_current = atomic_load (&current->refs) > 1u;
+            valid_current = atomic_load (&current->refs) > 1u && atomic_load (&current->scheduled);;
             iot_schedule_free (current);
           }
         }
