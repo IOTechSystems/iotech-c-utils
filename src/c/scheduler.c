@@ -234,7 +234,7 @@ static void * iot_scheduler_thread (void * arg)
         /* Recalculate the next start time for the schedule */
         next = current->period + iot_time_nsecs ();
 
-        if (((current->repeat > 0u) && (--(current->repeat) == 0u))) // Last repetition
+        if ((current->repeat > 0u) && (--(current->repeat) == 0u)) // Last repetition
         {
           iot_log_trace (scheduler->logger, "Schedule #%" PRIu64 " now idle", current->id);
           iot_schedule_queue_remove (scheduler, current);
