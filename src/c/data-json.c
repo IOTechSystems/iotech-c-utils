@@ -8,6 +8,7 @@
 #include "iot/base64.h"
 #include "data-impl.h"
 #include <math.h>
+#include <uchar.h>
 
 #define IOT_JSON_BUFF_SIZE 512u
 #define IOT_VAL_BUFF_SIZE 31u
@@ -212,11 +213,14 @@ static char * iot_data_string_from_json_token (const char * json, const iot_json
           case 'n': *dst++ = '\n'; break;
           case 't': *dst++ = '\t'; break;
           case 'u':
-            src += 3;
-            if (src + 1 < json + token->start + len)
+            if (src + 4 < json + token->start + len)
             {
-              *dst = *(src++) == '0' ? 0u : 0x10u; // 0 or 1
-              *dst++ |= *src <= '9' ? *src - '0' : tolower (*src) - 'a' + 10;
+              char32_t wc;
+              mbstate_t ps = { 0 };
+              sscanf (++src, "%4" SCNx32, &wc);
+              size_t charsz = c32rtomb (dst, wc, &ps);
+              if (charsz > 0) dst += charsz;
+              src += 3;
             }
             break;
           default:

@@ -47,6 +47,11 @@ typedef enum iot_data_type_t
   IOT_DATA_INVALID = 20u  /**< Invalid data type */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
+/** Macro to determine type for C int */
+#define IOT_DATA_INT ((sizeof (int) == sizeof (int64_t)) ? IOT_DATA_INT64 : IOT_DATA_INT32)
+/** Macro to determine type for C unsigned */
+#define IOT_DATA_UNSIGNED ((sizeof (unsigned) == sizeof (uint64_t)) ? IOT_DATA_UINT64 : IOT_DATA_UINT32)
+
 /**
  * Data ownership enumeration
  */
@@ -141,6 +146,20 @@ typedef struct iot_data_array_iter_t
   const struct iot_data_array_t * _array; /**< Pointer to data array structure */
   uint32_t _index;                        /**< Index of the given data array */
 } iot_data_array_iter_t;
+
+/**
+ * Alias for generic iterator structure. Do not use struct members directly.
+ */
+typedef struct iot_data_iter_t
+{
+  iot_data_type_t _type;
+  union
+  {
+    iot_data_vector_iter_t vector;
+    iot_data_list_iter_t list;
+    iot_data_map_iter_t map;
+  } _iter;
+} iot_data_iter_t;
 
 /** Type for data comparison function pointer */
 typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
@@ -418,6 +437,18 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
 extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_t val);
 
 /**
+ * @brief Allocate constant int64 data
+ *
+ * The function to allocate data for a constant int64, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int64 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i64 (iot_data_static_t * data, int64_t val);
+
+/**
  * @brief Allocate constant uint32 data
  *
  * The function to allocate data for a constant uint32, using fixed static storage, so need
@@ -428,6 +459,18 @@ extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_
  * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_t val);
+
+/**
+ * @brief Allocate constant int32 data
+ *
+ * The function to allocate data for a constant int32, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int32 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i32 (iot_data_static_t * data, int32_t val);
 
 /**
  * @brief Allocate constant uint16 data
@@ -442,6 +485,18 @@ extern iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_
 extern iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_t val);
 
 /**
+ * @brief Allocate constant int16 data
+ *
+ * The function to allocate data for a constant int16, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int16 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i16 (iot_data_static_t * data, int16_t val);
+
+/**
  * @brief Allocate constant uint8 data
  *
  * The function to allocate data for a constant uint8, using fixed static storage, so need
@@ -452,6 +507,18 @@ extern iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_
  * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t val);
+
+/**
+ * @brief Allocate constant int8 data
+ *
+ * The function to allocate data for a constant uint8, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int8 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t val);
 
 /**
  * @brief Allocate memory for data_type float
@@ -1966,6 +2033,60 @@ extern const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * 
 extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg);
 
 /**
+ * @brief Initialise iterator to the start of a iterable
+ *
+ * The function initialises an iterator to point to the first element of an iterable. Note that
+ * the iterator is unsafe in that the iterable cannot be modified when being iterated.
+ *
+ * @param iterable Input iterable
+ * @param iter   Input iterator
+ */
+extern void iot_data_iter (const iot_data_t * iterable, iot_data_iter_t * iter);
+
+/**
+ * @brief Iterate to next iterable element
+ *
+ * The function to set the iterator to point to the next element in an iterable. On reaching the end of the iterable,
+ * the iterator is set to point to the first element in the iterable.
+ *
+ * @param  iter  Input iterator
+ * @return       Returns whether the iterator is still valid (has not passed end of the iterable)
+ */
+extern bool iot_data_iter_next (iot_data_iter_t * iter);
+
+/**
+ * @brief Returns whether a iterable iterator has a next element
+ *
+ * The function returns whether the iterator next function will return a value
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_iter_has_next (const iot_data_iter_t * iter);
+
+/**
+ * @brief Iterate to previous iterable element
+ *
+ * The function to set the iterator to point to the previous element in an iterable. On reaching the start of the iterable,
+ * the iterator is set to point to the last element in the iterable.
+ *
+ * @param  iter  Input iterator
+ * @return       Returns whether the iterator is still valid (has not passed start of the iterable)
+ */
+extern bool iot_data_iter_prev (iot_data_iter_t * iter);
+
+/**
+ * @brief Get the value from the iterable at an index referenced by iterator
+ *
+ * The function to return the value from the iterable at an index referenced by iterator. If iterator index exceeds
+ * size of an iterable, NULL is returned
+ *
+ * @param  iter  Input iterator
+ * @return       Pointer to a data value from the iterable index pointed by iterator if valid, NULL otherwise
+ */
+extern const iot_data_t * iot_data_iter_value (const iot_data_iter_t * iter);
+
+/**
  * @brief  Convert data to json string
  *
  * The function to convert data to a json string. If metadata has been
@@ -2336,9 +2457,10 @@ extern uint32_t iot_data_block_size (void);
 
 /**
  * @brief Returns a memory block
- * @return       Pointer to a memory block
+ * @param size   Required block size
+ * @return       Pointer to a memory block, or NULL if requested size is greater than block size
  */
-extern void * iot_data_block_alloc (void);
+extern void * iot_data_block_alloc (size_t size);
 
 /**
  * @brief Frees a memory block

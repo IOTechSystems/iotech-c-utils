@@ -175,6 +175,7 @@ static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, 
 
 static void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
+  (void) ctx;
   iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message);
 }
 
@@ -189,7 +190,7 @@ typedef struct iot_logger_udp_ctx_t
 static void iot_log_udp (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
   iot_logger_impl_t * logimpl = (iot_logger_impl_t*) logger;
-  iot_logger_udp_ctx_t *impl = (iot_logger_udp_ctx_t *)ctx;
+  const iot_logger_udp_ctx_t  *impl = ctx;
   iot_component_lock (&logger->component);
   if (impl->sock != -1)
   {
@@ -317,7 +318,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
         host = target;
         to = sep + 1;
       }
-      port = atoi (to);
+      port = (uint16_t) atoi (to);
       result = iot_logger_alloc_udp (name, level, start, next, host, port);
     }
     else

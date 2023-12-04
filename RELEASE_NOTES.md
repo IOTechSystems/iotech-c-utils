@@ -363,6 +363,10 @@
 - Added function `iot_data_alloc_const_ui32` to allocate const uint32_t data value
 - Added function `iot_data_alloc_const_ui16` to allocate const uint16_t data value
 - Added function `iot_data_alloc_const_ui8` to allocate const uint8_t data value
+- Added function `iot_data_alloc_const_i64` to allocate const int64_t data value
+- Added function `iot_data_alloc_const_i32` to allocate const int32_t data value
+- Added function `iot_data_alloc_const_i16` to allocate const int16_t data value
+- Added function `iot_data_alloc_const_i8` to allocate const int8_t data value
 - Added function `iot_data_map_iter_bool_value` to return a boolean value from a data map iterator
 - Added function `iot_logger_set_next` to set logger delegate
 
@@ -371,3 +375,6 @@
 * `iot_data_block_size`
 * `iot_data_block_alloc`
 * `iot_data_block_free`
+
+- Support added for Debian 12
+- Added `iot_data_iter_t` to allow for iteration over generic iterable types
