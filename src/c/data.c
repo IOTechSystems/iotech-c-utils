@@ -2087,6 +2087,14 @@ const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32_t inde
   return arr->values[index];
 }
 
+const void * iot_data_vector_get_pointer (const iot_data_t * vector, uint32_t index)
+{
+  const iot_data_vector_t * arr = (const iot_data_vector_t*) vector;
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  iot_data_t * data = (index < arr->size) ? arr->values[index] : NULL;
+  return (data && (data->type == IOT_DATA_POINTER)) ? ((const iot_data_pointer_t*) data)->value : NULL;
+}
+
 void iot_data_vector_resize (iot_data_t * vector, uint32_t size)
 {
   iot_data_vector_t * vec = (iot_data_vector_t*) vector;

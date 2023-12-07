@@ -353,6 +353,7 @@
 - Support added for Alpine Linux 3.18
 - Added function `iot_data_binary_from_string` to create binary data from string data
 - Added function `iot_data_map_get_array` to find an array in a map
+- Added function `iot_data_vector_get_pointer` to get a pointer from a vector element
 - Added function `iot_data_string_from_binary` to create string data from binary data
 - Added function `iot_data_binary_take` to take buffer from binary data
 - Added function `iot_data_map_add_unused` to add a value to a map if key unused

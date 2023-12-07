@@ -1655,13 +1655,24 @@ extern void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t
 /**
  * @brief Get a value at an index from then vector
  *
- * The function to get the value from then vector at a given index
+ * Function to get a value from a vector at a given index
  *
- * @param vector  Input vector
- * @param index  Index of an vector to get the value
+ * @param vector Input vector
+ * @param index  Vector index for value
  * @return       Pointer to a value at the index
  */
 extern const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32_t index);
+
+/**
+ * @brief Get pointer from value at a given vector index
+ *
+ * Function to get a pointer from a value at a vector index, if the index is invalid or value type is not IOT_DATA_POINTER then NULL is returned
+ *
+ * @param map    Input vector
+ * @param index  Vector index for value
+ * @return       Pointer from value at index (NULL if invalid index ot value not a pointer)
+ */
+extern const void * iot_data_vector_get_pointer (const iot_data_t * vector, uint32_t index);
 
 /**
  * @brief Resize a vector
