@@ -1668,7 +1668,7 @@ extern const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32
  *
  * Function to get a pointer from a value at a vector index, if the index is invalid or value type is not IOT_DATA_POINTER then NULL is returned
  *
- * @param map    Input vector
+ * @param vector Input vector
  * @param index  Vector index for value
  * @return       Pointer from value at index (NULL if invalid index ot value not a pointer)
  */
