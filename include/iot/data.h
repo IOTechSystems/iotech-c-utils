@@ -152,13 +152,13 @@ typedef struct iot_data_array_iter_t
  */
 typedef struct iot_data_iter_t
 {
-  iot_data_type_t _type;
+  iot_data_type_t _type; /**< Iterator type */
   union
   {
     iot_data_vector_iter_t vector;
     iot_data_list_iter_t list;
     iot_data_map_iter_t map;
-  } _iter;
+  } _iter; /**< Iterator */
 } iot_data_iter_t;
 
 /** Type for data comparison function pointer */
