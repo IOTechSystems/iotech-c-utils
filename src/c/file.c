@@ -105,13 +105,10 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
 bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
 {
   assert (path && binary);
-  if(len > PATH_MAX - 5)
-  {
-    return false;
-  }
   bool ok = false;
   char tmp_path[PATH_MAX];
   strncpy (tmp_path, path, PATH_MAX - 5);
+  tmp_path[PATH_MAX-5] = '\0';
   strcat (tmp_path, ".new");
   FILE *fd = fopen (tmp_path, "w");
   if (fd)
