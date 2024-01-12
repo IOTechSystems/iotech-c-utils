@@ -222,9 +222,9 @@ extern uint32_t iot_data_ref_count (const iot_data_t * data);
 /**
  * @brief Free memory allocated to data
  *
- * The function to decrement reference count by 1 and free the allocated memory only if the reference count is <=1
+ * The function to decrement reference count by 1 and free the allocated memory only if the reference count is <= 1
  *
- * @param data  Pointer to data
+ * @param data  Pointer to data (can be NULL)
  */
 extern void iot_data_free (iot_data_t * data);
 
@@ -233,8 +233,8 @@ extern void iot_data_free (iot_data_t * data);
  *
  * The function to return the basic data type for the data
  *
- * @param data  Pointer to data
- * @return      Datatype from the enum defined in iot_data_type_t. Returns IOT_DATA_INVALID if data pointer is NULL
+ * @param data  Pointer to data (can be NULL)
+ * @return      Data type enumeration. Returns IOT_DATA_INVALID if data pointer is NULL
  */
 extern iot_data_type_t iot_data_type (const iot_data_t * data);
 
