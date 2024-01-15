@@ -97,7 +97,7 @@ static void sched_free (void * data)
 
 static int suite_init (void)
 {
-  logger = iot_logger_alloc ("Test", IOT_LOG_WARN, true);
+  logger = iot_logger_alloc ("Test", IOT_LOG_TRACE, true);
   return 0;
 }
 
