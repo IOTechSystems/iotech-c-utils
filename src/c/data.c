@@ -3345,6 +3345,29 @@ extern void iot_data_map_dump (iot_data_t * map)
 
 #endif
 
+uint32_t iot_data_iter_size (const iot_data_iter_t * iter)
+{
+  assert (iter);
+  uint32_t size;
+
+  switch (iter->_type)
+  {
+    case IOT_DATA_VECTOR:
+      size = iot_data_vector_size (iter->_iter.vector._vector);
+      break;
+    case IOT_DATA_MAP:
+      size = iot_data_map_size (iter->_iter.map._map);
+      break;
+    case IOT_DATA_LIST:
+      size = iot_data_list_length(iter->_iter.list._list);
+      break;
+    default:
+      assert (false);
+  }
+
+  return size;
+}
+
 void iot_data_iter (const iot_data_t * data, iot_data_iter_t *iter)
 {
   iter->_type = data->type;

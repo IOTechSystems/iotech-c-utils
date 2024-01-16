@@ -2351,6 +2351,51 @@ static void test_map_get (void)
   iot_data_free (map);
 }
 
+static void test_iter_size_map(void)
+{
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+
+  iot_data_iter_t iter;
+
+  iot_data_iter(map, &iter);
+
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 0u);
+  iot_data_string_map_add (map, "Key1", iot_data_alloc_ui32 (1u));
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 1u);
+  iot_data_string_map_add (map, "Key2", iot_data_alloc_ui32 (1u));
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 2u);
+}
+
+static void test_iter_size_vector(void)
+{
+  iot_data_t * vector = iot_data_alloc_vector (2u);
+
+  iot_data_iter_t iter;
+
+  iot_data_iter(vector, &iter);
+
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 2u);
+  iot_data_vector_add(vector, 0, iot_data_alloc_ui32 (1u));
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 2u);
+  iot_data_vector_add(vector, 1, iot_data_alloc_ui32 (1u));
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 2u);
+}
+
+static void test_iter_size_list(void)
+{
+  iot_data_t * list = iot_data_alloc_list ();
+
+  iot_data_iter_t iter;
+
+  iot_data_iter(list, &iter);
+
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 0u);
+  iot_data_list_tail_push(list, iot_data_alloc_ui32 (1u));
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 1u);
+  iot_data_list_tail_push(list, iot_data_alloc_ui32 (1u));
+  CU_ASSERT_EQUAL(iot_data_iter_size (&iter), 2u);
+}
+
 static void test_list_size (void)
 {
   iot_data_t * list = iot_data_alloc_list ();
@@ -5396,6 +5441,9 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_array_iter_float64", test_data_array_iter_float64);
   CU_add_test (suite, "data_array_iter_bool", test_data_array_iter_bool);
   CU_add_test (suite, "data_list_size", test_list_size);
+  CU_add_test (suite, "data_iter_size_map", test_iter_size_map);
+  CU_add_test (suite, "data_iter_size_vector", test_iter_size_vector);
+  CU_add_test (suite, "data_iter_size_list", test_iter_size_list);
   CU_add_test (suite, "data_list_free", test_list_free);
   CU_add_test (suite, "data_list_iter", test_list_iter);
   CU_add_test (suite, "data_list_copy", test_list_copy);
