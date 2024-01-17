@@ -5429,9 +5429,9 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_array_iter_float64", test_data_array_iter_float64);
   CU_add_test (suite, "data_array_iter_bool", test_data_array_iter_bool);
   CU_add_test (suite, "data_list_size", test_list_size);
-  CU_add_test (suite, "data_iter_size_map", test_iterable_length_map);
-  CU_add_test (suite, "data_iter_size_vector", test_iterable_length_vector);
-  CU_add_test (suite, "data_iter_size_list", test_iterable_length_list);
+  CU_add_test (suite, "data_iterable_length_map", test_iterable_length_map);
+  CU_add_test (suite, "data_iterable_length_vector", test_iterable_length_vector);
+  CU_add_test (suite, "data_iterable_length_list", test_iterable_length_list);
   CU_add_test (suite, "data_list_free", test_list_free);
   CU_add_test (suite, "data_list_iter", test_list_iter);
   CU_add_test (suite, "data_list_copy", test_list_copy);
