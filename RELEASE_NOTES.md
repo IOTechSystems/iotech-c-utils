@@ -379,4 +379,4 @@
 
 - Support added for Debian 12
 - Added `iot_data_iter_t` to allow for iteration over generic iterable types
-- Added `iot_data_iterable_length` function for determining number of elements in generic iterable types
+- Added `iot_data_length` function for determining number of elements in a list, map or vector
