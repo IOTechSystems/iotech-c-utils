@@ -3353,14 +3353,17 @@ uint32_t iot_data_length (const iot_data_t * data)
   switch (iot_data_type(data))
   {
     case IOT_DATA_VECTOR:
-      length = iot_data_vector_size (data);
+      length = ((const iot_data_vector_t*) data)->size;
       break;
     case IOT_DATA_MAP:
-      length = iot_data_map_size (data);
+      length = ((const iot_data_map_t*) data)->size;
       break;
     case IOT_DATA_LIST:
-      length = iot_data_list_length(data);
+    {
+      const iot_data_list_t *impl = (const iot_data_list_t *) data;
+      length = impl->head ? impl->head->length : 0;
       break;
+    }
     default:
       assert (false);
   }
