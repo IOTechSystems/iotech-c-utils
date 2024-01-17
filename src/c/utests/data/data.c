@@ -2355,11 +2355,11 @@ static void test_data_length_map(void)
 {
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
 
-  CU_ASSERT_EQUAL(iot_data_length (map), 0u);
+  CU_ASSERT_EQUAL (iot_data_length (map), 0u)
   iot_data_string_map_add (map, "Key1", iot_data_alloc_ui32 (1u));
-  CU_ASSERT_EQUAL(iot_data_length (map), 1u);
+  CU_ASSERT_EQUAL (iot_data_length (map), 1u)
   iot_data_string_map_add (map, "Key2", iot_data_alloc_ui32 (1u));
-  CU_ASSERT_EQUAL(iot_data_length (map), 2u);
+  CU_ASSERT_EQUAL (iot_data_length (map), 2u)
 }
 
 static void test_data_length_array(void)
@@ -2368,29 +2368,29 @@ static void test_data_length_array(void)
 
   iot_data_t * array = iot_data_alloc_array (data, sizeof(data), IOT_DATA_INT8, IOT_DATA_REF);
 
-  CU_ASSERT_EQUAL(iot_data_length (array), 4u);
+  CU_ASSERT_EQUAL (iot_data_length (array), 4u)
 }
 
 static void test_data_length_vector(void)
 {
   iot_data_t * vector = iot_data_alloc_vector (2u);
 
-  CU_ASSERT_EQUAL(iot_data_length (vector), 2u);
+  CU_ASSERT_EQUAL (iot_data_length (vector), 2u)
   iot_data_vector_add(vector, 0, iot_data_alloc_ui32 (1u));
-  CU_ASSERT_EQUAL(iot_data_length (vector), 2u);
+  CU_ASSERT_EQUAL (iot_data_length (vector), 2u)
   iot_data_vector_add(vector, 1, iot_data_alloc_ui32 (1u));
-  CU_ASSERT_EQUAL(iot_data_length (vector), 2u);
+  CU_ASSERT_EQUAL (iot_data_length (vector), 2u)
 }
 
 static void test_data_length_list(void)
 {
   iot_data_t * list = iot_data_alloc_list ();
 
-  CU_ASSERT_EQUAL(iot_data_length (list), 0u);
+  CU_ASSERT_EQUAL (iot_data_length (list), 0u)
   iot_data_list_tail_push(list, iot_data_alloc_ui32 (1u));
-  CU_ASSERT_EQUAL(iot_data_length (list), 1u);
+  CU_ASSERT_EQUAL (iot_data_length (list), 1u)
   iot_data_list_tail_push(list, iot_data_alloc_ui32 (1u));
-  CU_ASSERT_EQUAL(iot_data_length (list), 2u);
+  CU_ASSERT_EQUAL (iot_data_length (list), 2u)
 }
 
 static void test_list_size (void)
