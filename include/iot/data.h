@@ -2055,7 +2055,7 @@ extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_d
 extern void iot_data_iter (const iot_data_t * iterable, iot_data_iter_t * iter);
 
 /**
- * @brief Get the number of elements in a list, map or vector
+ * @brief Get the number of elements in a list, map, array or vector
  *
  * @param data Input data
  * @return Number of elements
