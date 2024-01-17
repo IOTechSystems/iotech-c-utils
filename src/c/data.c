@@ -3364,6 +3364,7 @@ uint32_t iot_data_length (const iot_data_t * data)
       length = impl->head ? impl->head->length : 0;
       break;
     }
+    case IOT_DATA_BINARY:
     case IOT_DATA_ARRAY:
       length = ((const iot_data_array_t*) data)->length;
       break;
