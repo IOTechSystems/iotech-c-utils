@@ -2391,6 +2391,13 @@ static void test_data_length_vector(void)
   CU_ASSERT_EQUAL (iot_data_length (vector), 2u)
 }
 
+static void test_data_length_uint8(void)
+{
+  iot_data_t * uint8 = iot_data_alloc_ui8(3u);
+
+  CU_ASSERT_EQUAL (iot_data_length (uint8), 1u)
+}
+
 static void test_data_length_list(void)
 {
   iot_data_t * list = iot_data_alloc_list ();
@@ -5452,6 +5459,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_length_array", test_data_length_array);
   CU_add_test (suite, "data_length_binary", test_data_length_binary);
   CU_add_test (suite, "data_length_list", test_data_length_list);
+  CU_add_test (suite, "data_length_uint8", test_data_length_uint8);
   CU_add_test (suite, "data_list_free", test_list_free);
   CU_add_test (suite, "data_list_iter", test_list_iter);
   CU_add_test (suite, "data_list_copy", test_list_copy);

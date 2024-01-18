@@ -3369,7 +3369,7 @@ uint32_t iot_data_length (const iot_data_t * data)
       length = ((const iot_data_array_t*) data)->length;
       break;
     default:
-      assert (false);
+      length = 1;
   }
 
   return length;
