@@ -3347,10 +3347,10 @@ extern void iot_data_map_dump (iot_data_t * map)
 
 uint32_t iot_data_length (const iot_data_t * data)
 {
-  assert (data);
-  uint32_t length;
+  assert (data && (data->type <= IOT_DATA_MAP));
+  uint32_t length = 1;
 
-  switch (iot_data_type(data))
+  switch (data->type)
   {
     case IOT_DATA_VECTOR:
       length = ((const iot_data_vector_t*) data)->size;
@@ -3369,7 +3369,7 @@ uint32_t iot_data_length (const iot_data_t * data)
       length = ((const iot_data_array_t*) data)->length;
       break;
     default:
-      length = 1;
+      break;
   }
 
   return length;

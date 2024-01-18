@@ -2351,7 +2351,7 @@ static void test_map_get (void)
   iot_data_free (map);
 }
 
-static void test_data_length_map(void)
+static void test_data_length_map (void)
 {
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
 
@@ -2362,7 +2362,7 @@ static void test_data_length_map(void)
   CU_ASSERT_EQUAL (iot_data_length (map), 2u)
 }
 
-static void test_data_length_binary(void)
+static void test_data_length_binary (void)
 {
   int8_t data[4] = {-1, -2, 3, 4};
 
@@ -2371,7 +2371,7 @@ static void test_data_length_binary(void)
   CU_ASSERT_EQUAL (iot_data_length (array), 4u)
 }
 
-static void test_data_length_array(void)
+static void test_data_length_array (void)
 {
   int8_t data[4] = {-1, -2, 3, 4};
 
@@ -2380,7 +2380,7 @@ static void test_data_length_array(void)
   CU_ASSERT_EQUAL (iot_data_length (array), 4u)
 }
 
-static void test_data_length_vector(void)
+static void test_data_length_vector (void)
 {
   iot_data_t * vector = iot_data_alloc_vector (2u);
 
@@ -2391,14 +2391,14 @@ static void test_data_length_vector(void)
   CU_ASSERT_EQUAL (iot_data_length (vector), 2u)
 }
 
-static void test_data_length_uint8(void)
+static void test_data_length_uint8 (void)
 {
   iot_data_t * uint8 = iot_data_alloc_ui8(3u);
 
   CU_ASSERT_EQUAL (iot_data_length (uint8), 1u)
 }
 
-static void test_data_length_list(void)
+static void test_data_length_list (void)
 {
   iot_data_t * list = iot_data_alloc_list ();
 
