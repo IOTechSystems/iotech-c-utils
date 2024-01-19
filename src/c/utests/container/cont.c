@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2020-2023
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -20,7 +20,32 @@ static const char * logger_config =
   "\"Level\":\"Info\""
 "}";
 
+static const char * bad_logger_config_1 =
+  "{"
+  "\"Name\":\"${}\","
+  "\"Level\":\"Info\""
+  "}";
+
+static const char * bad_logger_config_2 =
+  "{"
+  "\"Name\":\"${aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}\","
+  "\"Level\":\"Info\""
+  "}";
+
+static const char * bad_logger_config_3 =
+  "{"
+  "\"Name\":\"${\","
+  "\"Level\":\"Info\""
+  "}";
+
+static const char * bad_logger_config_4 =
+  "{"
+  "\"Name\":\"${I_DO_NOT_EXIST}\","
+  "\"Level\":\"Info\""
+  "}";
+
 static bool running_called = false;
+static bool stopping_called = false;
 
 static int suite_init (void)
 {
@@ -44,8 +69,15 @@ static void test_alloc (void)
 
 static void test_logger_running_callback (iot_component_t * comp, bool timeout)
 {
+  (void) comp;
   CU_ASSERT (! timeout)
   running_called = true;
+}
+
+static void test_logger_stopping_callback (iot_component_t * comp)
+{
+  (void) comp;
+  stopping_called = true;
 }
 
 static void test_add_component (void)
@@ -54,7 +86,7 @@ static void test_add_component (void)
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
-  iot_component_t * comp = iot_container_find_component (cont, "logger");
+  const iot_component_t * comp = iot_container_find_component (cont, "logger");
 
   CU_ASSERT (comp != NULL)
   CU_ASSERT (comp && strcmp (comp->factory->type, IOT_LOGGER_TYPE) == 0)
@@ -69,6 +101,27 @@ static void test_add_component (void)
   iot_container_free (cont);
 }
 
+
+static void test_bad_env_vars_in_config (void) // Tests bad environment variable in config don't crash the program
+{
+  iot_container_t * cont = iot_container_alloc ("test");
+  iot_component_factory_add (iot_logger_factory ());
+  iot_component_t * comp;
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", bad_logger_config_1);
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL)
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", bad_logger_config_2);
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL)
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", bad_logger_config_3);
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL)
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", bad_logger_config_4);
+  comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT (comp == NULL)
+  iot_container_free (cont);
+}
+
 static void test_delete_component (void)
 {
   iot_component_t * comp;
@@ -79,12 +132,14 @@ static void test_delete_component (void)
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp != NULL)
   iot_component_set_running_callback (comp, test_logger_running_callback);
+  iot_component_set_stopping_callback (comp, test_logger_stopping_callback);
   iot_container_start (cont);
+  CU_ASSERT (running_called)
+  iot_container_stop (cont);
+  CU_ASSERT (stopping_called)
   iot_container_delete_component (cont, "logger");
   comp = iot_container_find_component (cont, "logger");
   CU_ASSERT (comp == NULL)
-  CU_ASSERT (running_called)
-  iot_container_stop (cont);
   iot_container_free (cont);
 }
 
@@ -105,4 +160,6 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "container_state_name", test_state_name);
   CU_add_test (suite, "container_add_component", test_add_component);
   CU_add_test (suite, "container_delete_component", test_delete_component);
+  CU_add_test (suite, "bad_enviroment_variables_in_config", test_bad_env_vars_in_config);
+
 }

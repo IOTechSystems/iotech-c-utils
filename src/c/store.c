@@ -39,19 +39,19 @@ bool iot_store_write (const char * path, const char * str)
 uint8_t * iot_store_read_binary (const char * path, size_t * len)
 {
   assert (path);
-  return iot_store_reader ? (iot_store_reader) (path, len) : NULL;
+  return iot_store_reader ? iot_store_reader (path, len) : NULL;
 }
 
 bool iot_store_write_binary (const char * path, const uint8_t * binary, size_t len)
 {
   assert (path && binary && len);
-  return iot_store_writer ? (iot_store_writer) (path, binary, len) : false;
+  return iot_store_writer ? iot_store_writer (path, binary, len) : false;
 }
 
 bool iot_store_delete (const char * path)
 {
   assert (path);
-  return iot_store_deleter ? (iot_store_deleter) (path) : false;
+  return iot_store_deleter ? iot_store_deleter (path) : false;
 }
 
 static char * iot_store_config_path (const char * name, const char * uri)

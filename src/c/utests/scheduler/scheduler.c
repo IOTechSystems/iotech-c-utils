@@ -412,14 +412,20 @@ static void cunit_scheduler_setfreefn (void)
   iot_scheduler_free (scheduler);
 }
 
-static void cunit_scheduler_rate (bool concurrent)
+static void cunit_scheduler_rate (bool concurrent, bool sync)
 {
   reset_counters ();
   iot_threadpool_t *pool = iot_threadpool_alloc (4u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
   iot_schedule_t *sched = iot_schedule_create (scheduler, do_sum_100, NULL, NULL, IOT_MS_TO_NS (50u), 0, 0, pool, -1);
   iot_schedule_set_concurrent (sched, concurrent);
-  CU_ASSERT (iot_schedule_add (scheduler, sched));
+  if (concurrent && sync)
+  {
+    CU_ASSERT (! iot_schedule_set_sync (sched, sync))
+    sync = false;
+  }
+  CU_ASSERT (iot_schedule_set_sync (sched, sync))
+  CU_ASSERT (iot_schedule_add (scheduler, sched))
   iot_threadpool_start (pool);
   iot_scheduler_start (scheduler);
   iot_wait_secs (2);
@@ -439,12 +445,17 @@ static void cunit_scheduler_rate (bool concurrent)
 
 static void cunit_scheduler_concurrent (void)
 {
-  cunit_scheduler_rate (true);
+  cunit_scheduler_rate (true, false);
 }
 
 static void cunit_scheduler_serialized (void)
 {
-  cunit_scheduler_rate (false);
+  cunit_scheduler_rate (false, false);
+}
+
+static void cunit_scheduler_sync (void)
+{
+  cunit_scheduler_rate (false, true);
 }
 
 static void * scheduler_delete_with_user_data_do_work (void * arg)
@@ -464,18 +475,12 @@ static void cunit_scheduler_delete_with_user_data (void)
 {
   uint64_t *arg = calloc (1, sizeof(*arg));
   iot_scheduler_t * scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, NULL);
-  iot_schedule_t * sched1 = iot_schedule_create (
-    scheduler,
-    scheduler_delete_with_user_data_do_work,
-    scheduler_delete_with_user_data_free,
-    arg,
-    10,
-    0,
-    0,
-    NULL,
-    -1
+  iot_schedule_t * sched1 = iot_schedule_create
+  (
+    scheduler, scheduler_delete_with_user_data_do_work, scheduler_delete_with_user_data_free,
+    arg, 10, 0, 0, NULL, -1
   );
-  CU_ASSERT_TRUE (iot_schedule_add (scheduler, sched1));
+  CU_ASSERT_TRUE (iot_schedule_add (scheduler, sched1))
   iot_scheduler_start (scheduler);
   iot_wait_secs (1);
   iot_schedule_delete (scheduler, sched1);
@@ -499,6 +504,7 @@ extern void cunit_scheduler_test_init (void)
   CU_add_test (suite, "scheduler_setpriority", cunit_scheduler_setpriority);
   CU_add_test (suite, "scheduler_freefn", cunit_scheduler_setfreefn);
   CU_add_test (suite, "scheduler_concurrent", cunit_scheduler_concurrent);
+  CU_add_test (suite, "scheduler_sync", cunit_scheduler_sync);
   CU_add_test (suite, "scheduler_serialized", cunit_scheduler_serialized);
   CU_add_test (suite, "scheduler_delete_with_user_data", cunit_scheduler_delete_with_user_data);
 }

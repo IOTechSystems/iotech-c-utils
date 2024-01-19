@@ -12,6 +12,7 @@ The following Utilities are provided:
 * Container/Component
 * JSON parser
 * XML parser
+* YAML parser
 * Hash generation
 * Time stamp
 * Base64 encode/decode

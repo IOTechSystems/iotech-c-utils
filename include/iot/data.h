@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2022 IOTech Ltd
+// Copyright (c) 2019-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -12,8 +12,8 @@
  * @brief IOTech Data Representation API
  */
 
-#include "iot/os.h"
 #include "iot/defs.h"
+#include "iot/os.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,15 +47,27 @@ typedef enum iot_data_type_t
   IOT_DATA_INVALID = 20u  /**< Invalid data type */
 } __attribute__ ((__packed__)) iot_data_type_t;
 
+/** Macro to determine type for C int */
+#define IOT_DATA_INT ((sizeof (int) == sizeof (int64_t)) ? IOT_DATA_INT64 : IOT_DATA_INT32)
+/** Macro to determine type for C unsigned */
+#define IOT_DATA_UNSIGNED ((sizeof (unsigned) == sizeof (uint64_t)) ? IOT_DATA_UINT64 : IOT_DATA_UINT32)
+
 /**
  * Data ownership enumeration
  */
 typedef enum iot_data_ownership_t
 {
-  IOT_DATA_COPY = 0u,  /**< Data is copied and copy freed when no longer used */
-  IOT_DATA_TAKE = 1u,  /**< Data is taken and freed when no longer used */
-  IOT_DATA_REF = 2u    /**< Data is referenced and never freed */
+  IOT_DATA_COPY = 0u, /**< Data is copied and copy freed when no longer used */
+  IOT_DATA_TAKE = 1u, /**< Data is taken and freed when no longer used */
+  IOT_DATA_REF = 2u   /**< Data is referenced and never freed */
 } iot_data_ownership_t;
+
+/** Enum type for data tags */
+typedef enum iot_data_tag_t
+{
+  IOT_DATA_TAG_USER1 = 1u, /**< Identifier for user tag 1 */
+  IOT_DATA_TAG_USER2 = 2u  /**< Identifier for user tag 2 */
+} iot_data_tag_t;
 
 /** Opaque iot data structure */
 typedef struct iot_data_t iot_data_t;
@@ -65,25 +77,25 @@ typedef struct iot_data_t iot_data_t;
 */
 typedef struct iot_typecode_t
 {
-  iot_data_type_t type;          /**< Core data type */
-  iot_data_type_t element_type;  /**< Element type for Array, Map, Vector and List */
-  iot_data_type_t key_type;      /**< Key type for map */
+  iot_data_type_t type;         /**< Core data type */
+  iot_data_type_t element_type; /**< Element type for Array, Map, Vector and List */
+  iot_data_type_t key_type;     /**< Key type for map */
 } iot_typecode_t;
 
 /**
 * Type for simple data type static allocation
 */
-typedef void * iot_data_static_t [2u + 16u/sizeof (void*)];
+typedef void * iot_data_static_t[2u + 16u / sizeof (void*)];
 
 /**
 * Type for list type static allocation
 */
-typedef void * iot_data_list_static_t [4u + 8u/sizeof (void*)];
+typedef void * iot_data_list_static_t[4u + 8u / sizeof (void*)];
 
 /**
 * Macro to cast static data instance (iot_data_static_t) to a iot_data_t pointer
 */
-#define IOT_DATA_STATIC(s) ((iot_data_t*) (s))
+#define IOT_DATA_STATIC(s) ((iot_data_t *) (s))
 
 /** Type for set of data string constant values */
 typedef struct iot_data_consts_t
@@ -103,9 +115,9 @@ extern iot_data_consts_t iot_data_consts;
  */
 typedef struct iot_data_map_iter_t
 {
-  const struct iot_data_map_t * _map;   /**< Pointer to data map structure */
-  struct iot_node_t * _node;            /**< Pointer to map node structure */
-  uint32_t _count;                      /**< Position counter */
+  const struct iot_data_map_t * _map; /**< Pointer to data map structure */
+  struct iot_node_t * _node;          /**< Pointer to map node structure */
+  uint32_t _count;                    /**< Position counter */
 } iot_data_map_iter_t;
 
 /**
@@ -113,8 +125,8 @@ typedef struct iot_data_map_iter_t
  */
 typedef struct iot_data_vector_iter_t
 {
-  const struct iot_data_vector_t * _vector;  /**< Pointer to data vector structure */
-  uint32_t _index;                           /**< Index of the given vector */
+  const struct iot_data_vector_t * _vector; /**< Pointer to data vector structure */
+  uint32_t _index;                          /**< Index of the given vector */
 } iot_data_vector_iter_t;
 
 /**
@@ -122,8 +134,8 @@ typedef struct iot_data_vector_iter_t
  */
 typedef struct iot_data_list_iter_t
 {
-  const struct iot_data_list_t * _list;  /**< Pointer to data list structure */
-  struct iot_element_t * _element;       /**< Pointer to list element structure */
+  const struct iot_data_list_t * _list; /**< Pointer to data list structure */
+  struct iot_element_t * _element;      /**< Pointer to list element structure */
 } iot_data_list_iter_t;
 
 /**
@@ -131,9 +143,23 @@ typedef struct iot_data_list_iter_t
  */
 typedef struct iot_data_array_iter_t
 {
-  const struct iot_data_array_t * _array;  /**< Pointer to data array structure */
-  uint32_t _index;                         /**< Index of the given data array */
+  const struct iot_data_array_t * _array; /**< Pointer to data array structure */
+  uint32_t _index;                        /**< Index of the given data array */
 } iot_data_array_iter_t;
+
+/**
+ * Alias for generic iterator structure. Do not use struct members directly.
+ */
+typedef struct iot_data_iter_t
+{
+  iot_data_type_t _type; /**< Iterator type */
+  union
+  {
+    iot_data_vector_iter_t vector;
+    iot_data_list_iter_t list;
+    iot_data_map_iter_t map;
+  } _iter; /**< Iterator */
+} iot_data_iter_t;
 
 /** Type for data comparison function pointer */
 typedef bool (*iot_data_cmp_fn) (const iot_data_t * data, const void * arg);
@@ -143,6 +169,9 @@ typedef void (*iot_data_free_fn) (void * ptr);
 
 /** Type for data update function pointer */
 typedef iot_data_t * (*iot_data_update_fn) (const iot_data_t * data, void * arg);
+
+/** Function to compare string data with a string value */
+extern iot_data_cmp_fn iot_data_string_cmp;
 
 /**
  * @brief Set on a per thread basis allocation policy for data (cache or heap)
@@ -193,9 +222,9 @@ extern uint32_t iot_data_ref_count (const iot_data_t * data);
 /**
  * @brief Free memory allocated to data
  *
- * The function to decrement reference count by 1 and free the allocated memory only if the reference count is <=1
+ * The function to decrement reference count by 1 and free the allocated memory only if the reference count is <= 1
  *
- * @param data  Pointer to data
+ * @param data  Pointer to data (can be NULL)
  */
 extern void iot_data_free (iot_data_t * data);
 
@@ -204,8 +233,8 @@ extern void iot_data_free (iot_data_t * data);
  *
  * The function to return the basic data type for the data
  *
- * @param data  Pointer to data
- * @return      Datatype from the enum defined in iot_data_type_t
+ * @param data  Pointer to data (can be NULL)
+ * @return      Data type enumeration. Returns IOT_DATA_INVALID if data pointer is NULL
  */
 extern iot_data_type_t iot_data_type (const iot_data_t * data);
 
@@ -239,7 +268,7 @@ extern bool iot_data_is_static (const iot_data_t * data);
  * @param data Pointer to data
  * @return     Whether the data is of the value NaN
  */
-extern bool iot_data_is_nan (const iot_data_t *data);
+extern bool iot_data_is_nan (const iot_data_t * data);
 
 /**
  * @brief Get data type code
@@ -406,6 +435,90 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
  * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_t val);
+
+/**
+ * @brief Allocate constant int64 data
+ *
+ * The function to allocate data for a constant int64, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int64 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i64 (iot_data_static_t * data, int64_t val);
+
+/**
+ * @brief Allocate constant uint32 data
+ *
+ * The function to allocate data for a constant uint32, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        uint32 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_t val);
+
+/**
+ * @brief Allocate constant int32 data
+ *
+ * The function to allocate data for a constant int32, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int32 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i32 (iot_data_static_t * data, int32_t val);
+
+/**
+ * @brief Allocate constant uint16 data
+ *
+ * The function to allocate data for a constant uint16, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        uint16 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_t val);
+
+/**
+ * @brief Allocate constant int16 data
+ *
+ * The function to allocate data for a constant int16, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int16 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i16 (iot_data_static_t * data, int16_t val);
+
+/**
+ * @brief Allocate constant uint8 data
+ *
+ * The function to allocate data for a constant uint8, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        uint8 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t val);
+
+/**
+ * @brief Allocate constant int8 data
+ *
+ * The function to allocate data for a constant uint8, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        int8 value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t val);
 
 /**
  * @brief Allocate memory for data_type float
@@ -663,9 +776,9 @@ extern bool iot_data_list_iter_prev (iot_data_list_iter_t * iter);
 extern const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t * iter);
 
 /**
- * @brief Get the string value from the list referenced by an input iterator
+ * @brief Get the string value from the list referenced by an iterator
  *
- * Get string type value from the list referenced by an input iterator
+ * Get string type value from the list referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      String type value if iter is valid, NULL otherwise
@@ -673,7 +786,7 @@ extern const iot_data_t * iot_data_list_iter_value (const iot_data_list_iter_t *
 extern const char * iot_data_list_iter_string_value (const iot_data_list_iter_t * iter);
 
 /**
- * @brief Get pointer value from the list referenced by an input iterator
+ * @brief Get pointer value from the list referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      Pointer type value from the list if iter is valid, NULL otherwise
@@ -754,10 +867,30 @@ extern iot_data_t * iot_data_list_head_pop (iot_data_t * list);
 extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_data_ownership_t ownership);
 
 /**
+ * @brief Take buffer from a Binary or an Array. If internal buffer cannot be taken (is referenced or shared) a copy is returned
+ * @param data       Pointer to the binary or array
+ * @param len        Pointer to the returned buffer length
+ * @return           Binary or Array data buffer
+ */
+extern void * iot_data_binary_take (iot_data_t * data, uint32_t * len);
+
+/**
  * @brief Convert an array to a binary
  * @param data       Pointer to the array to be converted
  */
 extern void iot_data_binary_to_array (iot_data_t * data);
+
+/**
+ * @brief Create binary from string data (NULL string terminator is ignored)
+ * @param data       Pointer to the string data
+ */
+extern iot_data_t * iot_data_binary_from_string (const iot_data_t * data);
+
+/**
+ * @brief Create string from binary data
+ * @param data       Pointer to the binary data
+ */
+extern iot_data_t * iot_data_string_from_binary (const iot_data_t * data);
 
 /**
  * @brief Convert a binary to an array
@@ -916,11 +1049,22 @@ extern iot_data_t * iot_data_alloc_from_strings (const char * type, const char *
 extern iot_data_t * iot_data_alloc_array_from_base64 (const char * value);
 
 /**
+ * @brief Get the value of the element at the given index
+ *
+ * This function returns the address of the array element at the given index
+ *
+ * @param array  Input array
+ * @param index  Index in array
+ * @return       Pointer to the element at the given index in the array
+ */
+void * iot_data_array_get (const iot_data_t * array, uint32_t index);
+
+/**
  * @brief Increment data value by 1
  *
  * The function to increment the value by 1
  *
- * @param data  Value to increment. Applicable for integer and float data_types
+ * @param data  Value to increment. Applicable for integer and float data types
  */
 extern void iot_data_increment (iot_data_t * data);
 
@@ -929,7 +1073,7 @@ extern void iot_data_increment (iot_data_t * data);
  *
  * The function to decrement the value by 1
  *
- * @param data  Value to decrement. Applicable for integer and float data_types
+ * @param data  Value to decrement. Applicable for integer and float data types
  */
 extern void iot_data_decrement (iot_data_t * data);
 
@@ -1087,6 +1231,19 @@ extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void *
  * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
  */
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
+
+/**
+ * @brief Add key-value pair to a map if key not already in use
+ *
+ * The function to add a key-value pair to a map if key not already in use
+ *
+ * @param map  Map to add a new key-value pair
+ * @param key  Input key
+ * @param val  Input value
+ * @return     Whether key-value pair has been added
+ * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
+ */
+extern bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
 /**
  * @brief Merge the contents of one map into another. Key types must be compatible.
@@ -1277,6 +1434,17 @@ extern const iot_data_t * iot_data_map_get_vector (const iot_data_t * map, const
  * @return             Map found by key in the map. NULL if not found or not a Map
  */
 extern const iot_data_t * iot_data_map_get_map (const iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief Get array corresponding to key from a string map
+ *
+ * The function to get an array corresponding to key from the map, if the type value is not IOT_DATA_ARRAY then NULL is returned
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @return             Array found by key in the map. NULL if not found or not an array
+ */
+extern const iot_data_t * iot_data_map_get_array (const iot_data_t * map, const iot_data_t * key);
 
 /**
  * @brief Get list corresponding to key from a map
@@ -1487,13 +1655,24 @@ extern void iot_data_vector_add (iot_data_t * vector, uint32_t index, iot_data_t
 /**
  * @brief Get a value at an index from then vector
  *
- * The function to get the value from then vector at a given index
+ * Function to get a value from a vector at a given index
  *
- * @param vector  Input vector
- * @param index  Index of an vector to get the value
+ * @param vector Input vector
+ * @param index  Vector index for value
  * @return       Pointer to a value at the index
  */
 extern const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32_t index);
+
+/**
+ * @brief Get pointer from value at a given vector index
+ *
+ * Function to get a pointer from a value at a vector index, if the index is invalid or value type is not IOT_DATA_POINTER then NULL is returned
+ *
+ * @param vector Input vector
+ * @param index  Vector index for value
+ * @return       Pointer from value at index (NULL if invalid index ot value not a pointer)
+ */
+extern const void * iot_data_vector_get_pointer (const iot_data_t * vector, uint32_t index);
 
 /**
  * @brief Resize a vector
@@ -1671,7 +1850,7 @@ extern bool iot_data_map_iter_has_next (const iot_data_map_iter_t * iter);
 extern bool iot_data_map_iter_prev (iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Key from the map referenced by an input iterator
+ * @brief Get Key from the map referenced by an iterator
  *
  * The function to get the key in a map referenced by the iterator
  *
@@ -1681,7 +1860,7 @@ extern bool iot_data_map_iter_prev (iot_data_map_iter_t * iter);
 extern const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get Value from the map referenced by an input iterator
+ * @brief Get Value from the map referenced by an iterator
  *
  * The function to get the value from the map referenced by the iterator
  *
@@ -1691,7 +1870,7 @@ extern const iot_data_t * iot_data_map_iter_key (const iot_data_map_iter_t * ite
 extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Replace Value from the map referenced by an input iterator
+ * @brief Replace Value from the map referenced by an iterator
  *
  * The function to replace the value from the map referenced by the iterator
  *
@@ -1699,12 +1878,12 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
  * @param value New value to store in the map
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
-extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t *value);
+extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t * value);
 
 /**
- * @brief Get Key from the map referenced by an input iterator
+ * @brief Get Key from the map referenced by an iterator
  *
- * The function to get string type key from the map referenced by an input iterator
+ * The function to get string type key from the map referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      String type key if iter is valid, NULL otherwise
@@ -1712,9 +1891,9 @@ extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t *
 extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get string value from the map referenced by an input iterator
+ * @brief Get string value from the map referenced by an iterator
  *
- * The function to get the string type value from the map referenced by an input iterator
+ * The function to get the string value from the map referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      String type value from the map if iter is valid, NULL otherwise
@@ -1722,14 +1901,24 @@ extern const char * iot_data_map_iter_string_key (const iot_data_map_iter_t * it
 extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * iter);
 
 /**
- * @brief Get pointer value from the map referenced by an input iterator
+ * @brief Get pointer value from the map referenced by an iterator
  *
- * The function to get the pointer type value from the map referenced by an input iterator
+ * The function to get the pointer value from the map referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      Pointer type value from the map if iter is valid, NULL otherwise
  */
 extern const void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter);
+
+/**
+ * @brief Get boolean value from the map referenced by an iterator
+ *
+ * The function to get the boolean value from the map referenced by an iterator
+ *
+ * @param iter  Input iterator
+ * @return      Boolean value from the map if iter is valid, FALSE otherwise
+ */
+extern bool iot_data_map_iter_bool_value (const iot_data_map_iter_t * iter);
 
 /**
  * @brief Initialise iterator to the start of a vector
@@ -1797,9 +1986,9 @@ extern uint32_t iot_data_vector_iter_index (const iot_data_vector_iter_t * iter)
 extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter_t * iter);
 
 /**
- * @brief Get the string value from the vector referenced by an input iterator
+ * @brief Get the string value from the vector referenced by an iterator
  *
- * Get string type value from the vector referenced by an input iterator
+ * Get string type value from the vector referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      String type value if iter is valid, NULL otherwise
@@ -1807,9 +1996,9 @@ extern const iot_data_t * iot_data_vector_iter_value (const iot_data_vector_iter
 extern const char * iot_data_vector_iter_string_value (const iot_data_vector_iter_t * iter);
 
 /**
- * @brief Get pointer value from the vector referenced by an input iterator
+ * @brief Get pointer value from the vector referenced by an iterator
  *
- * Get the pointer type value from the vector referenced by an input iterator
+ * Get the pointer type value from the vector referenced by an iterator
  *
  * @param iter  Input iterator
  * @return      Pointer type value from the vector if iter is valid, NULL otherwise
@@ -1827,7 +2016,7 @@ extern const void * iot_data_vector_iter_pointer_value (const iot_data_vector_it
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
 
-extern iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t *value);
+extern iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * iter, iot_data_t * value);
 
 /**
  * @brief Get the value as string type from the vector at an index referenced by iterator
@@ -1853,6 +2042,71 @@ extern const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * 
  * @return        Pointer to the first element for which the comparison function return true, NULL otherwise
  */
 extern const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg);
+
+/**
+ * @brief Initialise iterator to the start of a iterable
+ *
+ * The function initialises an iterator to point to the first element of an iterable. Note that
+ * the iterator is unsafe in that the iterable cannot be modified when being iterated.
+ *
+ * @param iterable Input iterable
+ * @param iter   Input iterator
+ */
+extern void iot_data_iter (const iot_data_t * iterable, iot_data_iter_t * iter);
+
+/**
+ * @brief Get the number of elements in an iot_data object
+ *
+ * This function returns the number of elements in an iot_data object.
+ * This is 1 for all data types other than lists, vectors, arrays, maps and binary types where it is the number of elements in each.
+ *
+ * @param data Input data
+ * @return Number of elements
+ */
+extern uint32_t iot_data_length (const iot_data_t * data);
+
+/**
+ * @brief Iterate to next iterable element
+ *
+ * The function to set the iterator to point to the next element in an iterable. On reaching the end of the iterable,
+ * the iterator is set to point to the first element in the iterable.
+ *
+ * @param  iter  Input iterator
+ * @return       Returns whether the iterator is still valid (has not passed end of the iterable)
+ */
+extern bool iot_data_iter_next (iot_data_iter_t * iter);
+
+/**
+ * @brief Returns whether a iterable iterator has a next element
+ *
+ * The function returns whether the iterator next function will return a value
+ *
+ * @param iter  Input iterator
+ * @return      Whether the iterator has a next element
+ */
+extern bool iot_data_iter_has_next (const iot_data_iter_t * iter);
+
+/**
+ * @brief Iterate to previous iterable element
+ *
+ * The function to set the iterator to point to the previous element in an iterable. On reaching the start of the iterable,
+ * the iterator is set to point to the last element in the iterable.
+ *
+ * @param  iter  Input iterator
+ * @return       Returns whether the iterator is still valid (has not passed start of the iterable)
+ */
+extern bool iot_data_iter_prev (iot_data_iter_t * iter);
+
+/**
+ * @brief Get the value from the iterable at an index referenced by iterator
+ *
+ * The function to return the value from the iterable at an index referenced by iterator. If iterator index exceeds
+ * size of an iterable, NULL is returned
+ *
+ * @param  iter  Input iterator
+ * @return       Pointer to a data value from the iterable index pointed by iterator if valid, NULL otherwise
+ */
+extern const iot_data_t * iot_data_iter_value (const iot_data_iter_t * iter);
 
 /**
  * @brief  Convert data to json string
@@ -1937,6 +2191,31 @@ extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool or
  */
 extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool ordered, iot_data_t * cache);
 
+#ifdef IOT_HAS_CBOR
+/**
+ * @brief  Convert data to CBOR block
+ *
+ * The function to convert data to cbor.
+ *
+ * @param  data  Input data
+ * @return       CBOR in an IOT_DATA_BINARY
+ */
+extern iot_data_t * iot_data_to_cbor (const iot_data_t * data);
+
+/**
+ * @brief  Convert data to CBOR block with initial buffer size
+ *
+ * The function to convert data to cbor. An initial buffer size
+ * is provided to eliminate memory reallocation as the required buffer
+ * size increases.
+ *
+ * @param  data  Input data
+ * @param  size  Initial size of output buffer
+ * @return       CBOR in an IOT_DATA_BINARY
+ */
+extern iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size);
+
+#endif
 #ifdef IOT_HAS_XML
 /**
  * @brief Convert XML to iot_data_t type
@@ -1953,10 +2232,24 @@ extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool order
 extern iot_data_t * iot_data_from_xml (const char * xml);
 #endif
 
+#ifdef IOT_HAS_YAML
 /**
- * @brief Check for equality of 2 iot_data types
+ * @brief Convert YAML to iot_data_t type
  *
- * The function to check the values of the 2 iot_data types and returns true if the data value and type is the same.
+ * The function to convert input YAML string to iot_data. The conversion results
+ * in a map, vector or simple type depending on the YAML content.
+ *
+ * @param  yaml       Input YAML string
+ * @param  exception  If a parse error occurs, on exit this will hold a string describing the problem
+ * @return            A iot_data element if input string is a YAML string, NULL otherwise.
+ */
+extern iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t ** exception);
+#endif
+
+/**
+ * @brief Check for equality of two iot_data types. For equality both data types and values must match.
+ *
+ * Function to check the values of the two iot_data types and returns true if the data values and types are the same.
  *
  * @param  data1 Input data1 (can be NULL)
  * @param  data2 Input data2 (can be NULL)
@@ -1965,13 +2258,36 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
 extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 
 /**
- * @brief Compare two data instances, returning whether the fist is less than, equal to or greater than the second
+ * @brief Check for equality of two iot_data instances. Integer or floating types will compare as equal
+ *        if they have the same value.
+ *
+ * Function to check the values of the two iot_data instances and returns true if the data value is the same.
  *
  * @param  data1 Input data1 (can be NULL)
  * @param  data2 Input data2 (can be NULL)
- * @return       Returns zero if data1 equals data2, a value less than zero data1 less than data2, a value greater than zero if data1 greater than data2
+ * @return       'true' if data1 & data2 are equal, 'false' otherwise
+ */
+extern bool iot_data_equal_value (const iot_data_t * data1, const iot_data_t * data2);
+
+/**
+ * @brief Compare two data instances, returning whether the first is less than, equal to or greater than the second.
+ *        Both types must be the same for values to compare equal.
+ *
+ * @param  data1 Input data1 (can be NULL)
+ * @param  data2 Input data2 (can be NULL)
+ * @return       Returns zero if data1 equals data2, a value less than zero if data1 less than data2, a value greater than zero if data1 greater than data2
  */
 extern int iot_data_compare (const iot_data_t * data1, const iot_data_t * data2);
+
+/**
+ * @brief Compare two data instances, returning whether the first is less than, equal to or greater than the second. Different integer
+ * or floating types are compared by value.
+ *
+ * @param  data1 Input data1 (can be NULL)
+ * @param  data2 Input data2 (can be NULL)
+ * @return       Returns zero if data1 equals data2, a value less than zero if data1 less than data2, a value greater than zero if data1 greater than data2
+ */
+extern int iot_data_compare_value (const iot_data_t * data1, const iot_data_t * data2);
 
 /**
  * @brief Copy data
@@ -2135,6 +2451,44 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
  *
  */
 extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_t * path, iot_data_update_fn fn, void * arg);
+
+/**
+ * @brief Returns the value of a boolean user tag
+ *
+ * @param data   The data instance
+ * @param tag    The tag identifier (two supported)
+ * @return       The boolean value of the tag
+ */
+extern bool iot_data_get_tag (const iot_data_t * data, iot_data_tag_t tag);
+
+/**
+ * @brief Sets the value of a boolean user tag
+ *
+ * @param data   The data instance
+ * @param tag    The tag identifier (two supported)
+ * @param value  The boolean value to set the tag
+ * @return       The old boolean value of the tag
+ */
+extern bool iot_data_set_tag (iot_data_t * data, iot_data_tag_t tag, bool value);
+
+/**
+ * @brief Returns the size in bytes of an allocated/cached memory block
+ * @return       The size of a memory block
+ */
+extern uint32_t iot_data_block_size (void);
+
+/**
+ * @brief Returns a memory block
+ * @param size   Required block size
+ * @return       Pointer to a memory block, or NULL if requested size is greater than block size
+ */
+extern void * iot_data_block_alloc (size_t size);
+
+/**
+ * @brief Frees a memory block
+ * @param ptr Pointer to the memory block to be freed
+ */
+extern void iot_data_block_free (void * ptr);
 
 #ifdef __cplusplus
 }

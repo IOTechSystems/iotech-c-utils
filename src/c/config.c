@@ -18,7 +18,7 @@ static const iot_data_t * iot_config_get_type (const iot_data_t * map, const cha
 {
   assert (map && key);
   const iot_data_t * data = iot_data_string_map_get (map, key);
-  if ((data == NULL) || (iot_data_type (data) != type))
+  if (iot_data_type (data) != type)
   {
     if (logger == NULL) logger = iot_logger_default ();
     iot_log_error (logger, "Failed to resolve %s configuration value for: %s", iot_data_type_string (type), key);
@@ -140,7 +140,7 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
   {
     const char * start = str;
     const char * end;
-    char key [IOT_MAX_ENV_LEN];
+    char key[IOT_MAX_ENV_LEN];
 
     holder.size = strlen (str);
     holder.parsed = malloc (holder.size);
@@ -151,10 +151,24 @@ char * iot_config_substitute_env (const char * str, iot_logger_t * logger)
       {
         if ((end = strchr (start, '}'))) // Look for "}"
         {
+          if (end == start + 2) // Look for error case "${}"
+          {
+            if (logger == NULL) logger = iot_logger_default ();
+            iot_log_error (logger, "${}: bad substitution in config");
+            free (holder.parsed);
+            goto FAIL;
+          }
           size_t len = (size_t) ((end - start) - 2);
+          if (len >= IOT_MAX_ENV_LEN)
+          {
+            if (logger == NULL) logger = iot_logger_default ();
+            iot_log_error (logger, "Environment variable name is greater than max length of %d", IOT_MAX_ENV_LEN - 1);
+            free (holder.parsed);
+            goto FAIL;
+          }
           strncpy (key, start + 2, len);
           key[len] = '\0';
-          const char * env = getenv (key);
+          const char *env = getenv (key);
           if (env)
           {
             iot_update_parsed (&holder, env, strlen (env));

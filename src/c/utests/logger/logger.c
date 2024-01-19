@@ -22,6 +22,11 @@ static uint32_t cunit_custom_log_count = 0;
 
 static void cunit_custom_log_fn (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
+  (void) logger;
+  (void) level;
+  (void) timestamp;
+  (void) message;
+  (void) ctx;
   cunit_custom_log_count++;
 }
 
@@ -161,6 +166,36 @@ static void cunit_logger_selfstart (void)
   iot_logger_free (logger);
 }
 
+static void cunit_logger_format (void)
+{
+  iot_logger_t *logger = iot_logger_alloc ("MyLogger", IOT_LOG_INFO, true);
+  iot_log_info (logger, "INFO: %s %u", "testarg", 1234);
+  iot_logger_free (logger);
+}
+
+static void cunit_logger_set_next (void)
+{
+  iot_logger_t * logger = iot_logger_alloc ("MyLogger", IOT_LOG_INFO, true);
+  iot_logger_t * next = iot_logger_alloc_custom ("StartStop", IOT_LOG_ERROR, true, NULL, cunit_custom_log_fn, NULL, NULL);
+  cunit_custom_log_count = 0u;
+  iot_logger_set_next (logger, next);
+  iot_log_info (logger, "Info: set_next");
+  iot_log_error (logger, "Error: set_next");
+  CU_ASSERT (cunit_custom_log_count == 1u)
+  iot_logger_free (logger);
+  iot_logger_free (next);
+}
+
+static void cunit_logger_level_name (void)
+{
+  CU_ASSERT (strcmp ("", iot_logger_level_to_string (IOT_LOG_NONE)) == 0)
+  CU_ASSERT (strcmp ("ERROR", iot_logger_level_to_string (IOT_LOG_ERROR)) == 0)
+  CU_ASSERT (strcmp ("WARN", iot_logger_level_to_string (IOT_LOG_WARN)) == 0)
+  CU_ASSERT (strcmp ("Info", iot_logger_level_to_string (IOT_LOG_INFO)) == 0)
+  CU_ASSERT (strcmp ("Debug", iot_logger_level_to_string (IOT_LOG_DEBUG)) == 0)
+  CU_ASSERT (strcmp ("Trace", iot_logger_level_to_string (IOT_LOG_TRACE)) == 0)
+}
+
 void cunit_logger_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("logger", suite_init, suite_clean);
@@ -175,4 +210,7 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_start_stop", cunit_logger_start_stop);
   CU_add_test (suite, "logger_refcount", cunit_logger_refcount);
   CU_add_test (suite, "logger_selfstart", cunit_logger_selfstart);
+  CU_add_test (suite, "logger_format", cunit_logger_format);
+  CU_add_test (suite, "logger_set_next", cunit_logger_set_next);
+  CU_add_test (suite, "logger_level_name", cunit_logger_level_name);
 }
