@@ -3345,6 +3345,36 @@ extern void iot_data_map_dump (iot_data_t * map)
 
 #endif
 
+uint32_t iot_data_length (const iot_data_t * data)
+{
+  assert (data && (data->type <= IOT_DATA_MAP));
+  uint32_t length = 1;
+
+  switch (data->type)
+  {
+    case IOT_DATA_VECTOR:
+      length = ((const iot_data_vector_t*) data)->size;
+      break;
+    case IOT_DATA_MAP:
+      length = ((const iot_data_map_t*) data)->size;
+      break;
+    case IOT_DATA_LIST:
+    {
+      const iot_data_list_t *impl = (const iot_data_list_t *) data;
+      length = impl->head ? impl->head->length : 0;
+      break;
+    }
+    case IOT_DATA_BINARY:
+    case IOT_DATA_ARRAY:
+      length = ((const iot_data_array_t*) data)->length;
+      break;
+    default:
+      break;
+  }
+
+  return length;
+}
+
 void iot_data_iter (const iot_data_t * data, iot_data_iter_t *iter)
 {
   iter->_type = data->type;
