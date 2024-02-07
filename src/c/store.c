@@ -105,7 +105,7 @@ iot_data_t * iot_store_config_list (const char * directory)
     {
       if (dir->d_type == DT_REG)
       {
-        unsigned long file_len = strlen (dir->d_name);
+        size_t file_len = strlen (dir->d_name);
         const char *name = strndup (dir->d_name, file_len - 5);
         iot_data_list_tail_push (list, iot_data_alloc_string (name, IOT_DATA_TAKE));
       }
