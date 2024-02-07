@@ -92,3 +92,27 @@ bool iot_store_config_delete (const char * name, const char * uri)
   free (path);
   return ok;
 }
+
+iot_data_t * iot_store_config_list (const char * directory)
+{
+#ifdef _DIRENT_H
+  DIR *d = opendir (directory);
+  if (d)
+  {
+    iot_data_t * list = iot_data_alloc_list ();
+    const struct dirent *dir;
+    while ((dir = readdir (d)))
+    {
+      if (dir->d_type == DT_REG)
+      {
+        unsigned long file_len = strlen (dir->d_name);
+        const char *name = strndup (dir->d_name, file_len - 5);
+        iot_data_list_tail_push (list, iot_data_alloc_string (name, IOT_DATA_TAKE));
+      }
+    }
+    closedir (d);
+    return list;
+  }
+#endif
+  return NULL;
+}
