@@ -144,12 +144,13 @@ iot_data_t * iot_file_list (const char * directory, const char * remove_extensio
   {
     if (dir->d_type != DT_REG) continue;
     size_t file_len = strlen (dir->d_name);
-    if (remove_extension && strlen(dir->d_name) > strlen(remove_extension))
+    size_t extension_len = remove_extension ? strlen (remove_extension) : 0;
+    if (remove_extension && file_len > extension_len)
     {
-      const char *extension = dir->d_name + file_len - strlen (remove_extension);
+      const char *extension = dir->d_name + file_len - extension_len;
       if (strcmp (extension, remove_extension) == 0)
       {
-        file_len -= strlen (remove_extension);
+        file_len -= extension_len;
       }
     }
     const char *name = strndup (dir->d_name, file_len);
