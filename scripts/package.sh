@@ -25,7 +25,7 @@ do
 done
 
 BROOT="${ROOT}/${BARCH}"
-VER=$(cat ${ROOT}/VERSION)
+VER=$(cut -d . -f 1,2,3 < ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 REL_VER=$(cut -d . -f 4 < ${ROOT}/VERSION)
 
