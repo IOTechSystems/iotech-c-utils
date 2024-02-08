@@ -14,10 +14,6 @@
 
 #include "iot/os.h"
 
-#ifndef _AZURESPHERE_
-#include <dirent.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
