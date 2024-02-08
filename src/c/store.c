@@ -96,15 +96,14 @@ bool iot_store_config_delete (const char * name, const char * uri)
 iot_data_t * iot_store_config_list (const char * directory)
 {
 #ifndef _AZURESPHERE_
-  const char * extension_regex = ".json$";
-  size_t ext_len = strlen (extension_regex) - 1;
+  static const char extension_regex[] = ".json$";
   iot_data_t * file_list = iot_file_list (directory, extension_regex);
   iot_data_list_iter_t list_iter;
   iot_data_list_iter (file_list, &list_iter);
   while (iot_data_list_iter_next (&list_iter))
   {
     const char *full_name = iot_data_list_iter_string_value (&list_iter);
-    const char *new_name = strndup (full_name, strlen (full_name) - ext_len);
+    const char *new_name = strndup (full_name, strlen (full_name) - (sizeof (extension_regex) - 2));
     iot_data_t *old_iot = iot_data_list_iter_replace (&list_iter, iot_data_alloc_string (new_name, IOT_DATA_TAKE));
     iot_data_free (old_iot);
   }
