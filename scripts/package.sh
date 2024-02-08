@@ -83,7 +83,7 @@ case ${SYSTEM} in
     OS_ARCH=$(dpkg --print-architecture)
     cd ${ROOT}/${BARCH}/release
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}.${REL_VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${PKG_VER}.${REL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -92,7 +92,7 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples \
       --depends libyaml-0-2
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}.${REL_VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${PKG_VER}.${REL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -105,7 +105,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}.${REL_VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${PKG_VER}.${REL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -148,7 +148,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/release
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}.${REL_VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${PKG_VER}.${REL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
@@ -157,7 +157,7 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples \
       --depends libyaml
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}.${REL_VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${PKG_VER}.${REL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
@@ -170,7 +170,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}.${REL_VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${PKG_VER}.${REL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
