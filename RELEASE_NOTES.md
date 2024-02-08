@@ -381,3 +381,4 @@
 - Added `iot_data_iter_t` to allow for iteration over generic iterable types
 ## Version 1.5.1
 - Added `iot_data_length` function for determining number of elements in iot_data object
+- Added `iot_store_config_list` and `iot_file_list` functions to list all files in a given directory

@@ -142,6 +142,25 @@ static void test_read_file (void)
   }
 }
 
+static void test_list_file (void)
+{
+  iot_data_t *file_list = iot_file_list ("/tmp", ".txt");
+  iot_data_list_iter_t iter;
+  iot_data_list_iter (file_list, &iter);
+  bool file_found = false;
+  while (iot_data_list_iter_next (&iter))
+  {
+    const char * file = iot_data_string (iot_data_list_iter_value (&iter));
+    if (strcmp (file, "iot_test") == 0)
+    {
+      file_found = true;
+      break;
+    }
+  }
+  iot_data_free (file_list);
+  CU_ASSERT_TRUE (file_found)
+}
+
 static void test_delete_file (void)
 {
   CU_ASSERT (iot_store_delete (TEST_FILE_NAME))
@@ -162,6 +181,7 @@ void cunit_misc_test_init (void)
 #ifdef IOT_HAS_FILE
   CU_add_test (suite, "write_file", test_write_file);
   CU_add_test (suite, "read_file", test_read_file);
+  CU_add_test (suite, "list_file", test_list_file);
   CU_add_test (suite, "delete_file", test_delete_file);
 #endif
 }

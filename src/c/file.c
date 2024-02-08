@@ -69,6 +69,7 @@ extern bool iot_file_delete (const char * path)
 }
 
 #else // _AZURESPHERE_
+#include <dirent.h>
 
 bool iot_file_delete (const char * path)
 {
@@ -130,6 +131,36 @@ bool iot_file_write (const char * path, const char * str)
 {
   assert (str);
   return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
+}
+
+iot_data_t * iot_file_list (const char * directory, const char * remove_extension)
+{
+  iot_data_t * list = NULL;
+  DIR *d = opendir (directory);
+  if (d)
+  {
+    list = iot_data_alloc_list ();
+    const struct dirent *dir;
+    while ((dir = readdir (d)))
+    {
+      if (dir->d_type == DT_REG)
+      {
+        size_t file_len = strlen (dir->d_name);
+        if (remove_extension && strlen(dir->d_name) > strlen(remove_extension))
+        {
+          const char *extension = dir->d_name + strlen (dir->d_name) - strlen (remove_extension);
+          if (strcmp (extension, remove_extension) == 0)
+          {
+            file_len -= strlen (remove_extension);
+          }
+        }
+        const char *name = strndup (dir->d_name, file_len);
+        iot_data_list_tail_push (list, iot_data_alloc_string (name, IOT_DATA_TAKE));
+      }
+    }
+    closedir (d);
+  }
+  return list;
 }
 
 #endif
