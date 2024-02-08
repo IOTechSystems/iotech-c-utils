@@ -70,6 +70,7 @@ extern bool iot_file_delete (const char * path)
 
 #else // _AZURESPHERE_
 #include <dirent.h>
+#include <regex.h>
 
 bool iot_file_delete (const char * path)
 {
@@ -133,29 +134,27 @@ bool iot_file_write (const char * path, const char * str)
   return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
 }
 
-iot_data_t * iot_file_list (const char * directory, const char * remove_extension)
+iot_data_t * iot_file_list (const char * directory, const char * regex_str)
 {
   iot_data_t * list = NULL;
   DIR *d = opendir (directory);
   if (!d) goto DONE;
+  regex_t regex;
+  if (regex_str && regcomp (&regex, regex_str, REG_NOSUB) != 0) goto DONE;
   list = iot_data_alloc_list ();
   const struct dirent *dir;
   while ((dir = readdir (d)))
   {
-    if (dir->d_type != DT_REG) continue;
-    size_t file_len = strlen (dir->d_name);
-    size_t extension_len = remove_extension ? strlen (remove_extension) : 0;
-    if (remove_extension && file_len > extension_len)
+    if (dir->d_type == DT_REG)
     {
-      const char *extension = dir->d_name + file_len - extension_len;
-      if (strcmp (extension, remove_extension) == 0)
+      size_t nmatch = 0;
+      if (!regex_str || regexec (&regex, dir->d_name, nmatch, NULL, 0) == 0)
       {
-        file_len -= extension_len;
+        iot_data_list_tail_push (list, iot_data_alloc_string (dir->d_name, IOT_DATA_COPY));
       }
     }
-    const char *name = strndup (dir->d_name, file_len);
-    iot_data_list_tail_push (list, iot_data_alloc_string (name, IOT_DATA_TAKE));
   }
+  if (regex_str) regfree (&regex);
   closedir (d);
 DONE:
   return list;

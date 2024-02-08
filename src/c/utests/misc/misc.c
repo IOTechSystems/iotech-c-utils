@@ -151,7 +151,7 @@ static void test_list_file (void)
   while (iot_data_list_iter_next (&iter))
   {
     const char * file = iot_data_string (iot_data_list_iter_value (&iter));
-    if (strcmp (file, "iot_test") == 0)
+    if (strcmp (file, "iot_test.txt") == 0)
     {
       file_found = true;
       break;

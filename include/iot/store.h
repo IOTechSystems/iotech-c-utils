@@ -107,8 +107,8 @@ extern bool iot_store_config_save (const char * name, const char * uri, const ch
 extern bool iot_store_config_delete (const char * name, const char * uri);
 
 /**
- * @brief List configuration files in given directory
- * @param directory Directory in which to list files
+ * @brief List json files in given directory
+ * @param directory Directory in which to list json files
  * @return List of file names with '.json' removed
  */
 extern iot_data_t * iot_store_config_list (const char * directory);

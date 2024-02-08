@@ -74,10 +74,10 @@ extern bool iot_file_write_binary (const char * path, const uint8_t * binary, si
 /**
  * @brief List files in given directory
  * @param directory Directory in which to list files
- * @param remove_extension Optional extension to remove from each file name (where present)
+ * @param regex_str Optional regex string which files must match
  * @return List of files
  */
-extern iot_data_t * iot_file_list (const char * directory, const char * remove_extension);
+extern iot_data_t * iot_file_list (const char * directory, const char * regex_str);
 
 #ifdef __cplusplus
 }
