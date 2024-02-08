@@ -181,7 +181,9 @@ void cunit_misc_test_init (void)
 #ifdef IOT_HAS_FILE
   CU_add_test (suite, "write_file", test_write_file);
   CU_add_test (suite, "read_file", test_read_file);
+#ifndef _AZURESPHERE_
   CU_add_test (suite, "list_file", test_list_file);
+#endif
   CU_add_test (suite, "delete_file", test_delete_file);
 #endif
 }
