@@ -27,6 +27,7 @@ done
 BROOT="${ROOT}/${BARCH}"
 VER=$(cat ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
+REL_VER=$(cut -d . -f 4 < ${ROOT}/VERSION)
 
 MAINT_EMAIL="IOTech Support <support@iotechsys.com>"
 DESC_MAIN="IOT C Framework"
@@ -64,7 +65,7 @@ case ${SYSTEM} in
         ;;
     esac
 
-    export VER PKG_VER OS_ARCH
+    export VER PKG_VER REL_VER OS_ARCH
     mkdir /iotech-iot/${BARCH}/apks
     chmod 0644 /iotech-iot/scripts/apk.key
     printf '%s' "PACKAGER_PRIVKEY=/iotech-iot/scripts/apk.key" >> /etc/abuild.conf
@@ -82,7 +83,7 @@ case ${SYSTEM} in
     OS_ARCH=$(dpkg --print-architecture)
     cd ${ROOT}/${BARCH}/release
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}.${REL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -91,7 +92,7 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples \
       --depends libyaml-0-2
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}.${REL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -104,7 +105,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}.${REL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -147,7 +148,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/release
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}.${REL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
@@ -156,7 +157,7 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples \
       --depends libyaml
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}.${REL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
@@ -169,7 +170,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}.${REL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
