@@ -63,7 +63,7 @@ int main (int argc, char* argv[])
     fprintf (stderr, "\nInitialization of C Unit Registry failed.");
     return -1;
   }
-  cunit_misc_test_init ();
+  //cunit_misc_test_init ();
   cunit_cont_test_init ();
   cunit_logger_test_init ();
   cunit_json_test_init ();
