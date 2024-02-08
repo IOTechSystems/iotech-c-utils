@@ -121,7 +121,7 @@ static void test_uuid_string (void)
 
 #ifdef IOT_HAS_FILE
 
-#define TEST_FILE_NAME "/tmp/iot_test.txt"
+#define TEST_FILE_NAME "/tmp/iot_test.json"
 
 static void test_write_file (void)
 {
@@ -144,14 +144,33 @@ static void test_read_file (void)
 
 static void test_list_file (void)
 {
-  iot_data_t *file_list = iot_file_list ("/tmp", ".txt");
+  iot_data_t *file_list = iot_file_list ("/tmp", ".json");
   iot_data_list_iter_t iter;
   iot_data_list_iter (file_list, &iter);
   bool file_found = false;
   while (iot_data_list_iter_next (&iter))
   {
     const char * file = iot_data_string (iot_data_list_iter_value (&iter));
-    if (strcmp (file, "iot_test.txt") == 0)
+    if (strcmp (file, "iot_test.json") == 0)
+    {
+      file_found = true;
+      break;
+    }
+  }
+  iot_data_free (file_list);
+  CU_ASSERT_TRUE (file_found)
+}
+
+static void test_list_config_file (void)
+{
+  iot_data_t *file_list = iot_store_config_list ("/tmp");
+  iot_data_list_iter_t iter;
+  iot_data_list_iter (file_list, &iter);
+  bool file_found = false;
+  while (iot_data_list_iter_next (&iter))
+  {
+    const char * file = iot_data_string (iot_data_list_iter_value (&iter));
+    if (strcmp (file, "iot_test") == 0)
     {
       file_found = true;
       break;
@@ -183,6 +202,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "read_file", test_read_file);
 #ifndef _AZURESPHERE_
   CU_add_test (suite, "list_file", test_list_file);
+  CU_add_test (suite, "list_config_file", test_list_config_file);
 #endif
   CU_add_test (suite, "delete_file", test_delete_file);
 #endif
