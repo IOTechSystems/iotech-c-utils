@@ -137,29 +137,26 @@ iot_data_t * iot_file_list (const char * directory, const char * remove_extensio
 {
   iot_data_t * list = NULL;
   DIR *d = opendir (directory);
-  if (d)
+  if (!d) goto DONE;
+  list = iot_data_alloc_list ();
+  const struct dirent *dir;
+  while ((dir = readdir (d)))
   {
-    list = iot_data_alloc_list ();
-    const struct dirent *dir;
-    while ((dir = readdir (d)))
+    if (dir->d_type != DT_REG) continue;
+    size_t file_len = strlen (dir->d_name);
+    if (remove_extension && strlen(dir->d_name) > strlen(remove_extension))
     {
-      if (dir->d_type == DT_REG)
+      const char *extension = dir->d_name + file_len - strlen (remove_extension);
+      if (strcmp (extension, remove_extension) == 0)
       {
-        size_t file_len = strlen (dir->d_name);
-        if (remove_extension && strlen(dir->d_name) > strlen(remove_extension))
-        {
-          const char *extension = dir->d_name + file_len - strlen (remove_extension);
-          if (strcmp (extension, remove_extension) == 0)
-          {
-            file_len -= strlen (remove_extension);
-          }
-        }
-        const char *name = strndup (dir->d_name, file_len);
-        iot_data_list_tail_push (list, iot_data_alloc_string (name, IOT_DATA_TAKE));
+        file_len -= strlen (remove_extension);
       }
     }
-    closedir (d);
+    const char *name = strndup (dir->d_name, file_len);
+    iot_data_list_tail_push (list, iot_data_alloc_string (name, IOT_DATA_TAKE));
   }
+  closedir (d);
+DONE:
   return list;
 }
 
