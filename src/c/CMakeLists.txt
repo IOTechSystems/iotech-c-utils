@@ -68,7 +68,7 @@ endif ()
 
 if (IOT_BUILD_SHARED)
   add_library (iot SHARED ${C_FILES})
-  set_target_properties (iot PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1 VERSION ${IOT_DOT_VERSION} SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR})
+  set_target_properties (iot PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1 VERSION ${IOT_VERSION} SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR})
   target_include_directories (iot PRIVATE ../../include)
   target_link_libraries (iot ${LINK_LIBRARIES})
 endif ()
