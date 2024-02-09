@@ -58,13 +58,17 @@ int main (int argc, char* argv[])
     }
   }
 
+  printf ("Calling CU_initialize_registry ()");
   if (CU_initialize_registry ())
   {
     fprintf (stderr, "\nInitialization of C Unit Registry failed.");
     return -1;
   }
+  else
+  {
+
+  }
   cunit_misc_test_init ();
-/*
   cunit_cont_test_init ();
   cunit_logger_test_init ();
   cunit_json_test_init ();
@@ -74,7 +78,7 @@ int main (int argc, char* argv[])
   cunit_scheduler_test_init ();
   cunit_base64_test_init ();
   cunit_queue_test_init ();
-*/
+
   CU_set_error_action (error_action);
 
   if (automated)

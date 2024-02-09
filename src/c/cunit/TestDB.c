@@ -107,7 +107,7 @@ CU_ErrorCode CU_initialize_registry(void)
   if (NULL == f_pTestRegistry) {
     CU_set_error(result = CUE_NOMEMORY);
   }
-
+  printf ("CU_create result: %d\n", result);
   return result;
 }
 
