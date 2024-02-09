@@ -1,7 +1,7 @@
 #ifndef _IOT_DEFS_H_
 #define _IOT_DEFS_H_
 
-#define IOT_VERSION "${IOT_DOT_VERSION}"
+#define IOT_VERSION "${IOT_VERSION}"
 #cmakedefine IOT_HAS_XML
 #cmakedefine IOT_HAS_YAML
 #cmakedefine IOT_HAS_CBOR
