@@ -13,6 +13,7 @@
  */
 
 #include "iot/os.h"
+#include "iot/iot.h"
 
 #ifdef IOT_HAS_FILE
 
@@ -69,6 +70,14 @@ extern uint8_t * iot_file_read_binary (const char * path, size_t * len);
  * @return       Whether the binary was successfully written to the file
  */
 extern bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len);
+
+/**
+ * @brief List files in given directory
+ * @param directory Directory in which to list files
+ * @param regex_str Optional regex string which files must match
+ * @return List of files
+ */
+extern iot_data_t * iot_file_list (const char * directory, const char * regex_str);
 
 #ifdef __cplusplus
 }
