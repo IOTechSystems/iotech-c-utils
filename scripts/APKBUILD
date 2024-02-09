@@ -2,7 +2,7 @@
 # Maintainer: IOTech <support@iotechsys.com>
 pkgname=iotech-iot-${PKG_VER}${DEV}
 pkgver="${VER}"
-pkgrel="${VER_REL}"
+pkgrel="${REL_VER}"
 pkgdesc="IOT C Framework"
 url="www.iotechsys.com"
 arch="${OS_ARCH}"
