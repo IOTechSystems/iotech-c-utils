@@ -103,7 +103,7 @@ run_examples ()
 if [ "${UTEST}" = "true" ]
 then
   cd ${BROOT}/release
-  c/utests/runner/runner -a -j
+  c/utests/runner/runner
   c/tests/map/map_test
   c/tests/schedule/schedule_test
 fi
