@@ -16,10 +16,6 @@
 #define IOT_DATA_IS_INT_TYPE(t) ((t) >= IOT_DATA_INT8 && (t) <= IOT_DATA_UINT64)
 #define IOT_DATA_IS_SIGNED_TYPE(t) ((t) == IOT_DATA_INT8 || (t) == IOT_DATA_INT16 || (t) == IOT_DATA_INT32 || (t) == IOT_DATA_INT64)
 
-#if (defined (_GNU_SOURCE) || defined (_ALPINE_)) && !defined (__arm__)
-#define IOT_HAS_SPINLOCK
-#endif
-
 #if defined (NDEBUG) || defined (_AZURESPHERE_)
 #define IOT_DATA_CACHE
 #endif
@@ -180,9 +176,6 @@ _Static_assert (sizeof (unsigned) == sizeof (uint32_t) || sizeof (unsigned) == s
 #ifdef IOT_DATA_CACHE
 static iot_block_t * iot_data_cache = NULL;
 static iot_memory_block_t * iot_data_blocks = NULL;
-#ifdef IOT_HAS_SPINLOCK
-static pthread_spinlock_t iot_data_slock;
-#endif
 static pthread_mutex_t iot_data_mutex;
 #endif
 
@@ -254,53 +247,28 @@ static void * iot_data_alloc_block (void)
   iot_block_t * data;
 #ifdef IOT_DATA_CACHE
   iot_block_t * new_data_cache;
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_lock (&iot_data_slock);
-#else
   pthread_mutex_lock (&iot_data_mutex);
-#endif
-#ifdef IOT_HAS_SPINLOCK
-  while (iot_data_cache <= IOT_DATA_ALLOCATING)
+  bool allocate = (iot_data_cache == NULL);
+  new_data_cache = NULL;
+  if (allocate)
   {
-    new_data_cache = NULL;
-    bool allocate = (iot_data_cache == NULL);
-    if (allocate) iot_data_cache = IOT_DATA_ALLOCATING;
-    pthread_spin_unlock (&iot_data_slock);
-    pthread_mutex_lock (&iot_data_mutex);
-#else
-    bool allocate = (iot_data_cache == NULL);
-    new_data_cache = NULL;
-#endif
-    if (allocate)
-    {
-      iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
-      block->next = iot_data_blocks;
-      iot_data_blocks = block;
+    iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
+    block->next = iot_data_blocks;
+    iot_data_blocks = block;
 
-      uint8_t * iter = (uint8_t*) block->chunks;
-      new_data_cache = (iot_block_t*) iter;
-      for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
-      {
-        iot_block_t * prev = (iot_block_t*) iter;
-        iter += IOT_DATA_BLOCK_SIZE;
-        prev->next = (iot_block_t*) iter;
-      }
+    uint8_t * iter = (uint8_t*) block->chunks;
+    new_data_cache = (iot_block_t*) iter;
+    for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
+    {
+      iot_block_t * prev = (iot_block_t*) iter;
+      iter += IOT_DATA_BLOCK_SIZE;
+      prev->next = (iot_block_t*) iter;
     }
-#ifdef IOT_HAS_SPINLOCK
-    pthread_mutex_unlock (&iot_data_mutex);
-    pthread_spin_lock (&iot_data_slock);
-    if (allocate) iot_data_cache = new_data_cache;
   }
-#else
   if (allocate) iot_data_cache = new_data_cache;
-#endif
   data = iot_data_cache;
   iot_data_cache = data->next;
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_unlock (&iot_data_slock);
-#else
   pthread_mutex_unlock (&iot_data_mutex);
-#endif
   data = (data) ? memset (data, 0, IOT_DATA_BLOCK_SIZE) : calloc (1, IOT_DATA_BLOCK_SIZE);
 #else
   data = calloc (1, IOT_DATA_BLOCK_SIZE);
@@ -316,26 +284,11 @@ extern void * iot_data_block_alloc (size_t size)
 extern void iot_data_block_free (void  * ptr)
 {
 #ifdef IOT_DATA_CACHE
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_lock (&iot_data_slock);
-  while (iot_data_cache == IOT_DATA_ALLOCATING)
-  {
-    pthread_spin_unlock (&iot_data_slock);
-    pthread_mutex_lock (&iot_data_mutex);
-    pthread_mutex_unlock (&iot_data_mutex);
-    pthread_spin_lock (&iot_data_slock);
-  }
-#else
   pthread_mutex_lock (&iot_data_mutex);
-#endif
   iot_block_t * block = ptr;
   block->next = iot_data_cache;
   iot_data_cache = block;
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_unlock (&iot_data_slock);
-#else
   pthread_mutex_unlock (&iot_data_mutex);
-#endif
 #else
   free (ptr);
 #endif
@@ -439,9 +392,6 @@ static void iot_data_fini (void)
     iot_data_blocks = block->next;
     free (block);
   }
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_destroy (&iot_data_slock);
-#endif
   pthread_mutex_destroy (&iot_data_mutex);
 #endif
 }
@@ -466,9 +416,6 @@ static void iot_data_init (void)
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
 #endif
 #ifdef IOT_DATA_CACHE
-#ifdef IOT_HAS_SPINLOCK
-  pthread_spin_init (&iot_data_slock, 0);
-#endif
   pthread_mutex_init (&iot_data_mutex, NULL);
   iot_data_block_free (iot_data_alloc_block ());  // Initialize data cache
 #endif
