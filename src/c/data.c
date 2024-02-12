@@ -127,7 +127,6 @@ typedef struct iot_data_pointer_t
 #define IOT_DATA_BLOCK_SIZE (((IOT_DATA_MAX + 7) / 8) * 8)
 #define IOT_DATA_BLOCKS ((IOT_MEMORY_BLOCK_SIZE / IOT_DATA_BLOCK_SIZE) - 1)
 #define IOT_DATA_VALUE_BUFF_SIZE (IOT_DATA_BLOCK_SIZE - sizeof (iot_data_value_base_t))
-#define IOT_DATA_ALLOCATING ((iot_block_t*) 1)
 
 typedef struct iot_data_value_t
 {
@@ -176,7 +175,7 @@ _Static_assert (sizeof (unsigned) == sizeof (uint32_t) || sizeof (unsigned) == s
 #ifdef IOT_DATA_CACHE
 static iot_block_t * iot_data_cache = NULL;
 static iot_memory_block_t * iot_data_blocks = NULL;
-static pthread_mutex_t iot_data_mutex;
+static pthread_mutex_t iot_data_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 /* Static values for boolean and null types */
@@ -244,20 +243,15 @@ extern uint32_t iot_data_block_size (void)
 
 static void * iot_data_alloc_block (void)
 {
-  iot_block_t * data;
 #ifdef IOT_DATA_CACHE
-  iot_block_t * new_data_cache;
   pthread_mutex_lock (&iot_data_mutex);
-  bool allocate = (iot_data_cache == NULL);
-  new_data_cache = NULL;
-  if (allocate)
+  if (iot_data_cache == NULL)
   {
     iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
     block->next = iot_data_blocks;
     iot_data_blocks = block;
-
     uint8_t * iter = (uint8_t*) block->chunks;
-    new_data_cache = (iot_block_t*) iter;
+    iot_data_cache = (iot_block_t*) iter;
     for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
     {
       iot_block_t * prev = (iot_block_t*) iter;
@@ -265,15 +259,14 @@ static void * iot_data_alloc_block (void)
       prev->next = (iot_block_t*) iter;
     }
   }
-  if (allocate) iot_data_cache = new_data_cache;
-  data = iot_data_cache;
+  iot_block_t * data = iot_data_cache;
   iot_data_cache = data->next;
   pthread_mutex_unlock (&iot_data_mutex);
-  data = (data) ? memset (data, 0, IOT_DATA_BLOCK_SIZE) : calloc (1, IOT_DATA_BLOCK_SIZE);
-#else
-  data = calloc (1, IOT_DATA_BLOCK_SIZE);
-#endif
+  memset (data, 0, IOT_DATA_BLOCK_SIZE);
   return data;
+#else
+  return calloc (1, IOT_DATA_BLOCK_SIZE);
+#endif
 }
 
 extern void * iot_data_block_alloc (size_t size)
@@ -392,7 +385,6 @@ static void iot_data_fini (void)
     iot_data_blocks = block->next;
     free (block);
   }
-  pthread_mutex_destroy (&iot_data_mutex);
 #endif
 }
 
@@ -416,7 +408,6 @@ static void iot_data_init (void)
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
 #endif
 #ifdef IOT_DATA_CACHE
-  pthread_mutex_init (&iot_data_mutex, NULL);
   iot_data_block_free (iot_data_alloc_block ());  // Initialize data cache
 #endif
   iot_data_alloc_const_pointer (&iot_data_order, &iot_data_order);
