@@ -138,12 +138,15 @@ case ${SYSTEM} in
     case ${SYSTEM} in
       photon-40)
         RPM_DIST=ph4
+        LIBYAML=libyaml
       ;;
       fedora-36)
         RPM_DIST=fc36
+        LIBYAML=libyaml
       ;;
       opensuse-15.*)
         FPM=fpm.ruby2.5
+        LIBYAML=libyaml-0-2
       ;;
     esac
 
@@ -156,7 +159,7 @@ case ${SYSTEM} in
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends libyaml
+      --depends ${LIBYAML}
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${FULL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
@@ -177,7 +180,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends libyaml \
+      --depends ${LIBYAML} \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm *.tar.gz
