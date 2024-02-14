@@ -385,3 +385,7 @@
 - Support added for Alpine Linux 3.19
 - Added `iot_data_length` function for determining number of elements in iot_data object
 - Added `iot_store_config_list` and `iot_file_list` functions to list all files in a given directory
+
+## Version 1.5.2
+
+- Support added for openSUSE Leap 15.5

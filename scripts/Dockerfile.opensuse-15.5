@@ -1,5 +1,5 @@
-FROM opensuse/leap:15.4
-ENV SYSTEM="opensuse-15.4"
+FROM opensuse/leap:15.5
+ENV SYSTEM="opensuse-15.5"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 RUN zypper --non-interactive install git tar cmake gcc-c++ make wget rpm-build doxygen graphviz ruby-devel libyaml-devel
 RUN gem install public_suffix -v 4.0.7
