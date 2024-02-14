@@ -388,4 +388,4 @@
 
 ## Version 1.5.2
 
-- Support added for openSUSE Leap 15.5
+- Support for openSUSE Leap updated to version 15.5
