@@ -769,7 +769,10 @@ iot_data_t * iot_data_alloc_typed_map (iot_data_type_t key_type, iot_data_type_t
 
 iot_data_type_t iot_data_map_type (const iot_data_t * map)
 {
-  assert (map);
+  if (!map)
+  {
+    return IOT_DATA_NULL;
+  }
   return map->element_type;
 }
 
@@ -1802,7 +1805,10 @@ void iot_data_map_merge (iot_data_t * map, const iot_data_t * add)
 
 uint32_t iot_data_map_size (const iot_data_t * map)
 {
-  assert (map && (map->type == IOT_DATA_MAP));
+  if ((!map) || (map->type != IOT_DATA_MAP))
+  {
+    return 0;
+  }
   return ((const iot_data_map_t*) map)->size;
 }
 
@@ -1829,21 +1835,26 @@ bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data_t * ke
 
 const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key)
 {
-  assert (map && key && (map->type == IOT_DATA_MAP));
+  if ((!map) || (!key) || (map->type != IOT_DATA_MAP))
+  {
+    return NULL;
+  }
   const iot_node_t * node = iot_node_find (((const iot_data_map_t*) map)->tree, key);
   return node ? node->value : NULL;
 }
 
 const iot_data_t * iot_data_map_get_typed (const iot_data_t * map, const iot_data_t * key, iot_data_type_t type)
 {
-  assert (map && key && (map->type == IOT_DATA_MAP));
+  if ((!map) || (!key) || (map->type != IOT_DATA_MAP))
+  {
+    return NULL;
+  }
   const iot_node_t * node = iot_node_find (((const iot_data_map_t*) map)->tree, key);
   return (node && (node->value->type == type)) ? node->value : NULL;
 }
 
 const iot_data_t * iot_data_string_map_get (const iot_data_t * map, const char * key)
 {
-  assert (map && key);
   iot_data_static_t skey;
   iot_data_alloc_const_string (&skey, key);
   return iot_data_map_get (map, IOT_DATA_STATIC (&skey));
@@ -1989,7 +2000,10 @@ const iot_data_t * iot_data_string_map_get_list (const iot_data_t * map, const c
 
 iot_data_type_t iot_data_map_key_type (const iot_data_t * map)
 {
-  assert (map && (map->type == IOT_DATA_MAP));
+  if ((!map) || (map->type != IOT_DATA_MAP))
+  {
+    return IOT_DATA_NULL;
+  }
   return map->key_type;
 }
 
@@ -2270,7 +2284,10 @@ iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type
 
 void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
 {
-  assert (iter && map && map->type == IOT_DATA_MAP);
+  if ((!map) || (!iter) || (map->type != IOT_DATA_MAP))
+  {
+    return;
+  }
   iter->_map = (const iot_data_map_t*) map;
   iter->_node = NULL;
   iter->_count = 0;
@@ -2298,7 +2315,10 @@ bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
 
 bool iot_data_map_iter_has_next (const iot_data_map_iter_t * iter)
 {
-  assert (iter && iter->_map);
+  if ((!iter) || (!iter->_map))
+  {
+    return 0;
+  }
   return (iter->_count < iter->_map->size);
 }
 
@@ -2310,7 +2330,10 @@ static inline iot_node_t * iot_node_end (iot_node_t * node)
 
 const iot_data_t * iot_data_map_start (iot_data_t * map)
 {
-  assert (map);
+  if (!map)
+  {
+    return NULL;
+  }
   const iot_node_t * node = iot_node_start (((iot_data_map_t*) map)->tree);
   return node ? node->value : NULL;
 }
@@ -2323,7 +2346,10 @@ const void * iot_data_map_start_pointer (iot_data_t * map)
 
 const iot_data_t * iot_data_map_end (iot_data_t * map)
 {
-  assert (map);
+  if (!map)
+  {
+    return NULL;
+  }
   const iot_node_t * node = iot_node_end (((iot_data_map_t*) map)->tree);
   return node ? node->value : NULL;
 }
@@ -2773,7 +2799,10 @@ extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_da
   const iot_data_t * result = data;
   if (iot_data_list_length (path) > 0)
   {
-    assert (data->type == IOT_DATA_MAP || data->type == IOT_DATA_VECTOR);
+    if ((data->type != IOT_DATA_MAP) && (data->type != IOT_DATA_VECTOR))
+    {
+      return NULL;
+    }
     iot_data_t * p = iot_data_copy (path);
     iot_data_t * index = iot_data_list_head_pop (p);
     result = (data->type == IOT_DATA_MAP) ? iot_data_get_at (iot_data_map_get (data, index), p) : iot_data_get_at (iot_data_vector_get (data, iot_data_ui32 (index)), p);
