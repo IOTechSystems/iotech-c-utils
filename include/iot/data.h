@@ -2215,6 +2215,8 @@ extern iot_data_t * iot_data_to_cbor (const iot_data_t * data);
  */
 extern iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size);
 
+extern iot_data_t * iot_data_from_cbor (const uint8_t *data, uint32_t size);
+
 #endif
 #ifdef IOT_HAS_XML
 /**
