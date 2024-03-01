@@ -515,6 +515,39 @@ static void test_cbor_to_data (void)
   iot_data_free (cbor);
   iot_data_free (from_cbor);
 
+  //float
+  iot_data_t *float_value = iot_data_alloc_f32 (123.456f);
+  cbor = iot_data_to_cbor (float_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal (float_value, from_cbor));
+  iot_data_free (float_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //double
+  iot_data_t *double_value = iot_data_alloc_f64 (1239999999999999999999.456);
+  cbor = iot_data_to_cbor (double_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal (double_value, from_cbor));
+  iot_data_free (double_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //bool
+  iot_data_t *bool_value = iot_data_alloc_bool (true);
+  cbor = iot_data_to_cbor (bool_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal (bool_value, from_cbor));
+  iot_data_free (bool_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
   //string
   iot_data_t *string_value = iot_data_alloc_string ("test_string", IOT_DATA_REF);
   cbor = iot_data_to_cbor (string_value);
@@ -555,9 +588,35 @@ static void test_cbor_to_data (void)
   iot_data_free (from_cbor);
   iot_data_free (bytestring_value);
 
+  //array
+  iot_data_t *iot_array = iot_data_alloc_vector (4);
+  iot_data_vector_add (iot_array, 0, iot_data_alloc_string ("string_value", IOT_DATA_REF));
+  iot_data_vector_add (iot_array, 1, iot_data_alloc_i8 (-42));
+  iot_data_vector_add (iot_array, 2, iot_data_alloc_ui32 (UINT32_MAX));
+  iot_data_vector_add (iot_array, 3, iot_data_alloc_binary(binary_data, ARRAY_SIZE(binary_data), IOT_DATA_REF));
+  cbor = iot_data_to_cbor (iot_array);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE(iot_data_equal (iot_array, from_cbor))
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+  iot_data_free (iot_array);
+
+  //map
+  iot_data_t *iot_map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (iot_map, "one", iot_data_alloc_string ("one value", IOT_DATA_REF));
+  iot_data_string_map_add (iot_map, "two", iot_data_alloc_ui32 (UINT32_MAX));
+  iot_data_string_map_add (iot_map, "array", iot_data_alloc_binary(binary_data, ARRAY_SIZE(binary_data), IOT_DATA_REF));
+  cbor = iot_data_to_cbor (iot_map);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE(iot_data_equal (iot_map, from_cbor))
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+  iot_data_free (iot_map);
 }
-
-
 
 #endif
 

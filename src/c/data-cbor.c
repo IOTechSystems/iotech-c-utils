@@ -413,8 +413,11 @@ static iot_data_t *cbor_array_to_iot_data (const cbor_item_t *item)
   iot_data_t *iot_array = iot_data_alloc_vector ((uint32_t) size);
   for (size_t i=0; i<size; i++)
   {
-    iot_data_t *element_data = cbor_to_iot_data (cbor_array_get(item, i));
-    if (element_data)
+    cbor_item_t *element_item = cbor_array_get (item, i);
+    assert (element_item);
+    iot_data_t *element_data = cbor_to_iot_data (element_item);
+    cbor_decref (&element_item);
+    if (!element_data)
     {
       assert (false);
       element_data = iot_data_alloc_null();
@@ -451,7 +454,7 @@ static iot_data_t *cbor_map_to_iot_data (const cbor_item_t *item)
 
 static iot_data_t *cbor_tag_to_iot_data (const cbor_item_t *item)
 {
-  return iot_data_alloc_null ();
+  return iot_data_alloc_null();
 }
 
 static iot_data_t *cbor_float_ctrl_to_iot_data (const cbor_item_t *item)
