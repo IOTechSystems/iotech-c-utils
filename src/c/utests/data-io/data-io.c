@@ -668,18 +668,18 @@ void cunit_data_io_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data-io", suite_init, suite_clean);
 
-  /*CU_add_test (suite, "data_to_json", test_data_to_json);
+  CU_add_test (suite, "data_to_json", test_data_to_json);
   CU_add_test (suite, "data_from_json", test_data_from_json);
   CU_add_test (suite, "data_from_json2", test_data_from_json2);
-  CU_add_test (suite, "data_from_json3", test_data_from_json3);*/
+  CU_add_test (suite, "data_from_json3", test_data_from_json3);
 #ifdef IOT_HAS_XML
-  /*CU_add_test (suite, "data_from_xml", test_data_from_xml);*/
+  CU_add_test (suite, "data_from_xml", test_data_from_xml);
 #endif
 #ifdef IOT_HAS_CBOR
   CU_add_test (suite, "data_to_cbor", test_data_to_cbor);
   CU_add_test (suite, "cbor_to_data", test_cbor_to_data);
 #endif
 #ifdef IOT_HAS_YAML
- /* CU_add_test (suite, "data_from_yaml", test_data_from_yaml);*/
+  CU_add_test (suite, "data_from_yaml", test_data_from_yaml);
 #endif
 }
