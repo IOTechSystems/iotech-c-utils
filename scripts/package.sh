@@ -71,13 +71,13 @@ case ${SYSTEM} in
     chmod 0644 /iotech-iot/scripts/apk.key
     printf '%s' "PACKAGER_PRIVKEY=/iotech-iot/scripts/apk.key" >> /etc/abuild.conf
     export DEV=
-    export DEPS=yaml
+    export DEPS="yaml libcbor"
     build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dev
     export DEPS="iotech-iot-${PKG_VER}"
     build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dbg
-    export DEPS=yaml
+    export DEPS="yaml libcbor"
     build_apk "${BROOT}/debug" "iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH}"
     ;;
   debian*|ubuntu*)
@@ -91,7 +91,7 @@ case ${SYSTEM} in
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends libyaml-0-2
+      --depends libyaml-0-2 libcbor0.8
 
     ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${FULL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
@@ -112,7 +112,7 @@ case ${SYSTEM} in
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends libyaml-0-2 \
+      --depends libyaml-0-2 libcbor0.8 \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm *.tar.gz
@@ -138,15 +138,15 @@ case ${SYSTEM} in
     case ${SYSTEM} in
       photon-40)
         RPM_DIST=ph4
-        DEPS=libyaml
+        DEPS="libyaml libcbor"
       ;;
       fedora-36)
         RPM_DIST=fc36
-        DEPS=libyaml
+        DEPS="libyaml libcbor"
       ;;
       opensuse-15.*)
         FPM=fpm.ruby2.5
-        DEPS=libyaml-0-2
+        DEPS="libyaml-0-2 libcbor"
       ;;
     esac
 

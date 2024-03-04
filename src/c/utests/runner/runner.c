@@ -67,7 +67,7 @@ int main (int argc, char* argv[])
   cunit_cont_test_init ();
   cunit_logger_test_init ();
   cunit_json_test_init ();
-  cunit_data_test_init (); 
+  cunit_data_test_init ();
   cunit_data_io_test_init ();
   cunit_threadpool_test_init ();
   cunit_scheduler_test_init ();

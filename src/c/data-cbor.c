@@ -324,13 +324,7 @@ static iot_data_t *cbor_indefinite_bytestring_to_iot_data (const cbor_item_t *it
     size_t chunk_size = cbor_bytestring_length (chunk);
     cbor_mutable_data chunk_data = cbor_bytestring_handle (chunk);
     data_size += chunk_size;
-    char *new_data = realloc (data, data_size);
-    if (!new_data)
-    {
-      assert (false);
-      goto error;
-    }
-    data = new_data;
+    data = realloc (data, data_size);
     memcpy (data + write_offset, chunk_data, chunk_size);
     write_offset += chunk_size;
   }
@@ -366,7 +360,7 @@ static iot_data_t *cbor_indefinite_string_to_iot_data (const cbor_item_t *item)
 {
   assert (cbor_string_is_indefinite (item));
   size_t chunk_count = cbor_string_chunk_count (item);
-  if (chunk_count == 0) return NULL;
+  if (chunk_count == 0) return iot_data_alloc_string ("", IOT_DATA_TAKE);
   char * data = NULL;
   size_t data_size = 1; // For null terminator
   size_t write_offset = 0;
@@ -382,13 +376,7 @@ static iot_data_t *cbor_indefinite_string_to_iot_data (const cbor_item_t *item)
     size_t chunk_size = cbor_bytestring_length (chunk);
     cbor_mutable_data chunk_data = cbor_bytestring_handle (chunk);
     data_size += chunk_size;
-    char *new_data = realloc (data, data_size);
-    if (!new_data)
-    {
-      assert (false);
-      goto error;
-    }
-    data = new_data;
+    data = realloc (data, data_size);
     memcpy (data + write_offset, chunk_data, chunk_size);
     write_offset += chunk_size;
   }
@@ -430,7 +418,7 @@ static iot_data_t *cbor_map_to_iot_data (const cbor_item_t *item)
 {
   assert (cbor_isa_map(item));
   size_t size = cbor_map_size (item);
-  iot_data_t *iot_map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t *iot_map = iot_data_alloc_map (IOT_DATA_MULTI);
   for (size_t i=0; i<size; i++)
   {
     struct cbor_pair pair = cbor_map_handle (item)[i];
@@ -515,11 +503,7 @@ iot_data_t * iot_data_from_cbor (const uint8_t *data, uint32_t size)
   iot_data_t *out = NULL;
   struct cbor_load_result result;
   cbor_item_t *item = cbor_load (data, size, &result);
-  if (result.error.code != CBOR_ERR_NONE)
-  {
-    assert (false);
-    goto done;
-  }
+  if (result.error.code != CBOR_ERR_NONE) goto done;
   out = cbor_to_iot_data (item);
 done:
   if (item) cbor_decref (&item);
