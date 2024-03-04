@@ -281,13 +281,13 @@ static iot_data_t *cbor_negint_to_iot_data (const cbor_item_t *item)
   switch (cbor_int_get_width (item))
   {
     case CBOR_INT_8:
-      return iot_data_alloc_i16 (1 - cbor_get_uint8 (item));
+      return iot_data_alloc_i16 (-1 - cbor_get_uint8 (item));
     case CBOR_INT_16:
-      return iot_data_alloc_i32 (1 - cbor_get_uint16 (item));
+      return iot_data_alloc_i32 (-1 - cbor_get_uint16 (item));
     case CBOR_INT_32:
-      return iot_data_alloc_i64 (1 - cbor_get_uint32 (item));
+      return iot_data_alloc_i64 (-1 - cbor_get_uint32 (item));
     case CBOR_INT_64:
-      return iot_data_alloc_i64 (1 - cbor_get_uint64 (item));
+      return iot_data_alloc_i64 (-1 - cbor_get_uint64 (item));
   }
   assert (false);
   return NULL;
