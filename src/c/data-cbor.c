@@ -360,7 +360,7 @@ static iot_data_t *cbor_indefinite_string_to_iot_data (const cbor_item_t *item)
 {
   assert (cbor_string_is_indefinite (item));
   size_t chunk_count = cbor_string_chunk_count (item);
-  if (chunk_count == 0) return iot_data_alloc_string ("", IOT_DATA_TAKE);
+  if (chunk_count == 0) return iot_data_alloc_string ("", IOT_DATA_REF);
   char * data = NULL;
   size_t data_size = 1; // For null terminator
   size_t write_offset = 0;
