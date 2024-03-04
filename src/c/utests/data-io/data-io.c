@@ -482,6 +482,14 @@ static void test_cbor_to_data (void)
   iot_data_free (cbor);
   iot_data_free (from_cbor);
 
+  unsigned char negative_short_int_data[] = {0x39, 0x01, 0xf4, 0xFF};
+  iot_data_t *expected_val = iot_data_alloc_i16 (-501);
+  from_cbor = iot_data_from_cbor (negative_short_int_data, ARRAY_SIZE(negative_short_int_data));
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE (iot_data_equal_value (from_cbor, expected_val))
+  iot_data_free (from_cbor);
+  iot_data_free (expected_val);
+
   //positive int
   iot_data_t *uint32_value = iot_data_alloc_ui32(UINT32_MAX);
   cbor = iot_data_to_cbor (uint32_value);
@@ -504,9 +512,9 @@ static void test_cbor_to_data (void)
   iot_data_free (cbor);
   iot_data_free (from_cbor);
 
-  unsigned char negative_half_int_data[] = {0x39, 0x01, 0xf4, 0xFF};
-  iot_data_t *expected_val = iot_data_alloc_i16 (-501);
-  from_cbor = iot_data_from_cbor (negative_half_int_data, ARRAY_SIZE(negative_half_int_data));
+  unsigned char negative_int_data[] = {0x3a, 0xa5, 0xf7, 0x02, 0xb3, 0xFF};
+  expected_val = iot_data_alloc_i64 (-2784428724);
+  from_cbor = iot_data_from_cbor (negative_int_data, ARRAY_SIZE(negative_int_data));
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
   CU_ASSERT_TRUE (iot_data_equal_value (from_cbor, expected_val))
   iot_data_free (from_cbor);

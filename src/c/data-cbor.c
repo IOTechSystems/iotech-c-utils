@@ -6,6 +6,7 @@
 #include "iot/data.h"
 #include "data-impl.h"
 #include <endian.h>
+#include <cbor.h>
 
 #define IOT_CBOR_BUFF_SIZE 512u
 #define IOT_CBOR_BUFF_DOUBLING_LIMIT 4096u
@@ -253,8 +254,6 @@ iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size)
   }
 }
 
-#include <cbor.h>
-
 static iot_data_t *cbor_to_iot_data (const cbor_item_t *item);
 
 static iot_data_t *cbor_uint_to_iot_data (const cbor_item_t *item)
@@ -281,13 +280,13 @@ static iot_data_t *cbor_negint_to_iot_data (const cbor_item_t *item)
   switch (cbor_int_get_width (item))
   {
     case CBOR_INT_8:
-      return iot_data_alloc_i16 (-1 - cbor_get_uint8 (item));
+      return iot_data_alloc_i16 (-1 - (int16_t) cbor_get_uint8 (item));
     case CBOR_INT_16:
-      return iot_data_alloc_i32 (-1 - cbor_get_uint16 (item));
+      return iot_data_alloc_i32 (-1 - (int32_t) cbor_get_uint16 (item));
     case CBOR_INT_32:
-      return iot_data_alloc_i64 (-1 - cbor_get_uint32 (item));
+      return iot_data_alloc_i64 (-1 - (int64_t) cbor_get_uint32 (item));
     case CBOR_INT_64:
-      return iot_data_alloc_i64 (-1 - cbor_get_uint64 (item));
+      return iot_data_alloc_i64 (-1 - (int64_t) cbor_get_uint64 (item));
   }
   assert (false);
   return NULL;
