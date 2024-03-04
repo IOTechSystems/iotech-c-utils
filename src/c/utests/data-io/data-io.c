@@ -422,7 +422,7 @@ static void test_data_to_cbor (void)
   iot_data_free (map);
 
   //neg
-  unsigned char negative_i16_expected_data[] = {0x39, 0x01, 0xf4, 0xFF};
+  unsigned char negative_i16_expected_data[] = {0x39, 0x01, 0xf4 };
   iot_data_t *neg_i16 = iot_data_alloc_i16 (-501);
   cbor = iot_data_to_cbor (neg_i16);
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
