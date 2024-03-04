@@ -13,6 +13,8 @@
 #include <float.h>
 #include "limits.h"
 
+#define ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
+
 static int suite_init (void)
 {
   iot_logger_start (iot_logger_default ());
@@ -418,9 +420,18 @@ static void test_data_to_cbor (void)
   }
   iot_data_free (cbor);
   iot_data_free (map);
+
+  //neg
+  unsigned char negative_i16_expected_data[] = {0x39, 0x01, 0xf4, 0xFF};
+  iot_data_t *neg_i16 = iot_data_alloc_i16 (-501);
+  cbor = iot_data_to_cbor (neg_i16);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
+  CU_ASSERT_TRUE (ARRAY_SIZE(negative_i16_expected_data) == iot_data_array_length(cbor))
+  CU_ASSERT_TRUE (memcmp (negative_i16_expected_data, iot_data_address (cbor), iot_data_array_length (cbor)) == 0);
+  iot_data_free (neg_i16);
+  iot_data_free (cbor);
 }
 
-#define ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 
 static void test_cbor_to_data (void)
 {
