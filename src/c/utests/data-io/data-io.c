@@ -416,7 +416,7 @@ static void test_data_to_cbor (void)
   {
     // printf ("CBOR: %s\n", iot_data_to_json (cbor));
     // printf ("CBOR hash: %u\n", iot_data_hash (cbor));
-    CU_ASSERT (iot_data_hash (cbor) == 2072572302U)
+    CU_ASSERT (iot_data_hash (cbor) == 1151834325U)
   }
   iot_data_free (cbor);
   iot_data_free (map);

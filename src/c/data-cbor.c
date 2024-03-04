@@ -75,7 +75,7 @@ static void iot_data_cbor_write_uint (iot_cbor_holder_t * holder, uint64_t value
 
 static void iot_data_cbor_write_int (iot_cbor_holder_t * holder, int64_t value)
 {
-  iot_data_cbor_write_uint (holder, value < 0 ? -value : value, value < 0 ? 0x20 : 0);
+  iot_data_cbor_write_uint (holder, value < 0 ? -1 - value : value, value < 0 ? 0x20 : 0);
 }
 
 static void iot_data_dump_cbor_ptr (iot_cbor_holder_t * holder, const void * ptr, const iot_data_type_t type)
