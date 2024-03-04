@@ -454,7 +454,7 @@ static iot_data_t *cbor_map_to_iot_data (const cbor_item_t *item)
 
 static iot_data_t *cbor_tag_to_iot_data (const cbor_item_t *item)
 {
-  assert (cbor_isa_tag);
+  assert (cbor_isa_tag(item));
   return cbor_to_iot_data (cbor_tag_item(item));
 }
 
@@ -477,6 +477,8 @@ static iot_data_t *cbor_float_ctrl_to_iot_data (const cbor_item_t *item)
       return iot_data_alloc_f32 (cbor_float_get_float4 (item));
     case CBOR_FLOAT_64:
       return iot_data_alloc_f64 (cbor_float_get_float8 (item));
+    default:
+      break;
   }
   assert (false);
   return NULL;
@@ -502,6 +504,8 @@ static iot_data_t *cbor_to_iot_data (const cbor_item_t *item)
       return cbor_tag_to_iot_data (item);
     case CBOR_TYPE_FLOAT_CTRL:
       return cbor_float_ctrl_to_iot_data (item);
+    default:
+      break;
   }
   assert (false);
   return NULL;
