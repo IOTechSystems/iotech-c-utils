@@ -528,11 +528,6 @@ done:
 
 iot_data_t * iot_data_from_iot_cbor (const iot_data_t *data)
 {
-  if (!iot_data_is_of_type (data, IOT_DATA_BINARY))
-  {
-    assert (false);
-    return NULL;
-  }
   return iot_data_from_cbor (iot_data_address (data),iot_data_array_size (data));
 }
 
