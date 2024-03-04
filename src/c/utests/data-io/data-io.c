@@ -433,7 +433,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
-  CU_ASSERT_TRUE(iot_data_equal (uint8_value, from_cbor));
+  CU_ASSERT_TRUE(iot_data_equal_value (uint8_value, from_cbor))
   iot_data_free (uint8_value);
   iot_data_free (cbor);
   iot_data_free (from_cbor);
@@ -444,7 +444,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
-  CU_ASSERT_TRUE(iot_data_equal (int8_value, from_cbor));
+  CU_ASSERT_TRUE(iot_data_equal_value (int8_value, from_cbor));
   iot_data_free (int8_value);
   iot_data_free (cbor);
   iot_data_free (from_cbor);
@@ -455,7 +455,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
-  CU_ASSERT_TRUE(iot_data_equal (uint16_value, from_cbor));
+  CU_ASSERT_TRUE(iot_data_equal_value (uint16_value, from_cbor));
   iot_data_free (uint16_value);
   iot_data_free (cbor);
   iot_data_free (from_cbor);
@@ -466,7 +466,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
-  CU_ASSERT_TRUE(iot_data_equal (int16_value, from_cbor));
+  CU_ASSERT_TRUE(iot_data_equal_value (int16_value, from_cbor));
   iot_data_free (int16_value);
   iot_data_free (cbor);
   iot_data_free (from_cbor);
@@ -477,7 +477,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
-  CU_ASSERT_TRUE(iot_data_equal (uint32_value, from_cbor));
+  CU_ASSERT_TRUE(iot_data_equal_value (uint32_value, from_cbor));
   iot_data_free (uint32_value);
   iot_data_free (cbor);
   iot_data_free (from_cbor);
@@ -488,7 +488,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
-  CU_ASSERT_TRUE(iot_data_equal (int32_value, from_cbor));
+  CU_ASSERT_TRUE(iot_data_equal_value (int32_value, from_cbor))
   iot_data_free (int32_value);
   iot_data_free (cbor);
   iot_data_free (from_cbor);
@@ -499,7 +499,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
-  CU_ASSERT_TRUE(iot_data_equal (uint64_value, from_cbor));
+  CU_ASSERT_TRUE(iot_data_equal_value (uint64_value, from_cbor));
   iot_data_free (uint64_value);
   iot_data_free (cbor);
   iot_data_free (from_cbor);
@@ -510,7 +510,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
-  CU_ASSERT_TRUE(iot_data_equal (int64_value, from_cbor));
+  CU_ASSERT_TRUE(iot_data_equal_value (int64_value, from_cbor));
   iot_data_free (int64_value);
   iot_data_free (cbor);
   iot_data_free (from_cbor);
@@ -598,7 +598,7 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
-  CU_ASSERT_TRUE(iot_data_equal (iot_array, from_cbor))
+  CU_ASSERT_TRUE(iot_data_equal_value (iot_array, from_cbor))
   iot_data_free (cbor);
   iot_data_free (from_cbor);
   iot_data_free (iot_array);
@@ -612,10 +612,20 @@ static void test_cbor_to_data (void)
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
   from_cbor = iot_data_from_iot_cbor (cbor);
   CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
-  CU_ASSERT_TRUE(iot_data_equal (iot_map, from_cbor))
+  CU_ASSERT_TRUE(iot_data_equal_value (iot_map, from_cbor))
   iot_data_free (cbor);
   iot_data_free (from_cbor);
   iot_data_free (iot_map);
+
+  //tag
+  /* Tag 255 << 8 + uint 2 */
+  unsigned char tag_binary_data[] = {0xD9, 0xFF, 0x00, 0x02};
+  iot_data_t *expected_val = iot_data_alloc_ui8 (2);
+  from_cbor = iot_data_from_cbor (tag_binary_data, ARRAY_SIZE(tag_binary_data));
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  iot_data_equal (from_cbor, expected_val);
+  iot_data_free (from_cbor);
+  iot_data_free (expected_val);
 }
 
 #endif
