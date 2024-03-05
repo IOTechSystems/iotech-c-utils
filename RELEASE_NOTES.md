@@ -389,3 +389,7 @@
 ## Version 1.5.2
 
 - Support for openSUSE Leap updated to version 15.5
+
+## Version 1.5.3
+
+- Added CBOR decoding function `iot_data_from_cbor`
