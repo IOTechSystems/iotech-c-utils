@@ -84,6 +84,21 @@ case ${SYSTEM} in
     OS_ARCH=$(dpkg --print-architecture)
     cd ${ROOT}/${BARCH}/release
 
+    case ${SYSTEM} in
+      ubuntu-22.04|debian12)
+        DEPS="libyaml libcbor0.8"
+      ;;
+      ubuntu-20.04)
+        DEPS="libyaml libcbor0.6"
+      ;;
+      ubuntu-18.04)
+        DEPS="libyaml libcbor0.5"
+      ;;
+      debian-10|debian-11)
+        DEPS="libyaml-0-2 libcbor0"
+      ;;
+    esac
+
     ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${FULL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
