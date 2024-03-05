@@ -385,8 +385,8 @@ static iot_data_t *cbor_indefinite_string_to_iot_data (const cbor_item_t *item)
       assert (false);
       goto error;
     }
-    size_t chunk_size = cbor_bytestring_length (chunk);
-    cbor_mutable_data chunk_data = cbor_bytestring_handle (chunk);
+    size_t chunk_size = cbor_string_length (chunk);
+    cbor_mutable_data chunk_data = cbor_string_handle (chunk);
     data_size += chunk_size;
     data = realloc (data, data_size);
     memcpy (data + write_offset, chunk_data, chunk_size);
