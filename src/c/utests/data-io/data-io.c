@@ -11,6 +11,9 @@
 #include "data-io.h"
 #include "CUnit.h"
 #include <float.h>
+#include "limits.h"
+
+#define ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 
 static int suite_init (void)
 {
@@ -413,11 +416,245 @@ static void test_data_to_cbor (void)
   {
     // printf ("CBOR: %s\n", iot_data_to_json (cbor));
     // printf ("CBOR hash: %u\n", iot_data_hash (cbor));
-    CU_ASSERT (iot_data_hash (cbor) == 2072572302U)
+    CU_ASSERT (iot_data_hash (cbor) == 1151834325U)
   }
   iot_data_free (cbor);
   iot_data_free (map);
+
+  //neg
+  unsigned char negative_i16_expected_data[] = {0x39, 0x01, 0xf4 };
+  iot_data_t *neg_i16 = iot_data_alloc_i16 (-501);
+  cbor = iot_data_to_cbor (neg_i16);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
+  CU_ASSERT_TRUE (ARRAY_SIZE(negative_i16_expected_data) == iot_data_array_length(cbor))
+  CU_ASSERT_TRUE (memcmp (negative_i16_expected_data, iot_data_address (cbor), iot_data_array_length (cbor)) == 0);
+  iot_data_free (neg_i16);
+  iot_data_free (cbor);
 }
+
+
+static void test_cbor_to_data (void)
+{
+  iot_data_t *from_cbor = NULL;
+  iot_data_t *cbor = NULL;
+
+  //positive very short int
+  iot_data_t *uint8_value = iot_data_alloc_ui8 (UINT8_MAX);
+  cbor = iot_data_to_cbor (uint8_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal_value (uint8_value, from_cbor))
+  iot_data_free (uint8_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //negative very short int
+  iot_data_t *int8_value = iot_data_alloc_i8 (INT8_MIN);
+  cbor = iot_data_to_cbor (int8_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal_value (int8_value, from_cbor));
+  iot_data_free (int8_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //positive short int
+  iot_data_t *uint16_value = iot_data_alloc_ui16 (UINT16_MAX);
+  cbor = iot_data_to_cbor (uint16_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal_value (uint16_value, from_cbor));
+  iot_data_free (uint16_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //negative short int
+  iot_data_t *int16_value = iot_data_alloc_i16 (INT16_MIN);
+  cbor = iot_data_to_cbor (int16_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal_value (int16_value, from_cbor));
+  iot_data_free (int16_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  unsigned char negative_short_int_data[] = {0x39, 0x01, 0xf4, 0xFF};
+  iot_data_t *expected_val = iot_data_alloc_i16 (-501);
+  from_cbor = iot_data_from_cbor (negative_short_int_data, ARRAY_SIZE(negative_short_int_data));
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE (iot_data_equal_value (from_cbor, expected_val))
+  iot_data_free (from_cbor);
+  iot_data_free (expected_val);
+
+  //positive int
+  iot_data_t *uint32_value = iot_data_alloc_ui32(UINT32_MAX);
+  cbor = iot_data_to_cbor (uint32_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal_value (uint32_value, from_cbor));
+  iot_data_free (uint32_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //negative int
+  iot_data_t *int32_value = iot_data_alloc_i32 (INT32_MIN);
+  cbor = iot_data_to_cbor (int32_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal_value (int32_value, from_cbor))
+  iot_data_free (int32_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  unsigned char negative_int_data[] = {0x3a, 0xa5, 0xf7, 0x02, 0xb3, 0xFF};
+  expected_val = iot_data_alloc_i64 (-2784428724);
+  from_cbor = iot_data_from_cbor (negative_int_data, ARRAY_SIZE(negative_int_data));
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE (iot_data_equal_value (from_cbor, expected_val))
+  iot_data_free (from_cbor);
+  iot_data_free (expected_val);
+
+  //positive long int
+  iot_data_t *uint64_value = iot_data_alloc_ui64(UINT64_MAX);
+  cbor = iot_data_to_cbor (uint64_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal_value (uint64_value, from_cbor));
+  iot_data_free (uint64_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //negative int
+  iot_data_t *int64_value = iot_data_alloc_i64 (INT64_MIN);
+  cbor = iot_data_to_cbor (int64_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal_value (int64_value, from_cbor));
+  iot_data_free (int64_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //float
+  iot_data_t *float_value = iot_data_alloc_f32 (123.456f);
+  cbor = iot_data_to_cbor (float_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal (float_value, from_cbor));
+  iot_data_free (float_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //double
+  iot_data_t *double_value = iot_data_alloc_f64 (1239999999999999999999.456);
+  cbor = iot_data_to_cbor (double_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal (double_value, from_cbor));
+  iot_data_free (double_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //bool
+  iot_data_t *bool_value = iot_data_alloc_bool (true);
+  cbor = iot_data_to_cbor (bool_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal (bool_value, from_cbor));
+  iot_data_free (bool_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //string
+  iot_data_t *string_value = iot_data_alloc_string ("test_string", IOT_DATA_REF);
+  cbor = iot_data_to_cbor (string_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE(iot_data_equal (string_value, from_cbor))
+  iot_data_free (string_value);
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+
+  //indefinite string
+  unsigned char indef_string_data[] = {0x7F, 0x64, 't', 'e', 's', 't', 0x63 , '1', '2', '3', 0x63, '4', '5', '6', 0x64, 't', 'e', 's', 't', 0xFF};
+  from_cbor = iot_data_from_cbor (indef_string_data, ARRAY_SIZE(indef_string_data));
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor);
+  CU_ASSERT_TRUE (strcmp(iot_data_string (from_cbor),"test123456test") == 0)
+  iot_data_free (from_cbor);
+
+  //bytestring
+  char test_data[] = "test12345test";
+  iot_data_t *bytestring_value = iot_data_alloc_binary(test_data, ARRAY_SIZE(test_data), IOT_DATA_REF);
+  cbor = iot_data_to_cbor (bytestring_value);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE(iot_data_equal (bytestring_value, from_cbor))
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+  iot_data_free (bytestring_value);
+
+  //indefinite bytestring
+  unsigned char binary_data[] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x99};
+  unsigned char indef_binary_data[] = {0x5F, 0x44, 0xaa, 0xbb, 0xcc, 0xdd, 0x43, 0xee, 0xff, 0x99, 0xFF};
+  from_cbor = iot_data_from_cbor (indef_binary_data, ARRAY_SIZE(indef_binary_data));
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  bytestring_value = iot_data_alloc_binary(binary_data, ARRAY_SIZE(binary_data), IOT_DATA_REF);
+  CU_ASSERT_TRUE(iot_data_equal (bytestring_value, from_cbor))
+  iot_data_free (from_cbor);
+  iot_data_free (bytestring_value);
+
+  //array
+  iot_data_t *iot_array = iot_data_alloc_vector (4);
+  iot_data_vector_add (iot_array, 0, iot_data_alloc_string ("string_value", IOT_DATA_REF));
+  iot_data_vector_add (iot_array, 1, iot_data_alloc_i8 (-42));
+  iot_data_vector_add (iot_array, 2, iot_data_alloc_ui32 (UINT32_MAX));
+  iot_data_vector_add (iot_array, 3, iot_data_alloc_binary(binary_data, ARRAY_SIZE(binary_data), IOT_DATA_REF));
+  cbor = iot_data_to_cbor (iot_array);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE(iot_data_equal_value (iot_array, from_cbor))
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+  iot_data_free (iot_array);
+
+  //map
+  iot_data_t *iot_map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (iot_map, "one", iot_data_alloc_string ("one value", IOT_DATA_REF));
+  iot_data_string_map_add (iot_map, "two", iot_data_alloc_ui32 (UINT32_MAX));
+  iot_data_string_map_add (iot_map, "array", iot_data_alloc_binary(binary_data, ARRAY_SIZE(binary_data), IOT_DATA_REF));
+  cbor = iot_data_to_cbor (iot_map);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (cbor)
+  from_cbor = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE(iot_data_equal_value (iot_map, from_cbor))
+  iot_data_free (cbor);
+  iot_data_free (from_cbor);
+  iot_data_free (iot_map);
+
+  //tag
+  /* Tag 255 << 8 + uint 2 */
+  unsigned char tag_binary_data[] = {0xD9, 0xFF, 0x00, 0x02};
+  expected_val = iot_data_alloc_ui8 (2);
+  from_cbor = iot_data_from_cbor (tag_binary_data, ARRAY_SIZE(tag_binary_data));
+  CU_ASSERT_PTR_NOT_NULL_FATAL (from_cbor)
+  CU_ASSERT_TRUE (iot_data_equal (from_cbor, expected_val))
+  iot_data_free (from_cbor);
+  iot_data_free (expected_val);
+}
+
 #endif
 
 #ifdef IOT_HAS_YAML
@@ -477,6 +714,7 @@ void cunit_data_io_test_init (void)
 #endif
 #ifdef IOT_HAS_CBOR
   CU_add_test (suite, "data_to_cbor", test_data_to_cbor);
+  CU_add_test (suite, "cbor_to_data", test_cbor_to_data);
 #endif
 #ifdef IOT_HAS_YAML
   CU_add_test (suite, "data_from_yaml", test_data_from_yaml);

@@ -2215,6 +2215,23 @@ extern iot_data_t * iot_data_to_cbor (const iot_data_t * data);
  */
 extern iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size);
 
+/**
+ * @bief Convert cbor data to iot_data_t structure
+ *
+ * @param data Input data
+ * @param size size of input data
+ * @return iot_data struct
+ */
+extern iot_data_t * iot_data_from_cbor (const uint8_t *data, uint32_t size);
+
+/**
+ * @bief Convert iot binary cbor data to iot_data_t structure
+ *
+ * @param data Input binary data, must be of type IOT_DATA_BINARY
+ * @return iot_data struct
+ */
+extern iot_data_t * iot_data_from_iot_cbor (const iot_data_t *data);
+
 #endif
 #ifdef IOT_HAS_XML
 /**
