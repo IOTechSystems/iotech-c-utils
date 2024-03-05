@@ -385,8 +385,8 @@ static iot_data_t *cbor_indefinite_string_to_iot_data (const cbor_item_t *item)
       assert (false);
       goto error;
     }
-    size_t chunk_size = cbor_bytestring_length (chunk);
-    cbor_mutable_data chunk_data = cbor_bytestring_handle (chunk);
+    size_t chunk_size = cbor_string_length (chunk);
+    cbor_mutable_data chunk_data = cbor_string_handle (chunk);
     data_size += chunk_size;
     data = realloc (data, data_size);
     memcpy (data + write_offset, chunk_data, chunk_size);
@@ -456,6 +456,17 @@ static iot_data_t *cbor_tag_to_iot_data (const cbor_item_t *item)
   assert (cbor_isa_tag(item));
   return cbor_to_iot_data (cbor_tag_item(item));
 }
+
+#if (CBOR_MAJOR_VERSION == 0 && CBOR_MINOR_VERSION < 8)
+/*
+ * libcbor versions <0.8 do not have a "cbor_get_bool" function
+ */
+static bool cbor_get_bool (const cbor_item_t *item)
+{
+  assert (cbor_is_bool (item));
+  return item->metadata.float_ctrl_metadata.ctrl == CBOR_CTRL_TRUE;
+}
+#endif
 
 static iot_data_t *cbor_float_ctrl_to_iot_data (const cbor_item_t *item)
 {
