@@ -297,7 +297,7 @@ static iot_data_t *cbor_negint_to_iot_data (const cbor_item_t *item)
     case CBOR_INT_64:
     {
       uint64_t raw = cbor_get_uint64 (item);
-      return (raw <= INT64_MAX) ? iot_data_alloc_i64 (-1 - (int64_t) raw) : iot_data_alloc_i64 (-1 - (int64_t) raw);
+      return (raw <= INT64_MAX) ? iot_data_alloc_i64 (-1 - (int64_t) raw) : iot_data_alloc_null ();
     }
   }
   assert (false);
