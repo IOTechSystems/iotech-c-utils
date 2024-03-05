@@ -280,13 +280,25 @@ static iot_data_t *cbor_negint_to_iot_data (const cbor_item_t *item)
   switch (cbor_int_get_width (item))
   {
     case CBOR_INT_8:
-      return iot_data_alloc_i16 (-1 - (int16_t) cbor_get_uint8 (item));
+      {
+        uint8_t raw = cbor_get_uint8 (item);
+        return (raw <= INT8_MAX) ? iot_data_alloc_i8 (-1 - (int8_t) raw) : iot_data_alloc_i16 (-1 - (int16_t) raw);
+      }
     case CBOR_INT_16:
-      return iot_data_alloc_i32 (-1 - (int32_t) cbor_get_uint16 (item));
+    {
+      uint16_t raw = cbor_get_uint16 (item);
+      return (raw <= INT16_MAX) ? iot_data_alloc_i16 (-1 - (int16_t) raw) : iot_data_alloc_i32 (-1 - (int32_t) raw);
+    }
     case CBOR_INT_32:
-      return iot_data_alloc_i64 (-1 - (int64_t) cbor_get_uint32 (item));
+    {
+      uint32_t raw = cbor_get_uint32 (item);
+      return (raw <= INT32_MAX) ? iot_data_alloc_i32 (-1 - (int32_t) raw) : iot_data_alloc_i64 (-1 - (int64_t) raw);
+    }
     case CBOR_INT_64:
-      return iot_data_alloc_i64 (-1 - (int64_t) cbor_get_uint64 (item));
+    {
+      uint64_t raw = cbor_get_uint64 (item);
+      return (raw <= INT64_MAX) ? iot_data_alloc_i64 (-1 - (int64_t) raw) : iot_data_alloc_i64 (-1 - (int64_t) raw);
+    }
   }
   assert (false);
   return NULL;
