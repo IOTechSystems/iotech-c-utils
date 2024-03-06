@@ -86,16 +86,16 @@ case ${SYSTEM} in
 
     case ${SYSTEM} in
       ubuntu-22.04|debian12)
-        DEPS="libyaml libcbor0.8"
+        CBOR=libcbor0.8
       ;;
       ubuntu-20.04)
-        DEPS="libyaml libcbor0.6"
+        CBOR=libcbor0.6
       ;;
       ubuntu-18.04)
-        DEPS="libyaml libcbor0.5"
+        CBOR=libcbor0.5
       ;;
       debian-10|debian-11)
-        DEPS="libyaml-0-2 libcbor0"
+        CBOR=libcbor0
       ;;
     esac
 
@@ -106,7 +106,7 @@ case ${SYSTEM} in
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends "libyaml-0-2 libcbor0.8"
+      --depends libyaml-0-2 --depends ${CBOR}
 
     ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${FULL_VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
@@ -127,7 +127,7 @@ case ${SYSTEM} in
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends "libyaml-0-2 libcbor0.8" \
+      --depends libyaml-0-2 --depends ${CBOR} \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm *.tar.gz
@@ -153,15 +153,15 @@ case ${SYSTEM} in
     case ${SYSTEM} in
       photon-40)
         RPM_DIST=ph4
-        DEPS="libyaml libcbor"
+        YAML_DEP="libyaml"
       ;;
       fedora-36)
         RPM_DIST=fc36
-        DEPS="libyaml libcbor"
+        YAML_DEP="libyaml"
       ;;
       opensuse-15.*)
         FPM=fpm.ruby2.5
-        DEPS="libyaml-0-2 libcbor"
+        YAML_DEP="libyaml-0-2"
       ;;
     esac
 
@@ -174,7 +174,7 @@ case ${SYSTEM} in
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends ${DEPS}
+      --depends ${YAML_DEP} --depends libcbor
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${FULL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
@@ -195,7 +195,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends ${DEPS} \
+      --depends ${YAML_DEP} --depends libcbor \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm *.tar.gz
