@@ -457,9 +457,9 @@ static iot_data_t *cbor_tag_to_iot_data (const cbor_item_t *item)
   return cbor_to_iot_data (cbor_tag_item(item));
 }
 
-#if (CBOR_MAJOR_VERSION == 0 && CBOR_MINOR_VERSION < 8)
+#if (CBOR_MAJOR_VERSION == 0 && CBOR_MINOR_VERSION < 7)
 /*
- * libcbor versions <0.8 do not have a "cbor_get_bool" function
+ * libcbor versions <0.7 do not have a "cbor_get_bool" function
  */
 static bool cbor_get_bool (const cbor_item_t *item)
 {
