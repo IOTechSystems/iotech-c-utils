@@ -328,7 +328,7 @@ static iot_data_t * iot_data_vector_from_json (iot_json_tok_t ** tokens, const c
   while (elements--)
   {
     iot_data_t * val = iot_data_value_from_json (tokens, json, ordered, cache);
-    if(val) iot_data_vector_add (vector, index++, val);
+    if (val) iot_data_vector_add (vector, index++, val);
   }
   return vector;
 }
