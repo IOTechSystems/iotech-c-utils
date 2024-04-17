@@ -1413,6 +1413,22 @@ iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t val)
   return (iot_data_t*) data;
 }
 
+iot_data_t * iot_data_alloc_const_f32 (iot_data_static_t * data, float val)
+{
+  iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_FLOAT32);
+  bval->value.f32 = val;
+  bval->base.hash = val;
+  return (iot_data_t*) data;
+}
+
+iot_data_t * iot_data_alloc_const_f64 (iot_data_static_t * data, double val)
+{
+  iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_FLOAT64);
+  bval->value.f64 = val;
+  bval->base.hash = val;
+  return (iot_data_t*) data;
+}
+
 iot_data_t * iot_data_alloc_f32 (float val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT32, false);
