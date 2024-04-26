@@ -393,3 +393,9 @@
 ## Version 1.5.3
 
 - Added CBOR decoding function `iot_data_from_cbor`
+
+## Version 1.5.4
+
+- Added function `iot_data_alloc_const_f32` to allocate a const float data value
+- Added function `iot_data_alloc_const_f64` to allocate a const double data value
+- Fixed reading of values which exceed the size of int64_t and uint64_t in `iot_data_primitive_from_json`
