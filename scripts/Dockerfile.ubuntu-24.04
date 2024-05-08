@@ -1,0 +1,16 @@
+FROM ubuntu:24.04
+ENV SYSTEM="ubuntu-24.04"
+LABEL MAINTAINER="IOTech <support@iotechsys.com>"
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y unzip build-essential file wget git gcc cmake make valgrind cppcheck lcov doxygen graphviz python3-pip ruby-dev libxml2-dev libxslt1-dev zlib1g-dev libyaml-dev libcbor-dev
+RUN gem install --no-document fpm
+RUN pip3 install lxml gcovr==5.0
+COPY VERSION /iotech-iot/
+COPY RELEASE_NOTES.md /iotech-iot/
+COPY src /iotech-iot/src/
+COPY include /iotech-iot/include/
+COPY scripts /iotech-iot/scripts/
+COPY sonar-project.properties /iotech-iot/
+COPY .git /iotech-iot/.git/
+WORKDIR /iotech-iot
+ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/linux.sh", "-cppcheck", "-lcov", "-valgrind", "-utest", "-examples"]
