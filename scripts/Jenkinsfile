@@ -23,7 +23,7 @@ def buildStage (systems, arch)
   def sq = getSonarQubeParam ()
   def sonar = 'false'
 
-  if (("${sq}" == 'true' || env.BRANCH_NAME.startsWith ('PR')) && ("${sys}" == 'ubuntu-22.04') && ("${arch}" == 'x86_64'))
+  if (("${sq}" == 'true' || env.BRANCH_NAME.startsWith ('PR')) && ("${sys}" == 'ubuntu-24.04') && ("${arch}" == 'x86_64'))
   {
     sonar = 'true'
   }
@@ -76,9 +76,9 @@ def metricsStage (systems, arch)
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
   publishCoreMetrics (systems, arch)
-  if ("${sys}" == 'ubuntu-22.04' || "${sys}" == 'all')
+  if ("${sys}" == 'ubuntu-24.04' || "${sys}" == 'all')
   {
-    publishAdvancedMetrics ('ubuntu-22.04', arch)
+    publishAdvancedMetrics ('ubuntu-24.04', arch)
   }
   if ("${archive}" == 'Release')
   {
@@ -403,7 +403,7 @@ pipeline
     choice (name: 'Arch', choices: ['x86_64','x86','arm64','arm32','all'], description: 'Build Host Architecture')
     choice (name: 'Target', choices: ['None','frdm_k64f','qemu_x86','riscv64-oe','riscv32-oe','acrn','all'], description: 'Target System')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
-    booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-22.04 x86_64)')
+    booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-24.04 x86_64)')
   }
   stages { stage ('All') { steps { script { parallel buildMap }}}}
 }
