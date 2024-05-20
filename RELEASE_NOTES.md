@@ -399,4 +399,5 @@
 - Added function `iot_data_alloc_const_f32` to allocate a const float data value
 - Added function `iot_data_alloc_const_f64` to allocate a const double data value
 - Fixed reading of values which exceed the size of int64_t and uint64_t in `iot_data_primitive_from_json`
-- Support added for Ubuntu 24.04 and Fedora 40
+- Support added for Ubuntu 24.04
+- Support added for Fedora 40 and removed Fedora 36
