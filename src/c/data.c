@@ -890,41 +890,6 @@ extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const 
   return (element != NULL);
 }
 
-static iot_data_type_t iot_data_polymorphic_list_restricted_element_type (const iot_data_t *data)
-{
-  assert (data && (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_LIST));
-  iot_data_type_t restricted_type = data->element_type;
-  if (restricted_type != IOT_DATA_MULTI) goto done;
-
-  iot_data_iter_t iter;
-  iot_data_iter (data, &iter);
-  if (!iot_data_iter_next (&iter)) goto done;
-  restricted_type = iot_data_type (iot_data_iter_value (&iter));
-  while (iot_data_iter_next (&iter))
-  {
-    iot_data_type_t test_type = iot_data_type (iot_data_iter_value (&iter));
-    if (test_type != restricted_type)
-    {
-      restricted_type = IOT_DATA_MULTI;
-      break;
-    }
-  }
-done:
-  return restricted_type;
-}
-
-iot_data_type_t iot_data_list_restricted_element_type (const iot_data_t * list)
-{
-  assert (list && (list->type == IOT_DATA_LIST));
-  return iot_data_polymorphic_list_restricted_element_type (list);
-}
-
-void iot_data_list_restrict (iot_data_t * list)
-{
-  assert (list && (list->type == IOT_DATA_LIST));
-  list->element_type = iot_data_list_restricted_element_type (list);
-}
-
 void iot_data_list_iter (const iot_data_t * list, iot_data_list_iter_t * iter)
 {
   assert (iter && list && list->type == IOT_DATA_LIST);
@@ -2319,18 +2284,6 @@ iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type
   return to;
 }
 
-iot_data_type_t iot_data_vector_restricted_element_type (const iot_data_t * vector)
-{
-  assert (vector && (vector->type == IOT_DATA_VECTOR));
-  return iot_data_polymorphic_list_restricted_element_type (vector);
-}
-
-void iot_data_vector_restrict (iot_data_t * vector)
-{
-  assert (vector && (vector->type == IOT_DATA_VECTOR));
-  vector->element_type = iot_data_list_restricted_element_type (vector);
-}
-
 void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
 {
   assert (iter && map && map->type == IOT_DATA_MAP);
@@ -2940,6 +2893,43 @@ extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_
     iot_data_free (p);
   }
   return result;
+}
+
+iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data)
+{
+  assert (data && (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_LIST || data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_MAP));
+  iot_data_type_t restricted_type = data->element_type;
+  if (restricted_type != IOT_DATA_MULTI) goto done;
+  iot_data_iter_t iter;
+  iot_data_iter (data, &iter);
+  if (!iot_data_iter_next (&iter)) goto done;
+  restricted_type = iot_data_type (iot_data_iter_value (&iter));
+  while (iot_data_iter_next (&iter))
+  {
+    iot_data_type_t test_type = iot_data_type (iot_data_iter_value (&iter));
+    if (test_type != restricted_type)
+    {
+      restricted_type = IOT_DATA_MULTI;
+      break;
+    }
+  }
+done:
+  return restricted_type;
+}
+
+void iot_data_restrict (iot_data_t *data)
+{
+  assert (data);
+  switch (data->type)
+  {
+    case IOT_DATA_MAP:
+    case IOT_DATA_VECTOR:
+    case IOT_DATA_LIST:
+      data->element_type = iot_data_restricted_element_type (data);
+      break;
+    default:
+      break;
+  }
 }
 
 /* Red/Black binary tree manipulation functions. Implements iot_data_map_t.

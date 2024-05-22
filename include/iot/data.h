@@ -744,20 +744,6 @@ extern const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_
 extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
 
 /**
- * @brief Get the restricted element type of the list based on the elements it contains
- * @param list
- * @return the new element type of the list. If the vector contains elements with different types, IOT_DATA_MULTI will be returned
- */
-extern iot_data_type_t iot_data_list_restricted_element_type (const iot_data_t * list);
-
-/**
- * @brief Restrict the element type of the list based on the elements it contains
- * @param list
- */
-extern void iot_data_list_restrict (iot_data_t * list);
-
-
-/**
  * @brief Associate a list iterator with a list
  *
  * The function initialises an list iterator asociating it with a list. Note that
@@ -1750,19 +1736,6 @@ extern uint32_t iot_data_vector_size (const iot_data_t * vector);
 extern uint32_t iot_data_vector_element_count (const iot_data_t * vector, iot_data_type_t type, bool recurse);
 
 /**
- * @brief Get the restricted element type of the vector based on the elements it contains
- * @param vector
- * @return the new element type of the vector. If the vector contains elements with different types, IOT_DATA_MULTI will be returned
- */
-extern iot_data_type_t iot_data_vector_restricted_element_type (const iot_data_t * vector);
-
-/**
- * @brief Restrict the element type of the vector based on the elements it contains
- * @param vector
- */
-extern void iot_data_vector_restrict (iot_data_t * vector);
-
-/**
  * @brief Initialise iterator for an array
  *
  * The function initialises an iterator to point to the beginning of an array. Note that
@@ -2557,6 +2530,19 @@ extern void * iot_data_block_alloc (size_t size);
  * @param ptr Pointer to the memory block to be freed
  */
 extern void iot_data_block_free (void * ptr);
+
+/**
+ * @brief Get the restricted element type based on the elements it contains
+ * @param data The data instance
+ * @return the restricted element type. If the data contains elements with different types, IOT_DATA_MULTI will be returned
+ */
+extern iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data);
+
+/**
+ * @brief Restrict the element type of the data based on the elements it contains
+ * @param data The data instance
+ */
+extern void iot_data_restrict (iot_data_t * data);
 
 #ifdef __cplusplus
 }

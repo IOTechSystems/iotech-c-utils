@@ -5425,7 +5425,7 @@ static void test_data_restrict (void)
   iot_data_vector_add (vector, 0, iot_data_alloc_ui32 (42));
   iot_data_vector_add (vector, 1, iot_data_alloc_string ("test", IOT_DATA_REF));
   CU_ASSERT_TRUE (iot_data_vector_type (vector) == IOT_DATA_MULTI)
-  CU_ASSERT_TRUE (iot_data_vector_restricted_element_type (vector) == IOT_DATA_MULTI)
+  CU_ASSERT_TRUE (iot_data_restricted_element_type (vector) == IOT_DATA_MULTI)
   iot_data_free (vector);
 
   // same type
@@ -5433,20 +5433,20 @@ static void test_data_restrict (void)
   iot_data_vector_add (vector, 0, iot_data_alloc_ui32 (42));
   iot_data_vector_add (vector, 1, iot_data_alloc_ui32 (999));
   CU_ASSERT_TRUE (iot_data_vector_type (vector) == IOT_DATA_MULTI)
-  CU_ASSERT_TRUE (iot_data_vector_restricted_element_type (vector) == IOT_DATA_UINT32)
+  CU_ASSERT_TRUE (iot_data_restricted_element_type (vector) == IOT_DATA_UINT32)
   iot_data_free (vector);
 
   // one element
   vector = iot_data_alloc_vector (1);
   iot_data_vector_add (vector, 0, iot_data_alloc_ui32 (42));
   CU_ASSERT_TRUE (iot_data_vector_type (vector) == IOT_DATA_MULTI)
-  CU_ASSERT_TRUE (iot_data_vector_restricted_element_type (vector) == IOT_DATA_UINT32)
+  CU_ASSERT_TRUE (iot_data_restricted_element_type (vector) == IOT_DATA_UINT32)
   iot_data_free (vector);
 
   // empty
   vector = iot_data_alloc_vector (0);
   CU_ASSERT_TRUE (iot_data_vector_type (vector) == IOT_DATA_MULTI)
-  CU_ASSERT_TRUE (iot_data_vector_restricted_element_type (vector) == IOT_DATA_MULTI)
+  CU_ASSERT_TRUE (iot_data_restricted_element_type (vector) == IOT_DATA_MULTI)
   iot_data_free (vector);
 
   //LIST
@@ -5456,7 +5456,7 @@ static void test_data_restrict (void)
   iot_data_list_head_push (list, iot_data_alloc_ui32 (42));
   iot_data_list_head_push (list, iot_data_alloc_string ("test", IOT_DATA_REF));
   CU_ASSERT_TRUE (iot_data_list_type (list) == IOT_DATA_MULTI)
-  CU_ASSERT_TRUE (iot_data_list_restricted_element_type (list) == IOT_DATA_MULTI)
+  CU_ASSERT_TRUE (iot_data_restricted_element_type (list) == IOT_DATA_MULTI)
   iot_data_free (list);
 
   // same type
@@ -5464,20 +5464,20 @@ static void test_data_restrict (void)
   iot_data_list_head_push (list, iot_data_alloc_ui32 (42));
   iot_data_list_head_push (list, iot_data_alloc_ui32 (999));
   CU_ASSERT_TRUE (iot_data_list_type (list) == IOT_DATA_MULTI)
-  CU_ASSERT_TRUE (iot_data_list_restricted_element_type (list) == IOT_DATA_UINT32)
+  CU_ASSERT_TRUE (iot_data_restricted_element_type (list) == IOT_DATA_UINT32)
   iot_data_free (list);
 
   // one element
   list = iot_data_alloc_list ();
   iot_data_list_head_push (list, iot_data_alloc_ui32 (42));
   CU_ASSERT_TRUE (iot_data_list_type (list) == IOT_DATA_MULTI)
-  CU_ASSERT_TRUE (iot_data_list_restricted_element_type (list) == IOT_DATA_UINT32)
+  CU_ASSERT_TRUE (iot_data_restricted_element_type (list) == IOT_DATA_UINT32)
   iot_data_free (list);
 
   // empty
   list = iot_data_alloc_list ();
   CU_ASSERT_TRUE (iot_data_list_type (list) == IOT_DATA_MULTI)
-  CU_ASSERT_TRUE (iot_data_list_restricted_element_type (list) == IOT_DATA_MULTI)
+  CU_ASSERT_TRUE (iot_data_restricted_element_type (list) == IOT_DATA_MULTI)
   iot_data_free (list);
 }
 
