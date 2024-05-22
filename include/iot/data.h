@@ -2542,7 +2542,7 @@ extern iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data
  * @brief Restrict the element type of the data based on the elements it contains
  * @param data The data instance
  */
-extern void iot_data_restrict (iot_data_t * data);
+extern void iot_data_restrict_element (iot_data_t * data);
 
 #ifdef __cplusplus
 }

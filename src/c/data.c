@@ -2899,7 +2899,7 @@ iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data)
 {
   assert (data && (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_LIST || data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_MAP));
   iot_data_type_t restricted_type = data->element_type;
-  if (restricted_type != IOT_DATA_MULTI) goto done;
+  if (restricted_type != IOT_DATA_MULTI || data->type == IOT_DATA_ARRAY) goto done;
   iot_data_iter_t iter;
   iot_data_iter (data, &iter);
   if (!iot_data_iter_next (&iter)) goto done;
@@ -2917,7 +2917,7 @@ done:
   return restricted_type;
 }
 
-void iot_data_restrict (iot_data_t *data)
+void iot_data_restrict_element (iot_data_t *data)
 {
   assert (data);
   switch (data->type)
