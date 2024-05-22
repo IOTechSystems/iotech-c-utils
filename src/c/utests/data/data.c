@@ -5496,7 +5496,7 @@ static void test_data_restrict (void)
   iot_data_free (list);
 
   list = iot_data_alloc_typed_list (IOT_DATA_UINT32);
-  iot_data_list_add (list, 0, iot_data_alloc_ui32 (42));
+  iot_data_list_head_push (list,iot_data_alloc_ui32 (42));
   CU_ASSERT_TRUE (iot_data_list_type (list) == IOT_DATA_UINT32)
   iot_data_restrict_element (list);
   CU_ASSERT_TRUE (iot_data_list_type (list) == IOT_DATA_UINT32)
