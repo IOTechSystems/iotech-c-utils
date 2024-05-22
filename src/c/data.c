@@ -890,12 +890,12 @@ extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const 
   return (element != NULL);
 }
 
-static iot_data_type_t iot_data_polymorphic_list_type_restrict (iot_data_t * data)
+static iot_data_type_t iot_data_polymorphic_list_restricted_element_type (const iot_data_t *data)
 {
   assert (data && (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_LIST));
-  if (data->element_type != IOT_DATA_MULTI) goto done;
+  iot_data_type_t restricted_type = data->element_type;
+  if (restricted_type != IOT_DATA_MULTI) goto done;
 
-  iot_data_type_t restricted_type = IOT_DATA_MULTI;
   iot_data_iter_t iter;
   iot_data_iter (data, &iter);
   if (!iot_data_iter_next (&iter)) goto done;
@@ -909,15 +909,20 @@ static iot_data_type_t iot_data_polymorphic_list_type_restrict (iot_data_t * dat
       break;
     }
   }
-  data->element_type = restricted_type;
 done:
-  return data->element_type;
+  return restricted_type;
 }
 
-iot_data_type_t iot_data_list_restrict (iot_data_t * list)
+iot_data_type_t iot_data_list_restricted_element_type (const iot_data_t * list)
 {
   assert (list && (list->type == IOT_DATA_LIST));
-  return iot_data_polymorphic_list_type_restrict (list);
+  return iot_data_polymorphic_list_restricted_element_type (list);
+}
+
+void iot_data_list_restrict (iot_data_t * list)
+{
+  assert (list && (list->type == IOT_DATA_LIST));
+  list->element_type = iot_data_list_restricted_element_type (list);
 }
 
 void iot_data_list_iter (const iot_data_t * list, iot_data_list_iter_t * iter)
@@ -2314,10 +2319,16 @@ iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type
   return to;
 }
 
-iot_data_type_t iot_data_vector_restrict (iot_data_t * vector)
+iot_data_type_t iot_data_vector_restricted_element_type (const iot_data_t * vector)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR));
-  return iot_data_polymorphic_list_type_restrict (vector);
+  return iot_data_polymorphic_list_restricted_element_type (vector);
+}
+
+void iot_data_vector_restrict (iot_data_t * vector)
+{
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  vector->element_type = iot_data_list_restricted_element_type (vector);
 }
 
 void iot_data_map_iter (const iot_data_t * map, iot_data_map_iter_t * iter)
