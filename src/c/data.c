@@ -830,13 +830,13 @@ iot_data_t * iot_data_alloc_typed_list (iot_data_type_t element_type)
 
 iot_data_type_t iot_data_list_type (const iot_data_t * list)
 {
-  assert (list);
+  assert (list && (list->type == IOT_DATA_LIST));
   return list->element_type;
 }
 
 uint32_t iot_data_list_length (const iot_data_t * list)
 {
-  assert (list);
+  assert (list && (list->type == IOT_DATA_LIST));
   const iot_data_list_t * impl = (const iot_data_list_t*) list;
   return impl->head ? impl->head->length : 0;
 }
