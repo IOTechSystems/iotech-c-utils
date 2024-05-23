@@ -401,3 +401,4 @@
 - Fixed reading of values which exceed the size of int64_t and uint64_t in `iot_data_primitive_from_json`
 - Support added for Ubuntu 24.04
 - Support added for Fedora 40 and removed for Fedora 36
+- Added functions `iot_data_restricted_element_type` and `iot_data_restrict_element` to restrict the element type of lists, vectors and maps

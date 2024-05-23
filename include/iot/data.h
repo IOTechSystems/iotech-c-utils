@@ -2531,6 +2531,19 @@ extern void * iot_data_block_alloc (size_t size);
  */
 extern void iot_data_block_free (void * ptr);
 
+/**
+ * @brief Get the restricted element type based on the elements it contains
+ * @param data The data instance
+ * @return the restricted element type. If the data contains elements with different types, IOT_DATA_MULTI will be returned
+ */
+extern iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data);
+
+/**
+ * @brief Restrict the element type of the data based on the elements it contains
+ * @param data The data instance
+ */
+extern void iot_data_restrict_element (iot_data_t * data);
+
 #ifdef __cplusplus
 }
 #endif
