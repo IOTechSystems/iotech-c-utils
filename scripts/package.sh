@@ -85,7 +85,10 @@ case ${SYSTEM} in
     cd ${ROOT}/${BARCH}/release
 
     case ${SYSTEM} in
-      ubuntu-22.04|debian12)
+      ubuntu-24.04)
+        CBOR=libcbor0.10
+      ;;
+      ubuntu-22.04|debian-12)
         CBOR=libcbor0.8
       ;;
       ubuntu-20.04)
@@ -155,13 +158,15 @@ case ${SYSTEM} in
         RPM_DIST=ph4
         YAML_DEP="libyaml"
       ;;
-      fedora-36)
-        RPM_DIST=fc36
+      fedora-40)
+        RPM_DIST=fc40
         YAML_DEP="libyaml"
+        CBOR_DEP="libcbor"
       ;;
       opensuse-15.*)
         FPM=fpm.ruby2.5
         YAML_DEP="libyaml-0-2"
+        CBOR_DEP="libcbor0_10"
       ;;
     esac
 
@@ -174,7 +179,7 @@ case ${SYSTEM} in
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends ${YAML_DEP} --depends libcbor
+      --depends ${YAML_DEP} --depends ${CBOR_DEP}
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${FULL_VER}" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \

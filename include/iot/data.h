@@ -521,6 +521,30 @@ extern iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t 
 extern iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t val);
 
 /**
+ * @brief Allocate constant float data
+ *
+ * The function to allocate data for a constant float, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        float value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_f32 (iot_data_static_t * data, float val);
+
+/**
+ * @brief Allocate constant double data
+ *
+ * The function to allocate data for a constant double, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        double value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_f64 (iot_data_static_t * data, double val);
+
+/**
  * @brief Allocate memory for data_type float
  *
  * The function to allocate memory for data_type float
@@ -2506,6 +2530,19 @@ extern void * iot_data_block_alloc (size_t size);
  * @param ptr Pointer to the memory block to be freed
  */
 extern void iot_data_block_free (void * ptr);
+
+/**
+ * @brief Get the restricted element type based on the elements it contains
+ * @param data The data instance
+ * @return the restricted element type. If the data contains elements with different types, IOT_DATA_MULTI will be returned
+ */
+extern iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data);
+
+/**
+ * @brief Restrict the element type of the data based on the elements it contains
+ * @param data The data instance
+ */
+extern void iot_data_restrict_element (iot_data_t * data);
 
 #ifdef __cplusplus
 }

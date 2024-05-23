@@ -1413,6 +1413,22 @@ iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t val)
   return (iot_data_t*) data;
 }
 
+iot_data_t * iot_data_alloc_const_f32 (iot_data_static_t * data, float val)
+{
+  iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_FLOAT32);
+  bval->value.f32 = val;
+  bval->base.hash = val;
+  return (iot_data_t*) data;
+}
+
+iot_data_t * iot_data_alloc_const_f64 (iot_data_static_t * data, double val)
+{
+  iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_FLOAT64);
+  bval->value.f64 = val;
+  bval->base.hash = val;
+  return (iot_data_t*) data;
+}
+
 iot_data_t * iot_data_alloc_f32 (float val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT32, false);
@@ -2877,6 +2893,43 @@ extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_
     iot_data_free (p);
   }
   return result;
+}
+
+iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data)
+{
+  assert (data && (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_LIST || data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_MAP));
+  iot_data_type_t restricted_type = data->element_type;
+  if (restricted_type != IOT_DATA_MULTI || data->type == IOT_DATA_ARRAY) goto done;
+  iot_data_iter_t iter;
+  iot_data_iter (data, &iter);
+  if (!iot_data_iter_next (&iter)) goto done;
+  restricted_type = iot_data_type (iot_data_iter_value (&iter));
+  while (iot_data_iter_next (&iter))
+  {
+    iot_data_type_t test_type = iot_data_type (iot_data_iter_value (&iter));
+    if (test_type != restricted_type)
+    {
+      restricted_type = IOT_DATA_MULTI;
+      break;
+    }
+  }
+done:
+  return restricted_type;
+}
+
+void iot_data_restrict_element (iot_data_t *data)
+{
+  assert (data);
+  switch (data->type)
+  {
+    case IOT_DATA_MAP:
+    case IOT_DATA_VECTOR:
+    case IOT_DATA_LIST:
+      data->element_type = iot_data_restricted_element_type (data);
+      break;
+    default:
+      break;
+  }
 }
 
 /* Red/Black binary tree manipulation functions. Implements iot_data_map_t.
