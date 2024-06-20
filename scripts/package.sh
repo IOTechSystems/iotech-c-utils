@@ -135,7 +135,7 @@ case ${SYSTEM} in
 
     rm *.tar.gz
     ;;
-  photon*|fedora*|opensuse*)
+  photon*|fedora*|opensuse*|oraclelinux*)
     case ${BARCH} in
       arm64)
         OS_ARCH=aarch64
@@ -160,6 +160,11 @@ case ${SYSTEM} in
       ;;
       fedora-40)
         RPM_DIST=fc40
+        YAML_DEP="libyaml"
+        CBOR_DEP="libcbor"
+      ;;
+      oraclelinux-9)
+        RPM_DIST=el9
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
       ;;
