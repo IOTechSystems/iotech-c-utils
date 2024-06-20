@@ -163,6 +163,11 @@ case ${SYSTEM} in
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
       ;;
+      oraclelinux-9)
+        RPM_DIST=el9
+        YAML_DEP="libyaml"
+        CBOR_DEP="libcbor"
+      ;;
       opensuse-15.*)
         FPM=fpm.ruby2.5
         YAML_DEP="libyaml-0-2"
