@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-systems_x86_64 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-40','oraclelinux-9',opensuse-15.5','photon-40','zephyr-2.3','clearlinux','azuresphere-15','yocto-riscv'] as String[]
+systems_x86_64 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-40','oraclelinux-9','opensuse-15.5','photon-40','zephyr-2.3','clearlinux','azuresphere-15','yocto-riscv'] as String[]
 systems_arm64 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-40','oraclelinux-9','opensuse-15.5','photon-40'] as String[]
 systems_arm32 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','opensuse-15.5'] as String[]
 systems_x86 = ['alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10']
