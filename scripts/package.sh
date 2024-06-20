@@ -135,7 +135,7 @@ case ${SYSTEM} in
 
     rm *.tar.gz
     ;;
-  photon*|fedora*|opensuse*)
+  photon*|fedora*|opensuse*|oraclelinux*)
     case ${BARCH} in
       arm64)
         OS_ARCH=aarch64
