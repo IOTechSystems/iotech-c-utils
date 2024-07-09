@@ -45,7 +45,9 @@ build_apk ()
   cp $1/${SRC}.tar.gz /iotech-iot/apks/build
   cd /iotech-iot/apks/build
   /usr/bin/abuild -F checksum
+  set +e
   /usr/bin/abuild -F -d -P ${REPO}
+  set -e
   mv ${REPO}/apks/${OS_ARCH}/*.apk /iotech-iot/${BARCH}/apks
   cd /iotech-iot
   rm -rf /iotech-iot/apks/build ${REPO}
