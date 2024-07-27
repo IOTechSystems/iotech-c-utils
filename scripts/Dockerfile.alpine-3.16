@@ -1,4 +1,4 @@
-FROM alpine:3.16
+FROM alpine:3.19.3
 ENV SYSTEM="alpine-3.16"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
 RUN apk add --update --no-cache build-base wget git gcc cmake make yaml-dev alpine-sdk
