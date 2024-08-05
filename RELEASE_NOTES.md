@@ -403,3 +403,4 @@
 - Support added for Fedora 40 and removed for Fedora 36
 - Added functions `iot_data_restricted_element_type` and `iot_data_restrict_element` to restrict the element type of lists, vectors and maps
 - Support added for Oracle Linux 9
+- Support added for Alpine Linux 3.20
