@@ -175,3 +175,7 @@
 ## Version 1.2.8
 
 - Update to by default serialize schedule execution. Can be overridden with a new `iot_schedule_set_concurrent` function
+
+## Version 1.2.9
+
+- Function added to add a schedule with the start time randomised across its interval
