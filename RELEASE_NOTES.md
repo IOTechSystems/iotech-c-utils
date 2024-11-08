@@ -404,3 +404,7 @@
 - Added functions `iot_data_restricted_element_type` and `iot_data_restrict_element` to restrict the element type of lists, vectors and maps
 - Support added for Oracle Linux 9
 - Support added for Alpine Linux 3.20
+
+## Version 1.5.5
+
+- Added function `iot_schedule_add_randomised` to add a schedule with the start time randomised across its interval

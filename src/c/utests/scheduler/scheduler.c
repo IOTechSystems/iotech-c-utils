@@ -489,6 +489,29 @@ static void cunit_scheduler_delete_with_user_data (void)
   iot_scheduler_free (scheduler);
 }
 
+static void cunit_scheduler_random (void)
+{
+  iot_schedule_t *sched[10];
+  reset_counters ();
+  iot_threadpool_t *pool = iot_threadpool_alloc (1u, 1u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_start (pool);
+  iot_scheduler_start (scheduler);
+  for (unsigned i = 0; i < 10; i++)
+  {
+    sched[i] = iot_schedule_create (scheduler, do_sum_100, NULL, NULL, IOT_SEC_TO_NS (10u), 0, 0, pool, -1);
+  }
+  for (unsigned i = 0; i < 10; i++)
+  {
+    CU_ASSERT (iot_schedule_add_randomised (scheduler, sched[i], IOT_SEC_TO_NS (2u)));
+  }
+  iot_wait_secs (9);
+  iot_scheduler_stop (scheduler);
+  iot_threadpool_free (pool);
+  iot_scheduler_free (scheduler);
+  CU_ASSERT (atomic_load (&sum_test) >= 9u)   // Allow for one unlucky collision
+}
+
 extern void cunit_scheduler_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("scheduler", suite_init, suite_clean);
@@ -500,6 +523,7 @@ extern void cunit_scheduler_test_init (void)
   CU_add_test (suite, "scheduler_refcount", cunit_scheduler_refcount);
   CU_add_test (suite, "scheduler_nrepeat", cunit_scheduler_nrepeat);
   CU_add_test (suite, "scheduler_starttime", cunit_scheduler_starttime);
+  CU_add_test (suite, "scheduler_random", cunit_scheduler_random);
   CU_add_test (suite, "scheduler_reset", cunit_scheduler_reset);
   CU_add_test (suite, "scheduler_setpriority", cunit_scheduler_setpriority);
   CU_add_test (suite, "scheduler_freefn", cunit_scheduler_setfreefn);
@@ -508,4 +532,3 @@ extern void cunit_scheduler_test_init (void)
   CU_add_test (suite, "scheduler_serialized", cunit_scheduler_serialized);
   CU_add_test (suite, "scheduler_delete_with_user_data", cunit_scheduler_delete_with_user_data);
 }
-
