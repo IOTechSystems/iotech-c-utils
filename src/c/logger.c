@@ -63,6 +63,7 @@ iot_logger_t * iot_logger_default (void)
     iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
     iot_logger_dfl.base.level = iot_logger_dfl.save = IOT_LOGLEVEL_DEFAULT;
     iot_logger_dfl.impl = iot_log_console;
+    iot_logger_dfl.name = "defaultlogger";
   }
   return logger;
 }
