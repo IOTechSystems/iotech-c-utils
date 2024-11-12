@@ -157,6 +157,23 @@ extern bool iot_schedule_set_sync (iot_schedule_t * schedule, bool enable);
 extern bool iot_schedule_add (iot_scheduler_t * scheduler, iot_schedule_t * schedule);
 
 /**
+ * @brief  Add a schedule to the queue with randomised start time
+ *
+ * @code
+ *
+ *    bool return = iot_schedule_add_randomised(myScheduler, mySchedule, deadband);
+ *
+ * @endcode
+ *
+ * @param  scheduler  Pointer to a scheduler
+ * @param  schedule   Pointer to the schedule to be added
+ * @param  deadband   Amount of time at the end of the schedule period in which
+ *                    the schedule will not be started
+ * @return            'true' on success, 'false' on error
+ */
+extern bool iot_schedule_add_randomised (iot_scheduler_t * scheduler, iot_schedule_t * schedule, uint64_t deadband);
+
+/**
  * @brief  Remove a schedule from the queue
  *
  * @code
