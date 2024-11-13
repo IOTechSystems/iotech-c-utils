@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
 RUN apt-get update && apt-get install -y unzip build-essential file wget git gcc cmake make valgrind cppcheck lcov doxygen graphviz uuid-dev python3-pip ruby-dev
 RUN dpkg-reconfigure --frontend noninteractive tzdata
+RUN gem install dotenv -v 2.8.1
 RUN gem install --no-document fpm
 RUN pip3 install gcovr==5.0
 COPY VERSION /iotech-iot/
