@@ -150,12 +150,7 @@ def publishAdvancedMetrics (system, arch)
 {
   fileOperations ([fileCopyOperation (includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/', flattenFiles: true),
     fileCopyOperation (includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/', flattenFiles: true)])
-  publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-iot/src:src')
   junit (testResults: "${arch}/${system}/release/junit-Results.xml")
-  cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
-  archiveArtifacts (artifacts: "${arch}/${system}/lcov/cobertura.xml")
-  archiveArtifacts (artifacts: "${arch}/${system}/lcov/html/**")
-  // publishCoverage (adapters: [coberturaAdapter("${arch}/${system}/lcov/cobertura.xml")], sourceFileResolver: sourceFiles('NEVER_STORE'))
   recordIssues (tools: [taskScanner (id: "Tasks-${arch}-${env.BUILD_ID}", highTags: 'FIXME', includePattern: '**/*.c', normalTags: 'TODO')])
   recordIssues (tools: [cppCheck (id: "CppCheck-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/cppcheck.xml")])
   recordIssues (tools: [gcc (id: "GCC-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/release.log")])
