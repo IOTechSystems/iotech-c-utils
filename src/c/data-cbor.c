@@ -454,7 +454,10 @@ static iot_data_t *cbor_map_to_iot_data (const cbor_item_t *item)
 static iot_data_t *cbor_tag_to_iot_data (const cbor_item_t *item)
 {
   assert (cbor_isa_tag(item));
-  return cbor_to_iot_data (cbor_tag_item(item));
+  cbor_item_t *tagged = cbor_tag_item(item);
+  iot_data_t *result = cbor_to_iot_data (tagged);
+  cbor_decref (&tagged);
+  return result;
 }
 
 #if (CBOR_MAJOR_VERSION == 0 && CBOR_MINOR_VERSION < 7)

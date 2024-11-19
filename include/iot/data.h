@@ -632,7 +632,7 @@ extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const
  * @return        Pointer to the allocated memory
  */
 
-extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
+extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...)  __attribute__ ((format (printf, 1, 2)));
 
 /**
  * @brief Allocate data for a pointer, with associated free function
