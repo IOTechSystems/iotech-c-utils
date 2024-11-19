@@ -158,9 +158,10 @@ extern iot_logger_t * iot_logger_default (void);
  *
  * @param logger  Pointer to the logger component
  * @param level   Log level for this entry
- * @param ...     Formatted string for logging
+ * @param fmt     Formatted string for logging
+ * @param ...     Parameters for fmt
  */
-extern void iot_log__log (iot_logger_t * logger, iot_loglevel_t level, ...);
+extern void iot_log__log (iot_logger_t * logger, iot_loglevel_t level, const char *fmt, ...)  __attribute__ ((format (printf, 3, 4)));
 
 /**
  * @brief Log message format string and arguments with a specified log level

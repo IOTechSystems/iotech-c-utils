@@ -79,11 +79,10 @@ void iot_log__va_log (iot_logger_t * l, iot_loglevel_t level, const char* fmt, v
   } while ((logger = logger->next));
 }
 
-void iot_log__log (iot_logger_t * l, iot_loglevel_t level, ...)
+void iot_log__log (iot_logger_t * l, iot_loglevel_t level, const char *fmt, ...)
 {
   va_list args;
-  va_start (args, level);
-  const char * fmt = va_arg (args, const char *);
+  va_start (args, fmt);
   iot_log__va_log (l, level, fmt, args);
   va_end (args);
 }
