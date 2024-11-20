@@ -179,3 +179,4 @@
 ## Version 1.2.9
 
 - Function added to add a schedule with the start time randomised across its interval
+- Hint to gcc that log functions are printf-like so as to warn against parameter mismatches
