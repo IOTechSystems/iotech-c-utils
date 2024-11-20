@@ -146,7 +146,7 @@ static void * iot_threadpool_thread (void * arg)
     }
     iot_component_unlock (comp);
   }
-  iot_log_debug (pool->logger, "Thread exiting", name);
+  iot_log_debug (pool->logger, "Thread %s exiting", name);
   atomic_fetch_add (&pool->created, -1);
   if (pending_delete) iot_threadpool_final_free (pool);
   return NULL;

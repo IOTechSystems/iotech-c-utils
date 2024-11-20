@@ -167,41 +167,46 @@ extern iot_logger_t * iot_logger_default (void);
  * @brief Log message with the log level set to Trace
  *
  * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
+ * @param fmt     Formatted string for logging
+ * @param ...     Parameters for fmt
  */
-extern void iot_log__trace (iot_logger_t * logger, ...);
+extern void iot_log__trace (iot_logger_t * logger, const char *fmt, ...)  __attribute__ ((format (printf, 2, 3)));
 
 /**
  * @brief Log message with the log level set to Debug
  *
  * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
+ * @param fmt     Formatted string for logging
+ * @param ...     Parameters for fmt
  */
-extern void iot_log__debug (iot_logger_t * logger, ...);
+extern void iot_log__debug (iot_logger_t * logger, const char *fmt, ...)  __attribute__ ((format (printf, 2, 3)));
 
 /**
  * @brief Log message with the log level set to Info
  *
  * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
+ * @param fmt     Formatted string for logging
+ * @param ...     Parameters for fmt
  */
-extern void iot_log__info (iot_logger_t * logger, ...);
+extern void iot_log__info (iot_logger_t * logger, const char *fmt, ...)  __attribute__ ((format (printf, 2, 3)));
 
 /**
  * @brief Log message with the log level set to Warning
  *
  * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
+ * @param fmt     Formatted string for logging
+ * @param ...     Parameters for fmt
  */
-extern void iot_log__warn (iot_logger_t * logger, ...);
+extern void iot_log__warn (iot_logger_t * logger, const char *fmt, ...)  __attribute__ ((format (printf, 2, 3)));
 
 /**
  * @brief Log message with the log level set to Error
  *
  * @param logger  Pointer to the logger component
- * @param ...     Formatted string for logging
+ * @param fmt     Formatted string for logging
+ * @param ...     Parameters for fmt
  */
-extern void iot_log__error (iot_logger_t * logger, ...);
+extern void iot_log__error (iot_logger_t * logger, const char *fmt, ...)  __attribute__ ((format (printf, 2, 3)));
 
 /** Log trace macro */
 #define iot_log_trace(l,...) if ((l) && (l)->level >= IOT_LOG_TRACE) iot_log__trace ((l), __VA_ARGS__)
