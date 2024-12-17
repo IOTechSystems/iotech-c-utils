@@ -409,3 +409,4 @@
 
 - Added function `iot_schedule_add_randomised` to add a schedule with the start time randomised across its interval
 - Hint to gcc that log functions are printf-like so as to warn against parameter mismatches
+- Support added for Alpine Linux 3.21
