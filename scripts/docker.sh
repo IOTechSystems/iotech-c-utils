@@ -13,7 +13,7 @@ VER=$(cat VERSION)
 
 if [ "${ARCH}" = "arm32" ] || [ "${ARCH}" = "x86" ]
 then
-  if [ "${SYS}" = "alpine-3.20" ]
+  if [ "${SYS}" = "alpine-3.20" ] || [ "${SYS}" = "alpine-3.21" ]
   then
     DOCKER_RUN_FLAGS="--security-opt seccomp=unconfined"
   fi

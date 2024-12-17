@@ -353,7 +353,7 @@ static inline void iot_data_block_free_data (iot_data_t * data)
 
 static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
 {
-  atomic_store (&data->refs, 1u);
+  data->refs = 1u;
   data->type = type;
   data->element_type = (type >= IOT_DATA_ARRAY && type <= IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
   data->key_type = (type == IOT_DATA_MAP) ? IOT_DATA_MULTI : IOT_DATA_INVALID;
@@ -419,13 +419,13 @@ static void iot_data_init (void)
 
 iot_data_t * iot_data_add_ref (const iot_data_t * data)
 {
-  if (data) atomic_fetch_add (&((iot_data_t*) data)->refs, 1u);
+  if (data && !data->constant) ((iot_data_t*) data)->refs++;
   return (iot_data_t*) data;
 }
 
 uint32_t iot_data_ref_count (const iot_data_t * data)
 {
-  return data ? atomic_load (&((iot_data_t*) data)->refs) : 0u;
+  return data ? data->refs : 0u;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)
@@ -1549,7 +1549,7 @@ extern void * iot_data_binary_take (iot_data_t * data, uint32_t * len)
   assert (data && len && (data->type == IOT_DATA_BINARY || data->type == IOT_DATA_ARRAY));
   iot_data_array_t * array = (iot_data_array_t*) data;
   *len = iot_data_array_size (data);
-  if (array->base.release && (atomic_load (&(data)->refs) == 1u))
+  if (array->base.release && (data->refs == 1u))
   {
     ret = array->data;
     array->data = NULL;
