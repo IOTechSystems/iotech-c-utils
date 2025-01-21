@@ -39,6 +39,9 @@ typedef struct iot_logger_impl_t
 {
   iot_logger_t base;                  // Public part of logger
   volatile iot_loglevel_t save;       // Last saved log level
+  iot_loglevel_t mylevel;             // Log level for this logger only
+  iot_data_t *parents;                // List of loggers for which this is the 'next' logger
+  pthread_mutex_t mtx;                // Mutex to use when accessing parents list
   char * name;                        // Name of logger
   iot_log_function_t impl;            // Log implementation function
   iot_log_free_fn_t freectx;          // Function to free log context
@@ -51,6 +54,7 @@ iot_logger_impl_t;
 
 static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
 static iot_logger_impl_t iot_logger_dfl;
+static iot_data_list_static_t iot_logger_dfl_pars;
 
 static void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx);
 
@@ -62,8 +66,10 @@ iot_logger_t * iot_logger_default (void)
     logger = &iot_logger_dfl.base;
     memset (&iot_logger_dfl, 0, sizeof (iot_logger_dfl));
     iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
-    iot_logger_dfl.base.level = iot_logger_dfl.save = IOT_LOGLEVEL_DEFAULT;
+    iot_logger_dfl.base.level = iot_logger_dfl.save = iot_logger_dfl.mylevel = IOT_LOGLEVEL_DEFAULT;
     iot_logger_dfl.impl = iot_log_console;
+    iot_logger_dfl.parents = iot_data_alloc_const_list (&iot_logger_dfl_pars);
+    pthread_mutex_init (&iot_logger_dfl.mtx, NULL);
   }
   return logger;
 }
@@ -76,7 +82,7 @@ void iot_log__va_log (iot_logger_t * l, iot_loglevel_t level, const char* fmt, v
   uint64_t ts = iot_time_usecs ();
   do
   {
-    if (logger->base.level >= level) (logger->impl) (&logger->base, level, ts, str, logger->ctx);
+    if (logger->mylevel >= level) (logger->impl) (&logger->base, level, ts, str, logger->ctx);
   } while ((logger = logger->next));
 }
 
@@ -88,23 +94,34 @@ void iot_log__log (iot_logger_t * l, iot_loglevel_t level, const char *fmt, ...)
   va_end (args);
 }
 
+static iot_loglevel_t iot_logger_effective_level (const iot_logger_impl_t *logger)
+{
+  return (logger->next && logger->next->base.level > logger->mylevel) ? logger->next->base.level : logger->mylevel;
+}
+
 void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
 {
   assert (logger);
-  logger->level = level;
+  iot_logger_impl_t *impl = (iot_logger_impl_t *)logger;
+  impl->mylevel = level;
+  logger->level = iot_logger_effective_level (impl);
 }
 
 iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, bool start, iot_logger_t * next, iot_log_function_t impl, void * ctx, iot_log_free_fn_t freectx)
 {
   assert (name && impl);
   iot_logger_impl_t * logger = calloc (1, sizeof (*logger));
-  iot_logger_add_ref (next);
   logger->impl = impl;
   logger->name = strdup (name);
   logger->save = level;
-  logger->next = (iot_logger_impl_t*) next;
+  if (next)
+  {
+    iot_logger_set_next (&logger->base, next);
+  }
   logger->ctx = ctx;
   logger->freectx = freectx;
+  logger->parents = iot_data_alloc_typed_list (IOT_DATA_STRING);
+  pthread_mutex_init (&logger->mtx, NULL);
   iot_component_init (&logger->base.component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
   if (start) iot_logger_start (&logger->base);
   return &logger->base;
@@ -120,10 +137,18 @@ void iot_logger_free (iot_logger_t * logger)
   iot_logger_impl_t * impl = (iot_logger_impl_t*) logger;
   if (impl && (impl != &iot_logger_dfl) && iot_component_dec_ref (&logger->component))
   {
+    if (impl->next)
+    {
+      pthread_mutex_lock (&impl->next->mtx);
+      iot_data_list_remove (impl->next->parents, iot_data_string_cmp, impl->name);
+      pthread_mutex_unlock (&impl->next->mtx);
+    }
     free (impl->name);
     iot_logger_free ((iot_logger_t*) impl->next);
+    iot_data_free (impl->parents);
     if (impl->freectx) (impl->freectx) (impl->ctx);
     iot_component_fini (&logger->component);
+    pthread_mutex_destroy (&impl->mtx);
     free (logger);
   }
 }
@@ -136,9 +161,8 @@ void iot_logger_add_ref (iot_logger_t * logger)
 void iot_logger_start (iot_logger_t * logger)
 {
   assert (logger);
-  const iot_logger_impl_t * impl = (const iot_logger_impl_t*) logger;
   iot_component_set_running (&logger->component);
-  logger->level = impl->save;
+  iot_logger_set_level (logger, ((iot_logger_impl_t *)logger)->save);
 }
 
 void iot_logger_stop (iot_logger_t * logger)
@@ -146,8 +170,8 @@ void iot_logger_stop (iot_logger_t * logger)
   assert (logger);
   iot_logger_impl_t * impl = (iot_logger_impl_t*) logger;
   iot_component_set_stopped (&logger->component);
-  impl->save = logger->level;
-  logger->level = IOT_LOG_NONE;
+  impl->save = impl->mylevel;
+  iot_logger_set_level (logger, IOT_LOG_NONE);
 }
 
 static inline size_t iot_logger_format_log (iot_logger_impl_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message)
@@ -277,9 +301,18 @@ const char * iot_logger_level_to_string (iot_loglevel_t level)
 void iot_logger_set_next (iot_logger_t * logger, iot_logger_t * next)
 {
   iot_logger_impl_t * logimpl = (iot_logger_impl_t*) logger;
-  iot_logger_free ((iot_logger_t*) logimpl->next);
+  if (logimpl->next)
+  {
+    pthread_mutex_lock (&logimpl->next->mtx);
+    iot_data_list_remove (logimpl->next->parents, iot_data_string_cmp, logimpl->name);
+    pthread_mutex_unlock (&logimpl->next->mtx);
+    iot_logger_free ((iot_logger_t*) logimpl->next);
+  }
   iot_logger_add_ref (next);
   logimpl->next = (iot_logger_impl_t*) next;
+  pthread_mutex_lock (&logimpl->next->mtx);
+  iot_data_list_tail_push (logimpl->next->parents, iot_data_alloc_string (logimpl->name, IOT_DATA_COPY));
+  pthread_mutex_unlock (&logimpl->next->mtx);
 }
 
 #ifdef IOT_BUILD_COMPONENTS
@@ -331,10 +364,33 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   return (iot_component_t*) result;
 }
 
+void iot_logger_relevel (iot_logger_t * l, iot_container_t * cont)
+{
+  iot_logger_impl_t *logger = (iot_logger_impl_t *)l;
+  iot_data_list_iter_t iter;
+  pthread_mutex_lock (&logger->mtx);
+  iot_data_list_iter (logger->parents, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    iot_component_t *comp = iot_container_find_component (cont, iot_data_list_iter_string_value (&iter));
+    if (comp)
+    {
+      iot_logger_impl_t *parent = (iot_logger_impl_t *)comp;
+      parent->base.level = iot_logger_effective_level (parent);
+      iot_logger_relevel (&parent->base, cont);
+    }
+    else
+    {
+      iot_data_list_iter_remove (&iter);
+    }
+  }
+  pthread_mutex_unlock (&logger->mtx);
+}
+
 static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map)
 {
-  (void) cont;
-  ((iot_logger_t*) comp)->level = iot_logger_config_level (map);
+  iot_logger_set_level ((iot_logger_t*) comp, iot_logger_config_level (map));
+  iot_logger_relevel ((iot_logger_t *) comp, cont);
   return true;
 }
 
