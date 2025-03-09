@@ -151,6 +151,23 @@ extern iot_data_t * iot_container_list_components (iot_container_t * cont, const
  */
 extern iot_data_t * iot_container_component_read (iot_container_t * cont, const char * name);
 
+/**
+ * @brief Get state of named component
+ *
+ * @param cont  Pointer to a container
+ * @param name  Component name
+ * @return      Data map, with keys "name", "type", "state" and "config"
+ */
+extern iot_data_t * iot_container_component_read (iot_container_t * cont, const char * name);
+
+/**
+ * @brief Get component stats
+ *
+ * @param cont  Pointer to a container
+ * @return      Data map of component name to stats
+ */
+extern iot_data_t * iot_container_stats (iot_container_t * cont);
+
 #ifdef __cplusplus
 }
 #endif
