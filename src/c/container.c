@@ -485,7 +485,7 @@ iot_data_t * iot_container_stats (iot_container_t * cont)
   iot_data_list_iter (cont->components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
-    const iot_component_t * comp = iot_data_list_iter_pointer_value (&iter);
+    iot_component_t * comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter); // double check cast
     iot_data_t * stats = iot_component_stats (comp);
     if (stats) iot_data_map_add (map, iot_data_alloc_string (comp->name, IOT_DATA_REF), stats);
   }

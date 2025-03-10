@@ -59,7 +59,7 @@ typedef void (*iot_component_stopping_fn_t) (iot_component_t * comp);
 /** Type definition for component starting function pointer */
 typedef void (*iot_component_starting_fn_t) (iot_component_t * comp);
 /** Type definition for component stats function pointer */
-typedef iot_data_t *(*iot_component_stats_fn_t) (const iot_component_t * comp);
+typedef iot_data_t *(*iot_component_stats_fn_t) (iot_component_t * comp);
 
 /**
  * Component factory structure
@@ -304,7 +304,7 @@ extern iot_data_t * iot_component_read (iot_component_t * component);
  * @param component  Pointer to component
  * @return           Data map containing run time statistics, NULL is returned if statistics are not available.
  */
-extern iot_data_t * iot_component_stats (const iot_component_t * component);
+extern iot_data_t * iot_component_stats (iot_component_t * component);
 
 /**
  * @brief Get component stats
@@ -312,7 +312,7 @@ extern iot_data_t * iot_component_stats (const iot_component_t * component);
  * @param component  Pointer to component
  * @param stats_fn   Pointer to stats fn
  */
-extern void iot_component_add_stats_callback (iot_component_t * component, iot_component_stats_fn_t stats_fn);
+extern void iot_component_set_stats_callback (iot_component_t * component, iot_component_stats_fn_t stats_fn);
 
 /**
  * @brief Get container
