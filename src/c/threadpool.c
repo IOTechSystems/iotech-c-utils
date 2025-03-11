@@ -75,6 +75,11 @@ static void iot_threadpool_final_free (iot_threadpool_t * pool)
   free (pool);
 }
 
+static int iot_threadpool_digits (uint16_t n)
+{
+  return n < 100 ? (n < 10 ? 1 : 2) : (n < 1000 ? 3 : (n < 10000 ? 4 : 5));
+}
+
 static void * iot_threadpool_thread (void * arg)
 {
   iot_thread_t * th = (iot_thread_t*) arg;
@@ -86,7 +91,8 @@ static void * iot_threadpool_thread (void * arg)
   iot_component_state_t state;
   bool pending_delete = false;
 
-  snprintf (name, IOT_PRCTL_NAME_MAX, "iot-%" PRIu16 "-%" PRIu16, th->pool->id, th->id);
+  int width = iot_threadpool_digits (th->pool->threads);
+  snprintf (name, IOT_PRCTL_NAME_MAX, "iot-%" PRIu16 "-%0*" PRIu16, th->pool->id, width, th->id);
 #ifdef IOT_HAS_PRCTL
   prctl (PR_SET_NAME, name);
 #endif
