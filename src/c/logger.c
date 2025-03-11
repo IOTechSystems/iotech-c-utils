@@ -45,6 +45,7 @@ typedef struct iot_logger_impl_t
   void *ctx;                          // Context for custom loggers
   struct iot_logger_impl_t * next;    // Pointer to next logger (can be chained in config)
   char buff [IOT_LOG_MSG_MAX];        // Log format buffer
+  bool no_stderr;                     // If set, console logs go to stdout only
 }
 iot_logger_impl_t;
 
@@ -175,7 +176,8 @@ static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, 
 static void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
   (void) ctx;
-  iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message);
+  iot_logger_impl_t *impl = (iot_logger_impl_t*) logger;
+  iot_logger_log_to_fd (impl, (impl->no_stderr || level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message);
 }
 
 /********* Standard Logger Implementations: UDP *********/
@@ -323,6 +325,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
     else
     {
       result = iot_logger_alloc_custom (name, level, start, next, iot_log_console, NULL, NULL);
+      ((iot_logger_impl_t *)result)->no_stderr = iot_data_string_map_get_bool (map, "NoStderr", false);
     }
   }
   return (iot_component_t*) result;
