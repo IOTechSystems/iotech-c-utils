@@ -49,9 +49,11 @@ typedef struct iot_threadpool_t
   const uint32_t max_jobs;           // Maximum number of queued jobs
   const uint16_t id;                 // Thread pool id
   uint16_t working;                  // Number of threads currently working
+  uint16_t working_max;              // Maximum value of working
   uint16_t threads;                  // Number of threads allocated
   _Atomic uint16_t created;          // Number of threads created
   uint32_t jobs;                     // Number of jobs in queue
+  uint16_t jobs_max;                 // Maximum value of jobs
   uint32_t delay;                    // Shutdown delay in milliseconds
   uint32_t next_id;                  // Job id counter
   iot_job_t * front;                 // Front of job queue
@@ -63,6 +65,32 @@ typedef struct iot_threadpool_t
   pthread_cond_t queue_cond;         // Job queue control condition
   iot_logger_t * logger;             // Optional logger
 } iot_threadpool_t;
+
+typedef struct iot_threadpool_consts_t
+{
+  iot_data_static_t max_jobs_key;
+  iot_data_static_t id_key;
+  iot_data_static_t working_key;
+  iot_data_static_t working_max_key;
+  iot_data_static_t allocated_key;
+  iot_data_static_t created_key;
+  iot_data_static_t jobs_key;
+  iot_data_static_t jobs_max_key;
+} iot_threadpool_consts_t;
+
+static iot_threadpool_consts_t iot_threadpool_consts = { 0 };
+
+static const char * iot_threadpool_strings [] =
+{
+  "max_jobs", "id", "working", "working_max", "allocated", "created", "jobs", "jobs_max", NULL
+};
+
+__attribute__((constructor)) static void iot_threadpool_init (void)
+{
+  const char ** str = iot_threadpool_strings;
+  iot_data_static_t * ptr = (iot_data_static_t *) &iot_threadpool_consts;
+  while (*str) iot_data_alloc_const_string (ptr++, *str++);
+}
 
 static void iot_threadpool_final_free (iot_threadpool_t * pool)
 {
@@ -123,6 +151,7 @@ static void * iot_threadpool_thread (void * arg)
         pthread_cond_broadcast (&pool->queue_cond); // Signal now space in job queue
       }
       pool->working++;
+      if (pool->working > pool->working_max) pool->working_max = pool->working;
       iot_component_unlock (comp);
       if ((job.priority != IOT_THREAD_NO_PRIORITY) && (job.priority != priority)) // If required, set thread priority
       {
@@ -152,6 +181,23 @@ static void * iot_threadpool_thread (void * arg)
   return NULL;
 }
 
+static iot_data_t * iot_threadpool_get_stats (iot_component_t * comp)
+{
+  iot_threadpool_t * threadpool = (iot_threadpool_t *) comp;
+  iot_data_t * result = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_component_lock (comp);
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_threadpool_consts.max_jobs_key), iot_data_alloc_ui32 (threadpool->max_jobs));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_threadpool_consts.id_key), iot_data_alloc_ui16 (threadpool->id));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_threadpool_consts.working_key), iot_data_alloc_ui16 (threadpool->working));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_threadpool_consts.working_max_key), iot_data_alloc_ui16 (threadpool->working_max));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_threadpool_consts.allocated_key), iot_data_alloc_ui16 (threadpool->threads));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_threadpool_consts.created_key), iot_data_alloc_ui16 (atomic_load (&threadpool->created)));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_threadpool_consts.jobs_key), iot_data_alloc_ui32 (threadpool->jobs));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_threadpool_consts.jobs_max_key), iot_data_alloc_ui32 (threadpool->jobs_max));
+  iot_component_unlock (comp);
+  return result;
+}
+
 iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, int default_prio, int affinity, iot_logger_t * logger)
 {
   static _Atomic uint16_t pool_id = ATOMIC_VAR_INIT (0);
@@ -171,6 +217,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
   iot_component_init (&pool->component, IOT_THREADPOOL_FACTORY, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
+  iot_component_set_stats_callback (&pool->component, iot_threadpool_get_stats);
   pool->threads = threads;
   for (created = 0; created < threads; created++)
   {
@@ -249,6 +296,7 @@ static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void * (*fu
 DONE:
 
   pool->jobs++;
+  if (pool->jobs > pool->jobs_max) pool->jobs_max = pool->jobs;
   pthread_cond_signal (&pool->job_cond); // Signal new job added
 }
 
