@@ -346,7 +346,7 @@ bool iot_schedule_add_randomised (iot_scheduler_t * scheduler, iot_schedule_t * 
 {
   assert (scheduler && schedule);
   uint64_t interval = (schedule->period > deadband) ? schedule->period - deadband : schedule->period;
-  uint64_t start = (uint64_t) (interval * (((float) rand ()) / RAND_MAX)); // Set start delay between zero and period minus deadband
+  uint64_t start = (uint64_t) (interval * (((float) rand ()) / (float) RAND_MAX)); // Set start delay between zero and period minus deadband
   iot_schedule_update_start (schedule, start + iot_time_nsecs ());
   return iot_schedule_add (scheduler, schedule);
 }
