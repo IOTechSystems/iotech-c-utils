@@ -60,7 +60,7 @@ if [ "${SONAR}" = "true" ]
 then
   unzip -q scripts/sonar-wrapper.zip
   unzip -q scripts/sonar-scanner.zip
-  mv sonar-scanner-*-linux sonar-scanner
+  mv sonar-scanner-*-linux-x64 sonar-scanner
   SONAR_DIR="${BROOT}/lcov/sonar"
   mkdir -p "${SONAR_DIR}"
   SONAR_WRAPPER="${ROOT}/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir ${SONAR_DIR}"
