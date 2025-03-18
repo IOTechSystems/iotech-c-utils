@@ -64,7 +64,7 @@ then
   SONAR_DIR="${BROOT}/lcov/sonar"
   mkdir -p "${SONAR_DIR}"
   SONAR_WRAPPER="${ROOT}/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir ${SONAR_DIR}"
-  SONAR_SCANNER="${ROOT}/sonar-scanner/bin/sonar-scanner -Dsonar.token=${SONAR_AUTH_TOKEN} -Dsonar.cfamily.build-wrapper-output=${SONAR_DIR} -Dsonar.branch.name=${BRANCH} -Dsonar.coverageReportPaths=${SONAR_DIR}/sonar.xml"
+  SONAR_SCANNER="${ROOT}/sonar-scanner/bin/sonar-scanner -Dsonar.token=${SONAR_AUTH_TOKEN} -Dsonar.branch.name=${BRANCH} -Dsonar.coverageReportPaths=${SONAR_DIR}/sonar.xml"
 fi
 
 # Release build
