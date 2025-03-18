@@ -1,7 +1,8 @@
-FROM debian:11
-ENV SYSTEM="debian-11"
+FROM oraclelinux:9
+ENV SYSTEM="oraclelinux-9"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
-RUN apt-get update && apt-get install -y build-essential wget git gcc cmake make doxygen graphviz ruby-dev libyaml-dev libcbor-dev
+RUN dnf config-manager --enable ol9_codeready_builder ol9_distro_builder && \
+  dnf upgrade -y && dnf install -y wget git gcc glibc-static gcc-c++ cmake make rpm-build doxygen graphviz ruby-devel libyaml-devel libcbor-devel
 RUN gem install --no-document fpm
 COPY VERSION /iotech-iot/
 COPY RELEASE_NOTES.md /iotech-iot/

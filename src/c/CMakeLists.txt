@@ -45,6 +45,10 @@ if (IOT_BUILD_YAML)
   set (LINK_LIBRARIES ${LINK_LIBRARIES} yaml)
 endif ()
 
+if (IOT_BUILD_CBOR)
+  set (LINK_LIBRARIES ${LINK_LIBRARIES} cbor)
+endif ()
+
 # Set files to compile
 set (C_FILES data.c data-json.c json.c base64.c logger.c scheduler.c thread.c threadpool.c time.c component.c hash.c config.c util.c store.c file.c uuid.c queue.c)
 if (IOT_BUILD_XML)
@@ -68,7 +72,7 @@ endif ()
 
 if (IOT_BUILD_SHARED)
   add_library (iot SHARED ${C_FILES})
-  set_target_properties (iot PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1 VERSION ${IOT_DOT_VERSION} SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR})
+  set_target_properties (iot PROPERTIES OUTPUT_NAME iot CLEAN_DIRECT_OUTPUT 1 VERSION ${IOT_VERSION} SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR})
   target_include_directories (iot PRIVATE ../../include)
   target_link_libraries (iot ${LINK_LIBRARIES})
 endif ()

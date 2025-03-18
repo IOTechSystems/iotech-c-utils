@@ -379,5 +379,34 @@
 
 - Support added for Debian 12
 - Added `iot_data_iter_t` to allow for iteration over generic iterable types
+- 
 ## Version 1.5.1
+
+- Support added for Alpine Linux 3.19
 - Added `iot_data_length` function for determining number of elements in iot_data object
+- Added `iot_store_config_list` and `iot_file_list` functions to list all files in a given directory
+
+## Version 1.5.2
+
+- Support for openSUSE Leap updated to version 15.5
+
+## Version 1.5.3
+
+- Added CBOR decoding function `iot_data_from_cbor`
+
+## Version 1.5.4
+
+- Added function `iot_data_alloc_const_f32` to allocate a const float data value
+- Added function `iot_data_alloc_const_f64` to allocate a const double data value
+- Fixed reading of values which exceed the size of int64_t and uint64_t in `iot_data_primitive_from_json`
+- Support added for Ubuntu 24.04
+- Support added for Fedora 40 and removed for Fedora 36
+- Added functions `iot_data_restricted_element_type` and `iot_data_restrict_element` to restrict the element type of lists, vectors and maps
+- Support added for Oracle Linux 9
+- Support added for Alpine Linux 3.20
+
+## Version 1.5.5
+
+- Added function `iot_schedule_add_randomised` to add a schedule with the start time randomised across its interval
+- Hint to gcc that log functions are printf-like so as to warn against parameter mismatches
+- Support added for Alpine Linux 3.21

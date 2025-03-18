@@ -17,6 +17,7 @@ The following Utilities are provided:
 * Time stamp
 * Base64 encode/decode
 * Persistence
+* CBOR encoding
 
 ## License
 [Apache-2.0](LICENSE)

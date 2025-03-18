@@ -1,12 +1,16 @@
 #!/usr/bin/env groovy
 
-systems_x86_64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40','zephyr-2.3','clearlinux','azuresphere-15','yocto-riscv'] as String[]
-systems_arm64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40'] as String[]
-systems_arm32 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','opensuse-15.4'] as String[]
-systems_x86 = ['alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10']
-targets = ['x86_64','arm64','arm32','x86'] as String[]
-arch_system_map = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32, x86: systems_x86]
-releaseType = ['None':'dev', 'Release':'release', 'Development':'dev']
+def systems_x86_64 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-40','oraclelinux-9','opensuse-15.5','photon-40','zephyr-2.3','clearlinux','azuresphere-15','yocto-riscv'] as String[]
+def systems_arm64 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-40','oraclelinux-9','opensuse-15.5','photon-40'] as String[]
+def systems_arm32 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','opensuse-15.5'] as String[]
+def systems_x86 = ['alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10']
+def targets = ['x86_64','arm64','arm32','x86'] as String[]
+
+def String getReleaseName (archive)
+{
+  def releaseType = ['None':'dev', 'Release':'release', 'Development':'dev']
+  return releaseType[archive]
+}
 
 def checkoutStage (arch)
 {
@@ -23,7 +27,7 @@ def buildStage (systems, arch)
   def sq = getSonarQubeParam ()
   def sonar = 'false'
 
-  if (("${sq}" == 'true' || env.BRANCH_NAME.startsWith ('PR')) && ("${sys}" == 'ubuntu-22.04') && ("${arch}" == 'x86_64'))
+  if (("${sq}" == 'true' || env.BRANCH_NAME.startsWith ('PR')) && ("${sys}" == 'ubuntu-24.04') && ("${arch}" == 'x86_64'))
   {
     sonar = 'true'
   }
@@ -76,9 +80,9 @@ def metricsStage (systems, arch)
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
   publishCoreMetrics (systems, arch)
-  if ("${sys}" == 'ubuntu-22.04' || "${sys}" == 'all')
+  if ("${sys}" == 'ubuntu-24.04' || "${sys}" == 'all')
   {
-    publishAdvancedMetrics ('ubuntu-22.04', arch)
+    publishAdvancedMetrics ('ubuntu-24.04', arch)
   }
   if ("${archive}" == 'Release')
   {
@@ -150,17 +154,8 @@ def publishCoreMetrics (systems, arch)
 
 def publishAdvancedMetrics (system, arch)
 {
-  fileOperations ([fileCopyOperation (includes: "${arch}/${system}/src/c/*.c", targetLocation: 'src/c/', flattenFiles: true),
-    fileCopyOperation (includes: "${arch}/${system}/include/*.h", targetLocation: 'include/iot/', flattenFiles: true)])
-  if ("${arch}" == 'x86_64')
-  {
-    publishValgrind (pattern: '**/*_vg.xml', sourceSubstitutionPaths: '/iotech-iot/src:src')
-  }
   junit (testResults: "${arch}/${system}/release/junit-Results.xml")
-  cobertura (coberturaReportFile: "${arch}/${system}/lcov/cobertura.xml")
-  archiveArtifacts (artifacts: "${arch}/${system}/lcov/cobertura.xml")
   archiveArtifacts (artifacts: "${arch}/${system}/lcov/html/**")
-  // publishCoverage (adapters: [coberturaAdapter("${arch}/${system}/lcov/cobertura.xml")], sourceFileResolver: sourceFiles('NEVER_STORE'))
   recordIssues (tools: [taskScanner (id: "Tasks-${arch}-${env.BUILD_ID}", highTags: 'FIXME', includePattern: '**/*.c', normalTags: 'TODO')])
   recordIssues (tools: [cppCheck (id: "CppCheck-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/cppcheck.xml")])
   recordIssues (tools: [gcc (id: "GCC-${arch}-${env.BUILD_ID}", pattern: "${arch}/${system}/release/release.log")])
@@ -168,16 +163,17 @@ def publishAdvancedMetrics (system, arch)
 
 def publishDebs (arch)
 {
-  def debs_x86_64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-12','debian-11','debian-10','azuresphere-15','yocto-riscv']
-  def debs_arm64 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-12','debian-11','debian-10']
-  def debs_arm32 = ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-12','debian-11','debian-10']
+  def debs_x86_64 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-12','debian-11','debian-10','azuresphere-15','yocto-riscv']
+  def debs_arm64 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-12','debian-11','debian-10']
+  def debs_arm32 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','debian-12','debian-11','debian-10']
   def debs_x86 = ['debian-12','debian-11','debian-10']
   def deb_lists = [x86_64: debs_x86_64, arm64: debs_arm64, arm32: debs_arm32, x86: debs_x86]
   def deb_archs = [x86_64: 'amd64', arm64: 'arm64', arm32: 'armhf', x86: 'i386']
-  def deb_name = ['ubuntu-22.04':'jammy','ubuntu-20.04':'focal','ubuntu-18.04':'bionic','debian-12':'bookworm','debian-11':'bullseye','debian-10':'buster','azuresphere-15':'jammy','yocto-riscv':'jammy']
+  def deb_name = ['ubuntu-24.04':'noble','ubuntu-22.04':'jammy','ubuntu-20.04':'focal','ubuntu-18.04':'bionic','debian-12':'bookworm','debian-11':'bullseye','debian-10':'buster','azuresphere-15':'jammy','yocto-riscv':'jammy']
   def debs = deb_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
+  def releaseName = getReleaseName (archive)
 
   for (int i = 0; i < debs.size(); ++i)
   {
@@ -187,12 +183,12 @@ def publishDebs (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${debs[i]}/release/iotech*iot*.deb",
-        "target": "debian-${releaseType[archive]}/pool/${name}/",
+        "target": "debian-${releaseName}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       },
       {
         "pattern": "${arch}/${debs[i]}/debug/iotech*iot*.deb",
-        "target": "debian-${releaseType[archive]}/pool/${name}/",
+        "target": "debian-${releaseName}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }
       ]}"""
@@ -203,19 +199,21 @@ def publishDebs (arch)
 
 def publishApks (arch)
 {
-  def apks_x86_64 = ['alpine-3.18','alpine-3.17','alpine-3.16']
-  def apks_arm64 = ['alpine-3.18','alpine-3.17','alpine-3.16']
-  def apks_arm32 = ['alpine-3.18','alpine-3.17','alpine-3.16']
-  def apks_x86 = ['alpine-3.18','alpine-3.17','alpine-3.16']
+  def apks_x86_64 = ['alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16']
+  def apks_arm64 = ['alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16']
+  def apks_arm32 = ['alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16']
+  def apks_x86 = ['alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16']
   def apk_lists = [x86_64: apks_x86_64, arm64: apks_arm64, arm32: apks_arm32, x86: apks_x86]
   def apk_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', x86: 'x86']
   def host_archs = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armv7', x86: 'x86']
-  def apk_vers = ['alpine-3.18':'v3.18','alpine-3.17':'v3.17','alpine-3.16':'v3.16']
+  def apk_vers = ['alpine-3.21':'v3.21','alpine-3.20':'v3.20','alpine-3.19':'v3.19','alpine-3.18':'v3.18','alpine-3.17':'v3.17','alpine-3.16':'v3.16']
   def apk_arch = apk_archs[arch]
   def harch = host_archs[arch]
   def apks = apk_lists[arch]
   def sys = getSystemParam ()
-  def repo = "alpine-${releaseType[archive]}"
+  def archive = getArchiveParam ()
+  def releaseName = getReleaseName (archive)
+  def repo = "alpine-${releaseName}"
 
   for (int i = 0; i < apks.size(); ++i)
   {
@@ -235,15 +233,16 @@ def publishApks (arch)
 
 def publishRpms (arch)
 {
-  def rpms_x86_64 = ['fedora-36','opensuse-15.4','photon-40']
-  def rpms_arm64 = ['fedora-36','opensuse-15.4','photon-40']
-  def rpms_arm32 = ['opensuse-15.4']
+  def rpms_x86_64 = ['fedora-40','opensuse-15.5','photon-40','oraclelinux-9']
+  def rpms_arm64 = ['fedora-40','opensuse-15.5','photon-40','oraclelinux-9']
+  def rpms_arm32 = ['opensuse-15.5']
   def rpms_x86 = []
   def rpm_lists = [x86_64: rpms_x86_64, arm64: rpms_arm64, arm32: rpms_arm32, x86: rpms_x86]
   def rpm_arch = [x86_64: 'x86_64', arm64: 'aarch64', arm32: 'armhf']
   def rpms = rpm_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
+  def releaseName = getReleaseName (archive)
 
   for (int i = 0; i < rpms.size(); ++i)
   {
@@ -252,12 +251,12 @@ def publishRpms (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${rpms[i]}/release/iotech-iot*.rpm",
-        "target": "rpm-${rpms[i]}-${releaseType[archive]}",
+        "target": "rpm-${rpms[i]}-${releaseName}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       },
       {
         "pattern": "${arch}/${rpms[i]}/debug/iotech-iot-*-dbg*.rpm",
-        "target": "rpm-${rpms[i]}-${releaseType[archive]}",
+        "target": "rpm-${rpms[i]}-${releaseName}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }
       ]}"""
@@ -277,6 +276,7 @@ def publishTars (arch)
   def tars = tar_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
+  def releaseName = getReleaseName (archive)
 
   for (int i = 0; i < tars.size(); ++i)
   {
@@ -285,12 +285,12 @@ def publishTars (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${tars[i]}/release/iotech-iot*.tar.gz",
-        "target": "generic-${releaseType[archive]}/${tars[i]}/",
+        "target": "generic-${releaseName}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       },
       {
         "pattern": "${arch}/${tars[i]}/debug/iotech-iot-dev*.tar.gz",
-        "target": "generic-${releaseType[archive]}/${tars[i]}/",
+        "target": "generic-${releaseName}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
       ]}"""
@@ -323,7 +323,7 @@ def String getSystemParam ()
   def ret = "${params.System}"
   if ("${ret}" == 'null')
   {
-    ret = 'ubuntu-22.04'
+    ret = 'ubuntu-24.04'
   }
   return ret
 }
@@ -378,9 +378,10 @@ def String getSonarQubeParam ()
   return ret
 }
 
-buildMap = [:]
+def buildMap = [:]
 for (t in targets)
 {
+  def arch_system_map = [x86_64: systems_x86_64, arm64: systems_arm64, arm32: systems_arm32, x86: systems_x86]
   def target = t
   def sys = getSystemParam ()
   def arch = getArchParam ()
@@ -408,11 +409,11 @@ pipeline
   parameters
   {
     choice (name: 'Archive', choices: ['None','Development','Release'], description: 'Build Archive Type')
-    choice (name: 'System', choices: ['ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-36','opensuse-15.4','photon-40','zephyr-2.3','clearlinux','azuresphere-15','yocto-riscv','all'], description: 'System to Build')
+    choice (name: 'System', choices: ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04','alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10','fedora-40','oraclelinux-9','opensuse-15.5','photon-40','zephyr-2.3','clearlinux','azuresphere-15','yocto-riscv','all'], description: 'System to Build')
     choice (name: 'Arch', choices: ['x86_64','x86','arm64','arm32','all'], description: 'Build Host Architecture')
     choice (name: 'Target', choices: ['None','frdm_k64f','qemu_x86','riscv64-oe','riscv32-oe','acrn','all'], description: 'Target System')
     booleanParam (name: 'Native', defaultValue: false, description: 'Build on host not in container')
-    booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-22.04 x86_64)')
+    booleanParam (name: 'SonarQube', defaultValue: false, description: 'Run SonarQube (only for ubuntu-24.04 x86_64)')
   }
   stages { stage ('All') { steps { script { parallel buildMap }}}}
 }

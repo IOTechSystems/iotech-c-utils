@@ -1,10 +1,8 @@
-FROM debian:11
-ENV SYSTEM="debian-11"
+FROM alpine:3.21
+ENV SYSTEM="alpine-3.21"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
-RUN apt-get update && apt-get install -y build-essential wget git gcc cmake make doxygen graphviz ruby-dev libyaml-dev libcbor-dev
-RUN gem install --no-document fpm
+RUN apk add --update --no-cache build-base wget git gcc cmake make yaml-dev alpine-sdk libcbor-dev
 COPY VERSION /iotech-iot/
-COPY RELEASE_NOTES.md /iotech-iot/
 COPY src /iotech-iot/src/
 COPY include /iotech-iot/include/
 COPY scripts /iotech-iot/scripts/

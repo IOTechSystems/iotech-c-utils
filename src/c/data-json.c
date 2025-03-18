@@ -9,6 +9,7 @@
 #include "data-impl.h"
 #include <math.h>
 #include <uchar.h>
+#include <errno.h>
 
 #define IOT_JSON_BUFF_SIZE 512u
 #define IOT_VAL_BUFF_SIZE 31u
@@ -275,14 +276,19 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
       }
       else if (strchr (str, '-'))
       {
-        int64_t i64;
-        if (sscanf (str,"%"SCNd64, &i64) == 1) ret = iot_data_alloc_i64 (i64);
+        errno = 0;
+        unsigned long long int temp = strtoull (str + 1, NULL, 10); // Skip '-' for strtoull
+        if (errno == ERANGE || temp > (unsigned long long) INT64_MAX + 1) ret = NULL;
+        else ret = iot_data_alloc_i64 (-(int64_t)temp); // add the '-' back
       }
       else
       {
-        uint64_t ui64;
-        if (sscanf (str,"%"SCNu64, &ui64) == 1)
+        errno = 0;
+        unsigned long long int temp = strtoull (str, NULL, 10);
+        if (errno == ERANGE || temp > (unsigned long long) UINT64_MAX) ret = NULL;
+        else
         {
+          uint64_t ui64 = (uint64_t) temp;
           ret = (ui64 <= INT64_MAX) ? iot_data_alloc_i64 ((int64_t) ui64) : iot_data_alloc_ui64 (ui64);
         }
       }
@@ -305,7 +311,8 @@ static iot_data_t * iot_data_map_from_json (iot_json_tok_t ** tokens, const char
   {
     iot_data_t * key = iot_data_string_from_json (tokens, json, cache);
     if (ordered) iot_data_vector_add (ordering, i++, iot_data_add_ref (key));
-    iot_data_map_add (map, key, iot_data_value_from_json (tokens, json, ordered, cache));
+    iot_data_t * val = iot_data_value_from_json (tokens, json, ordered, cache);
+    if (val) iot_data_map_add (map, key, val);
   }
   if (ordered) iot_data_set_metadata (map, ordering,IOT_DATA_STATIC (&iot_data_order));
   return map;
@@ -320,7 +327,8 @@ static iot_data_t * iot_data_vector_from_json (iot_json_tok_t ** tokens, const c
   (*tokens)++;
   while (elements--)
   {
-    iot_data_vector_add (vector, index++, iot_data_value_from_json (tokens, json, ordered, cache));
+    iot_data_t * val = iot_data_value_from_json (tokens, json, ordered, cache);
+    if (val) iot_data_vector_add (vector, index++, val);
   }
   return vector;
 }

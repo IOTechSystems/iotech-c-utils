@@ -521,6 +521,30 @@ extern iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t 
 extern iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t val);
 
 /**
+ * @brief Allocate constant float data
+ *
+ * The function to allocate data for a constant float, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        float value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_f32 (iot_data_static_t * data, float val);
+
+/**
+ * @brief Allocate constant double data
+ *
+ * The function to allocate data for a constant double, using fixed static storage, so need
+ * not be deleted.
+ *
+ * @param data       Address of static storage for data
+ * @param val        double value.
+ * @return           Pointer to the allocated data (same address as the static storage)
+ */
+extern iot_data_t * iot_data_alloc_const_f64 (iot_data_static_t * data, double val);
+
+/**
  * @brief Allocate memory for data_type float
  *
  * The function to allocate memory for data_type float
@@ -608,7 +632,7 @@ extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const
  * @return        Pointer to the allocated memory
  */
 
-extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...);
+extern iot_data_t * iot_data_alloc_string_fmt (const char * format, ...)  __attribute__ ((format (printf, 1, 2)));
 
 /**
  * @brief Allocate data for a pointer, with associated free function
@@ -2215,6 +2239,23 @@ extern iot_data_t * iot_data_to_cbor (const iot_data_t * data);
  */
 extern iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size);
 
+/**
+ * @bief Convert cbor data to iot_data_t structure
+ *
+ * @param data Input data
+ * @param size size of input data
+ * @return iot_data struct
+ */
+extern iot_data_t * iot_data_from_cbor (const uint8_t *data, uint32_t size);
+
+/**
+ * @bief Convert iot binary cbor data to iot_data_t structure
+ *
+ * @param data Input binary data, must be of type IOT_DATA_BINARY
+ * @return iot_data struct
+ */
+extern iot_data_t * iot_data_from_iot_cbor (const iot_data_t *data);
+
 #endif
 #ifdef IOT_HAS_XML
 /**
@@ -2489,6 +2530,19 @@ extern void * iot_data_block_alloc (size_t size);
  * @param ptr Pointer to the memory block to be freed
  */
 extern void iot_data_block_free (void * ptr);
+
+/**
+ * @brief Get the restricted element type based on the elements it contains
+ * @param data The data instance
+ * @return the restricted element type. If the data contains elements with different types, IOT_DATA_MULTI will be returned
+ */
+extern iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data);
+
+/**
+ * @brief Restrict the element type of the data based on the elements it contains
+ * @param data The data instance
+ */
+extern void iot_data_restrict_element (iot_data_t * data);
 
 #ifdef __cplusplus
 }
