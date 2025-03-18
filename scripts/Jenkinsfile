@@ -6,7 +6,12 @@ def systems_arm32 = ['ubuntu-24.04','ubuntu-22.04','ubuntu-20.04','ubuntu-18.04'
 def systems_x86 = ['alpine-3.21','alpine-3.20','alpine-3.19','alpine-3.18','alpine-3.17','alpine-3.16','debian-12','debian-11','debian-10']
 
 targets = ['x86_64','arm64','arm32','x86'] as String[]
-releaseType = ['None':'dev', 'Release':'release', 'Development':'dev']
+
+def String getReleaseName (archive)
+{
+  def releaseType = ['None':'dev', 'Release':'release', 'Development':'dev']
+  return releaseType[archive]
+}
 
 def checkoutStage (arch)
 {
@@ -169,6 +174,7 @@ def publishDebs (arch)
   def debs = deb_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
+  def releaseName = getReleaseName (archive)
 
   for (int i = 0; i < debs.size(); ++i)
   {
@@ -178,12 +184,12 @@ def publishDebs (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${debs[i]}/release/iotech*iot*.deb",
-        "target": "debian-${releaseType[archive]}/pool/${name}/",
+        "target": "debian-${releaseName}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       },
       {
         "pattern": "${arch}/${debs[i]}/debug/iotech*iot*.deb",
-        "target": "debian-${releaseType[archive]}/pool/${name}/",
+        "target": "debian-${releaseName}/pool/${name}/",
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }
       ]}"""
@@ -235,6 +241,7 @@ def publishRpms (arch)
   def rpms = rpm_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
+  def releaseName = getReleaseName (archive)
 
   for (int i = 0; i < rpms.size(); ++i)
   {
@@ -243,12 +250,12 @@ def publishRpms (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${rpms[i]}/release/iotech-iot*.rpm",
-        "target": "rpm-${rpms[i]}-${releaseType[archive]}",
+        "target": "rpm-${rpms[i]}-${releaseName}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       },
       {
         "pattern": "${arch}/${rpms[i]}/debug/iotech-iot-*-dbg*.rpm",
-        "target": "rpm-${rpms[i]}-${releaseType[archive]}",
+        "target": "rpm-${rpms[i]}-${releaseName}",
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }
       ]}"""
@@ -268,6 +275,7 @@ def publishTars (arch)
   def tars = tar_lists[arch]
   def sys = getSystemParam ()
   def archive = getArchiveParam ()
+  def releaseName = getReleaseName (archive)
 
   for (int i = 0; i < tars.size(); ++i)
   {
@@ -276,12 +284,12 @@ def publishTars (arch)
       def uploadSpec = """{"files":[
       {
         "pattern": "${arch}/${tars[i]}/release/iotech-iot*.tar.gz",
-        "target": "generic-${releaseType[archive]}/${tars[i]}/",
+        "target": "generic-${releaseName}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       },
       {
         "pattern": "${arch}/${tars[i]}/debug/iotech-iot-dev*.tar.gz",
-        "target": "generic-${releaseType[archive]}/${tars[i]}/",
+        "target": "generic-${releaseName}/${tars[i]}/",
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
       ]}"""
