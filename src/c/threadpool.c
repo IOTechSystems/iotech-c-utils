@@ -75,7 +75,7 @@ static void iot_threadpool_final_free (iot_threadpool_t * pool)
   free (pool);
 }
 
-static int iot_threadpool_digits (uint16_t n)
+static inline int iot_threadpool_digits (uint16_t n)
 {
   return n < 100 ? (n < 10 ? 1 : 2) : (n < 1000 ? 3 : (n < 10000 ? 4 : 5));
 }
