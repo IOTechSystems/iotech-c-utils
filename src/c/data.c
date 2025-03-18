@@ -3231,8 +3231,8 @@ static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key)
       y->left->parent = y;
       y->colour = z->colour;
     }
-    iot_node_delete (z);
     if (x && (col == IOT_NODE_BLACK)) iot_node_remove_balance (map, x);
+    iot_node_delete (z);
   }
   return (z != NULL);
 }
