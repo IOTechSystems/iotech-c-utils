@@ -212,7 +212,9 @@ def publishApks (arch)
   def harch = host_archs[arch]
   def apks = apk_lists[arch]
   def sys = getSystemParam ()
-  def repo = "alpine-${releaseType[archive]}"
+  def archive = getArchiveParam ()
+  def releaseName = getReleaseName (archive)
+  def repo = "alpine-${releaseName}"
 
   for (int i = 0; i < apks.size(); ++i)
   {
