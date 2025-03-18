@@ -54,7 +54,7 @@ done
 
 BROOT="${ROOT}/${BARCH}"
 
-# SonarQube build wrapper (only for Ubuntu 20.04 x86_64)
+# SonarQube build wrapper (only for Ubuntu 24.04 x86_64)
 
 if [ "${SONAR}" = "true" ]
 then

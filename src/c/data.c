@@ -3146,7 +3146,7 @@ static void iot_node_remove_balance (iot_data_map_t * map, iot_node_t * x)
       }
     }
   }
-  x->colour = IOT_NODE_BLACK;
+  iot_node_set_colour (x, IOT_NODE_BLACK);
 }
 
 static inline iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key)
