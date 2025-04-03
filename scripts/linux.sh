@@ -71,8 +71,9 @@ fi
 
 mkdir -p ${BROOT}/release
 cd ${BROOT}/release
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_STRIP=${ROOT}/scripts/strip-split.sh ${ROOT}/src
 make 2>&1 | tee release.log
+find . -name "*.a" -exec strip -d {} \;
 make package
 
 # Debug build
