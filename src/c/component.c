@@ -173,7 +173,11 @@ extern iot_data_t * iot_component_read (iot_component_t * component)
 extern iot_data_t * iot_component_stats (iot_component_t * component)
 {
   assert (component);
-  return component->stats_fn ? component->stats_fn(component) : NULL;
+  iot_data_t * data = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * stats = component->stats_fn ? component->stats_fn(component) : NULL;
+  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.meta), iot_component_read (component));
+  if (stats) iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.stats), stats);
+  return data;
 }
 
 extern void iot_component_set_stats_callback (iot_component_t * component, iot_component_stats_fn_t stats_fn)
