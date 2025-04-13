@@ -175,7 +175,9 @@ extern iot_data_t * iot_component_stats (iot_component_t * component)
   assert (component);
   iot_data_t * data = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_t * stats = component->stats_fn ? component->stats_fn(component) : NULL;
-  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.meta), iot_component_read (component));
+  iot_data_t * meta = iot_component_read (component);
+  iot_data_map_remove (meta, IOT_DATA_STATIC (&iot_data_consts.config));
+  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.meta), meta);
   if (stats) iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.stats), stats);
   return data;
 }
