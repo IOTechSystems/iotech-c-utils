@@ -6,7 +6,10 @@
  */
 
 #include "logger.h"
+#include "iot/container.h"
 #include "CUnit.h"
+
+#define IOT_TEST_LOGGER_TYPE "IOT::UTEST::Logger"
 
 static int suite_init (void)
 {
@@ -19,6 +22,26 @@ static int suite_clean (void)
 }
 
 static uint32_t cunit_custom_log_count = 0;
+
+static const char * logger1_config =
+"{"
+  "\"Name\":\"logger1\","
+  "\"Level\":\"Warning\""
+"}";
+
+static const char * logger2_config =
+"{"
+  "\"Name\":\"logger2\","
+  "\"Next\":\"logger1\","
+  "\"Level\":\"Info\""
+"}";
+
+static const char * logger3_config =
+"{"
+  "\"Name\":\"logger3\","
+  "\"Next\":\"logger2\","
+  "\"Level\":\"Debug\""
+"}";
 
 static void cunit_custom_log_fn (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
@@ -196,6 +219,52 @@ static void cunit_logger_level_name (void)
   CU_ASSERT (strcmp ("Trace", iot_logger_level_to_string (IOT_LOG_TRACE)) == 0)
 }
 
+static iot_component_t * cunit_logger_chained_config (iot_container_t * cont, const iot_data_t * map)
+{
+  iot_logger_t *result;
+  iot_loglevel_t level = iot_logger_level_from_string (iot_data_string_map_get_string (map, "Level"));
+  iot_logger_t * next = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Next"));
+  bool start = iot_data_string_map_get_bool (map, "Start", true);
+  const char * name = iot_data_string_map_get_string (map, "Name");
+  result = iot_logger_alloc_custom (name, level, start, next, cunit_custom_log_fn, NULL, NULL);
+  return (iot_component_t*) result;
+}
+
+static void cunit_logger_chained (void)
+{
+  iot_component_factory_t f =
+  {
+    IOT_TEST_LOGGER_TYPE,
+    IOT_CATEGORY_CORE,
+    cunit_logger_chained_config,
+    iot_logger_factory ()->free_fn,
+    iot_logger_factory ()->reconfig_fn,
+    NULL
+  };
+  iot_component_factory_add (&f);
+  iot_container_t *cont = iot_container_alloc ("logger_chained");
+  iot_container_add_component (cont, IOT_TEST_LOGGER_TYPE, "logger1", logger1_config);
+  iot_container_add_component (cont, IOT_TEST_LOGGER_TYPE, "logger2", logger2_config);
+  iot_container_add_component (cont, IOT_TEST_LOGGER_TYPE, "logger3", logger3_config);
+  iot_logger_t * logger1 = (iot_logger_t *)iot_container_find_component (cont, "logger1");
+  iot_logger_t * logger3 = (iot_logger_t *)iot_container_find_component (cont, "logger3");
+
+  cunit_custom_log_count = 0u;
+  cunit_test_logs (logger3);
+  CU_ASSERT (cunit_custom_log_count == 9u)
+
+  iot_logger_set_level (logger1, IOT_LOG_DEBUG);
+  iot_logger_relevel (logger1, cont);
+  iot_logger_set_level (logger3, IOT_LOG_WARN);
+  iot_logger_relevel (logger3, cont);
+
+  cunit_custom_log_count = 0u;
+  cunit_test_logs (logger3);
+  CU_ASSERT (cunit_custom_log_count == 9u)
+
+  iot_container_free (cont);
+}
+
 void cunit_logger_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("logger", suite_init, suite_clean);
@@ -213,4 +282,5 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_format", cunit_logger_format);
   CU_add_test (suite, "logger_set_next", cunit_logger_set_next);
   CU_add_test (suite, "logger_level_name", cunit_logger_level_name);
+  CU_add_test (suite, "logger_chained", cunit_logger_chained);
 }
