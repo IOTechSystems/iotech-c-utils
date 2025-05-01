@@ -25,6 +25,7 @@ struct iot_container_t
   iot_logger_t * logger;
   iot_data_t * components;
   char * name;
+  uint64_t startup_time;
   pthread_rwlock_t lock;
 };
 
@@ -240,7 +241,7 @@ const iot_container_config_t * iot_container_get_config (void)
 
 iot_container_t * iot_container_alloc (const char * name)
 {
-  iot_container_t * cont = malloc (sizeof (*cont));
+  iot_container_t * cont = calloc (1, sizeof (*cont));
   cont->name = strdup (name);
   cont->logger = iot_logger_default ();
   cont->components = iot_data_alloc_typed_list (IOT_DATA_POINTER);
@@ -336,6 +337,7 @@ AGAIN:
 
 void iot_container_start (iot_container_t * cont)
 {
+  uint64_t start_time = iot_time_usecs ();
   pthread_rwlock_rdlock (&cont->lock);
   iot_data_list_iter_t iter;
   iot_data_list_iter (cont->components, &iter);
@@ -355,6 +357,7 @@ void iot_container_start (iot_container_t * cont)
   }
   iot_container_running (cont);
   pthread_rwlock_unlock (&cont->lock);
+  cont->startup_time = iot_time_usecs () - start_time;
 }
 
 void iot_container_stop (iot_container_t * cont)
@@ -489,6 +492,7 @@ iot_data_t * iot_container_stats (iot_container_t * cont)
     iot_data_t * stats = iot_component_stats (comp);
     if (stats) iot_data_map_add (map, iot_data_alloc_string (comp->name, IOT_DATA_REF), stats);
   }
+  iot_data_string_map_add (map, "startup_time", iot_data_alloc_ui64(cont->startup_time));
   pthread_rwlock_unlock (&cont->lock);
   return map;
 }
