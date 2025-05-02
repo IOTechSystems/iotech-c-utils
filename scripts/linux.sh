@@ -54,25 +54,26 @@ done
 
 BROOT="${ROOT}/${BARCH}"
 
-# SonarQube build wrapper (only for Ubuntu 20.04 x86_64)
+# SonarQube build wrapper (only for Ubuntu 24.04 x86_64)
 
 if [ "${SONAR}" = "true" ]
 then
   unzip -q scripts/sonar-wrapper.zip
   unzip -q scripts/sonar-scanner.zip
-  mv sonar-scanner-*-linux sonar-scanner
+  mv sonar-scanner-*-linux-x64 sonar-scanner
   SONAR_DIR="${BROOT}/lcov/sonar"
   mkdir -p "${SONAR_DIR}"
   SONAR_WRAPPER="${ROOT}/build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir ${SONAR_DIR}"
-  SONAR_SCANNER="${ROOT}/sonar-scanner/bin/sonar-scanner -Dsonar.token=${SONAR_AUTH_TOKEN} -Dsonar.cfamily.build-wrapper-output=${SONAR_DIR} -Dsonar.branch.name=${BRANCH} -Dsonar.coverageReportPaths=${SONAR_DIR}/sonar.xml"
+  SONAR_SCANNER="${ROOT}/sonar-scanner/bin/sonar-scanner -Dsonar.token=${SONAR_AUTH_TOKEN} -Dsonar.branch.name=${BRANCH} -Dsonar.coverageReportPaths=${SONAR_DIR}/sonar.xml"
 fi
 
 # Release build
 
 mkdir -p ${BROOT}/release
 cd ${BROOT}/release
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release ${ROOT}/src
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DIOT_BUILD_COMPONENTS=ON -DIOT_BUILD_DYNAMIC_LOAD=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_STRIP=${ROOT}/scripts/strip-split.sh ${ROOT}/src
 make 2>&1 | tee release.log
+find . -name "*.a" -exec strip -d {} \;
 make package
 
 # Debug build
