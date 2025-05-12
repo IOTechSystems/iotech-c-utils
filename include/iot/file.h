@@ -21,6 +21,11 @@
 extern "C" {
 #endif
 
+/** File change flags for iot_file_watch function */
+
+extern const uint32_t iot_file_deleted_flag;
+extern const uint32_t iot_file_modified_flag;
+
 /**
  * @brief Load string from file path, returns file contents as a NULL terminated string
  *
@@ -78,6 +83,17 @@ extern bool iot_file_write_binary (const char * path, const uint8_t * binary, si
  * @return List of files
  */
 extern iot_data_t * iot_file_list (const char * directory, const char * regex_str);
+
+/**
+ * @brief Watch a file for changes
+ *
+ * Function to watch a file for changes. If file exists, will block until file content changed or file deleted.
+ *
+ * @param path  File path
+ * @param mask  Mask of events to watch for (iot_file_deleted_flag, iot_file_changed_flag)
+ * @return      File change or zero if no change or no file
+ */
+extern uint32_t iot_file_watch (const char * path, uint32_t mask);
 
 #ifdef __cplusplus
 }

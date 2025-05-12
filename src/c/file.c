@@ -71,6 +71,7 @@ extern bool iot_file_delete (const char * path)
 #else // _AZURESPHERE_
 #include <dirent.h>
 #include <regex.h>
+#include <sys/inotify.h>
 
 bool iot_file_delete (const char * path)
 {
@@ -158,6 +159,31 @@ iot_data_t * iot_file_list (const char * directory, const char * regex_str)
   closedir (d);
 DONE:
   return list;
+}
+
+const uint32_t iot_file_deleted_flag = IN_DELETE_SELF;
+const uint32_t iot_file_modified_flag = IN_MODIFY;
+
+uint32_t iot_file_watch (const char * path, uint32_t mask)
+{
+  assert (path);
+  uint32_t change = 0u;
+  int fd = inotify_init ();
+  int wd = inotify_add_watch (fd, path, mask);
+  if (wd)
+  {
+    char buffer[sizeof (struct inotify_event) + NAME_MAX + 1];
+    ssize_t ret = read (fd, buffer, sizeof (buffer));
+    if (ret > 0)
+    {
+      struct inotify_event *event = (struct inotify_event *) buffer;
+      if (event->mask & IN_MODIFY) change |= IN_MODIFY;
+      if (event->mask & IN_DELETE_SELF) change |= IN_DELETE_SELF;
+    }
+    inotify_rm_watch (fd, wd);
+    close (fd);
+  }
+  return change;
 }
 
 #endif
