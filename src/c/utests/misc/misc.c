@@ -216,6 +216,24 @@ static void test_file_append (void)
   }
 }
 
+static void test_file_append_binary (void)
+{
+  char buff[12u];
+  bool ok = iot_file_write_binary (TEST_FILE_NAME, (const uint8_t*) "Hello", 5u);
+  CU_ASSERT (ok)
+  ok = iot_file_append_binary (TEST_FILE_NAME, (const uint8_t*) " World", 6u);
+  CU_ASSERT (ok)
+  uint8_t * ret = iot_file_read_binary (TEST_FILE_NAME, NULL);
+  CU_ASSERT (ret != NULL)
+  if (ret)
+  {
+    memcpy (buff, ret, 11u);
+    buff[11] = 0;
+    CU_ASSERT (strcmp ("Hello World", buff) == 0)
+    free (ret);
+  }
+}
+
 static _Atomic uint32_t test_file_notify_status = 0u;
 
 static void * test_file_notify_thread (void * arg)
@@ -290,6 +308,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "file_exists", test_file_exists);
   CU_add_test (suite, "file_notify", test_file_notify);
   CU_add_test (suite, "file_append", test_file_append);
+  CU_add_test (suite, "file_append_binary", test_file_append_binary);
 #ifndef _AZURESPHERE_
   CU_add_test (suite, "list_file", test_list_file);
   CU_add_test (suite, "list_config_file", test_list_config_file);

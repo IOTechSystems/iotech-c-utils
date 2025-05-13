@@ -123,7 +123,7 @@ extern bool iot_file_exists (const char * path);
  * will block until the content changes or the file deleted.
  *
  * @param path  File path
- * @param mask  Mask of events to watch for (iot_file_deleted_flag, iot_file_changed_flag)
+ * @param mask  Mask of events to watch for (iot_file_deleted_flag, iot_file_self_delete_flag, iot_file_changed_flag)
  * @return      File change or zero if no change or no file
  */
 extern uint32_t iot_file_watch (const char * path, uint32_t mask);
