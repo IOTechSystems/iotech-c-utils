@@ -127,7 +127,7 @@ static void test_uuid_string (void)
 
 #ifdef IOT_HAS_FILE
 
-#define TEST_FILE_NAME "/tmp/_iot_test.json"
+#define TEST_FILE_NAME "/tmp/iot_test.json"
 #define TEST_SCOPED_DIR "/tmp/_iot"
 #define TEST_SCOPED_FILE_NAME "/tmp/_iot/test.txt"
 
