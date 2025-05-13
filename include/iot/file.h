@@ -42,8 +42,17 @@ extern char * iot_file_read (const char * path);
  * @param str   String to write
  * @return      Whether the string was successfully written to the file
  */
-
 extern bool iot_file_write (const char * path, const char * str);
+
+/**
+ * @brief Appends a NULL terminated string to a file
+ *
+ * @param path  File path
+ * @param str   String to append
+ * @return      Whether the string was successfully appended to the file
+ */
+extern bool iot_file_append (const char * path, const char * str);
+
 /**
  * @brief Delete a file
  *
@@ -78,12 +87,34 @@ extern uint8_t * iot_file_read_binary (const char * path, size_t * len);
 extern bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len);
 
 /**
+ * @brief Write append binary data to a file
+ *
+ * Function to append binary data of given size to a file
+ *
+ * @param path   File path
+ * @param binary The binary array to be appended
+ * @param len    Length of binary array to be appended
+ * @return       Whether the binary was successfully appended to the file
+ */
+extern bool iot_file_append_binary (const char * path, const uint8_t * binary, size_t len);
+
+/**
  * @brief List files in given directory
  * @param directory Directory in which to list files
  * @param regex_str Optional regex string which files must match
  * @return List of files
  */
 extern iot_data_t * iot_file_list (const char * directory, const char * regex_str);
+
+/**
+ * @brief Check if a file exists
+ *
+ * Function to check if a file or directory exists
+ *
+ * @param path  File path
+ * @return      Whether the file or directory exists
+ */
+extern bool iot_file_exists (const char * path);
 
 /**
  * @brief Watch a file for changes

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2020-2025
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -8,6 +8,12 @@
 #include "iot/iot.h"
 #include "misc.h"
 #include "CUnit.h"
+
+#ifdef IOT_HAS_FILE
+#include <pthread.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#endif
 
 #define MAX_COUNTER 1000
 #define MAX_SECS_COUNTER 4
@@ -121,7 +127,9 @@ static void test_uuid_string (void)
 
 #ifdef IOT_HAS_FILE
 
-#define TEST_FILE_NAME "/tmp/iot_test.json"
+#define TEST_FILE_NAME "/tmp/_iot_test.json"
+#define TEST_SCOPED_DIR "/tmp/_iot"
+#define TEST_SCOPED_FILE_NAME "/tmp/_iot/test.txt"
 
 static void test_write_file (void)
 {
@@ -185,30 +193,82 @@ static void test_delete_file (void)
   CU_ASSERT (iot_store_delete (TEST_FILE_NAME))
 }
 
+static void test_file_exists (void)
+{
+  CU_ASSERT (iot_store_write (TEST_FILE_NAME, "Hello"))
+  CU_ASSERT (iot_file_exists (TEST_FILE_NAME))
+  CU_ASSERT (iot_store_delete (TEST_FILE_NAME))
+  CU_ASSERT (! iot_file_exists (TEST_FILE_NAME))
+}
+
+static void test_file_append (void)
+{
+  bool ok = iot_file_write (TEST_FILE_NAME, "Hello");
+  CU_ASSERT (ok)
+  ok = iot_file_append (TEST_FILE_NAME, " World");
+  CU_ASSERT (ok)
+  char * ret = iot_file_read (TEST_FILE_NAME);
+  CU_ASSERT (ret != NULL)
+  if (ret)
+  {
+    CU_ASSERT (strcmp ("Hello World", ret) == 0)
+    free (ret);
+  }
+}
+
 static _Atomic uint32_t test_file_notify_status = 0u;
 
 static void * test_file_notify_thread (void * arg)
 {
-  uint32_t status = iot_file_watch (TEST_FILE_NAME, iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag);
+  char * file = (char*) arg;
+  uint32_t status = iot_file_watch (file, iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag);
   atomic_store (&test_file_notify_status, status);
   return NULL;
 }
+
 static void test_file_notify (void)
 {
   pthread_t tid;
+  bool ok;
+  int ret;
   iot_store_delete (TEST_FILE_NAME);
   atomic_store (&test_file_notify_status, 0u);
   uint32_t status = iot_file_watch (TEST_FILE_NAME, iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag);
-  CU_ASSERT (status == 0u) // No file
-  iot_file_write (TEST_FILE_NAME, "Initial");
+  CU_ASSERT (status == 0u) // Case 1: File does not exist
+  ok = iot_file_write (TEST_FILE_NAME, "Initial");
+  CU_ASSERT (ok)
+  pthread_create (&tid, NULL, test_file_notify_thread, TEST_FILE_NAME);
   iot_wait_secs (1u);
-  pthread_create (&tid, NULL, test_file_notify_thread, NULL);
-  iot_wait_secs (1u);
-  iot_file_write (TEST_FILE_NAME, "Change");
+  ok = iot_file_append (TEST_FILE_NAME, "Change");
+  CU_ASSERT (ok)
   pthread_join (tid, NULL);
   status = atomic_load (&test_file_notify_status);
-  printf ("Status: %x\n", status);
-  CU_ASSERT (status == iot_file_modify_flag);
+  CU_ASSERT (status == iot_file_modify_flag) // Case 2: File modified
+  pthread_create (&tid, NULL, test_file_notify_thread, TEST_FILE_NAME);
+  iot_wait_secs (1u);
+  ok = iot_file_delete (TEST_FILE_NAME);
+  CU_ASSERT (ok)
+  pthread_join (tid, NULL);
+  status = atomic_load (&test_file_notify_status);
+  CU_ASSERT (status == iot_file_self_delete_flag) // Case 3: File deleted
+  ret = mkdir (TEST_SCOPED_DIR, 0700);
+  CU_ASSERT (ret == 0)
+  ok = iot_file_write (TEST_SCOPED_FILE_NAME, "Initial");
+  CU_ASSERT (ok)
+  pthread_create (&tid, NULL, test_file_notify_thread, TEST_SCOPED_DIR);
+  iot_wait_secs (1u);
+  ok = iot_file_delete (TEST_SCOPED_FILE_NAME);
+  CU_ASSERT (ok)
+  pthread_join (tid, NULL);
+  status = atomic_load (&test_file_notify_status);
+  CU_ASSERT (status == iot_file_delete_flag) // Case 4: Directory content deleted
+  pthread_create (&tid, NULL, test_file_notify_thread, TEST_SCOPED_DIR);
+  iot_wait_secs (1u);
+  ret = rmdir (TEST_SCOPED_DIR);
+  CU_ASSERT (ret == 0)
+  pthread_join (tid, NULL);
+  status = atomic_load (&test_file_notify_status);
+  CU_ASSERT (status == iot_file_self_delete_flag) // Case 5: Directory deleted
 }
 
 #endif
@@ -226,12 +286,13 @@ void cunit_misc_test_init (void)
 #ifdef IOT_HAS_FILE
   CU_add_test (suite, "write_file", test_write_file);
   CU_add_test (suite, "read_file", test_read_file);
+  CU_add_test (suite, "delete_file", test_delete_file);
+  CU_add_test (suite, "file_exists", test_file_exists);
+  CU_add_test (suite, "file_notify", test_file_notify);
+  CU_add_test (suite, "file_append", test_file_append);
 #ifndef _AZURESPHERE_
   CU_add_test (suite, "list_file", test_list_file);
   CU_add_test (suite, "list_config_file", test_list_config_file);
 #endif
-  CU_add_test (suite, "delete_file", test_delete_file);
-  CU_add_test (suite, "file_notify", test_file_notify);
 #endif
-
 }
