@@ -109,16 +109,20 @@ bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t le
 {
   assert (path && binary);
   bool ok = false;
+  bool exists = access (path, F_OK) == 0;
   char tmp_path[PATH_MAX];
-  strncpy (tmp_path, path, PATH_MAX - 5);
-  tmp_path[PATH_MAX-5] = '\0';
-  strcat (tmp_path, ".new");
-  FILE *fd = fopen (tmp_path, "w");
+  if (exists)
+  {
+    strncpy (tmp_path, path, PATH_MAX - 5);
+    tmp_path[PATH_MAX - 5] = '\0';
+    strncat (tmp_path, ".new", 4u);
+  }
+  FILE *fd = fopen (exists ? tmp_path : path, "w");
   if (fd)
   {
     ok = (fwrite (binary, len, 1u, fd) == 1u);
     fclose (fd);
-    if (ok) rename (tmp_path, path);
+    if (ok && exists) rename (tmp_path, path);
   }
   return ok;
 }
@@ -161,8 +165,9 @@ DONE:
   return list;
 }
 
-const uint32_t iot_file_deleted_flag = IN_DELETE_SELF;
-const uint32_t iot_file_modified_flag = IN_MODIFY;
+const uint32_t iot_file_self_delete_flag = IN_DELETE;
+const uint32_t iot_file_delete_flag = IN_DELETE_SELF;
+const uint32_t iot_file_modify_flag = IN_MODIFY;
 
 uint32_t iot_file_watch (const char * path, uint32_t mask)
 {
@@ -170,15 +175,14 @@ uint32_t iot_file_watch (const char * path, uint32_t mask)
   uint32_t change = 0u;
   int fd = inotify_init ();
   int wd = inotify_add_watch (fd, path, mask);
-  if (wd)
+  if (wd > 0)
   {
     char buffer[sizeof (struct inotify_event) + NAME_MAX + 1];
     ssize_t ret = read (fd, buffer, sizeof (buffer));
     if (ret > 0)
     {
-      struct inotify_event *event = (struct inotify_event *) buffer;
-      if (event->mask & IN_MODIFY) change |= IN_MODIFY;
-      if (event->mask & IN_DELETE_SELF) change |= IN_DELETE_SELF;
+      const struct inotify_event * event = (const struct inotify_event *) buffer;
+      change = event->mask & mask;
     }
     inotify_rm_watch (fd, wd);
     close (fd);

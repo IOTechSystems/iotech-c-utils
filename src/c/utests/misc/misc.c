@@ -185,6 +185,32 @@ static void test_delete_file (void)
   CU_ASSERT (iot_store_delete (TEST_FILE_NAME))
 }
 
+static _Atomic uint32_t test_file_notify_status = 0u;
+
+static void * test_file_notify_thread (void * arg)
+{
+  uint32_t status = iot_file_watch (TEST_FILE_NAME, iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag);
+  atomic_store (&test_file_notify_status, status);
+  return NULL;
+}
+static void test_file_notify (void)
+{
+  pthread_t tid;
+  iot_store_delete (TEST_FILE_NAME);
+  atomic_store (&test_file_notify_status, 0u);
+  uint32_t status = iot_file_watch (TEST_FILE_NAME, iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag);
+  CU_ASSERT (status == 0u) // No file
+  iot_file_write (TEST_FILE_NAME, "Initial");
+  iot_wait_secs (1u);
+  pthread_create (&tid, NULL, test_file_notify_thread, NULL);
+  iot_wait_secs (1u);
+  iot_file_write (TEST_FILE_NAME, "Change");
+  pthread_join (tid, NULL);
+  status = atomic_load (&test_file_notify_status);
+  printf ("Status: %x\n", status);
+  CU_ASSERT (status == iot_file_modify_flag);
+}
+
 #endif
 
 void cunit_misc_test_init (void)
@@ -205,5 +231,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "list_config_file", test_list_config_file);
 #endif
   CU_add_test (suite, "delete_file", test_delete_file);
+  CU_add_test (suite, "file_notify", test_file_notify);
 #endif
+
 }

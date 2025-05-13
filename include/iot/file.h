@@ -23,8 +23,9 @@ extern "C" {
 
 /** File change flags for iot_file_watch function */
 
-extern const uint32_t iot_file_deleted_flag;
-extern const uint32_t iot_file_modified_flag;
+extern const uint32_t iot_file_self_delete_flag; /** File or directory deleted (path) */
+extern const uint32_t iot_file_delete_flag;      /** Directory content deleted */
+extern const uint32_t iot_file_modify_flag;      /** File or directory contents modified */
 
 /**
  * @brief Load string from file path, returns file contents as a NULL terminated string
@@ -87,7 +88,8 @@ extern iot_data_t * iot_file_list (const char * directory, const char * regex_st
 /**
  * @brief Watch a file for changes
  *
- * Function to watch a file for changes. If file exists, will block until file content changed or file deleted.
+ * Function to watch a file or directory for changes. If file or directory exists,
+ * will block until the content changes or the file deleted.
  *
  * @param path  File path
  * @param mask  Mask of events to watch for (iot_file_deleted_flag, iot_file_changed_flag)

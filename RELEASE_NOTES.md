@@ -413,4 +413,4 @@
 
 ## Version 1.5.6
 
-- Added File watch function `iot_file_watch' to watch for file changes
+- Added File watch function `iot_file_watch' to watch for file and directory changes
