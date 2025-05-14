@@ -410,3 +410,9 @@
 - Added function `iot_schedule_add_randomised` to add a schedule with the start time randomised across its interval
 - Hint to gcc that log functions are printf-like so as to warn against parameter mismatches
 - Support added for Alpine Linux 3.21
+
+## Version 1.5.6
+
+- Added File watch function `iot_file_watch` to watch for file and directory changes
+- Added function `iot_file_exists` to check if a file or directory exists
+- Added functions `iot_file_append_binary` and `iot_file_append` to append data to a file
