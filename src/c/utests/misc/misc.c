@@ -235,11 +235,12 @@ static void test_file_append_binary (void)
 }
 
 static _Atomic uint32_t test_file_notify_status = 0u;
+static uint32_t test_file_notify_mask = 0u;
 
 static void * test_file_notify_thread (void * arg)
 {
   char * file = (char*) arg;
-  uint32_t status = iot_file_watch (file, iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag);
+  uint32_t status = iot_file_watch (file, test_file_notify_mask);
   atomic_store (&test_file_notify_status, status);
   return NULL;
 }
@@ -249,10 +250,14 @@ static void test_file_notify (void)
   pthread_t tid;
   bool ok;
   int ret;
+  char * buff;
+
   iot_store_delete (TEST_FILE_NAME);
   atomic_store (&test_file_notify_status, 0u);
-  uint32_t status = iot_file_watch (TEST_FILE_NAME, iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag);
+  test_file_notify_mask = iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag | iot_file_access_flag;
+  uint32_t status = iot_file_watch (TEST_FILE_NAME, test_file_notify_status);
   CU_ASSERT (status == 0u) // Case 1: File does not exist
+
   ok = iot_file_write (TEST_FILE_NAME, "Initial");
   CU_ASSERT (ok)
   pthread_create (&tid, NULL, test_file_notify_thread, TEST_FILE_NAME);
@@ -262,6 +267,7 @@ static void test_file_notify (void)
   pthread_join (tid, NULL);
   status = atomic_load (&test_file_notify_status);
   CU_ASSERT (status == iot_file_modify_flag) // Case 2: File modified
+
   pthread_create (&tid, NULL, test_file_notify_thread, TEST_FILE_NAME);
   iot_wait_secs (1u);
   ok = iot_file_delete (TEST_FILE_NAME);
@@ -269,6 +275,7 @@ static void test_file_notify (void)
   pthread_join (tid, NULL);
   status = atomic_load (&test_file_notify_status);
   CU_ASSERT (status == iot_file_self_delete_flag) // Case 3: File deleted
+
   ret = mkdir (TEST_SCOPED_DIR, 0700);
   CU_ASSERT (ret == 0)
   ok = iot_file_write (TEST_SCOPED_FILE_NAME, "Initial");
@@ -280,6 +287,7 @@ static void test_file_notify (void)
   pthread_join (tid, NULL);
   status = atomic_load (&test_file_notify_status);
   CU_ASSERT (status == iot_file_delete_flag) // Case 4: Directory content deleted
+
   pthread_create (&tid, NULL, test_file_notify_thread, TEST_SCOPED_DIR);
   iot_wait_secs (1u);
   ret = rmdir (TEST_SCOPED_DIR);
@@ -287,6 +295,20 @@ static void test_file_notify (void)
   pthread_join (tid, NULL);
   status = atomic_load (&test_file_notify_status);
   CU_ASSERT (status == iot_file_self_delete_flag) // Case 5: Directory deleted
+
+  test_file_notify_mask = iot_file_access_flag;
+  ok = iot_file_write (TEST_FILE_NAME, "Initial");
+  CU_ASSERT (ok)
+  pthread_create (&tid, NULL, test_file_notify_thread, TEST_FILE_NAME);
+  iot_wait_secs (1u);
+  buff = iot_file_read (TEST_FILE_NAME);
+  CU_ASSERT (buff != NULL)
+  free (buff);
+  pthread_join (tid, NULL);
+  status = atomic_load (&test_file_notify_status);
+  CU_ASSERT (status == iot_file_access_flag) // Case 6: File accessed
+  ok = iot_file_delete (TEST_FILE_NAME);
+  CU_ASSERT (ok)
 }
 
 #endif

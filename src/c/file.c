@@ -189,6 +189,7 @@ bool iot_file_exists (const char * path)
 const uint32_t iot_file_self_delete_flag = IN_DELETE_SELF;
 const uint32_t iot_file_delete_flag = IN_DELETE;
 const uint32_t iot_file_modify_flag = IN_MODIFY;
+const uint32_t iot_file_access_flag = IN_ACCESS;
 
 uint32_t iot_file_watch (const char * path, uint32_t mask)
 {
