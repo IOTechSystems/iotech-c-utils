@@ -21,6 +21,13 @@
 extern "C" {
 #endif
 
+/** File change flags for iot_file_watch function */
+
+extern const uint32_t iot_file_self_delete_flag; /** File or directory deleted (path) */
+extern const uint32_t iot_file_delete_flag;      /** Directory content deleted */
+extern const uint32_t iot_file_modify_flag;      /** File or directory contents modified */
+extern const uint32_t iot_file_access_flag;      /** File or directory accessed for read or write */
+
 /**
  * @brief Load string from file path, returns file contents as a NULL terminated string
  *
@@ -36,8 +43,17 @@ extern char * iot_file_read (const char * path);
  * @param str   String to write
  * @return      Whether the string was successfully written to the file
  */
-
 extern bool iot_file_write (const char * path, const char * str);
+
+/**
+ * @brief Appends a NULL terminated string to a file
+ *
+ * @param path  File path
+ * @param str   String to append
+ * @return      Whether the string was successfully appended to the file
+ */
+extern bool iot_file_append (const char * path, const char * str);
+
 /**
  * @brief Delete a file
  *
@@ -72,12 +88,46 @@ extern uint8_t * iot_file_read_binary (const char * path, size_t * len);
 extern bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len);
 
 /**
+ * @brief Write append binary data to a file
+ *
+ * Function to append binary data of given size to a file
+ *
+ * @param path   File path
+ * @param binary The binary array to be appended
+ * @param len    Length of binary array to be appended
+ * @return       Whether the binary was successfully appended to the file
+ */
+extern bool iot_file_append_binary (const char * path, const uint8_t * binary, size_t len);
+
+/**
  * @brief List files in given directory
  * @param directory Directory in which to list files
  * @param regex_str Optional regex string which files must match
  * @return List of files
  */
 extern iot_data_t * iot_file_list (const char * directory, const char * regex_str);
+
+/**
+ * @brief Check if a file exists
+ *
+ * Function to check if a file or directory exists
+ *
+ * @param path  File path
+ * @return      Whether the file or directory exists
+ */
+extern bool iot_file_exists (const char * path);
+
+/**
+ * @brief Watch a file for changes (wrapper for inotify)
+ *
+ * Function to watch a file or directory for changes. If file or directory exists,
+ * will block until the content changes or the file deleted.
+ *
+ * @param path  File path
+ * @param mask  Mask (OR) of events to watch for (iot_file_deleted_flag, iot_file_self_delete_flag, iot_file_changed_flag, iot_file_access_flag)
+ * @return      File change (OR of change flags) or zero if no file
+ */
+extern uint32_t iot_file_watch (const char * path, uint32_t mask);
 
 #ifdef __cplusplus
 }

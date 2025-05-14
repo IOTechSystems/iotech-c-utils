@@ -413,4 +413,7 @@
 
 ## Version 1.5.6
 
-- Added functions `iot_container_stats`, `iot_component_stats`, `iot_component_add_stats_callback`, `iot_component_get_container`
+- Added functions `iot_container_stats`, `iot_component_stats`, `iot_component_add_stats_callback` and `iot_component_get_container`
+- Added File watch function `iot_file_watch` to watch for file and directory changes
+- Added function `iot_file_exists` to check if a file or directory exists
+- Added functions `iot_file_append_binary` and `iot_file_append` to append data to a file
