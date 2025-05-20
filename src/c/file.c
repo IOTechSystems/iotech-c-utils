@@ -90,7 +90,7 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
   {
     fseek (fd, 0, SEEK_END);
     size = ftell (fd);
-    if (size) // Return NULL if file empty
+    if (size != -1) // Return NULL if file empty
     {
       rewind (fd);
       ret = malloc (size + 1u); // Allocate extra byte so can be NULL terminated if a string
@@ -194,22 +194,35 @@ const uint32_t iot_file_access_flag = IN_ACCESS;
 uint32_t iot_file_watch (const char * path, uint32_t mask)
 {
   assert (path);
-  uint32_t change = 0u;
+  uint32_t flags = 0u;
+  mask &= (IN_DELETE_SELF | IN_DELETE | IN_MODIFY | IN_ACCESS); // Only allow supported flags
+  bool write_check = (mask & (IN_MODIFY | IN_DELETE_SELF | IN_DELETE));
   int fd = inotify_init ();
-  int wd = inotify_add_watch (fd, path, mask);
-  if (wd > 0)
+  int wd = inotify_add_watch (fd, path, mask | IN_CLOSE | IN_DELETE_SELF | IN_DELETE); // Add close and delete flags to watch set for termination
+  if (wd != -1)
   {
-    char buffer[sizeof (struct inotify_event) + NAME_MAX + 1];
-    ssize_t ret = read (fd, buffer, sizeof (buffer));
-    if (ret > 0)
+    char buffer[sizeof (struct inotify_event) + NAME_MAX + 1]  __attribute__ ((aligned(8)));
+    while (true)
     {
-      const struct inotify_event * event = (const struct inotify_event *) buffer;
-      change = event->mask & mask;
+      ssize_t ret = read (fd, buffer, sizeof (buffer));
+      const char * ptr = buffer;
+      while (ret > 0) // Process set of events from read
+      {
+        const struct inotify_event * event = (const struct inotify_event *) ptr;
+        flags |= event->mask; // Update change flags
+        size_t size = sizeof (*event) + event->len;
+        ret -= size;
+        ptr += size;
+      }
+      if ((flags & (IN_DELETE_SELF | IN_DELETE)) || (write_check && (flags & IN_CLOSE_WRITE)) || (!write_check && (flags & IN_CLOSE_NOWRITE)))
+      {
+        break; // Stop on deletion or close
+      }
     }
     inotify_rm_watch (fd, wd);
-    close (fd);
   }
-  return change;
+  close (fd);
+  return flags & mask; // Only return user supplied flags
 }
 
 #endif

@@ -121,7 +121,7 @@ extern bool iot_file_exists (const char * path);
  * @brief Watch a file for changes (wrapper for inotify)
  *
  * Function to watch a file or directory for changes. If file or directory exists,
- * will block until the content changes or the file deleted.
+ * will block until the file content changes or the file is accessed or deleted.
  *
  * @param path  File path
  * @param mask  Mask (OR) of events to watch for (iot_file_deleted_flag, iot_file_self_delete_flag, iot_file_changed_flag, iot_file_access_flag)
