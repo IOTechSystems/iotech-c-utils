@@ -1149,7 +1149,7 @@ const void * iot_data_address (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && !data->constant && ((uint32_t) atomic_fetch_sub (&data->refs, 1u) <= 1u))
+  if (data && !data->constant && (atomic_fetch_sub (&data->refs, 1u) <= 1u))
   {
     if (data->base.meta) iot_data_free (data->base.meta);
     switch (data->type)
