@@ -189,16 +189,15 @@ bool iot_file_exists (const char * path)
 const uint32_t iot_file_self_delete_flag = IN_DELETE_SELF;
 const uint32_t iot_file_delete_flag = IN_DELETE;
 const uint32_t iot_file_modify_flag = IN_MODIFY;
-const uint32_t iot_file_access_flag = IN_ACCESS;
 
 uint32_t iot_file_watch (const char * path, uint32_t mask)
 {
+  static const uint32_t stop_flags = IN_CLOSE_WRITE | IN_DELETE_SELF | IN_DELETE;
   assert (path);
   uint32_t flags = 0u;
-  mask &= (IN_DELETE_SELF | IN_DELETE | IN_MODIFY | IN_ACCESS); // Only allow supported flags
-  bool write_check = (mask & (IN_MODIFY | IN_DELETE_SELF | IN_DELETE));
+  mask &= (iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag); // Only allow supported flags
   int fd = inotify_init ();
-  int wd = inotify_add_watch (fd, path, mask | IN_CLOSE | IN_DELETE_SELF | IN_DELETE); // Add close and delete flags to watch set for termination
+  int wd = inotify_add_watch (fd, path, mask | stop_flags); // Add stop flags to watch set for termination
   if (wd != -1)
   {
     char buffer[sizeof (struct inotify_event) + NAME_MAX + 1]  __attribute__ ((aligned(8)));
@@ -214,10 +213,7 @@ uint32_t iot_file_watch (const char * path, uint32_t mask)
         ret -= size;
         ptr += size;
       }
-      if ((flags & (IN_DELETE_SELF | IN_DELETE)) || (write_check && (flags & IN_CLOSE_WRITE)) || (!write_check && (flags & IN_CLOSE_NOWRITE)))
-      {
-        break; // Stop on deletion or close
-      }
+      if (flags & stop_flags) break; // Stop watching if stop flag set
     }
     inotify_rm_watch (fd, wd);
   }
