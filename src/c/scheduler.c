@@ -51,6 +51,26 @@ struct iot_scheduler_t
   struct timespec schd_time;      /* Time for next schedule */
 };
 
+typedef struct iot_scheduler_consts_t
+{
+  iot_data_static_t active_queue_key;
+  iot_data_static_t idle_queue_key;
+} iot_scheduler_consts_t;
+
+static iot_scheduler_consts_t iot_scheduler_consts = { 0 };
+
+static const char * iot_scheduler_strings [] =
+{
+  "active_queue_size", "idle_queue_size", NULL
+};
+
+__attribute__((constructor)) static void iot_scheduler_init (void)
+{
+  const char ** str = iot_scheduler_strings;
+  iot_data_static_t * ptr = (iot_data_static_t *) &iot_scheduler_consts;
+  while (*str) iot_data_alloc_const_string (ptr++, *str++);
+}
+
 static inline void iot_schedule_add_ref (iot_schedule_t * schedule)
 {
   atomic_fetch_add (&schedule->refs, 1u);
@@ -260,10 +280,22 @@ static void * iot_scheduler_thread (void * arg)
   return NULL;
 }
 
+static iot_data_t * iot_scheduler_get_stats (iot_component_t * comp)
+{
+  iot_scheduler_t * scheduler = (iot_scheduler_t *) comp;
+  iot_data_t * result = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_component_lock (comp);
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_scheduler_consts.active_queue_key), iot_data_alloc_ui32 (iot_data_map_size (scheduler->queue)));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_scheduler_consts.idle_queue_key), iot_data_alloc_ui32 (iot_data_map_size (scheduler->idle)));
+  iot_component_unlock (comp);
+  return result;
+}
+
 iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t * logger)
 {
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1u, sizeof (*scheduler));
   iot_component_init (&scheduler->component, IOT_SCHEDULER_FACTORY, (iot_component_start_fn_t) iot_scheduler_start, (iot_component_stop_fn_t) iot_scheduler_stop);
+  iot_component_set_stats_callback (&scheduler->component, iot_scheduler_get_stats);
   scheduler->logger = logger;
   scheduler->idle = iot_data_alloc_map (IOT_DATA_UINT64);
   scheduler->queue = iot_data_alloc_map (IOT_DATA_UINT64);

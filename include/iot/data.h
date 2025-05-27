@@ -103,7 +103,9 @@ typedef struct iot_data_consts_t
   iot_data_static_t category; /**< constant "category" string */
   iot_data_static_t config;   /**< constant "config" string */
   iot_data_static_t name;     /**< constant "name" string */
+  iot_data_static_t meta;     /**< constant "meta" string */
   iot_data_static_t state;    /**< constant "state" string */
+  iot_data_static_t stats;    /**< constant "stats" string */
   iot_data_static_t type;     /**< constant "type" string */
 } iot_data_consts_t;
 
