@@ -1,0 +1,2 @@
+Test executable to monitor inotify events generated from a target file or
+directory.
