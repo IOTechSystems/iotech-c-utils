@@ -312,7 +312,7 @@ static void iot_container_running (const iot_container_t * cont)
   unsigned tries = 0u;
 
   // Timeout wait for all components to start
-  while (true)
+  while (tries++ < IOT_CONTAINER_RUN_RETRIES)
   {
     iot_data_list_iter (cont->components, &iter);
     while (iot_data_list_iter_next (&iter))
@@ -322,7 +322,6 @@ static void iot_container_running (const iot_container_t * cont)
     }
     break;
 AGAIN:
-    if (++tries == IOT_CONTAINER_RUN_RETRIES) break;
     iot_wait_msecs (sleep_msecs);
   }
 
@@ -490,7 +489,7 @@ iot_data_t * iot_container_stats (iot_container_t * cont)
   {
     iot_component_t * comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter); // double check cast
     iot_data_t * stats = iot_component_stats (comp);
-    if (stats) iot_data_map_add (map, iot_data_alloc_string (comp->name, IOT_DATA_REF), stats);
+    if (stats) iot_data_map_add (map, iot_data_alloc_string (comp->name, IOT_DATA_COPY), stats);
   }
   iot_data_string_map_add (map, "startup_time", iot_data_alloc_ui64(cont->startup_time));
   pthread_rwlock_unlock (&cont->lock);
