@@ -413,6 +413,8 @@
 
 ## Version 1.5.6
 
-- Added File watch function `iot_file_watch` to watch for file and directory changes
+[- Added File watch function `iot_file_watch` to watch for file and directory changes
 - Added function `iot_file_exists` to check if a file or directory exists
 - Added functions `iot_file_append_binary` and `iot_file_append` to append data to a file
+- Added function `iot_data_bounded_equal` to compare if two numeric datatypes are equal within a given bound
+

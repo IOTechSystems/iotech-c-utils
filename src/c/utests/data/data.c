@@ -5503,6 +5503,29 @@ static void test_data_restrict (void)
   iot_data_free (list);
 }
 
+static void test_check_bounds (iot_data_t * v1, iot_data_t * v2)
+{
+  CU_ASSERT (! iot_data_bounded_equal (v1, v2, 0.0f))
+  CU_ASSERT (! iot_data_bounded_equal (v1, v2, 1.0f))
+  CU_ASSERT (iot_data_bounded_equal (v1, v2, 2.1f))
+  CU_ASSERT (iot_data_bounded_equal (v1, v2, 3.0f))
+  iot_data_free (v1);
+  iot_data_free (v2);
+}
+static void test_data_bounded_equal (void)
+{
+  test_check_bounds (iot_data_alloc_i8 (1), iot_data_alloc_i8 (-1));
+  test_check_bounds (iot_data_alloc_ui8 (1), iot_data_alloc_ui8 (3));
+  test_check_bounds (iot_data_alloc_i16 (1), iot_data_alloc_i16 (-1));
+  test_check_bounds (iot_data_alloc_ui16 (1), iot_data_alloc_ui16 (3));
+  test_check_bounds (iot_data_alloc_i32 (1), iot_data_alloc_i32 (-1));
+  test_check_bounds (iot_data_alloc_ui32 (1), iot_data_alloc_ui32 (3));
+  test_check_bounds (iot_data_alloc_i64 (1), iot_data_alloc_i64 (-1));
+  test_check_bounds (iot_data_alloc_ui64 (1), iot_data_alloc_ui64 (3));
+  test_check_bounds (iot_data_alloc_f32 (1.0), iot_data_alloc_f32 (3.0));
+  test_check_bounds (iot_data_alloc_f64 (1.0), iot_data_alloc_f64 (3.0));
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -5701,4 +5724,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_block", test_data_block);
   CU_add_test (suite, "data_iter", test_data_iter);
   CU_add_test (suite, "data_restrict", test_data_restrict);
+  CU_add_test (suite, "data_bounded_equal", test_data_bounded_equal);
 }
