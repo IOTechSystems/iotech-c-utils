@@ -1,6 +1,9 @@
 FROM ubuntu:18.04
 ENV SYSTEM="ubuntu-18.04"
 LABEL MAINTAINER="IOTech <support@iotechsys.com>"
+ENV DEBIAN_FRONTEND=noninteractive
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://www.mirrorservice.org/sites/archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.ubuntu.com/ubuntu/|http://www.mirrorservice.org/sites/archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
 RUN apt-get update && apt-get install -y lsb-release apt-transport-https curl gnupg build-essential file wget git gcc make \
   doxygen graphviz ruby-dev libxml2-dev libxslt1-dev zlib1g-dev libyaml-dev libcbor-dev
 RUN gem install public_suffix -v 4.0.7
