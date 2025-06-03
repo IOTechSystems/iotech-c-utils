@@ -2582,6 +2582,7 @@ void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required)
 
 void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape)
 {
+  assert (add);
   size_t len = strlen (add);
   size_t adj_len = len;
   size_t i;
