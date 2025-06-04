@@ -250,7 +250,6 @@ static void test_file_notify (void)
   pthread_t tid;
   bool ok;
   int ret;
-  char * buff;
 
   iot_store_delete (TEST_FILE_NAME);
   atomic_store (&test_file_notify_status, 0u);

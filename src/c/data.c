@@ -10,6 +10,7 @@
 #include "iot/uuid.h"
 #include <stdarg.h>
 #include <float.h>
+#include <math.h>
 
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
 #define IOT_DATA_IS_FLOAT_TYPE(t) ((t) == IOT_DATA_FLOAT32 || (t) == IOT_DATA_FLOAT64)
@@ -681,6 +682,25 @@ int iot_data_compare_value (const iot_data_t * data1, const iot_data_t * data2)
 bool iot_data_equal (const iot_data_t * v1, const iot_data_t * v2)
 {
   return ((iot_data_hash (v1) == iot_data_hash (v2)) && (iot_data_cmp (v1, v2, false) == 0));
+}
+
+bool iot_data_bounded_equal (const iot_data_t * data1, const iot_data_t * data2, float bound)
+{
+  assert (bound >= 0.0f);
+  bool eq = false;
+  if (data1 && data2 && (data2->type == data1->type) && (data1->type <= IOT_DATA_FLOAT64))
+  {
+    double d1 = 0.0;
+    double d2 = 0.0;
+    iot_data_cast (data1, IOT_DATA_FLOAT64, &d1);
+    iot_data_cast (data2, IOT_DATA_FLOAT64, &d2);
+    eq = fabsl (d1 - d2) <= bound;
+  }
+  else
+  {
+    eq = iot_data_equal (data1, data2);
+  }
+  return eq;
 }
 
 bool iot_data_equal_value (const iot_data_t * data1, const iot_data_t * data2)
@@ -2562,6 +2582,7 @@ void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required)
 
 void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, bool escape)
 {
+  assert (add);
   size_t len = strlen (add);
   size_t adj_len = len;
   size_t i;

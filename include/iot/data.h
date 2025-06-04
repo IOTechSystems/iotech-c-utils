@@ -2299,6 +2299,19 @@ extern iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t ** excepti
 extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 
 /**
+ * @brief Check for equality of two iot_data types within a given bound (difference).
+ * Bound checking is applied only for integer or floating point types. For non-integer or non-floating point types
+ * the result is as per the iot_data_equal function.
+ *
+ * @param  data1 Input data1 (can be NULL)
+ * @param  data2 Input data2 (can be NULL)
+ * @param  bound Bound for equality check, if zero then exact equality is checked. Bound must be zero or a positive value.
+ * @return       'true' if data1 and data2 are of the same integer or floating point type and the value difference is within bound,
+ *                otherwise as per iot_data_equal function.
+ */
+extern bool iot_data_bounded_equal (const iot_data_t * data1, const iot_data_t * data2, float bound);
+
+/**
  * @brief Check for equality of two iot_data instances. Integer or floating types will compare as equal
  *        if they have the same value.
  *
