@@ -5505,10 +5505,10 @@ static void test_data_restrict (void)
 
 static void test_check_bounds (iot_data_t * v1, iot_data_t * v2)
 {
-  CU_ASSERT (! iot_data_bounded_equal (v1, v2, 0.0f))
-  CU_ASSERT (! iot_data_bounded_equal (v1, v2, 1.0f))
-  CU_ASSERT (iot_data_bounded_equal (v1, v2, 2.1f))
-  CU_ASSERT (iot_data_bounded_equal (v1, v2, 3.0f))
+  CU_ASSERT_FALSE (iot_data_bounded_equal (v1, v2, 0.0f))
+  CU_ASSERT_FALSE (iot_data_bounded_equal (v1, v2, 1.0f))
+  CU_ASSERT_TRUE (iot_data_bounded_equal (v1, v2, 2.1f))
+  CU_ASSERT_TRUE (iot_data_bounded_equal (v1, v2, 3.0f))
   iot_data_free (v1);
   iot_data_free (v2);
 }
@@ -5524,6 +5524,12 @@ static void test_data_bounded_equal (void)
   test_check_bounds (iot_data_alloc_ui64 (1), iot_data_alloc_ui64 (3));
   test_check_bounds (iot_data_alloc_f32 (1.0), iot_data_alloc_f32 (3.0));
   test_check_bounds (iot_data_alloc_f64 (1.0), iot_data_alloc_f64 (3.0));
+  iot_data_t * val = iot_data_alloc_i8 (1);
+  CU_ASSERT_TRUE (iot_data_bounded_equal (NULL, NULL, 0.0f))
+  CU_ASSERT_FALSE (iot_data_bounded_equal (val, NULL, 0.0f))
+  CU_ASSERT_FALSE (iot_data_bounded_equal (NULL, val, 0.0f))
+  CU_ASSERT_TRUE (iot_data_bounded_equal (val, val, 0.0f))
+  iot_data_free (val);
 }
 
 void cunit_data_test_init (void)
