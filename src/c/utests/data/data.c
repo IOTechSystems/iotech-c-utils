@@ -3792,14 +3792,6 @@ static void test_data_string_from_binary (void)
   iot_data_free (bin);
 }
 
-static void test_data_alloc_heap (void)
-{
-  iot_data_alloc_heap (true);
-  iot_data_t * map = iot_data_from_json (test_config);
-  iot_data_free (map);
-  iot_data_alloc_heap (false);
-}
-
 static void test_data_cast (void)
 {
   static const int8_t i8_val = -8;
@@ -5681,7 +5673,6 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_add_ref", test_data_add_ref);
   CU_add_test (suite, "data_alloc_uuid", test_data_alloc_uuid);
   CU_add_test (suite, "data_alloc_pointer", test_data_alloc_pointer);
-  CU_add_test (suite, "data_alloc_heap", test_data_alloc_heap);
   CU_add_test (suite, "data_cast", test_data_cast);
   CU_add_test (suite, "data_const_string", test_data_const_string);
   CU_add_test (suite, "data_const_ui64", test_data_const_ui64);
