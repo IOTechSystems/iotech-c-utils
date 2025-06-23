@@ -94,9 +94,12 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
     {
       rewind (fd);
       ret = malloc (size + 1u); // Allocate extra byte so can be NULL terminated if a string
-      size_t items = fread (ret, size, 1u, fd);
-      assert (items == 1);
-      (void) items;
+      if (size)
+      {
+        size_t items = fread (ret, size, 1u, fd);
+        assert (items == 1);
+        (void) items;
+      }
       ret[size] = 0; // String NULL terminator
     }
     fclose (fd);
