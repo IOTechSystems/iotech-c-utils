@@ -16,10 +16,6 @@
 #define IOT_DATA_IS_INT_TYPE(t) ((t) >= IOT_DATA_INT8 && (t) <= IOT_DATA_UINT64)
 #define IOT_DATA_IS_SIGNED_TYPE(t) ((t) == IOT_DATA_INT8 || (t) == IOT_DATA_INT16 || (t) == IOT_DATA_INT32 || (t) == IOT_DATA_INT64)
 
-#if defined (NDEBUG) || defined (_AZURESPHERE_)
-#define IOT_DATA_CACHE
-#endif
-
 #define IOT_DATA_TYPES (IOT_DATA_INVALID + 1)
 #define IOT_MEMORY_BLOCK_SIZE 4096u
 #define IOT_VAL_BUFF_SIZE 31u
@@ -28,7 +24,6 @@
 
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
-static _Thread_local bool iot_data_alloc_from_heap = false; /* Thread specific memory allocation policy */
 iot_data_static_t iot_data_order = { 0 };
 static const char * iot_data_const_strings [] = { "category","config","name","meta","state","stats","type",NULL };
 
@@ -84,7 +79,6 @@ typedef struct iot_node_t
   iot_data_t * key;
   iot_data_t * value;
   iot_node_colour_t colour;
-  bool heap : 1;
 } iot_node_t;
 
 typedef struct iot_data_map_t
@@ -170,14 +164,6 @@ _Static_assert (sizeof (iot_data_struct_dummy_t) == 2 * sizeof (iot_data_static_
 _Static_assert (sizeof (int) == sizeof (int32_t) || sizeof (int) == sizeof (int64_t), "int not int32_t or int64_t");
 _Static_assert (sizeof (unsigned) == sizeof (uint32_t) || sizeof (unsigned) == sizeof (uint64_t), "unsigned not uint32_t or uint64_t");
 
-// Data cache usually disabled for debug builds as otherwise too difficult to trace leaks
-
-#ifdef IOT_DATA_CACHE
-static iot_block_t * iot_data_cache = NULL;
-static iot_memory_block_t * iot_data_blocks = NULL;
-static pthread_mutex_t iot_data_mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
-
 /* Static values for boolean and null types */
 
 static iot_data_value_base_t iot_data_bool_true = { .value.bl = true, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
@@ -229,13 +215,6 @@ uint32_t iot_data_type_size (iot_data_type_t type)
   return (type <= IOT_DATA_BINARY) ? iot_data_type_sizes[type] : 0u;
 }
 
-bool iot_data_alloc_heap (bool set)
-{
-  bool old = iot_data_alloc_from_heap;
-  iot_data_alloc_from_heap = set;
-  return old;
-}
-
 extern uint32_t iot_data_block_size (void)
 {
   return IOT_DATA_BLOCK_SIZE;
@@ -243,30 +222,7 @@ extern uint32_t iot_data_block_size (void)
 
 static void * iot_data_alloc_block (void)
 {
-#ifdef IOT_DATA_CACHE
-  pthread_mutex_lock (&iot_data_mutex);
-  if (iot_data_cache == NULL)
-  {
-    iot_memory_block_t * block = calloc (1, IOT_MEMORY_BLOCK_SIZE);
-    block->next = iot_data_blocks;
-    iot_data_blocks = block;
-    uint8_t * iter = (uint8_t*) block->chunks;
-    iot_data_cache = (iot_block_t*) iter;
-    for (unsigned i = 0; i < (IOT_DATA_BLOCKS - 1); i++)
-    {
-      iot_block_t * prev = (iot_block_t*) iter;
-      iter += IOT_DATA_BLOCK_SIZE;
-      prev->next = (iot_block_t*) iter;
-    }
-  }
-  iot_block_t * data = iot_data_cache;
-  iot_data_cache = data->next;
-  pthread_mutex_unlock (&iot_data_mutex);
-  memset (data, 0, IOT_DATA_BLOCK_SIZE);
-  return data;
-#else
   return calloc (1, IOT_DATA_BLOCK_SIZE);
-#endif
 }
 
 extern void * iot_data_block_alloc (size_t size)
@@ -276,15 +232,7 @@ extern void * iot_data_block_alloc (size_t size)
 
 extern void iot_data_block_free (void  * ptr)
 {
-#ifdef IOT_DATA_CACHE
-  pthread_mutex_lock (&iot_data_mutex);
-  iot_block_t * block = ptr;
-  block->next = iot_data_cache;
-  iot_data_cache = block;
-  pthread_mutex_unlock (&iot_data_mutex);
-#else
   free (ptr);
-#endif
 }
 
 static inline void iot_data_map_hash (iot_data_t * map, const iot_data_t * key, const iot_data_t * value)
@@ -335,20 +283,12 @@ uint32_t iot_data_hash (const iot_data_t * data)
 
 static inline void iot_element_free (iot_element_t * element)
 {
-  (element->heap) ? free (element) : iot_data_block_free (element);
+  free (element);
 }
 
-static iot_element_t * iot_element_alloc (void)
+static inline iot_element_t * iot_element_alloc (void)
 {
-  bool heap = iot_data_alloc_from_heap;
-  iot_element_t * element = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_alloc_block ();
-  element->heap = heap;
-  return element;
-}
-
-static inline void iot_data_block_free_data (iot_data_t * data)
-{
-  (data->heap) ? free (data) : iot_data_block_free (data);
+  return calloc (1, IOT_DATA_BLOCK_SIZE);
 }
 
 static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
@@ -361,9 +301,7 @@ static void iot_data_block_init (iot_data_t * data, iot_data_type_t type)
 
 static void * iot_data_block_alloc_data (iot_data_type_t type)
 {
-  bool heap = iot_data_alloc_from_heap;
-  iot_data_t * data = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_alloc_block ();
-  data->heap = heap;
+  iot_data_t * data = calloc (1, IOT_DATA_BLOCK_SIZE);
   data->composed = IOT_DATA_IS_COMPOSED_TYPE (type);
   iot_data_block_init (data, type);
   return data;
@@ -378,14 +316,6 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot
 
 static void iot_data_fini (void)
 {
-#ifdef IOT_DATA_CACHE
-  while (iot_data_blocks)
-  {
-    iot_memory_block_t * block = iot_data_blocks;
-    iot_data_blocks = block->next;
-    free (block);
-  }
-#endif
 }
 
 static void iot_data_init (void)
@@ -406,9 +336,6 @@ static void iot_data_init (void)
   printf ("sizeof (iot_data_list_static_t): %zu\n", sizeof (iot_data_list_static_t));
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
-#endif
-#ifdef IOT_DATA_CACHE
-  iot_data_block_free (iot_data_alloc_block ());  // Initialize data cache
 #endif
   iot_data_alloc_const_pointer (&iot_data_order, &iot_data_order);
   const char ** str = iot_data_const_strings;
@@ -1159,7 +1086,7 @@ void iot_data_free (iot_data_t * data)
         iot_data_value_t * val = (iot_data_value_t*) data;
         if (data->release && (val->value.str != val->buff))
         {
-          data->release_block ? iot_data_block_free (val->value.str) : free (val->value.str);
+          free (val->value.str);
         }
         break;
       }
@@ -1205,7 +1132,7 @@ void iot_data_free (iot_data_t * data)
       }
       default: break;
     }
-    iot_data_block_free_data (data);
+    free (data);
   }
 }
 
@@ -2975,9 +2902,7 @@ static inline iot_node_t * iot_node_sibling (const iot_node_t * node)
 
 static inline iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key, iot_data_t * value)
 {
-  bool heap = iot_data_alloc_from_heap;
-  iot_node_t * node = heap ? calloc (1, IOT_DATA_BLOCK_SIZE) : iot_data_alloc_block ();
-  node->heap = heap;
+  iot_node_t * node = calloc (1, IOT_DATA_BLOCK_SIZE);
   node->value = value;
   node->key = key;
   node->parent = parent;
@@ -2989,7 +2914,7 @@ static void iot_node_delete (iot_node_t * node)
 {
   iot_data_free (node->key);
   iot_data_free (node->value);
-  (node->heap) ? free (node) : iot_data_block_free (node);
+  free (node);
 }
 
 static inline iot_node_t * iot_node_minimum (iot_node_t * node)
