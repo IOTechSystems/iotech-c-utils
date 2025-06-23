@@ -221,7 +221,7 @@ extern uint32_t iot_data_block_size (void)
   return IOT_DATA_BLOCK_SIZE;
 }
 
-static void * iot_data_alloc_block (void)
+static inline void * iot_data_alloc_block (void)
 {
   return calloc (1, IOT_DATA_BLOCK_SIZE);
 }
@@ -315,10 +315,6 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot
   return val;
 }
 
-static void iot_data_fini (void)
-{
-}
-
 static void iot_data_init (void)
 {
 #ifdef IOT_DEBUG_SIZE
@@ -342,7 +338,6 @@ static void iot_data_init (void)
   const char ** str = iot_data_const_strings;
   iot_data_static_t * ptr = (iot_data_static_t*) &iot_data_consts;
   while (*str) iot_data_alloc_const_string (ptr++, *str++);
-  atexit (iot_data_fini);
 }
 
 iot_data_t * iot_data_add_ref (const iot_data_t * data)
