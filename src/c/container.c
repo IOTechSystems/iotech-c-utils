@@ -312,7 +312,7 @@ static void iot_container_running (const iot_container_t * cont)
   unsigned tries = 0u;
 
   // Timeout wait for all components to start
-  while (tries++ < IOT_CONTAINER_RUN_RETRIES)
+  while (true)
   {
     iot_data_list_iter (cont->components, &iter);
     while (iot_data_list_iter_next (&iter))
@@ -322,6 +322,7 @@ static void iot_container_running (const iot_container_t * cont)
     }
     break;
 AGAIN:
+    if (++tries == IOT_CONTAINER_RUN_RETRIES) break;
     iot_wait_msecs (sleep_msecs);
   }
 
