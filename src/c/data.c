@@ -26,7 +26,7 @@
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
 iot_data_static_t iot_data_order = { 0 };
-static const char * iot_data_const_strings [] = { "category","config","name","state","type",NULL };
+static const char * iot_data_const_strings [] = { "category","config","name","meta","state","stats","type",NULL };
 
 iot_data_consts_t iot_data_consts = { 0 };
 

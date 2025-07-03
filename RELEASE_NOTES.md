@@ -421,3 +421,8 @@
 
 - Data memory management update for better multi-threaded performance
 - Added function `iot_data_bounded_equal` to compare if two numeric datatypes are equal within a given bound
+
+## Version 1.6.0
+
+- Added functions `iot_container_stats`, `iot_component_stats`, `iot_component_add_stats_callback` and `iot_component_get_container`
+
