@@ -425,4 +425,5 @@
 ## Version 1.6.0
 
 - Added functions `iot_container_stats`, `iot_component_stats`, `iot_component_add_stats_callback` and `iot_component_get_container`
+- Support added for Alpine Linux 3.22
 
