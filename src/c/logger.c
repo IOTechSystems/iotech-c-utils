@@ -99,12 +99,39 @@ static iot_loglevel_t iot_logger_effective_level (const iot_logger_impl_t *logge
   return (logger->next && logger->next->base.level > logger->mylevel) ? logger->next->base.level : logger->mylevel;
 }
 
+static void iot_logger_relevel (iot_logger_t * l)
+{
+  iot_logger_impl_t *logger = (iot_logger_impl_t *)l;
+  iot_data_list_iter_t iter;
+  pthread_mutex_lock (&logger->mtx);
+  iot_data_list_iter (logger->parents, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    iot_component_t *comp = iot_container_find_component (l->component.container, iot_data_list_iter_string_value (&iter));
+    if (comp)
+    {
+      iot_logger_impl_t *parent = (iot_logger_impl_t *)comp;
+      parent->base.level = iot_logger_effective_level (parent);
+      iot_logger_relevel (&parent->base);
+    }
+    else
+    {
+      iot_data_list_iter_remove (&iter);
+    }
+  }
+  pthread_mutex_unlock (&logger->mtx);
+}
+
 void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
 {
   assert (logger);
   iot_logger_impl_t *impl = (iot_logger_impl_t *)logger;
   impl->mylevel = level;
   logger->level = iot_logger_effective_level (impl);
+  if (logger->component.state == IOT_COMPONENT_RUNNING)
+  {
+    iot_logger_relevel (logger);
+  }
 }
 
 iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, bool start, iot_logger_t * next, iot_log_function_t impl, void * ctx, iot_log_free_fn_t freectx)
@@ -364,33 +391,9 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   return (iot_component_t*) result;
 }
 
-void iot_logger_relevel (iot_logger_t * l, iot_container_t * cont)
-{
-  iot_logger_impl_t *logger = (iot_logger_impl_t *)l;
-  iot_data_list_iter_t iter;
-  pthread_mutex_lock (&logger->mtx);
-  iot_data_list_iter (logger->parents, &iter);
-  while (iot_data_list_iter_next (&iter))
-  {
-    iot_component_t *comp = iot_container_find_component (cont, iot_data_list_iter_string_value (&iter));
-    if (comp)
-    {
-      iot_logger_impl_t *parent = (iot_logger_impl_t *)comp;
-      parent->base.level = iot_logger_effective_level (parent);
-      iot_logger_relevel (&parent->base, cont);
-    }
-    else
-    {
-      iot_data_list_iter_remove (&iter);
-    }
-  }
-  pthread_mutex_unlock (&logger->mtx);
-}
-
 static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map)
 {
   iot_logger_set_level ((iot_logger_t*) comp, iot_logger_config_level (map));
-  iot_logger_relevel ((iot_logger_t *) comp, cont);
   return true;
 }
 

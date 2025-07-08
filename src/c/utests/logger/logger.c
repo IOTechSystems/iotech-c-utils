@@ -254,9 +254,7 @@ static void cunit_logger_chained (void)
   CU_ASSERT (cunit_custom_log_count == 9u)
 
   iot_logger_set_level (logger1, IOT_LOG_DEBUG);
-  iot_logger_relevel (logger1, cont);
   iot_logger_set_level (logger3, IOT_LOG_WARN);
-  iot_logger_relevel (logger3, cont);
 
   cunit_custom_log_count = 0u;
   cunit_test_logs (logger3);
