@@ -197,19 +197,6 @@ extern void iot_log__va_log (iot_logger_t * logger, iot_loglevel_t level, const 
 extern void iot_logger_set_level (iot_logger_t *logger, iot_loglevel_t level);
 
 /**
- * @brief  Recalculate log levels for the chain of loggers
- *         This should be called following iot_logger_set_level
- *         In v1.6 this function will be removed (iot_logger_set_level
- *         will take an additional container parameter allowing it to
- *         perform the relevel operation internally)
- *
- * @param logger  Pointer to the logger
- * @param cont    Container in which the loggers are running
- */
-
-extern void iot_logger_relevel (iot_logger_t * logger, iot_container_t * cont);
-
-/**
  * @brief Parse string into log level
  * @param str level string
  * @return log level corresponding to the string, or IOT_LOGLEVEL_DEFAULT
