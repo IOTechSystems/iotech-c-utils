@@ -817,7 +817,7 @@ extern const char * iot_data_list_iter_string_value (const iot_data_list_iter_t 
  * @param iter  Input iterator
  * @return      Pointer type value from the list if iter is valid, NULL otherwise
  */
-extern const void * iot_data_list_iter_pointer_value (const iot_data_list_iter_t * iter);
+extern void * iot_data_list_iter_pointer_value (const iot_data_list_iter_t * iter);
 
 /**
  * @brief Remove the data associated with a list iterator. The list iterator is set to
@@ -1231,7 +1231,7 @@ extern const char * iot_data_string (const iot_data_t * data);
  * @param data  Data pointer to retrieve value
  * @return      Returned pointer or NULL if date not of type POINTER
  */
-extern const void * iot_data_pointer (const iot_data_t * data);
+extern void * iot_data_pointer (const iot_data_t * data);
 
 /**
  * @brief Cast integer, float or boolean values
@@ -1492,7 +1492,7 @@ extern const iot_data_t * iot_data_map_get_list (const iot_data_t * map, const i
  * @param key          Key for the value
  * @return             Pointer found by key in the map. NULL if not found or not a pointer
  */
-extern const void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key);
+extern void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key);
 
 /**
  * @brief  Get value from the map for a key provided
@@ -1632,7 +1632,7 @@ extern const iot_data_t * iot_data_string_map_get_list (const iot_data_t * map, 
  * @param key          String key for the value
  * @return             Pointer found by key in the map. NULL if not found or not a map.
  */
-extern const void * iot_data_string_map_get_pointer (const iot_data_t * map, const char * key);
+extern void * iot_data_string_map_get_pointer (const iot_data_t * map, const char * key);
 
 /**
  * @brief  Get the key type of map
@@ -1698,7 +1698,7 @@ extern const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32
  * @param index  Vector index for value
  * @return       Pointer from value at index (NULL if invalid index ot value not a pointer)
  */
-extern const void * iot_data_vector_get_pointer (const iot_data_t * vector, uint32_t index);
+extern void * iot_data_vector_get_pointer (const iot_data_t * vector, uint32_t index);
 
 /**
  * @brief Resize a vector
@@ -1825,7 +1825,7 @@ extern const iot_data_t * iot_data_map_start (iot_data_t * map);
  * @param  map   Input map
  * @return       Pointer from the first element in the map
  */
-extern const void * iot_data_map_start_pointer (iot_data_t * map);
+extern void * iot_data_map_start_pointer (iot_data_t * map);
 
 /**
  * @brief Return last element in a map or NULL if map empty
@@ -1841,7 +1841,7 @@ extern const iot_data_t * iot_data_map_end (iot_data_t * map);
  * @param  map   Input map
  * @return       Pointer from the last element in the map
  */
-extern const void * iot_data_map_end_pointer (iot_data_t * map);
+extern void * iot_data_map_end_pointer (iot_data_t * map);
 
 /**
  * @brief Update the iterator to point to the next element within a map
@@ -1934,7 +1934,7 @@ extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * 
  * @param iter  Input iterator
  * @return      Pointer type value from the map if iter is valid, NULL otherwise
  */
-extern const void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter);
+extern void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter);
 
 /**
  * @brief Get boolean value from the map referenced by an iterator
@@ -2029,7 +2029,7 @@ extern const char * iot_data_vector_iter_string_value (const iot_data_vector_ite
  * @param iter  Input iterator
  * @return      Pointer type value from the vector if iter is valid, NULL otherwise
  */
-extern const void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t * iter);
+extern void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t * iter);
 
 /**
  * @brief Replace Value from the vector at the index referenced by iterator
