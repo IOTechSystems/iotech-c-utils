@@ -112,15 +112,20 @@ extern iot_component_state_t iot_component_wait (iot_component_t * component, ui
   return state;
 }
 
-extern iot_component_state_t iot_component_wait_and_lock (iot_component_t * component, uint32_t states)
+extern iot_component_state_t iot_component_wait_locked (iot_component_t * component, uint32_t states)
 {
-  assert (component);
-  IOT_RET_CHECK (pthread_mutex_lock (&component->mutex));
   while ((component->state & states) == 0)
   {
     pthread_cond_wait (&component->cond, &component->mutex);
   }
   return component->state;
+}
+
+extern iot_component_state_t iot_component_wait_and_lock (iot_component_t * component, uint32_t states)
+{
+  assert (component);
+  IOT_RET_CHECK (pthread_mutex_lock (&component->mutex));
+  return iot_component_wait_locked (component, states);
 }
 
 iot_component_state_t iot_component_lock (iot_component_t * component)

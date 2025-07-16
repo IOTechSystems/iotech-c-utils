@@ -127,10 +127,10 @@ static void * iot_threadpool_thread (void * arg)
   iot_log_debug (pool->logger, "Thread %s #%" PRIu16 " starting", name, th->id);
 
   atomic_fetch_add (&pool->created, 1u);
+  iot_component_lock (comp);
   while (true)
   {
-    state = iot_component_wait_and_lock (comp, (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING);
-
+    state = iot_component_wait_locked (comp, (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING);
     if (state == IOT_COMPONENT_DELETED) // Exit thread on deletion
     {
       pending_delete = th->pending_delete;
@@ -179,7 +179,6 @@ static void * iot_threadpool_thread (void * arg)
       iot_log_trace (pool->logger, "Thread %" PRIu16 " waiting for new job", th->id);
       pthread_cond_wait (&pool->job_cond, &comp->mutex); // Wait for new job
     }
-    iot_component_unlock (comp);
   }
   iot_log_debug (pool->logger, "Thread %" PRIu16 " exiting", th->id);
   atomic_fetch_sub (&pool->created, 1u);

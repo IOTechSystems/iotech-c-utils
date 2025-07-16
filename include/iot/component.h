@@ -226,6 +226,26 @@ extern bool iot_component_set_starting (iot_component_t * component);
 extern iot_component_state_t iot_component_wait (iot_component_t * component, uint32_t states);
 
 /**
+ * @brief Block until the component is in a given state 
+ *
+ * The function blocks until the component is in one of a given set of states.
+ * Expects the component to be locked prior to calling.
+ *
+ * @code
+ *
+ *   iot_component_lock (myComponent);
+ *   iot_component_state_t state = iot_component_wait_locked (myComponent, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+ *   iot_component_unlock (myComponent);
+ *
+ * @endcode
+ *
+ * @param component  Pointer to the component
+ * @param states     Logical OR of states on which to wait
+ * @return           State of the component that resulted in unblocking (one of states)
+ */
+extern iot_component_state_t iot_component_wait_locked (iot_component_t * component, uint32_t states);
+
+/**
  * @brief Block until the component state is changed to states
  *
  * The function that acquires a lock and blocks the calling thread for the component until the state does not change to state(s) provided.
