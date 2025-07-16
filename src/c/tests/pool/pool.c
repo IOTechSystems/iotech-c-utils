@@ -30,12 +30,12 @@ static const size_t ITERS = 1000;
 static const size_t THREADCOUNT = 14;
 static const size_t NODE_COUNT = 100;
 
-static void *node_process_request(void * data)
+static void * node_process_request (void * data)
 {
-  node_t *node = data;
+  node_t * node = data;
 
   pthread_mutex_lock (&node->mutex);
-  iot_data_t *request = iot_data_list_head_pop (node->request_list);
+  iot_data_t * request = iot_data_list_head_pop (node->request_list);
   pthread_mutex_unlock (&node->mutex);
 
   iot_wait_usecs (PROCESS_REQUEST_SLEEP_US);
@@ -54,9 +54,9 @@ static void *node_process_request(void * data)
 int main (int argc, char ** argv)
 {
   node_t nodes[NODE_COUNT];
-  iot_threadpool_t *pool = iot_threadpool_alloc (THREADCOUNT, 0, -1, -1, NULL);
+  iot_threadpool_t * pool = iot_threadpool_alloc (THREADCOUNT, 0, -1, -1, NULL);
 
-  for (size_t i=0; i<NODE_COUNT;i++)
+  for (size_t i = 0; i < NODE_COUNT; i++)
   {
     pthread_mutex_init (&nodes[i].mutex, NULL);
     nodes[i].request_list = iot_data_alloc_list ();
@@ -68,13 +68,13 @@ int main (int argc, char ** argv)
 
   uint64_t call_count = 0;
   uint64_t start = iot_time_msecs ();
-  for (size_t i=0; i<ITERS; i++)
+  for (size_t i = 0; i < ITERS; i++)
   {
-    for (size_t j=0; j<NODE_COUNT; j++)
+    for (size_t j = 0; j < NODE_COUNT; j++)
     {
-      node_t *node = &nodes[j];
+      node_t * node = &nodes[j];
       pthread_mutex_lock (&node->mutex);
-      iot_data_list_tail_push (node->request_list, iot_data_alloc_null());
+      iot_data_list_tail_push (node->request_list, iot_data_alloc_null ());
       if (iot_data_list_length (node->request_list) == 1) //first item
       {
         iot_threadpool_add_work (pool, node_process_request, node, -1);
@@ -83,16 +83,17 @@ int main (int argc, char ** argv)
       pthread_mutex_unlock (&node->mutex);
     }
     iot_wait_usecs (ITER_SLEEP_US);
-    if (i % 100 == 0) {
+    if (i % 100 == 0)
+    {
       fprintf (stderr, "DONE %lu iters\n", i);
     }
   }
   uint64_t time = iot_time_msecs () - start;
-  fprintf (stderr, "DONE %lu iters in %lu ms, add_work call count %lu/%lu \n", ITERS, time, call_count, ITERS *NODE_COUNT);
+  fprintf (stderr, "DONE %lu iters in %lu ms, add_work call count %lu/%lu \n", ITERS, time, call_count, ITERS * NODE_COUNT);
 
   iot_threadpool_stop (pool);
 
-  for (size_t i=0; i<NODE_COUNT;i++)
+  for (size_t i = 0; i < NODE_COUNT; i++)
   {
     pthread_mutex_destroy (&nodes[i].mutex);
     iot_data_free (nodes[i].request_list);
