@@ -130,13 +130,7 @@ static void * iot_threadpool_thread (void * arg)
   iot_component_lock (comp);
   while (true)
   {
-    uint32_t states = (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING;
-    while ((comp->state & states) == 0)
-    {
-      pthread_cond_wait (&comp->cond, &comp->mutex);
-    }
-    state = comp->state;
-
+    state = iot_component_wait_locked (comp, (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING);
     if (state == IOT_COMPONENT_DELETED) // Exit thread on deletion
     {
       pending_delete = th->pending_delete;
