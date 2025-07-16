@@ -431,4 +431,4 @@
 ## Version 1.6.1
 
 - Added function `iot_component_wait_locked` to wait for a component state while the components lock is held
-- Removed un-necessary lock release and immediate acquisition in `iot_threadpool_t` reducing potential lock contention  
+- Removed unnecessary lock release and immediate acquisition in `iot_threadpool_t` reducing potential lock contention  
