@@ -85,11 +85,11 @@ int main (int argc, char ** argv)
     iot_wait_usecs (ITER_SLEEP_US);
     if (i % 100 == 0)
     {
-      fprintf (stderr, "DONE %lu iters\n", i);
+      fprintf (stderr, "DONE %zu iters\n", i);
     }
   }
   uint64_t time = iot_time_msecs () - start;
-  fprintf (stderr, "DONE %lu iters in %lu ms, add_work call count %lu/%lu \n", ITERS, time, call_count, ITERS * NODE_COUNT);
+  fprintf (stderr, "DONE %zu iters in %"PRIu64" ms, add_work call count %"PRIu64"/%zu \n", ITERS, time, call_count, ITERS * NODE_COUNT);
 
   iot_threadpool_stop (pool);
 
