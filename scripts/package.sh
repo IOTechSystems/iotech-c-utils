@@ -96,10 +96,7 @@ case ${SYSTEM} in
       ubuntu-20.04)
         CBOR=libcbor0.6
       ;;
-      ubuntu-18.04)
-        CBOR=libcbor0.5
-      ;;
-      debian-10|debian-11)
+      debian-11)
         CBOR=libcbor0
       ;;
     esac
