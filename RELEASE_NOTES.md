@@ -12,3 +12,4 @@
 - Removed unnecessary lock release and immediate acquisition in `iot_threadpool_t` reducing potential lock contention  
 - Removed support for Debian 10 and Ubuntu 18.04
 - Removed support for versions of Alpine Linux prior to 3.20
+- Support removed for OpenSUSE 15.5 and added for OpenSUSE 15.6

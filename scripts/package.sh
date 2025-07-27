@@ -140,7 +140,7 @@ case ${SYSTEM} in
         OS_ARCH=aarch64
         ;;
       arm32)
-        if [ "${SYSTEM}" = "opensuse-15.5" ]
+        if [ "${SYSTEM}" = "opensuse-15.6" ]
         then
           OS_ARCH=armv7hl
         else
