@@ -99,8 +99,8 @@ case ${SYSTEM} in
         CBOR=libcbor0
       ;;
     esac
-
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" --iteration "$((REL_VER+1))" \
+# Note using "--iteration "$((REL_VER+1))" with a debian package gives a version of form major.minor.patch-<release>
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -109,7 +109,7 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples \
       --depends libyaml-0-2 --depends ${CBOR}
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" --iteration "$((REL_VER+1))" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -122,7 +122,7 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/debug
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" --iteration "$((REL_VER+1))" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
