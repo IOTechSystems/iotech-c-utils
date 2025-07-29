@@ -251,32 +251,38 @@ uint32_t iot_data_hash (const iot_data_t * data)
   {
     da->hash = 0;
     da->rehash = false;
-    if (da->type == IOT_DATA_VECTOR)
+    switch (da->type)
     {
-      iot_data_vector_iter_t iter;
-      iot_data_vector_iter (da, &iter);
-      while (iot_data_vector_iter_next (&iter))
-      {
-        da->hash ^= iot_data_hash (iot_data_vector_iter_value (&iter));
+      case IOT_DATA_LIST:
+      case IOT_DATA_VECTOR: {
+        iot_data_iter_t iter;
+        iot_data_iter (da, &iter);
+        while (iot_data_iter_next (&iter))
+        {
+          da->hash ^= iot_data_hash (iot_data_iter_value (&iter));
+        }
+        break;
       }
-    }
-    else if (da->type == IOT_DATA_LIST)
-    {
-      iot_data_list_iter_t iter;
-      iot_data_list_iter (da, &iter);
-      while (iot_data_list_iter_next (&iter))
+      case IOT_DATA_ARRAY:
+      case IOT_DATA_BINARY:
       {
-        da->hash ^= iot_data_hash (iot_data_list_iter_value (&iter));
+        iot_data_array_t * array = (iot_data_array_t *) da;
+        da->hash = array->data ? iot_hash_data (array->data, array->length) : 0;
+        break;
       }
-    }
-    else // IOT_DATA_MAP
-    {
-      iot_data_map_iter_t iter;
-      iot_data_map_iter (da, &iter);
-      while (iot_data_map_iter_next (&iter))
+      case IOT_DATA_MAP:
       {
-        iot_data_map_hash (da, iot_data_map_iter_key (&iter), iot_data_map_iter_value (&iter));
+        iot_data_map_iter_t iter;
+        iot_data_map_iter (da, &iter);
+        while (iot_data_map_iter_next (&iter))
+        {
+          iot_data_map_hash (da, iot_data_map_iter_key (&iter), iot_data_map_iter_value (&iter));
+        }
+        break;
       }
+      default:
+        assert(false);
+        break;
     }
   }
   return da ? da->hash : 0u;
@@ -1543,7 +1549,11 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
   array->base.element_type = type;
   array->data = length ? data : NULL;
   array->length = length;
-  array->base.hash = data ? iot_hash_data (data, size) : 0;
+
+  //defer hashing
+  array->base.hash = 0;
+  array->base.rehash = true;
+
   array->base.release = data ? (ownership != IOT_DATA_REF) : false;
   if (length && data && (ownership == IOT_DATA_COPY))
   {
