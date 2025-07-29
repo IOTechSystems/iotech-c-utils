@@ -269,6 +269,11 @@ uint32_t iot_data_hash (const iot_data_t * data)
         da->hash ^= iot_data_hash (iot_data_list_iter_value (&iter));
       }
     }
+    else if (da->type == IOT_DATA_ARRAY || da->type == IOT_DATA_BINARY)
+    {
+      iot_data_array_t * array = (iot_data_array_t *) da;
+      da->hash = array->data ? iot_hash_data (array->data, array->length) : 0;
+    }
     else // IOT_DATA_MAP
     {
       iot_data_map_iter_t iter;
@@ -1543,7 +1548,11 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
   array->base.element_type = type;
   array->data = length ? data : NULL;
   array->length = length;
-  array->base.hash = data ? iot_hash_data (data, size) : 0;
+
+  //defer hashing
+  array->base.hash = 0;
+  array->base.rehash = true;
+
   array->base.release = data ? (ownership != IOT_DATA_REF) : false;
   if (length && data && (ownership == IOT_DATA_COPY))
   {
