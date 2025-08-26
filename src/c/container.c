@@ -479,16 +479,16 @@ iot_data_t * iot_container_component_read (iot_container_t * cont, const char * 
   return data;
 }
 
-iot_data_t * iot_container_stats (iot_container_t * cont)
+iot_data_t * iot_container_stats (iot_container_t * cont, iot_data_t * whitelisted_components)
 {
   assert (cont);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
-  iot_data_list_iter_t iter;
+  iot_data_vector_iter_t sub_iter;
   pthread_rwlock_rdlock (&cont->lock);
-  iot_data_list_iter (cont->components, &iter);
-  while (iot_data_list_iter_next (&iter))
+  iot_data_vector_iter (whitelisted_components, &sub_iter);
+  while (iot_data_vector_iter_next (&sub_iter))
   {
-    iot_component_t * comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter); // double check cast
+    iot_component_t * comp = iot_container_find_component (cont, iot_data_vector_iter_string_value (&sub_iter));
     iot_data_t * stats = iot_component_stats (comp);
     if (stats) iot_data_map_add (map, iot_data_alloc_string (comp->name, IOT_DATA_COPY), stats);
   }

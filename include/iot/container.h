@@ -154,10 +154,11 @@ extern iot_data_t * iot_container_component_read (iot_container_t * cont, const 
 /**
  * @brief Get component stats
  *
- * @param cont  Pointer to a container
- * @return      Data map of component name to stats
+ * @param cont                    Pointer to a container
+ * @param whitelisted_components  Pointer to a vector containing the names of components whose stats to publish
+ * @return                        Data map of component name to stats
  */
-extern iot_data_t * iot_container_stats (iot_container_t * cont);
+extern iot_data_t * iot_container_stats (iot_container_t * cont, iot_data_t * whitelisted_components);
 
 #ifdef __cplusplus
 }
