@@ -482,6 +482,7 @@ iot_data_t * iot_container_component_read (iot_container_t * cont, const char * 
 iot_data_t * iot_container_stats (iot_container_t * cont, iot_data_t * whitelisted_components)
 {
   assert (cont);
+  assert (whitelisted_components);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_vector_iter_t sub_iter;
   pthread_rwlock_rdlock (&cont->lock);
