@@ -1560,7 +1560,7 @@ extern int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char *
  *
  * @param map          Map from which get a value
  * @param key          String key for the value
- * @param default_val  Default int64 value
+ * @param default_val  Default uint64 value
  * @return             Uint64_t value corresponding to the key, else default_val
  */
 extern uint64_t iot_data_string_map_get_ui64 (const iot_data_t * map, const char * key, uint64_t default_val);

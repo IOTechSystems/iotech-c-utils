@@ -17,3 +17,4 @@
 ## Version 1.6.2
 
 - Defer data hash calculations in `iot_data_alloc_binary` and `iot_data_alloc_array`
+- Fedora support updated to version 42

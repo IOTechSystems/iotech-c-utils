@@ -254,7 +254,8 @@ uint32_t iot_data_hash (const iot_data_t * data)
     switch (da->type)
     {
       case IOT_DATA_LIST:
-      case IOT_DATA_VECTOR: {
+      case IOT_DATA_VECTOR:
+      {
         iot_data_iter_t iter;
         iot_data_iter (da, &iter);
         while (iot_data_iter_next (&iter))
@@ -281,7 +282,7 @@ uint32_t iot_data_hash (const iot_data_t * data)
         break;
       }
       default:
-        assert(false);
+        assert (false);
         break;
     }
   }
