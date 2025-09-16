@@ -72,7 +72,7 @@ typedef void (*iot_log_free_fn_t) (void *ctx);
  */
 extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool self_start);
 
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
+#if defined (IOT_HAS_FILE)
 /**
  * @brief Allocate memory and initialize file logger component
  *

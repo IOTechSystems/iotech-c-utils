@@ -316,9 +316,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "file_notify", test_file_notify);
   CU_add_test (suite, "file_append", test_file_append);
   CU_add_test (suite, "file_append_binary", test_file_append_binary);
-#ifndef _AZURESPHERE_
   CU_add_test (suite, "list_file", test_list_file);
   CU_add_test (suite, "list_config_file", test_list_config_file);
-#endif
 #endif
 }
