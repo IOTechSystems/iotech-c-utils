@@ -10,10 +10,6 @@
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 #include <dlfcn.h>
 #endif
-#ifdef _AZURESPHERE_
-#include <applibs/applications.h>
-#include <applibs/log.h>
-#endif
 
 /* Wait/retry defaults for invoking running callbacks */
 
@@ -93,9 +89,6 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
   comp->factory = factory;
   comp->container = cont;
   iot_data_list_head_push (cont->components, iot_data_alloc_pointer (comp, iot_component_free));
-#if defined (_AZURESPHERE_) && ! defined (NDEBUG)
-  Log_Debug ("iot_component_create: %s (Total Memory: %" PRIu32 " kB)\n", cname, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
-#endif
 
 ERROR:
 
@@ -351,9 +344,6 @@ void iot_container_start (iot_container_t * cont)
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     (comp->start_fn) (comp);
-#if defined (_AZURESPHERE_) && ! defined (NDEBUG)
-    Log_Debug ("iot_container_start: %s (Total Memory: %" PRIu32 " kB)\n", comp->name, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
-#endif
   }
   iot_container_running (cont);
   pthread_rwlock_unlock (&cont->lock);

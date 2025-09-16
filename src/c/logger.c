@@ -22,9 +22,6 @@ static time_t time (time_t *t)
   return k_uptime_get () / 1000;
 }
 #endif
-#ifdef _AZURESPHERE_
-#include <applibs/log.h>
-#endif
 
 #define IOT_PRCTL_NAME_MAX 16
 #define IOT_LOG_LEVELS 6
@@ -215,11 +212,7 @@ static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, 
   iot_component_lock (&logger->base.component);
   if (iot_logger_format_log (logger, level, timestamp, message))
   {
-#ifdef _AZURESPHERE_
-    Log_Debug ("%s", logger->buff);
-#else
     fprintf (fd, "%s", logger->buff);
-#endif
   }
   iot_component_unlock (&logger->base.component);
 }
@@ -279,7 +272,7 @@ iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bo
 
 /********* Standard Logger Implementations: File *********/
 
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
+#if defined (IOT_HAS_FILE)
 
 static void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
@@ -358,7 +351,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   const char * name = iot_data_string_map_get_string (map, "Name");
   const char * to = iot_data_string_map_get_string (map, "To");
 
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
+#if defined (IOT_HAS_FILE)
   if (to && strncmp (to, "file:", 5) == 0 && strlen (to) > 5)
   {
     result = iot_logger_alloc_file (name, level, start, next, to + 5);
@@ -393,6 +386,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
 
 static bool iot_logger_reconfig (iot_component_t * comp, iot_container_t * cont, const iot_data_t * map)
 {
+  (void) cont;
   iot_logger_set_level ((iot_logger_t*) comp, iot_logger_config_level (map));
   return true;
 }
