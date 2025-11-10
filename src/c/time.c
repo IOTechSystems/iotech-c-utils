@@ -36,7 +36,7 @@ extern uint64_t iot_time_secs (void)
 
 uint64_t iot_time_nsecs (void)
 {
-  static _Atomic uint64_t lasttime = ATOMIC_VAR_INIT (0);
+  static _Atomic uint64_t lasttime = ATOMIC_VAR_INIT (0u);
   uint64_t result = iot_time_nanosecs ();
   uint64_t prev = atomic_load (&lasttime);
   do

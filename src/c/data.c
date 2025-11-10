@@ -236,12 +236,9 @@ extern void iot_data_block_free (void  * ptr)
   free (ptr);
 }
 
-static inline void iot_data_map_hash (iot_data_t * map, const iot_data_t * key, const iot_data_t * value)
+static inline void iot_data_map_hash (iot_data_t * map, const iot_data_t * key)
 {
-  uint32_t key_hash = iot_data_hash (key);
-  uint32_t val_hash = iot_data_hash (value);
-  map->hash ^= key_hash;
-  if (val_hash != key_hash) map->hash ^= val_hash; // Only apply value hash if different from key hash or hashes cancel out
+  map->hash ^= iot_data_hash (key);
 }
 
 uint32_t iot_data_hash (const iot_data_t * data)
@@ -267,7 +264,7 @@ uint32_t iot_data_hash (const iot_data_t * data)
       case IOT_DATA_ARRAY:
       case IOT_DATA_BINARY:
       {
-        iot_data_array_t * array = (iot_data_array_t *) da;
+        const iot_data_array_t * array = (iot_data_array_t *) da;
         da->hash = array->data ? iot_hash_data (array->data, array->length) : 0;
         break;
       }
@@ -277,7 +274,7 @@ uint32_t iot_data_hash (const iot_data_t * data)
         iot_data_map_iter (da, &iter);
         while (iot_data_map_iter_next (&iter))
         {
-          iot_data_map_hash (da, iot_data_map_iter_key (&iter), iot_data_map_iter_value (&iter));
+          iot_data_map_hash (da, iot_data_map_iter_key (&iter));
         }
         break;
       }
@@ -349,13 +346,13 @@ static void iot_data_init (void)
 
 iot_data_t * iot_data_add_ref (const iot_data_t * data)
 {
-  if (data && !data->constant) ((iot_data_t*) data)->refs++;
+  if (data && !data->constant) atomic_fetch_add (&((iot_data_t*) data)->refs, 1u);
   return (iot_data_t*) data;
 }
 
 uint32_t iot_data_ref_count (const iot_data_t * data)
 {
-  return data ? data->refs : 0u;
+  return data ? atomic_load (&data->refs) : 0u;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)
@@ -1498,7 +1495,7 @@ extern void * iot_data_binary_take (iot_data_t * data, uint32_t * len)
   assert (data && len && (data->type == IOT_DATA_BINARY || data->type == IOT_DATA_ARRAY));
   iot_data_array_t * array = (iot_data_array_t*) data;
   *len = iot_data_array_size (data);
-  if (array->base.release && (data->refs == 1u))
+  if (array->base.release && (atomic_load (&data->refs) == 1u))
   {
     ret = array->data;
     array->data = NULL;
@@ -3202,7 +3199,7 @@ static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * v
   else
   {
     iot_node_insert (map, key, value);
-    iot_data_map_hash (&map->base, key, value);
+    iot_data_map_hash (&map->base, key);
   }
   return (node == NULL);
 }
