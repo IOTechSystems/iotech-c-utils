@@ -327,7 +327,7 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
 /* Create a schedule and insert it into the idle queue */
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t delay, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
-  static _Atomic uint64_t schedule_id_counter = 0;
+  static _Atomic uint64_t schedule_id_counter = ATOMIC_VAR_INIT (0u);
 
   assert (scheduler && func);
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));
