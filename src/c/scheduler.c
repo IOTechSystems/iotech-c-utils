@@ -147,6 +147,11 @@ static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
   ts->tv_nsec = (long) IOT_NS_REMAINING (ns);
 }
 
+static inline uint64_t timespecToNs (const struct timespec *ts)
+{
+  return IOT_SEC_TO_NS(ts->tv_sec) + (uint64_t)ts->tv_nsec;
+}
+
 void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable)
 {
   assert (schedule);
@@ -183,7 +188,10 @@ static void * iot_scheduler_thread (void * arg)
   {
     state = iot_component_wait_and_lock (&scheduler->component, (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING); // State wait
     if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
-    pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time); // Schedule wait
+    uint64_t const now = iot_time_nsecs();
+    uint64_t const sched_time = timespecToNs (&scheduler->schd_time);
+    if (sched_time > now) pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time); // Schedule wait only if we need to
+
     state = scheduler->component.state;
     if (state != IOT_COMPONENT_RUNNING)
     {
