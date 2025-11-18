@@ -190,7 +190,7 @@ static void * iot_scheduler_thread (void * arg)
     if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
     uint64_t const now = iot_time_nsecs();
     uint64_t const sched_time = timespecToNs (&scheduler->schd_time);
-    if (sched_time >= now) pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time); // Schedule wait only if we need to
+    if (sched_time > now) pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time); // Schedule wait only if we need to
 
     state = scheduler->component.state;
     if (state != IOT_COMPONENT_RUNNING)
