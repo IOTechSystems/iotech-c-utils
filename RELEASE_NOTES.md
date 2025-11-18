@@ -18,3 +18,6 @@
 
 ## Version 1.6.3
 - Support added for Debian 13
+
+## Version 1.6.4
+- Improved scheduler performance
