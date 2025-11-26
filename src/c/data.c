@@ -23,8 +23,10 @@
 #define IOT_STR_BUFF_DOUBLING_LIMIT 4096u
 #define IOT_STR_BUFF_INCREMENT 1024u
 #define IOT_LOCAL_CACHE_LIMIT 2048u
+#define IOT_LOCAL_LOW_WATER 64
+#define IOT_BATCH_SIZE 64
 
-static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
+static const char * iot_data_type_names [IOT_DATA_TYPES] = {"I7nt8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
 iot_data_static_t iot_data_order = { 0 };
 static const char * iot_data_const_strings [] = { "category","config","name","meta","state","stats","type",NULL };
@@ -282,6 +284,35 @@ extern uint32_t iot_data_block_size (void)
   return IOT_DATA_BLOCK_SIZE;
 }
 
+static void iot_local_cache_refill(void)
+{
+  for (int i = 0; i < IOT_BATCH_SIZE; i++)
+  {
+    iot_block_t *block = iot_data_cache_pop();
+    if (!block)
+    {
+      iot_data_expand_pool();
+      block = iot_data_cache_pop();
+    }
+    if (!block) break;
+
+    block->next = iot_local_cache_head;
+    iot_local_cache_head = block;
+    iot_local_cache_count++;
+  }
+}
+
+static void iot_local_cache_drain(void)
+{
+  for (int i = 0; i < IOT_BATCH_SIZE && iot_local_cache_count > IOT_LOCAL_LOW_WATER; i++)
+  {
+    iot_block_t *block = iot_local_cache_head;
+    iot_local_cache_head = block->next;
+    iot_local_cache_count--;
+    iot_data_cache_push(block);
+  }
+}
+
 static inline void * iot_data_alloc_block (void)
 {
   void * ptr = NULL;
@@ -295,12 +326,17 @@ static inline void * iot_data_alloc_block (void)
   }
   else // Try (slower) shared cache
   {
+    iot_local_cache_refill();
     ptr = iot_data_cache_pop ();
-    if (ptr == NULL)
+    if (iot_local_cache_head)
     {
-      iot_data_expand_pool ();
-      ptr = iot_data_cache_pop ();
-      if (ptr == NULL) ptr = calloc (1, IOT_DATA_BLOCK_SIZE);
+      ptr = iot_local_cache_head;
+      iot_local_cache_head = iot_local_cache_head->next;
+      iot_local_cache_count--;
+    }
+    else
+    {
+      return calloc(1, IOT_DATA_BLOCK_SIZE);
     }
   }
   if (ptr)
@@ -322,17 +358,14 @@ extern void iot_data_block_free (void * ptr)
 {
   if (!ptr) return;
 
-  iot_block_t * block = (iot_block_t*) ptr;
+  iot_block_t *block = (iot_block_t *)ptr;
+  block->next = iot_local_cache_head;
+  iot_local_cache_head = block;
+  iot_local_cache_count++;
 
   if (iot_local_cache_count >= IOT_LOCAL_CACHE_LIMIT)
   {
-    iot_data_cache_push(block);
-  }
-  else // thread_local cache
-  {
-    block->next = iot_local_cache_head;
-    iot_local_cache_head = block;
-    iot_local_cache_count++;
+    iot_local_cache_drain();
   }
 }
 
