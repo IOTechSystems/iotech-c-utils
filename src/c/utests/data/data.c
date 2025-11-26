@@ -5524,6 +5524,14 @@ static void test_data_bounded_equal (void)
   iot_data_free (val);
 }
 
+static void test_data_alloc_heap (void)
+{
+  iot_data_alloc_heap (true);
+  iot_data_t * map = iot_data_from_json (test_config);
+  iot_data_free (map);
+  iot_data_alloc_heap (false);
+}
+
 void cunit_data_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data", suite_init, suite_clean);
@@ -5722,4 +5730,5 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_iter", test_data_iter);
   CU_add_test (suite, "data_restrict", test_data_restrict);
   CU_add_test (suite, "data_bounded_equal", test_data_bounded_equal);
+  CU_add_test (suite, "data_alloc_heap", test_data_alloc_heap);
 }
