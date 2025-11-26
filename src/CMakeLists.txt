@@ -40,6 +40,24 @@ configure_file ("${CMAKE_SOURCE_DIR}/c/defs.h.in" "${CMAKE_SOURCE_DIR}/../includ
 
 # Configure for different target systems
 
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+  include(CheckCCompilerFlag)
+  check_c_compiler_flag("-mcx16" HAS_MCX16)
+  if (HAS_MCX16)
+    message(STATUS "Enabling 128-bit atomics (mcx16)")
+    add_compile_options(-mcx16)
+  else()
+    message(WARNING "Compiler does not support -mcx16.")
+  endif ()
+endif ()
+
+# Link libatomic if needed (gcc calls this for 128bit atomis)
+include(CheckLibraryExists)
+check_library_exists(atomic __atomic_load_16 "" HAVE_LIBATOMIC)
+if (HAVE_LIBATOMIC)
+  link_libraries(atomic)
+endif ()
+
 set (OS_ARCH x86_64)
 set (CPACK_GENERATOR TGZ)
 message (STATUS "CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME} ${OS_ARCH} ${LINUX_SYS}")
