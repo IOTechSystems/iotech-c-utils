@@ -26,7 +26,7 @@
 #define IOT_LOCAL_LOW_WATER 64
 #define IOT_BATCH_SIZE 64
 
-static const char * iot_data_type_names [IOT_DATA_TYPES] = {"I7nt8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
+static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
 iot_data_static_t iot_data_order = { 0 };
 static const char * iot_data_const_strings [] = { "category","config","name","meta","state","stats","type",NULL };
@@ -327,7 +327,6 @@ static inline void * iot_data_alloc_block (void)
   else // Try (slower) shared cache
   {
     iot_local_cache_refill();
-    ptr = iot_data_cache_pop ();
     if (iot_local_cache_head)
     {
       ptr = iot_local_cache_head;
