@@ -21,3 +21,4 @@
 
 ## Version 1.6.4
 - Improved scheduler performance
+- Added additional stats collection and publishing for the scheduler component
