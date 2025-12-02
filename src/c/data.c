@@ -12,6 +12,15 @@
 #include <float.h>
 #include <math.h>
 
+#if defined(__x86_64__) || defined(__i386__)
+  #include <immintrin.h>
+  #define cpu_relax() _mm_pause()
+#elif defined(__aarch64__) || defined(__arm__)
+  #include <arm_acle.h>
+  #define cpu_relax() __yield()
+
+#endif
+
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
 #define IOT_DATA_IS_FLOAT_TYPE(t) ((t) == IOT_DATA_FLOAT32 || (t) == IOT_DATA_FLOAT64)
 #define IOT_DATA_IS_INT_TYPE(t) ((t) >= IOT_DATA_INT8 && (t) <= IOT_DATA_UINT64)
@@ -232,26 +241,27 @@ bool iot_data_alloc_heap (bool set)
 static void iot_data_cache_push (iot_block_t * block)
 {
   iot_cache_head_t next, orig = atomic_load (&iot_data_cache_head);
-  do
+  for (;;)
   {
     block->next = orig.node;
     next.node = block;
     next.tag = orig.tag + 1; // There is a 2^32 (or 2^64) chance this wraps around while the thread is sleeping and cause a problem
+    if (atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next)) break;
+    cpu_relax();
   }
-  while (!atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next));
 }
 
 static iot_block_t * iot_data_cache_pop (void)
 {
   iot_cache_head_t next, orig = atomic_load (&iot_data_cache_head);
-  do
+  for (;;)
   {
     if (orig.node == NULL) return NULL; // Cache empty
     next.node = orig.node->next;
     next.tag = orig.tag + 1;
+    if (atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next)) return orig.node;
+    cpu_relax();
   }
-  while (!atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next));
-  return orig.node;
 }
 
 static void iot_data_expand_pool (void)
