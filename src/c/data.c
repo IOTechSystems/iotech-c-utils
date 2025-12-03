@@ -241,26 +241,26 @@ bool iot_data_alloc_heap (bool set)
 static void iot_data_cache_push (iot_block_t * block)
 {
   iot_cache_head_t next, orig = atomic_load (&iot_data_cache_head);
-  for (;;)
+  while (true)
   {
     block->next = orig.node;
     next.node = block;
     next.tag = orig.tag + 1; // There is a 2^32 (or 2^64) chance this wraps around while the thread is sleeping and cause a problem
     if (atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next)) break;
-    cpu_relax();
+    cpu_relax ();
   }
 }
 
 static iot_block_t * iot_data_cache_pop (void)
 {
   iot_cache_head_t next, orig = atomic_load (&iot_data_cache_head);
-  for (;;)
+  while (true)
   {
     if (orig.node == NULL) return NULL; // Cache empty
     next.node = orig.node->next;
     next.tag = orig.tag + 1;
     if (atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next)) return orig.node;
-    cpu_relax();
+    cpu_relax ();
   }
 }
 
@@ -269,17 +269,14 @@ static void iot_data_expand_pool (void)
   pthread_mutex_lock (&iot_chunk_mutex);
 
   iot_memory_block_t * chunk = calloc (1, IOT_MEMORY_BLOCK_SIZE);
-  if (chunk)
-  {
-    chunk->next = iot_data_chunk_list;
-    iot_data_chunk_list = chunk;
+  chunk->next = iot_data_chunk_list;
+  iot_data_chunk_list = chunk;
 
-    uint8_t * iter = (uint8_t*) chunk->chunks;
-    for (unsigned i = 0; i < IOT_DATA_BLOCKS; i++)
-    {
-      iot_data_cache_push ((iot_block_t*) iter);
-      iter += IOT_DATA_BLOCK_SIZE;
-    }
+  uint8_t * iter = (uint8_t*) chunk->chunks;
+  for (unsigned i = 0; i < IOT_DATA_BLOCKS; i++)
+  {
+    iot_data_cache_push ((iot_block_t*) iter);
+    iter += IOT_DATA_BLOCK_SIZE;
   }
   pthread_mutex_unlock (&iot_chunk_mutex);
 }
@@ -296,13 +293,13 @@ extern uint32_t iot_data_block_size (void)
 
 static void iot_local_cache_refill(void)
 {
-  for (int i = 0; i < IOT_BATCH_SIZE; i++)
+  for (unsigned i = 0; i < IOT_BATCH_SIZE; i++)
   {
-    iot_block_t *block = iot_data_cache_pop();
+    iot_block_t *block = iot_data_cache_pop ();
     if (!block)
     {
-      iot_data_expand_pool();
-      block = iot_data_cache_pop();
+      iot_data_expand_pool ();
+      block = iot_data_cache_pop ();
     }
     if (!block) break;
 
@@ -314,41 +311,43 @@ static void iot_local_cache_refill(void)
 
 static void iot_local_cache_drain(void)
 {
-  for (int i = 0; i < IOT_BATCH_SIZE && iot_local_cache_count > IOT_LOCAL_LOW_WATER; i++)
+  for (unsigned i = 0; i < IOT_BATCH_SIZE && iot_local_cache_count > IOT_LOCAL_LOW_WATER; i++)
   {
     iot_block_t *block = iot_local_cache_head;
     iot_local_cache_head = block->next;
     iot_local_cache_count--;
-    iot_data_cache_push(block);
+    iot_data_cache_push (block);
   }
 }
 
 static inline void * iot_data_alloc_block (void)
 {
   void * ptr = NULL;
-
+  bool from_cache = false;
   // Check thread_local cache first
   if (iot_local_cache_head)
   {
     ptr = iot_local_cache_head;
     iot_local_cache_head = iot_local_cache_head->next;
     iot_local_cache_count--;
+    from_cache = true;
   }
   else // Try (slower) shared cache
   {
-    iot_local_cache_refill();
+    iot_local_cache_refill ();
     if (iot_local_cache_head)
     {
       ptr = iot_local_cache_head;
       iot_local_cache_head = iot_local_cache_head->next;
       iot_local_cache_count--;
+      from_cache = true;
     }
     else
     {
-      return calloc(1, IOT_DATA_BLOCK_SIZE);
+      ptr = calloc(1, IOT_DATA_BLOCK_SIZE);
     }
   }
-  if (ptr)
+  if (from_cache && ptr)
   {
     memset (ptr, 0, IOT_DATA_BLOCK_SIZE);
   }
@@ -365,16 +364,17 @@ extern void * iot_data_block_alloc (size_t size)
 
 extern void iot_data_block_free (void * ptr)
 {
-  if (!ptr) return;
-
-  iot_block_t *block = (iot_block_t *)ptr;
-  block->next = iot_local_cache_head;
-  iot_local_cache_head = block;
-  iot_local_cache_count++;
-
-  if (iot_local_cache_count >= IOT_LOCAL_CACHE_LIMIT)
+  if (ptr)
   {
-    iot_local_cache_drain();
+    iot_block_t *block = (iot_block_t *)ptr;
+    block->next = iot_local_cache_head;
+    iot_local_cache_head = block;
+    iot_local_cache_count++;
+
+    if (iot_local_cache_count >= IOT_LOCAL_CACHE_LIMIT)
+    {
+      iot_local_cache_drain ();
+    }
   }
 }
 
@@ -430,7 +430,7 @@ uint32_t iot_data_hash (const iot_data_t * data)
 
 static inline void iot_element_free (iot_element_t * element)
 {
-  (element->heap) ? free (element) : iot_data_block_free (element);
+  element->heap ? free (element) : iot_data_block_free (element);
 }
 
 static inline iot_element_t * iot_element_alloc (void)
