@@ -20,6 +20,13 @@
   #define cpu_relax() __yield()
 #endif
 
+#if !defined DEBUG_MEMORY
+#define IOT_DATA_CACHE
+#define IOT_LOCAL_CACHE_LIMIT 2048u
+#define IOT_LOCAL_LOW_WATER 64
+#define IOT_BATCH_SIZE 64
+#endif
+
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
 #define IOT_DATA_IS_FLOAT_TYPE(t) ((t) == IOT_DATA_FLOAT32 || (t) == IOT_DATA_FLOAT64)
 #define IOT_DATA_IS_INT_TYPE(t) ((t) >= IOT_DATA_INT8 && (t) <= IOT_DATA_UINT64)
@@ -30,18 +37,17 @@
 #define IOT_VAL_BUFF_SIZE 31u
 #define IOT_STR_BUFF_DOUBLING_LIMIT 4096u
 #define IOT_STR_BUFF_INCREMENT 1024u
-#define IOT_LOCAL_CACHE_LIMIT 2048u
-#define IOT_LOCAL_LOW_WATER 64
-#define IOT_BATCH_SIZE 64
 
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
 iot_data_static_t iot_data_order = { 0 };
 static const char * iot_data_const_strings [] = { "category","config","name","meta","state","stats","type",NULL };
 static _Thread_local bool iot_data_alloc_from_heap = false; /* Thread specific memory allocation policy */
+#ifdef IOT_DATA_CACHE
 static _Atomic iot_cache_head_t iot_data_cache_head = ATOMIC_VAR_INIT (((iot_cache_head_t){0}));
 static _Thread_local iot_block_t * iot_local_cache_head = NULL;
 static _Thread_local uint32_t iot_local_cache_count = 0;
+#endif
 
 iot_data_consts_t iot_data_consts = { 0 };
 
@@ -195,8 +201,10 @@ static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * v
 static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
 static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key);
 
+#ifdef IOT_DATA_CACHE
 static iot_memory_block_t * iot_data_chunk_list = NULL;
 static pthread_mutex_t iot_chunk_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 __attribute__((constructor)) static void iot_data_init (void);
 
@@ -230,6 +238,7 @@ bool iot_data_set_tag (iot_data_t * data, iot_data_tag_t tag, bool value)
   return old;
 }
 
+#ifdef IOT_DATA_CACHE
 bool iot_data_alloc_heap (bool set)
 {
   bool old = iot_data_alloc_from_heap;
@@ -280,16 +289,6 @@ static void iot_data_expand_pool (void)
   pthread_mutex_unlock (&iot_chunk_mutex);
 }
 
-uint32_t iot_data_type_size (iot_data_type_t type)
-{
-  return (type <= IOT_DATA_BINARY) ? iot_data_type_sizes[type] : 0u;
-}
-
-extern uint32_t iot_data_block_size (void)
-{
-  return IOT_DATA_BLOCK_SIZE;
-}
-
 static void iot_local_cache_refill (void)
 {
   for (unsigned i = 0; i < IOT_BATCH_SIZE; i++)
@@ -318,9 +317,21 @@ static void iot_local_cache_drain (void)
     iot_data_cache_push (block);
   }
 }
+#endif
+
+uint32_t iot_data_type_size (iot_data_type_t type)
+{
+  return (type <= IOT_DATA_BINARY) ? iot_data_type_sizes[type] : 0u;
+}
+
+extern uint32_t iot_data_block_size (void)
+{
+  return IOT_DATA_BLOCK_SIZE;
+}
 
 static inline void * iot_data_alloc_block (void)
 {
+#ifdef IOT_DATA_CACHE
   void * ptr = NULL;
   bool from_cache = false;
   // Check thread_local cache first
@@ -351,6 +362,9 @@ static inline void * iot_data_alloc_block (void)
     memset (ptr, 0, IOT_DATA_BLOCK_SIZE);
   }
   return ptr;
+#else
+  return calloc (1, IOT_DATA_BLOCK_SIZE);
+#endif
 }
 
 extern void * iot_data_block_alloc (size_t size)
@@ -363,6 +377,7 @@ extern void * iot_data_block_alloc (size_t size)
 
 extern void iot_data_block_free (void * ptr)
 {
+#ifdef IOT_DATA_CACHE
   if (ptr)
   {
     iot_block_t *block = (iot_block_t *)ptr;
@@ -375,6 +390,9 @@ extern void iot_data_block_free (void * ptr)
       iot_local_cache_drain ();
     }
   }
+#else
+  free (ptr)
+#endif
 }
 
 static inline void iot_data_map_hash (iot_data_t * map, const iot_data_t * key)
@@ -470,6 +488,7 @@ static inline iot_data_value_t * iot_data_value_alloc (iot_data_type_t type, iot
 
 static void iot_data_fini (void)
 {
+#ifdef IOT_DATA_CACHE
   pthread_mutex_lock (&iot_chunk_mutex);
   while (iot_data_chunk_list)
   {
@@ -478,6 +497,7 @@ static void iot_data_fini (void)
     free (chunk);
   }
   pthread_mutex_unlock (&iot_chunk_mutex);
+#endif
 }
 
 static void iot_data_init (void)
@@ -499,7 +519,9 @@ static void iot_data_init (void)
   printf ("IOT_DATA_BLOCK_SIZE: %zu IOT_DATA_BLOCKS: %zu\n", IOT_DATA_BLOCK_SIZE, IOT_DATA_BLOCKS);
   printf ("IOT_DATA_VALUE_BUFF_SIZE: %zu\n", IOT_DATA_VALUE_BUFF_SIZE);
 #endif
+#ifdef IOT_DATA_CACHE
   iot_data_block_free (iot_data_alloc_block ());
+#endif
   iot_data_alloc_const_pointer (&iot_data_order, &iot_data_order);
   const char ** str = iot_data_const_strings;
   iot_data_static_t * ptr = (iot_data_static_t*) &iot_data_consts;
@@ -3102,7 +3124,7 @@ static void iot_node_delete (iot_node_t * node)
 {
   iot_data_free (node->key);
   iot_data_free (node->value);
-  (node->heap) ? free (node) : iot_data_block_free (node);
+  node->heap ? free (node) : iot_data_block_free (node);
 }
 
 static inline iot_node_t * iot_node_minimum (iot_node_t * node)
