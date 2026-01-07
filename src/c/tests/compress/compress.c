@@ -33,6 +33,7 @@ int main (int argc, char ** argv)
     printf ("Usage: %s <json_file(s)>\n", argv[0]);
     exit (1);
   }
+  iot_data_alloc_heap (true);
   iot_data_t *cache = iot_data_alloc_typed_map (IOT_DATA_MULTI, IOT_DATA_MULTI);
   for (count = 1; count < argc; count++)
   {
