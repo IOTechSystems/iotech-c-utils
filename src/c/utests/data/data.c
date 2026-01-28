@@ -5052,15 +5052,23 @@ static void test_lists_init (iot_data_t ** l1, iot_data_t ** l2)
   iot_data_list_head_push (*l2, iot_data_alloc_ui32 (val++));
 }
 
+// To list [0,1,2] tail push [3,4,5] giving [3,4,5,0,1,2]
 static void test_list_tail_push_list (void)
 {
   iot_data_t * dest;
   iot_data_t * src;
+  iot_data_t * val;
 
   test_lists_init (&dest, &src);
   iot_data_list_tail_push_list (dest, src, IOT_DATA_COPY);
   CU_ASSERT (iot_data_list_length (dest) == 6u)
   CU_ASSERT (iot_data_list_length (src) == 3u)
+  val = iot_data_list_head_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 2u)
+  iot_data_free (val);
+  val = iot_data_list_tail_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 3u)
+  iot_data_free (val);
   iot_data_free (src);
   iot_data_free (dest);
 
@@ -5068,6 +5076,12 @@ static void test_list_tail_push_list (void)
   iot_data_list_tail_push_list (dest, src, IOT_DATA_REF);
   CU_ASSERT (iot_data_list_length (dest) == 6u)
   CU_ASSERT (iot_data_list_length (src) == 3u)
+  val = iot_data_list_head_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 2u)
+  iot_data_free (val);
+  val = iot_data_list_tail_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 3u)
+  iot_data_free (val);
   iot_data_free (src);
   iot_data_free (dest);
 
@@ -5075,19 +5089,33 @@ static void test_list_tail_push_list (void)
   iot_data_list_tail_push_list (dest, src, IOT_DATA_TAKE);
   CU_ASSERT (iot_data_list_length (dest) == 6u)
   CU_ASSERT (iot_data_list_length (src) == 0u)
+  val = iot_data_list_head_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 2u)
+  iot_data_free (val);
+  val = iot_data_list_tail_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 3u)
+  iot_data_free (val);
   iot_data_free (src);
   iot_data_free (dest);
 }
 
+// To list [0,1,2] head push [3,4,5] giving [0,1,2,3,4,5]
 static void test_list_head_push_list (void)
 {
   iot_data_t * dest;
   iot_data_t * src;
+  iot_data_t * val;
 
   test_lists_init (&dest, &src);
   iot_data_list_head_push_list (dest, src, IOT_DATA_COPY);
   CU_ASSERT (iot_data_list_length (dest) == 6u)
   CU_ASSERT (iot_data_list_length (src) == 3u)
+  val = iot_data_list_head_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 5u)
+  iot_data_free (val);
+  val = iot_data_list_tail_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 0u)
+  iot_data_free (val);
   iot_data_free (src);
   iot_data_free (dest);
 
@@ -5095,6 +5123,12 @@ static void test_list_head_push_list (void)
   iot_data_list_head_push_list (dest, src, IOT_DATA_REF);
   CU_ASSERT (iot_data_list_length (dest) == 6u)
   CU_ASSERT (iot_data_list_length (src) == 3u)
+  val = iot_data_list_head_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 5u)
+  iot_data_free (val);
+  val = iot_data_list_tail_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 0u)
+  iot_data_free (val);
   iot_data_free (src);
   iot_data_free (dest);
 
@@ -5102,6 +5136,12 @@ static void test_list_head_push_list (void)
   iot_data_list_head_push_list (dest, src, IOT_DATA_TAKE);
   CU_ASSERT (iot_data_list_length (dest) == 6u)
   CU_ASSERT (iot_data_list_length (src) == 0u)
+  val = iot_data_list_head_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 5u)
+  iot_data_free (val);
+  val = iot_data_list_tail_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 0u)
+  iot_data_free (val);
   iot_data_free (src);
   iot_data_free (dest);
 }

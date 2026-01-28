@@ -843,7 +843,7 @@ extern iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * ite
  * @brief Push the contents of a list onto the tail of a list. Copied elements are either taken or referenced.
  * @param dest_list  List to add values to
  * @param src_list   List of values to add to tail of dest_list
- * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list,
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
  */
 extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
 
@@ -865,7 +865,7 @@ extern iot_data_t * iot_data_list_tail_pop (iot_data_t * list);
  * @brief Push the contents of a list onto the head of a list. Copied elements are either taken or referenced.
  * @param dest_list  List to add values to
  * @param src_list   List of values to add to head of dest_list
- * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list,
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
  */
 extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
 
