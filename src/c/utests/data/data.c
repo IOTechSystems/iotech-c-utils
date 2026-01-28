@@ -5039,6 +5039,73 @@ static void test_shallow_copy_list (void)
   iot_data_free (list);
 }
 
+static void test_lists_init (iot_data_t ** l1, iot_data_t ** l2)
+{
+  uint32_t val = 0u;
+  *l1 = iot_data_alloc_list ();
+  *l2 = iot_data_alloc_list ();
+  iot_data_list_head_push (*l1, iot_data_alloc_ui32 (val++));
+  iot_data_list_head_push (*l1, iot_data_alloc_ui32 (val++));
+  iot_data_list_head_push (*l1, iot_data_alloc_ui32 (val++));
+  iot_data_list_head_push (*l2, iot_data_alloc_ui32 (val++));
+  iot_data_list_head_push (*l2, iot_data_alloc_ui32 (val++));
+  iot_data_list_head_push (*l2, iot_data_alloc_ui32 (val++));
+}
+
+static void test_list_tail_push_list (void)
+{
+  iot_data_t * dest;
+  iot_data_t * src;
+
+  test_lists_init (&dest, &src);
+  iot_data_list_tail_push_list (dest, src, IOT_DATA_COPY);
+  CU_ASSERT (iot_data_list_length (dest) == 6u)
+  CU_ASSERT (iot_data_list_length (src) == 3u)
+  iot_data_free (src);
+  iot_data_free (dest);
+
+  test_lists_init (&dest, &src);
+  iot_data_list_tail_push_list (dest, src, IOT_DATA_REF);
+  CU_ASSERT (iot_data_list_length (dest) == 6u)
+  CU_ASSERT (iot_data_list_length (src) == 3u)
+  iot_data_free (src);
+  iot_data_free (dest);
+
+  test_lists_init (&dest, &src);
+  iot_data_list_tail_push_list (dest, src, IOT_DATA_TAKE);
+  CU_ASSERT (iot_data_list_length (dest) == 6u)
+  CU_ASSERT (iot_data_list_length (src) == 0u)
+  iot_data_free (src);
+  iot_data_free (dest);
+}
+
+static void test_list_head_push_list (void)
+{
+  iot_data_t * dest;
+  iot_data_t * src;
+
+  test_lists_init (&dest, &src);
+  iot_data_list_head_push_list (dest, src, IOT_DATA_COPY);
+  CU_ASSERT (iot_data_list_length (dest) == 6u)
+  CU_ASSERT (iot_data_list_length (src) == 3u)
+  iot_data_free (src);
+  iot_data_free (dest);
+
+  test_lists_init (&dest, &src);
+  iot_data_list_head_push_list (dest, src, IOT_DATA_REF);
+  CU_ASSERT (iot_data_list_length (dest) == 6u)
+  CU_ASSERT (iot_data_list_length (src) == 3u)
+  iot_data_free (src);
+  iot_data_free (dest);
+
+  test_lists_init (&dest, &src);
+  iot_data_list_head_push_list (dest, src, IOT_DATA_TAKE);
+  CU_ASSERT (iot_data_list_length (dest) == 6u)
+  CU_ASSERT (iot_data_list_length (src) == 0u)
+  iot_data_free (src);
+  iot_data_free (dest);
+}
+
 static void test_get_at (void)
 {
   iot_data_t * map = iot_data_from_json (test_config);
@@ -5584,6 +5651,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_list_remove", test_list_remove);
   CU_add_test (suite, "data_list_find", test_list_find);
   CU_add_test (suite, "data_list_equal", test_list_equal);
+  CU_add_test (suite, "data_list_tail_push_list", test_list_tail_push_list);
+  CU_add_test (suite, "data_list_head_push_list", test_list_head_push_list);
   CU_add_test (suite, "data_map_size", test_map_size);
   CU_add_test (suite, "data_map_get", test_map_get);
   CU_add_test (suite, "data_map_iter_replace", test_data_map_iter_replace);

@@ -248,7 +248,8 @@ bool iot_data_alloc_heap (bool set)
 
 static void iot_data_cache_push (iot_block_t * block)
 {
-  iot_cache_head_t next, orig = atomic_load (&iot_data_cache_head);
+  iot_cache_head_t orig = atomic_load (&iot_data_cache_head);
+  iot_cache_head_t next = orig;
   while (true)
   {
     block->next = orig.node;
@@ -1090,6 +1091,82 @@ bool iot_data_list_iter_remove (iot_data_list_iter_t * iter)
     iot_data_list_remove_element (impl, element);
   }
   return element != NULL;
+}
+
+extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership)
+{
+  assert (dest_list && src_list && dest_list->type == IOT_DATA_LIST && src_list->type == IOT_DATA_LIST);
+  if (ownership == IOT_DATA_TAKE)
+  {
+    iot_data_list_t * dest = (iot_data_list_t*) dest_list;
+    iot_data_list_t * src = (iot_data_list_t*) src_list;
+    if (src->tail)
+    {
+      if (dest->tail)
+      {
+        dest->tail->prev = src->head;
+        src->head->next = dest->tail;
+        dest->tail = src->tail;
+        dest->head->length += src->head->length;
+      }
+      else
+      {
+        dest->tail = src->tail;
+        dest->head = src->head;
+      }
+      src->tail = NULL;
+      src->head = NULL;
+      dest_list->hash ^= src_list->hash;
+    }
+  }
+  else
+  {
+    iot_data_list_iter_t iter;
+    iot_data_list_iter (src_list, &iter);
+    while (iot_data_list_iter_prev (&iter))
+    {
+      const iot_data_t * value = iot_data_list_iter_value (&iter);
+      iot_data_list_tail_push (dest_list, ownership == IOT_DATA_REF ? iot_data_add_ref (value) : iot_data_copy (value));
+    }
+  }
+}
+
+extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership)
+{
+  assert (dest_list && src_list && dest_list->type == IOT_DATA_LIST && src_list->type == IOT_DATA_LIST);
+  if (ownership == IOT_DATA_TAKE)
+  {
+    iot_data_list_t * dest = (iot_data_list_t*) dest_list;
+    iot_data_list_t * src = (iot_data_list_t*) src_list;
+    if (src->head)
+    {
+      if (dest->head)
+      {
+        dest->head->next = src->tail;
+        src->tail->prev = dest->head;
+        dest->head = src->head;
+        dest->head->length += src->head->length;
+      }
+      else
+      {
+        dest->tail = src->tail;
+        dest->head = src->head;
+      }
+      src->tail = NULL;
+      src->head = NULL;
+      dest_list->hash ^= src_list->hash;
+    }
+  }
+  else
+  {
+    iot_data_list_iter_t iter;
+    iot_data_list_iter (src_list, &iter);
+    while (iot_data_list_iter_next (&iter))
+    {
+      const iot_data_t * value = iot_data_list_iter_value (&iter);
+      iot_data_list_head_push (dest_list, ownership == IOT_DATA_REF ? iot_data_add_ref (value) : iot_data_copy (value));
+    }
+  }
 }
 
 void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value)
