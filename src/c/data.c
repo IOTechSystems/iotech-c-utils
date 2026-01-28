@@ -249,7 +249,7 @@ bool iot_data_alloc_heap (bool set)
 static void iot_data_cache_push (iot_block_t * block)
 {
   iot_cache_head_t orig = atomic_load (&iot_data_cache_head);
-  iot_cache_head_t next = orig;
+  iot_cache_head_t next;
   while (true)
   {
     block->next = orig.node;
