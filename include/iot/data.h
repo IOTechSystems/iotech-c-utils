@@ -839,11 +839,16 @@ extern bool iot_data_list_iter_remove (iot_data_list_iter_t * iter);
  */
 extern iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value);
 
+ /**
+ * @brief Push the contents of a list onto the tail of a list. Copied elements are either taken or referenced.
+ * @param dest_list  List to add values to
+ * @param src_list   List of values to add to tail of dest_list
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
+ */
+extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
+
 /**
  * @brief Push a value onto the tail of a list
- *
- * The function to push a value onto the tail of a list
- *
  * @param list  Input list
  * @param value Value to add to tail of the list
  */
@@ -851,19 +856,21 @@ extern void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value);
 
 /**
  * @brief Pop a value from the tail of a list
- *
- * The function to pop a value from the tail of a list
- *
  * @param list  Input list
  * @return      Value from the list tail or NULL if list empty
  */
 extern iot_data_t * iot_data_list_tail_pop (iot_data_t * list);
 
 /**
+ * @brief Push the contents of a list onto the head of a list. Copied elements are either taken or referenced.
+ * @param dest_list  List to add values to
+ * @param src_list   List of values to add to head of dest_list
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
+ */
+extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
+
+/**
  * @brief Push a value onto the head of a list
- *
- * The function to push a value onto the head of a list
- *
  * @param list  Input list
  * @param value Value to add to head of the list
  */
@@ -871,9 +878,6 @@ extern void iot_data_list_head_push (iot_data_t * list, iot_data_t * value);
 
 /**
  * @brief Pop a value from the head of a list
- *
- * The function to pop a value from the head of a list
- *
  * @param list  Input list
  * @return      Value from the list head or NULL if list empty
  */
