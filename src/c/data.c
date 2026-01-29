@@ -16,8 +16,7 @@
   #include <immintrin.h>
   #define cpu_relax() _mm_pause()
 #elif defined(__aarch64__) || defined(__arm__)
-  #include <arm_acle.h>
-  #define cpu_relax() __yield()
+  #define cpu_relax() __asm__ __volatile__("yield" ::: "memory")
 #endif
 
 #if !defined DEBUG_MEMORY
