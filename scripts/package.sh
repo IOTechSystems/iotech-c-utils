@@ -75,7 +75,7 @@ case ${SYSTEM} in
     export DEPS="yaml libcbor"
     build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dev
-    export DEPS="iotech-iot-${PKG_VER}"
+    export DEPS="iotech-iot-${PKG_VER}=${VER}-r${REL_VER}"
     build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dbg
     export DEPS="yaml libcbor"
@@ -116,7 +116,7 @@ case ${SYSTEM} in
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude lib \
-      --depends iotech-iot-${PKG_VER}
+      --depends "iotech-iot-${PKG_VER} (= ${VER})"
 
     rm *.tar.gz
 
@@ -160,11 +160,13 @@ case ${SYSTEM} in
         RPM_DIST=fc42
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
+        ATOMIC_DEP="libatomic"
       ;;
       oraclelinux-9)
         RPM_DIST=el9
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
+        ATOMIC_DEP="libatomic"
       ;;
       opensuse-15.*)
         FPM=fpm.ruby2.5
@@ -182,7 +184,7 @@ case ${SYSTEM} in
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends ${YAML_DEP} --depends ${CBOR_DEP}
+      --depends ${YAML_DEP} --depends ${CBOR_DEP} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}}
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" --iteration "$((REL_VER+1))" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
@@ -191,7 +193,7 @@ case ${SYSTEM} in
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude lib \
-      --depends iotech-iot-${PKG_VER}
+      --depends "iotech-iot-${PKG_VER} = ${VER}-$((REL_VER+1))${RPM_DIST:+.${RPM_DIST}}"
 
     rm *.tar.gz
 
@@ -203,7 +205,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends ${YAML_DEP} --depends libcbor \
+      --depends ${YAML_DEP} --depends ${CBOR_DEP} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}} \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm *.tar.gz

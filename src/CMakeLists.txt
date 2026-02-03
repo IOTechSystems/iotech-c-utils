@@ -55,7 +55,7 @@ endif ()
 include(CheckLibraryExists)
 check_library_exists(atomic __atomic_load_16 "" HAVE_LIBATOMIC)
 if (HAVE_LIBATOMIC)
-  link_libraries(-l:libatomic.a)
+  link_libraries(atomic)
 endif ()
 
 set (OS_ARCH x86_64)

@@ -24,3 +24,4 @@
 - Added additional stats collection and publishing for the scheduler component
 - Data memory management update for better performance
 - Added functions `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` to support list merging
+- Added functions `iot_data_list_iter_push_after` and `iot_data_list_iter_push_before` to support additions within the list
