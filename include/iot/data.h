@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2023 IOTech Ltd
+// Copyright (c) 2019-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -839,7 +839,23 @@ extern bool iot_data_list_iter_remove (iot_data_list_iter_t * iter);
  */
 extern iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value);
 
- /**
+/**
+ * @brief Insert a new element in the list after the current element
+ *
+ * @param iter  Input iterator
+ * @param value New value to store in the list
+ */
+extern void iot_data_list_iter_push_after (const iot_data_list_iter_t * iter, iot_data_t * value);
+
+/**
+ * @brief Insert a new element in the list before the current element
+ *
+ * @param iter  Input iterator
+ * @param value New value to store in the list
+ */
+extern void iot_data_list_iter_push_before (const iot_data_list_iter_t * iter, iot_data_t * value);
+
+/**
  * @brief Push the contents of a list onto the tail of a list. Copied elements are either taken or referenced.
  * @param dest_list  List to add values to
  * @param src_list   List of values to add to tail of dest_list
