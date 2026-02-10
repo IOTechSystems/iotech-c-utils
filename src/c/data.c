@@ -261,7 +261,8 @@ static void iot_data_cache_push (iot_block_t * block)
 
 static iot_block_t * iot_data_cache_pop (void)
 {
-  iot_cache_head_t next, orig = atomic_load (&iot_data_cache_head);
+  iot_cache_head_t next;
+  iot_cache_head_t orig = atomic_load (&iot_data_cache_head);
   while (true)
   {
     if (orig.node == NULL) return NULL; // Cache empty
@@ -2115,6 +2116,19 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
   assert (map && key && (map->type == IOT_DATA_MAP));
   const iot_node_t * node = iot_node_find (((const iot_data_map_t*) map)->tree, key);
   return node ? node->value : NULL;
+}
+
+iot_data_t * iot_data_map_take (iot_data_t * map, const iot_data_t * key)
+{
+  iot_data_t * ret = NULL;
+  assert (map && key && (map->type == IOT_DATA_MAP));
+  const iot_data_t * val = iot_data_map_get (map, key);
+  if (val)
+  {
+    ret = iot_data_add_ref (val);
+    iot_data_map_remove (map, key);
+  }
+  return ret;
 }
 
 const iot_data_t * iot_data_map_get_typed (const iot_data_t * map, const iot_data_t * key, iot_data_type_t type)
