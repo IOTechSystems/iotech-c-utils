@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2023 IOTech
+// Copyright (c) 2019-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -1078,6 +1078,62 @@ iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_
     iter->_element->value = value;
   }
   return res;
+}
+
+void iot_data_list_iter_push_after (const iot_data_list_iter_t * iter, iot_data_t * value)
+{
+  assert (iter && iter->_list && value && (iter->_list->base.element_type == IOT_DATA_MULTI || iter->_list->base.element_type == value->type));
+  iot_data_t * base = (iot_data_t*) &iter->_list->base;
+  if (iter->_element)
+  {
+    if (iter->_element == iter->_list->head)
+    {
+      iot_data_list_head_push (base, value);
+    }
+    else
+    {
+      iot_element_t * element = iot_element_alloc ();
+      element->value = value;
+      element->next = iter->_element->next;
+      element->prev = iter->_element;
+      element->next->prev = element;  // element->next is non-NULL because we aren't at the head
+      iter->_element->next = element;
+      iter->_list->head->length++;
+      base->hash ^= iot_data_hash (value);
+    }
+  }
+  else
+  {
+    iot_data_list_tail_push (base, value);
+  }
+}
+
+void iot_data_list_iter_push_before (const iot_data_list_iter_t * iter, iot_data_t * value)
+{
+  assert (iter && iter->_list && value && (iter->_list->base.element_type == IOT_DATA_MULTI || iter->_list->base.element_type == value->type));
+  iot_data_t * base = (iot_data_t*) &iter->_list->base;
+  if (iter->_element)
+  {
+    if (iter->_element == iter->_list->tail)
+    {
+      iot_data_list_tail_push (base, value);
+    }
+    else
+    {
+      iot_element_t * element = iot_element_alloc ();
+      element->value = value;
+      element->next = iter->_element;
+      element->prev = iter->_element->prev;
+      element->prev->next = element; // element->prev is non-NULL because we aren't at the tail
+      iter->_element->prev = element;
+      iter->_list->head->length++;
+      base->hash ^= iot_data_hash (value);
+    }
+  }
+  else
+  {
+    iot_data_list_head_push (base, value);
+  }
 }
 
 bool iot_data_list_iter_remove (iot_data_list_iter_t * iter)
