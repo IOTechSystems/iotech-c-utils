@@ -5386,10 +5386,10 @@ static void test_data_map_get_int (void)
   iot_data_t * ui32_key = iot_data_alloc_string ("uint32", IOT_DATA_REF);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_map_add (map, key, iot_data_alloc_ui16 (123u));
-  iot_data_string_map_add (map, "int64", iot_data_alloc_i64 (-64));
-  iot_data_string_map_add (map, "uint64", iot_data_alloc_ui64 (64u));
-  iot_data_string_map_add (map, "int32", iot_data_alloc_i32 (-32));
-  iot_data_string_map_add (map, "uint32", iot_data_alloc_ui32 (32u));
+  iot_data_map_add (map, i64_key, iot_data_alloc_i64 (-64));
+  iot_data_map_add (map, ui64_key, iot_data_alloc_ui64 (64u));
+  iot_data_map_add (map, i32_key, iot_data_alloc_i32 (-32));
+  iot_data_map_add (map, ui32_key, iot_data_alloc_ui32 (32u));
 
   int i = 0;
   ok = iot_data_map_get_int (map, key, &i);
