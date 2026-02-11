@@ -1425,8 +1425,6 @@ extern bool iot_data_map_get_int (const iot_data_t * map, const iot_data_t * key
 /**
  * @brief Get int64_t value corresponding to key from a map
  *
- * Function to get a string value from a map
- *
  * @param map          Map from which get a value
  * @param key          Key for the value
  * @param default_val  Default int64 value
@@ -1437,14 +1435,32 @@ extern int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * 
 /**
  * @brief Get uint64_t value corresponding to key from a map
  *
- * Function to get a string value from a map
- *
  * @param map          Map from which get a value
  * @param key          Key for the value
  * @param default_val  Default int64 value
  * @return             int64_t value corresponding to the key, or default_val if not found
  */
 extern uint64_t iot_data_map_get_ui64 (const iot_data_t * map, const iot_data_t * key, uint64_t default_val);
+
+/**
+ * @brief Get int32_t value corresponding to key from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default int32 value
+ * @return             int32_t value corresponding to the key, or default_val if not found
+ */
+extern int32_t iot_data_map_get_i32 (const iot_data_t * map, const iot_data_t * key, int32_t default_val);
+
+/**
+ * @brief Get uint32_t value corresponding to key from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default uint32 value
+ * @return             uint32_t value corresponding to the key, or default_val if not found
+ */
+extern uint32_t iot_data_map_get_ui32 (const iot_data_t * map, const iot_data_t * key, uint32_t default_val);
 
 /**
  * @brief Get bool value corresponding to key from a map
@@ -1596,7 +1612,29 @@ extern int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char *
  */
 extern uint64_t iot_data_string_map_get_ui64 (const iot_data_t * map, const char * key, uint64_t default_val);
 
+  /**
+   * @brief Get int32_t value corresponding to a string key from a map
+   *
+   * The function to get a int32 value corresponding to key from the map, if the value type is IOT_DATA_INT32, else return default_val
+   *
+   * @param map          Map from which get a value
+   * @param key          String key for the value
+   * @param default_val  Default int32 value
+   * @return             Int32 value corresponding to the key, else default_val
+   */
+  extern int32_t iot_data_string_map_get_i32 (const iot_data_t * map, const char * key, int32_t default_val);
 
+  /**
+   * @brief Get uint32_t value corresponding to a string key from a map
+   *
+   * The function to get a uint32 value corresponding to key from the map, if the value type is IOT_DATA_UINT32, else return default_val
+   *
+   * @param map          Map from which get a value
+   * @param key          String key for the value
+   * @param default_val  Default uint32 value
+   * @return             Uint32 value corresponding to the key, else default_val
+   */
+  extern uint32_t iot_data_string_map_get_ui32 (const iot_data_t * map, const char * key, uint32_t default_val);
 /**
  * @brief Get bool value corresponding to key from a map
  *

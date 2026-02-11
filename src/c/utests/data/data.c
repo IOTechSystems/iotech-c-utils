@@ -2828,8 +2828,7 @@ static void test_data_map_take (void)
   iot_data_t * found = iot_data_map_take (map, list_key);
   CU_ASSERT (iot_data_map_size (map) == 1u)
   CU_ASSERT (found == list)
-  const iot_data_t * found2 = iot_data_map_get (map, list_key);
-  CU_ASSERT (found2 == NULL)
+  CU_ASSERT (iot_data_string_map_get (map, "list") == NULL)
   iot_data_free (found);
   iot_data_free (map);
 }
@@ -5376,12 +5375,20 @@ static void test_data_map_number (void)
   iot_data_free (map);
 }
 
-static void test_data_map_int (void)
+static void test_data_map_get_int (void)
 {
   bool ok;
   iot_data_t * key = iot_data_alloc_string ("Value", IOT_DATA_REF);
+  iot_data_t * i64_key = iot_data_alloc_string ("int64", IOT_DATA_REF);
+  iot_data_t * ui64_key = iot_data_alloc_string ("uint64", IOT_DATA_REF);
+  iot_data_t * i32_key = iot_data_alloc_string ("int32", IOT_DATA_REF);
+  iot_data_t * ui32_key = iot_data_alloc_string ("uint32", IOT_DATA_REF);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
   iot_data_map_add (map, key, iot_data_alloc_ui16 (123u));
+  iot_data_map_add (map, i64_key, iot_data_alloc_i64 (-64));
+  iot_data_map_add (map, ui64_key, iot_data_alloc_ui64 (64u));
+  iot_data_map_add (map, i32_key, iot_data_alloc_i32 (-32));
+  iot_data_map_add (map, ui32_key, iot_data_alloc_ui32 (32u));
 
   int i = 0;
   ok = iot_data_map_get_int (map, key, &i);
@@ -5391,6 +5398,23 @@ static void test_data_map_int (void)
   ok = iot_data_string_map_get_int (map, "Value", &i);
   CU_ASSERT (ok)
   CU_ASSERT (i == 123)
+
+  int64_t i64 = iot_data_string_map_get_i64 (map, "int64", 0);
+  CU_ASSERT (i64 == -64)
+  i64 = iot_data_map_get_i64 (map, i64_key, 0);
+  CU_ASSERT (i64 == -64)
+  uint64_t ui64 = iot_data_string_map_get_ui64 (map, "uint64", 0);
+  CU_ASSERT (ui64 == 64)
+  ui64 = iot_data_map_get_ui64 (map, ui64_key, 0);
+  CU_ASSERT (ui64 == 64)
+  int32_t i32 = iot_data_string_map_get_i32 (map, "int32", 0);
+  CU_ASSERT (i32 == -32)
+  i32 = iot_data_map_get_i32 (map, i32_key, 0);
+  CU_ASSERT (i32 == -32)
+  uint32_t ui32 = iot_data_string_map_get_ui32 (map, "uint32", 0);
+  CU_ASSERT (ui32 == 32)
+  ui32 = iot_data_map_get_ui32 (map, ui32_key, 0);
+  CU_ASSERT (ui32 == 32)
 
   iot_data_free (map);
 }
@@ -5914,7 +5938,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_compare", test_data_compare);
   CU_add_test (suite, "data_compress", test_data_compress);
   CU_add_test (suite, "data_map_number", test_data_map_number);
-  CU_add_test (suite, "data_map_int", test_data_map_int);
+  CU_add_test (suite, "data_map_get_int", test_data_map_get_int);
   CU_add_test (suite, "data_map_merge", test_data_map_merge);
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
   CU_add_test (suite, "data_vector_to_vector", test_data_vector_to_vector);
