@@ -26,4 +26,4 @@
 - Added functions `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` to support list merging
 - Added functions `iot_data_list_iter_push_after` and `iot_data_list_iter_push_before` to support additions within the list
 - Added function `iot_data_map_take` to take a value from a map
-- Added functions `iot_data_map_get_i32`, `iot_data_map_get_ui32`, `iot_data_string_map_get_i64` and `iot_data_string_map_get_ui64` to get typed integer values from a map
+- Added functions `iot_data_map_get_i32`, `iot_data_map_get_ui32`, `iot_data_string_map_get_i32` and `iot_data_string_map_get_ui32` to get typed integer values from a map

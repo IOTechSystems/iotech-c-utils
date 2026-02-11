@@ -2828,8 +2828,7 @@ static void test_data_map_take (void)
   iot_data_t * found = iot_data_map_take (map, list_key);
   CU_ASSERT (iot_data_map_size (map) == 1u)
   CU_ASSERT (found == list)
-  const iot_data_t * found2 = iot_data_map_get (map, list_key);
-  CU_ASSERT (found2 == NULL)
+  CU_ASSERT (iot_data_string_map_get (map, "list") == NULL)
   iot_data_free (found);
   iot_data_free (map);
 }

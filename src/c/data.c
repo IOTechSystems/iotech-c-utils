@@ -392,7 +392,7 @@ extern void iot_data_block_free (void * ptr)
     }
   }
 #else
-  free (ptr)
+  free (ptr);
 #endif
 }
 
