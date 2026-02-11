@@ -2176,13 +2176,13 @@ uint64_t iot_data_map_get_ui64 (const iot_data_t * map, const iot_data_t * key, 
   return (iot_data_type (data) == IOT_DATA_UINT64) ? iot_data_ui64 (data) : default_val;
 }
 
-int64_t iot_data_map_get_i32 (const iot_data_t * map, const iot_data_t * key, int32_t default_val)
+int32_t iot_data_map_get_i32 (const iot_data_t * map, const iot_data_t * key, int32_t default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
   return (iot_data_type (data) == IOT_DATA_INT32) ? iot_data_i32 (data) : default_val;
 }
 
-uint64_t iot_data_map_get_ui32 (const iot_data_t * map, const iot_data_t * key, uint32_t default_val)
+uint32_t iot_data_map_get_ui32 (const iot_data_t * map, const iot_data_t * key, uint32_t default_val)
 {
   const iot_data_t * data = iot_data_map_get (map, key);
   return (iot_data_type (data) == IOT_DATA_UINT32) ? iot_data_ui32 (data) : default_val;

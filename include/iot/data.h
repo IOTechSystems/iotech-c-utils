@@ -1450,7 +1450,7 @@ extern uint64_t iot_data_map_get_ui64 (const iot_data_t * map, const iot_data_t 
  * @param default_val  Default int32 value
  * @return             int32_t value corresponding to the key, or default_val if not found
  */
-extern int64_t iot_data_map_get_i32 (const iot_data_t * map, const iot_data_t * key, int32_t default_val);
+extern int32_t iot_data_map_get_i32 (const iot_data_t * map, const iot_data_t * key, int32_t default_val);
 
 /**
  * @brief Get uint32_t value corresponding to key from a map
@@ -1460,7 +1460,7 @@ extern int64_t iot_data_map_get_i32 (const iot_data_t * map, const iot_data_t * 
  * @param default_val  Default uint32 value
  * @return             uint32_t value corresponding to the key, or default_val if not found
  */
-extern uint64_t iot_data_map_get_ui32 (const iot_data_t * map, const iot_data_t * key, uint32_t default_val);
+extern uint32_t iot_data_map_get_ui32 (const iot_data_t * map, const iot_data_t * key, uint32_t default_val);
 
 /**
  * @brief Get bool value corresponding to key from a map
