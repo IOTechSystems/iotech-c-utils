@@ -2111,7 +2111,7 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
 
 iot_data_t * iot_data_map_take (iot_data_t * map, const iot_data_t * key)
 {
-  iot_data_t * ret = false;
+  iot_data_t * ret = NULL;
   assert (map && (map->type == IOT_DATA_MAP));
   if (key)
   {
