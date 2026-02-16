@@ -197,7 +197,7 @@ static void iot_node_free (iot_data_map_t * map, iot_node_t * node);
 static iot_node_t * iot_node_next (iot_node_t * iter);
 static iot_node_t * iot_node_prev (iot_node_t * iter);
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
-static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
+static iot_data_t * iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
 static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key);
 
 #ifdef IOT_DATA_CACHE
@@ -2009,18 +2009,9 @@ void * iot_data_pointer (const iot_data_t * data)
 
 bool iot_data_map_remove (iot_data_t * map, const iot_data_t * key)
 {
-  bool ret = false;
-  assert (map && (map->type == IOT_DATA_MAP));
-  if (key)
-  {
-    iot_data_map_t * mp = (iot_data_map_t*) map;
-    if ((ret = iot_node_remove (mp, key)))
-    {
-      mp->base.rehash = true;
-      mp->size--;
-    }
-  }
-  return ret;
+  iot_data_t * ret = iot_data_map_take (map, key);
+  iot_data_free (ret);
+  return ret != NULL;
 }
 
 void iot_data_string_map_add (iot_data_t * map, const char * key, iot_data_t * val)
@@ -2121,12 +2112,15 @@ const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * 
 iot_data_t * iot_data_map_take (iot_data_t * map, const iot_data_t * key)
 {
   iot_data_t * ret = NULL;
-  assert (map && key && (map->type == IOT_DATA_MAP));
-  const iot_data_t * val = iot_data_map_get (map, key);
-  if (val)
+  assert (map && (map->type == IOT_DATA_MAP));
+  if (key)
   {
-    ret = iot_data_add_ref (val);
-    iot_data_map_remove (map, key);
+    iot_data_map_t * mp = (iot_data_map_t*) map;
+    if ((ret = iot_node_remove (mp, key)))
+    {
+      mp->base.rehash = true;
+      mp->size--;
+    }
   }
   return ret;
 }
@@ -3290,10 +3284,9 @@ static inline iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key
   return node;
 }
 
-static void iot_node_delete (iot_node_t * node)
+static inline void iot_node_delete (iot_node_t * node)
 {
   iot_data_free (node->key);
-  iot_data_free (node->value);
   node->heap ? free (node) : iot_data_block_free (node);
 }
 
@@ -3498,8 +3491,9 @@ static void iot_node_transplant (iot_data_map_t * map, iot_node_t * u, iot_node_
   if (v) v->parent = u->parent;
 }
 
-static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key)
+static iot_data_t * iot_node_remove (iot_data_map_t * map, const iot_data_t * key)
 {
+  iot_data_t * val = NULL;
   iot_node_t * z = iot_node_find (map->tree, key);
   if (z)
   {
@@ -3537,9 +3531,10 @@ static bool iot_node_remove (iot_data_map_t * map, const iot_data_t * key)
       y->colour = z->colour;
     }
     if (x && (col == IOT_NODE_BLACK)) iot_node_remove_balance (map, x);
+    val = z->value;
     iot_node_delete (z);
   }
-  return (z != NULL);
+  return val;
 }
 
 static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value)
@@ -3566,6 +3561,7 @@ static void iot_node_free (iot_data_map_t * map, iot_node_t * node)
   {
     iot_node_free (map, node->left);
     iot_node_free (map, node->right);
+    iot_data_free (node->value);
     iot_node_delete (node);
   }
 }
