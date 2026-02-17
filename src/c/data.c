@@ -237,13 +237,14 @@ bool iot_data_set_tag (iot_data_t * data, iot_data_tag_t tag, bool value)
   return old;
 }
 
-#ifdef IOT_DATA_CACHE
 bool iot_data_alloc_heap (bool set)
 {
   bool old = iot_data_alloc_from_heap;
   iot_data_alloc_from_heap = set;
   return old;
 }
+
+#ifdef IOT_DATA_CACHE
 
 static void iot_data_cache_push (iot_block_t * block)
 {
