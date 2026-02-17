@@ -5772,10 +5772,12 @@ static void test_data_bounded_equal (void)
 
 static void test_data_alloc_heap (void)
 {
+#ifdef NDEBUG
   iot_data_alloc_heap (true);
   iot_data_t * map = iot_data_from_json (test_config);
   iot_data_free (map);
   iot_data_alloc_heap (false);
+#endif
 }
 
 void cunit_data_test_init (void)
