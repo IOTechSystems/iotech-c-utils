@@ -1364,7 +1364,7 @@ extern bool iot_data_string_map_remove (iot_data_t * map, const char * key);
 extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key);
 
 /**
- * @brief  Take a value from the map for a key provided
+ * @brief  Take a value from the map for a key
  *
  * The function to take the value corresponding to an input key from the map (value is removed from map)
  *
@@ -1373,6 +1373,17 @@ extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_da
  * @return     Value taken from map corresponding to key
  */
 extern iot_data_t * iot_data_map_take (iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief  Take a value from the map for a string key
+ *
+ * The function to take the value corresponding to an input string key from the map (value is removed from map)
+ *
+ * @param map  Map from which to take the value
+ * @param key  Input string key
+ * @return     Value taken from map corresponding to string key
+ */
+extern iot_data_t * iot_data_string_map_take (iot_data_t * map, const char * key);
 
 /**
  * @brief  Get value from the map for a key provided. Returns NULL if cannot be found or of wring type.

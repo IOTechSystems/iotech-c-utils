@@ -19,7 +19,7 @@
   #define cpu_relax() __asm__ __volatile__("yield" ::: "memory")
 #endif
 
-#if !defined DEBUG_MEMORY
+#ifdef NDEBUG
 #define IOT_DATA_CACHE
 #define IOT_LOCAL_CACHE_LIMIT 2048u
 #define IOT_LOCAL_LOW_WATER 64
@@ -2123,6 +2123,14 @@ iot_data_t * iot_data_map_take (iot_data_t * map, const iot_data_t * key)
     }
   }
   return ret;
+}
+
+iot_data_t * iot_data_string_map_take (iot_data_t * map, const char * key)
+{
+  assert (map && key);
+  iot_data_static_t skey;
+  iot_data_alloc_const_string (&skey, key);
+  return iot_data_map_take (map, IOT_DATA_STATIC (&skey));
 }
 
 const iot_data_t * iot_data_map_get_typed (const iot_data_t * map, const iot_data_t * key, iot_data_type_t type)
