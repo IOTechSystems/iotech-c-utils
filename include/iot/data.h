@@ -732,7 +732,7 @@ extern void iot_data_list_empty (iot_data_t * list);
 extern const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
 
 /**
- * @brief Remove matching element in a list using compare function
+ * @brief Remove matching elements in a list using a comparson function
  *
  * Applies a compare function to each element in a list until the compare
  * function returns true or the end of the list is reached. The list is searched from tail to head,
@@ -744,6 +744,17 @@ extern const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_
  * @return        Whether an element removed
  */
 extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
+
+/**
+ * @brief Filters out (removes) all elements in a list where a comparison function returns true
+ * for the element. Returns the number of elements removed.
+ *
+ * @param list    Input list
+ * @param cmp     A comparison function which takes an element and an argument and returns true or false
+ * @param arg     Pointer to user supplied argument that is passed to the comparison function.
+ * @return        The number of elements removed from the list
+ */
+extern uint32_t iot_data_list_filter (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
 
 /**
  * @brief Associate a list iterator with a list
