@@ -1023,6 +1023,23 @@ extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const 
   return (element != NULL);
 }
 
+extern uint32_t iot_data_list_filter (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg)
+{
+  uint32_t count = 0u;
+  assert (list && cmp);
+  iot_data_list_iter_t iter;
+  iot_data_list_iter (list, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    if (cmp (iot_data_list_iter_value (&iter), arg))
+    {
+      iot_data_list_iter_remove (&iter);
+      count++;
+    }
+  }
+  return count;
+}
+
 void iot_data_list_iter (const iot_data_t * list, iot_data_list_iter_t * iter)
 {
   assert (iter && list && list->type == IOT_DATA_LIST);

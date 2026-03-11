@@ -2740,6 +2740,23 @@ static void test_list_remove (void)
   CU_ASSERT (iot_data_list_length (list) == 1u)
   iot_data_free (list);
 }
+
+static void test_list_filter (void)
+{
+  uint32_t val0 = 0u;
+  uint32_t val1 = 1u;
+  uint32_t val2 = 2u;
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (val0));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (val1));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (val2));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (val1));
+  iot_data_list_tail_push (list, iot_data_alloc_ui32 (val0));
+  CU_ASSERT (iot_data_list_filter (list, test_list_cmp_fn, &val0) == 2u)
+  CU_ASSERT (iot_data_list_length (list) == 3u)
+  iot_data_free (list);
+}
+
 static void test_list_equal (void)
 {
   uint32_t val0 = 0u;
@@ -5831,6 +5848,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_list_iter_remove", test_list_iter_remove);
   CU_add_test (suite, "data_list_iter_remove_all", test_list_iter_remove_all);
   CU_add_test (suite, "data_list_remove", test_list_remove);
+  CU_add_test (suite, "data_list_filter", test_list_filter);
   CU_add_test (suite, "data_list_find", test_list_find);
   CU_add_test (suite, "data_list_equal", test_list_equal);
   CU_add_test (suite, "data_list_tail_push_list", test_list_tail_push_list);
