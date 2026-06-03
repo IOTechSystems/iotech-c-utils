@@ -28,7 +28,5 @@
 - Added functions `iot_data_map_take` and `iot_data_string_map_take` to take a value from a map
 - Added functions `iot_data_map_get_i32`, `iot_data_map_get_ui32`, `iot_data_string_map_get_i32` and `iot_data_string_map_get_ui32` to get typed integer values from a map
 - Added function `iot_data_list_filter` to filter out elements of a list
-
-## Version 1.6.5
 - Support added for Ubuntu 26.04
 
