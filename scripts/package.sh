@@ -86,7 +86,7 @@ case ${SYSTEM} in
     cd ${ROOT}/${BARCH}/release
 
     case ${SYSTEM} in
-      ubuntu-24.04|debian-13)
+      ubuntu-26.04|ubuntu-24.04|debian-13)
         CBOR=libcbor0.10
       ;;
       ubuntu-22.04|debian-12)
