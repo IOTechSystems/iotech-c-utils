@@ -95,9 +95,6 @@ case ${SYSTEM} in
       ubuntu-20.04)
         CBOR=libcbor0.6
       ;;
-      debian-11)
-        CBOR=libcbor0
-      ;;
     esac
 # Note using "--iteration "$((REL_VER+1))" with a debian package gives a version of form major.minor.patch-<release>
     ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
