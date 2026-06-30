@@ -30,3 +30,6 @@
 - Added function `iot_data_list_filter` to filter out elements of a list
 - Support added for Ubuntu 26.04
 
+## Version 1.6.5
+- Remove atomic operations on non atomic bool in scheduler
+
