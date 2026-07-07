@@ -4620,6 +4620,25 @@ static void test_data_vector_to_array (void)
   iot_data_free (array);
 }
 
+static void test_data_vector_to_list (void)
+{
+  iot_data_t * vector = iot_data_alloc_vector (4u);
+  iot_data_vector_add (vector, 0, iot_data_alloc_ui32 (0u));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_null ());
+  iot_data_vector_add (vector, 2u, iot_data_alloc_ui16 (2u));
+  iot_data_vector_add (vector, 3u, iot_data_alloc_string ("Test", IOT_DATA_REF));
+
+  iot_data_t * list = iot_data_vector_to_list (vector, IOT_DATA_MULTI);
+  CU_ASSERT (iot_data_list_length (list) == 4u)
+  iot_data_free (list);
+
+  list = iot_data_vector_to_list (vector, IOT_DATA_STRING);
+  CU_ASSERT (iot_data_list_length (list) == 1u)
+  iot_data_free (list);
+
+  iot_data_free (vector);
+}
+
 static void test_data_vector_to_vector (void)
 {
   iot_data_t * vector = iot_data_alloc_vector (3u);
@@ -5976,6 +5995,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_map_get_int", test_data_map_get_int);
   CU_add_test (suite, "data_map_merge", test_data_map_merge);
   CU_add_test (suite, "data_vector_to_array", test_data_vector_to_array);
+  CU_add_test (suite, "data_vector_to_list", test_data_vector_to_list);
   CU_add_test (suite, "data_vector_to_vector", test_data_vector_to_vector);
   CU_add_test (suite, "data_nested_vector_to_array", test_data_nested_vector_to_array);
   CU_add_test (suite, "data_ref_count", test_data_ref_count);
