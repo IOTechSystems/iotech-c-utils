@@ -4630,6 +4630,9 @@ static void test_data_vector_to_list (void)
 
   iot_data_t * list = iot_data_vector_to_list (vector, IOT_DATA_MULTI);
   CU_ASSERT (iot_data_list_length (list) == 4u)
+  iot_data_t * entry = iot_data_list_tail_pop (list);
+  CU_ASSERT (iot_data_type (entry) == IOT_DATA_UINT32)
+  iot_data_free (entry);
   iot_data_free (list);
 
   list = iot_data_vector_to_list (vector, IOT_DATA_STRING);

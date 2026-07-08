@@ -2605,7 +2605,7 @@ iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const iot_data_
     const iot_data_t * entry = iot_data_vector_iter_value (&iter);
     if (type == IOT_DATA_MULTI || entry->type == type)
     {
-      iot_data_list_tail_push (list, iot_data_add_ref (entry));
+      iot_data_list_head_push (list, iot_data_add_ref (entry));
     }
   }
   return list;
