@@ -2496,6 +2496,15 @@ extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t
 extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse);
 
 /**
+ * @brief Converts a vector to a list, vector elements must be of the target type or are ignored.
+ *
+ * @param vector  The vector to transform
+ * @param type    The data element type for the created list
+ * @return        The newly created list containing the vector elements, may be empty
+ */
+extern iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const iot_data_type_t type);
+
+/**
  * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements
  * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty vector is returned.
  *

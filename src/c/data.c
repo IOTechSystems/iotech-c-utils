@@ -2594,6 +2594,23 @@ iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_
   return iot_data_alloc_array (data, asize, type, IOT_DATA_TAKE);
 }
 
+iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const iot_data_type_t type)
+{
+  assert (vector && (vector->type == IOT_DATA_VECTOR));
+  iot_data_t * list = iot_data_alloc_typed_list (type);
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (vector, &iter);
+  while (iot_data_vector_iter_next (&iter))
+  {
+    const iot_data_t * entry = iot_data_vector_iter_value (&iter);
+    if (type == IOT_DATA_MULTI || entry->type == type)
+    {
+      iot_data_list_tail_push (list, iot_data_add_ref (entry));
+    }
+  }
+  return list;
+}
+
 iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type_t type, bool recurse)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR));
