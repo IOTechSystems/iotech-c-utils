@@ -32,6 +32,6 @@
 
 ## Version 1.6.5
 - Remove atomic operations on non atomic bool in scheduler
-- Support removed for Debian 11
+- Support removed for Debian 11 and Ubuntu 20.04
 - Added function `iot_data_vector_to_list` to populate a list from a vector
 
