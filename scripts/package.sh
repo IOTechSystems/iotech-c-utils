@@ -92,9 +92,6 @@ case ${SYSTEM} in
       ubuntu-22.04|debian-12)
         CBOR=libcbor0.8
       ;;
-      ubuntu-20.04)
-        CBOR=libcbor0.6
-      ;;
     esac
 # Note using "--iteration "$((REL_VER+1))" with a debian package gives a version of form major.minor.patch-<release>
     ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
@@ -115,7 +112,7 @@ case ${SYSTEM} in
       --exclude lib \
       --depends "iotech-iot-${PKG_VER} (= ${VER})"
 
-    rm *.tar.gz
+    rm ./*.tar.gz
 
     cd ${ROOT}/${BARCH}/debug
 
@@ -128,7 +125,7 @@ case ${SYSTEM} in
       --depends libyaml-0-2 --depends ${CBOR} \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
-    rm *.tar.gz
+    rm ./*.tar.gz
     ;;
   photon*|fedora*|opensuse*|oraclelinux*)
     case ${BARCH} in
@@ -192,7 +189,7 @@ case ${SYSTEM} in
       --exclude lib \
       --depends "iotech-iot-${PKG_VER} = ${VER}-$((REL_VER+1))${RPM_DIST:+.${RPM_DIST}}"
 
-    rm *.tar.gz
+    rm ./*.tar.gz
 
     cd ${ROOT}/${BARCH}/debug
 
@@ -205,7 +202,7 @@ case ${SYSTEM} in
       --depends ${YAML_DEP} --depends ${CBOR_DEP} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}} \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
-    rm *.tar.gz
+    rm ./*.tar.gz
     ;;
   *)
 esac
