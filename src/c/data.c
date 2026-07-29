@@ -1822,6 +1822,7 @@ extern iot_data_t * iot_data_alloc_binary (void * data, uint32_t length, iot_dat
 {
   iot_data_t * bin = iot_data_alloc_array (data, length, IOT_DATA_UINT8, ownership);
   bin->type = IOT_DATA_BINARY;
+  bin->element_type = IOT_DATA_UINT8;
   return bin;
 }
 

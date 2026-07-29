@@ -265,7 +265,7 @@ static void * iot_scheduler_thread (void * arg)
       else
       {
         scheduler->counters.skipped++;
-        iot_log_warn (scheduler->logger, "%S: Skipping schedule #%" PRIu64 " as running", __func__, current->id);
+        iot_log_warn (scheduler->logger, "%s: Skipping schedule #%" PRIu64 " as running", __func__, current->id);
       }
 
       if (valid_current)
