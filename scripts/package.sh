@@ -150,8 +150,8 @@ case ${SYSTEM} in
         RPM_DIST=ph4
         YAML_DEP="libyaml"
       ;;
-      fedora-42)
-        RPM_DIST=fc42
+      fedora-44)
+        RPM_DIST=fc44
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
         ATOMIC_DEP="libatomic"
