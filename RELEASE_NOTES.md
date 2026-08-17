@@ -34,5 +34,6 @@
 - Remove atomic operations on non atomic bool in scheduler
 - Support removed for Debian 11, Ubuntu 20.04 and Fedora 42
 - Support added for Fedora 44
+- Support added for Alpine 2.24, removed for 3.20 and 3.21
 - Added function `iot_data_vector_to_list` to populate a list from a vector
 
