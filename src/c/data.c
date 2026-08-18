@@ -1351,10 +1351,18 @@ bool iot_data_is_static (const iot_data_t * data)
 
 bool iot_data_is_nan (const iot_data_t * data)
 {
-  iot_data_type_t type = iot_data_type (data);
+  const iot_data_type_t type = iot_data_type (data);
   if (type != IOT_DATA_FLOAT32 && type != IOT_DATA_FLOAT64) return false;
-  return type == IOT_DATA_FLOAT32 ? iot_data_f32 (data) != iot_data_f32 (data) : iot_data_f64 (data) != iot_data_f64 (data);
+  return (type == IOT_DATA_FLOAT32) ? isnan (iot_data_f32 (data)) : isnan (iot_data_f64 (data)) != 0;
 }
+
+bool iot_data_is_infinity (const iot_data_t * data)
+{
+  const iot_data_type_t type = iot_data_type (data);
+  if (type != IOT_DATA_FLOAT32 && type != IOT_DATA_FLOAT64) return false;
+  return (type == IOT_DATA_FLOAT32) ? isinf (iot_data_f32 (data)) : isinf (iot_data_f64 (data)) != 0;
+}
+
 
 static void iot_data_cache_add (iot_data_t * cache, iot_data_t ** data)
 {

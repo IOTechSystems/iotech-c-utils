@@ -35,4 +35,5 @@
 - Support removed for Debian 11, Ubuntu 20.04 and Fedora 42
 - Support added for Fedora 44
 - Added function `iot_data_vector_to_list` to populate a list from a vector
+- Added `iot_data_is_infinity` function to determine if floating point data is Infinity
 

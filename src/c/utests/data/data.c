@@ -5579,6 +5579,29 @@ static void test_data_is_nan (void)
   iot_data_free (non_float_type);
 }
 
+static void test_data_is_infinity (void)
+{
+  iot_data_t * float_inf = iot_data_alloc_f32 (INFINITY);
+  CU_ASSERT (iot_data_is_infinity (float_inf))
+  iot_data_free (float_inf);
+
+  iot_data_t * double_inf = iot_data_alloc_f64 (INFINITY);
+  CU_ASSERT (iot_data_is_infinity (double_inf))
+  iot_data_free (double_inf);
+
+  iot_data_t * float_not_inf = iot_data_alloc_f32 (123.456f);
+  CU_ASSERT_FALSE (iot_data_is_infinity (float_not_inf))
+  iot_data_free (float_not_inf);
+
+  iot_data_t * double_not_inf = iot_data_alloc_f64 (123.456);
+  CU_ASSERT_FALSE (iot_data_is_infinity (double_not_inf))
+  iot_data_free (double_not_inf);
+
+  iot_data_t * non_float_type = iot_data_alloc_i32 (0);
+  CU_ASSERT_FALSE (iot_data_is_infinity (non_float_type))
+  iot_data_free (non_float_type);
+}
+
 static void test_data_tags (void)
 {
   bool old;
@@ -6019,6 +6042,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "binary_to_array", test_binary_to_array);
   CU_add_test (suite, "binary_take", test_binary_take);
   CU_add_test (suite, "data_is_nan", test_data_is_nan);
+  CU_add_test (suite, "data_is_infinity", test_data_is_infinity);
   CU_add_test (suite, "data_tags", test_data_tags);
   CU_add_test (suite, "data_block", test_data_block);
   CU_add_test (suite, "data_iter", test_data_iter);
