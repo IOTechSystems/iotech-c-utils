@@ -10,10 +10,6 @@
 #ifdef IOT_BUILD_DYNAMIC_LOAD
 #include <dlfcn.h>
 #endif
-#ifdef _AZURESPHERE_
-#include <applibs/applications.h>
-#include <applibs/log.h>
-#endif
 
 /* Wait/retry defaults for invoking running callbacks */
 
@@ -25,6 +21,7 @@ struct iot_container_t
   iot_logger_t * logger;
   iot_data_t * components;
   char * name;
+  uint64_t startup_time;
   pthread_rwlock_t lock;
 };
 
@@ -90,10 +87,8 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
   comp->config = map;
   comp->name = strdup (cname);
   comp->factory = factory;
+  comp->container = cont;
   iot_data_list_head_push (cont->components, iot_data_alloc_pointer (comp, iot_component_free));
-#if defined (_AZURESPHERE_) && ! defined (NDEBUG)
-  Log_Debug ("iot_component_create: %s (Total Memory: %" PRIu32 " kB)\n", cname, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
-#endif
 
 ERROR:
 
@@ -239,7 +234,7 @@ const iot_container_config_t * iot_container_get_config (void)
 
 iot_container_t * iot_container_alloc (const char * name)
 {
-  iot_container_t * cont = malloc (sizeof (*cont));
+  iot_container_t * cont = calloc (1, sizeof (*cont));
   cont->name = strdup (name);
   cont->logger = iot_logger_default ();
   cont->components = iot_data_alloc_typed_list (IOT_DATA_POINTER);
@@ -335,6 +330,7 @@ AGAIN:
 
 void iot_container_start (iot_container_t * cont)
 {
+  uint64_t start_time = iot_time_usecs ();
   pthread_rwlock_rdlock (&cont->lock);
   iot_data_list_iter_t iter;
   iot_data_list_iter (cont->components, &iter);
@@ -348,12 +344,10 @@ void iot_container_start (iot_container_t * cont)
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     (comp->start_fn) (comp);
-#if defined (_AZURESPHERE_) && ! defined (NDEBUG)
-    Log_Debug ("iot_container_start: %s (Total Memory: %" PRIu32 " kB)\n", comp->name, (uint32_t) Applications_GetTotalMemoryUsageInKB ());
-#endif
   }
   iot_container_running (cont);
   pthread_rwlock_unlock (&cont->lock);
+  cont->startup_time = iot_time_usecs () - start_time;
 }
 
 void iot_container_stop (iot_container_t * cont)
@@ -473,4 +467,22 @@ iot_data_t * iot_container_component_read (iot_container_t * cont, const char * 
     pthread_rwlock_unlock (&cont->lock);
   }
   return data;
+}
+
+iot_data_t * iot_container_stats (iot_container_t * cont)
+{
+  assert (cont);
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_list_iter_t iter;
+  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_list_iter (cont->components, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    iot_component_t * comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter); // double check cast
+    iot_data_t * stats = iot_component_stats (comp);
+    if (stats) iot_data_map_add (map, iot_data_alloc_string (comp->name, IOT_DATA_COPY), stats);
+  }
+  iot_data_string_map_add (map, "startup_time", iot_data_alloc_ui64(cont->startup_time));
+  pthread_rwlock_unlock (&cont->lock);
+  return map;
 }

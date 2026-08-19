@@ -44,12 +44,36 @@ struct iot_schedule_t
 
 struct iot_scheduler_t
 {
-  iot_component_t component;      /* Component base type */
-  iot_data_t * queue;             /* Map of active schedules, keyed by unique schedule time */
-  iot_data_t * idle;              /* Map of idle schedules, keyed by unique schedule id */
-  iot_logger_t * logger;          /* Optional logger */
-  struct timespec schd_time;      /* Time for next schedule */
+  iot_component_t component;           /* Component base type */
+  iot_data_t * queue;                  /* Map of active schedules, keyed by unique schedule time */
+  iot_data_t * idle;                   /* Map of idle schedules, keyed by unique schedule id */
+  iot_logger_t * logger;               /* Optional logger */
+  struct timespec schd_time;           /* Time for next schedule */
+  iot_scheduler_counters_t counters;   /* Stats counters */
 };
+
+typedef struct iot_scheduler_consts_t
+{
+  iot_data_static_t active_queue_key;
+  iot_data_static_t idle_queue_key;
+  iot_data_static_t total_runs_key;
+  iot_data_static_t skipped_runs_key;
+  iot_data_static_t dropped_runs_key;
+} iot_scheduler_consts_t;
+
+static iot_scheduler_consts_t iot_scheduler_consts = { 0 };
+
+static const char * iot_scheduler_strings [] =
+{
+  "active_queue_size", "idle_queue_size", "schedule_runs", "skipped_runs", "dropped_runs", NULL
+};
+
+__attribute__((constructor)) static void iot_scheduler_init (void)
+{
+  const char ** str = iot_scheduler_strings;
+  iot_data_static_t * ptr = (iot_data_static_t *) &iot_scheduler_consts;
+  while (*str) iot_data_alloc_const_string (ptr++, *str++);
+}
 
 static inline void iot_schedule_add_ref (iot_schedule_t * schedule)
 {
@@ -127,6 +151,11 @@ static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
   ts->tv_nsec = (long) IOT_NS_REMAINING (ns);
 }
 
+static inline uint64_t timespecToNs (const struct timespec *ts)
+{
+  return IOT_SEC_TO_NS(ts->tv_sec) + (uint64_t)ts->tv_nsec;
+}
+
 void iot_schedule_set_concurrent (iot_schedule_t * schedule, bool enable)
 {
   assert (schedule);
@@ -163,7 +192,10 @@ static void * iot_scheduler_thread (void * arg)
   {
     state = iot_component_wait_and_lock (&scheduler->component, (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING); // State wait
     if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
-    pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time); // Schedule wait
+    uint64_t const now = iot_time_nsecs();
+    uint64_t const sched_time = timespecToNs (&scheduler->schd_time);
+    if (sched_time > now) pthread_cond_timedwait (&scheduler->component.cond, &scheduler->component.mutex, &scheduler->schd_time); // Schedule wait only if we need to
+
     state = scheduler->component.state;
     if (state != IOT_COMPONENT_RUNNING)
     {
@@ -177,7 +209,7 @@ static void * iot_scheduler_thread (void * arg)
     iot_schedule_t * current = iot_schedule_queue_next (queue);
     if (current && current->start < iot_time_nsecs ()) // If a schedule and ready to run
     {
-      bool valid_current = atomic_load (&current->scheduled);
+      bool valid_current = current->scheduled;
       if (atomic_load (&current->concurrent) || (atomic_load (&current->refs) == 1u)) // Check for concurrent execution
       {
         iot_schedule_add_ref (current);
@@ -187,12 +219,13 @@ static void * iot_scheduler_thread (void * arg)
           iot_component_unlock (&scheduler->component);
           current->run_cb (current->arg);
           iot_component_lock (&scheduler->component);
-          valid_current = atomic_load (&current->scheduled);
+          valid_current = current->scheduled;
         }
         if (atomic_load (&current->sync)) // Run schedule directly
         {
           iot_log_trace (scheduler->logger, "Running sync schedule #%" PRIu64 "", current->id);
           schedule_fn (current);
+          scheduler->counters.total_runs++;
         }
         else if (current->threadpool) // Run schedule from threadpool
         {
@@ -208,25 +241,31 @@ static void * iot_scheduler_thread (void * arg)
             }
             if (atomic_fetch_add (&current->dropped, 1u) == 0u)
             {
+              scheduler->counters.dropped++;
               iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
             }
-            valid_current = atomic_load (&current->refs) > 1u && atomic_load (&current->scheduled);;
+            valid_current = atomic_load (&current->refs) > 1u && current->scheduled;
             iot_schedule_free (current);
           }
+          else scheduler->counters.total_runs++;
         }
         else // Run schedule in new thread
         {
           iot_log_trace (scheduler->logger, "Running schedule #%" PRIu64 " as thread", current->id);
           if (!iot_thread_create (NULL, schedule_fn, current, current->priority, IOT_THREAD_NO_AFFINITY, scheduler->logger))
           {
+            scheduler->counters.dropped++;
+            iot_log_warn (scheduler->logger, "Scheduled event dropped for schedule #%" PRIu64, current->id);
             valid_current = atomic_load (&current->refs) > 1u;
             iot_schedule_free (current);
           }
+          else scheduler->counters.total_runs++;
         }
       }
       else
       {
-        iot_log_trace (scheduler->logger, "Skipping schedule #%" PRIu64 " as running", current->id);
+        scheduler->counters.skipped++;
+        iot_log_warn (scheduler->logger, "%s: Skipping schedule #%" PRIu64 " as running", __func__, current->id);
       }
 
       if (valid_current)
@@ -260,10 +299,25 @@ static void * iot_scheduler_thread (void * arg)
   return NULL;
 }
 
+static iot_data_t * iot_scheduler_get_stats (iot_component_t * comp)
+{
+  iot_scheduler_t * scheduler = (iot_scheduler_t *) comp;
+  iot_data_t * result = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_component_lock (comp);
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_scheduler_consts.active_queue_key), iot_data_alloc_ui32 (iot_data_map_size (scheduler->queue)));
+  iot_data_map_add (result, IOT_DATA_STATIC(iot_scheduler_consts.idle_queue_key), iot_data_alloc_ui32 (iot_data_map_size (scheduler->idle)));
+  iot_data_map_add (result, IOT_DATA_STATIC (iot_scheduler_consts.total_runs_key), iot_data_alloc_ui64 (scheduler->counters.total_runs));
+  iot_data_map_add (result, IOT_DATA_STATIC (iot_scheduler_consts.skipped_runs_key), iot_data_alloc_ui64 (scheduler->counters.skipped));
+  iot_data_map_add (result, IOT_DATA_STATIC (iot_scheduler_consts.dropped_runs_key), iot_data_alloc_ui64 (scheduler->counters.dropped));
+  iot_component_unlock (comp);
+  return result;
+}
+
 iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t * logger)
 {
   iot_scheduler_t * scheduler = (iot_scheduler_t*) calloc (1u, sizeof (*scheduler));
   iot_component_init (&scheduler->component, IOT_SCHEDULER_FACTORY, (iot_component_start_fn_t) iot_scheduler_start, (iot_component_stop_fn_t) iot_scheduler_stop);
+  iot_component_set_stats_callback (&scheduler->component, iot_scheduler_get_stats);
   scheduler->logger = logger;
   scheduler->idle = iot_data_alloc_map (IOT_DATA_UINT64);
   scheduler->queue = iot_data_alloc_map (IOT_DATA_UINT64);
@@ -295,7 +349,7 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
 /* Create a schedule and insert it into the idle queue */
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t delay, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
-  static _Atomic uint64_t schedule_id_counter = 0;
+  static _Atomic uint64_t schedule_id_counter = ATOMIC_VAR_INIT (0u);
 
   assert (scheduler && func);
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));

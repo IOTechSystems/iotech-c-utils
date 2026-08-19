@@ -26,7 +26,6 @@ done
 
 BROOT="${ROOT}/${BARCH}"
 VER=$(cut -d . -f 1,2,3 < ${ROOT}/VERSION)
-FULL_VER=$(cut -d . -f 1,2,3,4 < ${ROOT}/VERSION)
 PKG_VER=$(cut -d . -f 1,2 < ${ROOT}/VERSION)
 REL_VER=$(cut -d . -f 4 < ${ROOT}/VERSION)
 
@@ -76,7 +75,7 @@ case ${SYSTEM} in
     export DEPS="yaml libcbor"
     build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dev
-    export DEPS="iotech-iot-${PKG_VER}"
+    export DEPS="iotech-iot-${PKG_VER}=${VER}-r${REL_VER}"
     build_apk "${BROOT}/release" "iotech-iot-${PKG_VER}-${VER}_${OS_ARCH}"
     export DEV=-dbg
     export DEPS="yaml libcbor"
@@ -87,24 +86,15 @@ case ${SYSTEM} in
     cd ${ROOT}/${BARCH}/release
 
     case ${SYSTEM} in
-      ubuntu-24.04)
+      ubuntu-26.04|ubuntu-24.04|debian-13)
         CBOR=libcbor0.10
       ;;
       ubuntu-22.04|debian-12)
         CBOR=libcbor0.8
       ;;
-      ubuntu-20.04)
-        CBOR=libcbor0.6
-      ;;
-      ubuntu-18.04)
-        CBOR=libcbor0.5
-      ;;
-      debian-10|debian-11)
-        CBOR=libcbor0
-      ;;
     esac
-
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${FULL_VER}" \
+# Note using "--iteration "$((REL_VER+1))" with a debian package gives a version of form major.minor.patch-<release>
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER} -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -113,20 +103,20 @@ case ${SYSTEM} in
       --exclude include --exclude docs --exclude examples \
       --depends libyaml-0-2 --depends ${CBOR}
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${FULL_VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude lib \
-      --depends iotech-iot-${PKG_VER}
+      --depends "iotech-iot-${PKG_VER} (= ${VER})"
 
-    rm *.tar.gz
+    rm ./*.tar.gz
 
     cd ${ROOT}/${BARCH}/debug
 
-    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${FULL_VER}" \
+    ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dbg -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
@@ -135,7 +125,7 @@ case ${SYSTEM} in
       --depends libyaml-0-2 --depends ${CBOR} \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
-    rm *.tar.gz
+    rm ./*.tar.gz
     ;;
   photon*|fedora*|opensuse*|oraclelinux*)
     case ${BARCH} in
@@ -143,7 +133,7 @@ case ${SYSTEM} in
         OS_ARCH=aarch64
         ;;
       arm32)
-        if [ "${SYSTEM}" = "opensuse-15.5" ]
+        if [ "${SYSTEM}" = "opensuse-15.6" ]
         then
           OS_ARCH=armv7hl
         else
@@ -160,15 +150,17 @@ case ${SYSTEM} in
         RPM_DIST=ph4
         YAML_DEP="libyaml"
       ;;
-      fedora-40)
-        RPM_DIST=fc40
+      fedora-44)
+        RPM_DIST=fc44
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
+        ATOMIC_DEP="libatomic"
       ;;
       oraclelinux-9)
         RPM_DIST=el9
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
+        ATOMIC_DEP="libatomic"
       ;;
       opensuse-15.*)
         FPM=fpm.ruby2.5
@@ -179,38 +171,38 @@ case ${SYSTEM} in
 
     cd ${ROOT}/${BARCH}/release
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${FULL_VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER} -v "${VER}" --iteration "$((REL_VER+1))" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends ${YAML_DEP} --depends ${CBOR_DEP}
+      --depends ${YAML_DEP} --depends ${CBOR_DEP} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}}
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${FULL_VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" --iteration "$((REL_VER+1))" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude lib \
-      --depends iotech-iot-${PKG_VER}
+      --depends "iotech-iot-${PKG_VER} = ${VER}-$((REL_VER+1))${RPM_DIST:+.${RPM_DIST}}"
 
-    rm *.tar.gz
+    rm ./*.tar.gz
 
     cd ${ROOT}/${BARCH}/debug
 
-    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${FULL_VER}" \
+    ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dbg -v "${VER}" --iteration "$((REL_VER+1))" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-dev-${PKG_VER}-${VER}_${OS_ARCH} \
       --architecture "${OS_ARCH}" ${RPM_DIST:+--rpm-dist ${RPM_DIST}} \
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends ${YAML_DEP} --depends libcbor \
+      --depends ${YAML_DEP} --depends ${CBOR_DEP} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}} \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
-    rm *.tar.gz
+    rm ./*.tar.gz
     ;;
   *)
 esac

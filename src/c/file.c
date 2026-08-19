@@ -9,68 +9,10 @@
 #include <limits.h>
 
 #ifdef IOT_HAS_FILE
-#ifdef _AZURESPHERE_
-#include <applibs/log.h>
-#include <applibs/storage.h>
-#define IOT_MALLOC_BLOCK_SIZE 512
 
-uint8_t * iot_file_read_binary (const char * path, size_t * len)
-{
-  uint8_t * buff = NULL;
-  int fd = Storage_OpenFileInImagePackage (path);
-  if (fd != -1)
-  {
-    ssize_t ret;
-    uint8_t * ptr;
-    size_t size = 0;
-    while (true)
-    {
-      buff = realloc (buff, size + IOT_MALLOC_BLOCK_SIZE);
-      ptr = buff + size;
-      memset (ptr, 0, IOT_MALLOC_BLOCK_SIZE);
-      ret = read (fd, ptr, IOT_MALLOC_BLOCK_SIZE);
-      if (ret < IOT_MALLOC_BLOCK_SIZE)
-      {
-        if (len) *len = size;
-        break;
-      }
-      size += IOT_MALLOC_BLOCK_SIZE;
-    }
-    close (fd);
-  }
-  else
-  {
-    if (len) *len = 0;
-    Log_Debug ("Error opening file: %s %s (%d)\n", path, strerror (errno), errno);
-  }
-  return buff;
-}
-
-bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
-{
-  bool ok = false;
-  int fd = Storage_OpenFileInImagePackage (path);
-  if (fd != -1)
-  {
-    ok = (write (fd, binary, len) == len);
-    close (fd);
-  }
-  if (! ok)
-  {
-    Log_Debug ("Error writing to file: %s %s (%d)\n", path, strerror (errno), errno);
-  }
-  return ok;
-}
-
-extern bool iot_file_delete (const char * path)
-{
-  (void) path;
-  return (Storage_DeleteMutableFile () == 0);
-}
-
-#else // _AZURESPHERE_
 #include <dirent.h>
 #include <regex.h>
+#include <sys/inotify.h>
 
 bool iot_file_delete (const char * path)
 {
@@ -89,13 +31,16 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
   {
     fseek (fd, 0, SEEK_END);
     size = ftell (fd);
-    if (size) // Return NULL if file empty
+    if (size != -1) // Return NULL if file empty
     {
       rewind (fd);
-      ret = malloc (size + 1); // Allocate extra byte so can be NULL terminated if a string
-      size_t items = fread (ret, size, 1u, fd);
-      assert (items == 1);
-      (void) items;
+      ret = malloc (size + 1u); // Allocate extra byte so can be NULL terminated if a string
+      if (size)
+      {
+        size_t items = fread (ret, size, 1u, fd);
+        assert (items == 1);
+        (void) items;
+      }
       ret[size] = 0; // String NULL terminator
     }
     fclose (fd);
@@ -104,34 +49,53 @@ uint8_t * iot_file_read_binary (const char * path, size_t * len)
   return ret;
 }
 
-bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
+static bool iot_file_update_binary (const char * path, const uint8_t * binary, size_t len, bool append)
 {
-  assert (path && binary);
+  assert (path && binary && len);
   bool ok = false;
+  bool exists = iot_file_exists (path);
+  bool backup = exists && !append;
   char tmp_path[PATH_MAX];
-  strncpy (tmp_path, path, PATH_MAX - 5);
-  tmp_path[PATH_MAX-5] = '\0';
-  strcat (tmp_path, ".new");
-  FILE *fd = fopen (tmp_path, "w");
+  if (backup)
+  {
+    strncpy (tmp_path, path, PATH_MAX - 5u);
+    strncat (tmp_path, ".new", 5u);
+  }
+  FILE *fd = fopen (backup ? tmp_path : path, append ? "a" : "w");
   if (fd)
   {
     ok = (fwrite (binary, len, 1u, fd) == 1u);
     fclose (fd);
-    if (ok) rename (tmp_path, path);
+    if (ok && backup) rename (tmp_path, path);
   }
   return ok;
 }
 
+bool iot_file_write_binary (const char * path, const uint8_t * binary, size_t len)
+{
+  return iot_file_update_binary (path, binary, len, false);
+}
+
+bool iot_file_append_binary (const char * path, const uint8_t * binary, size_t len)
+{
+  return iot_file_update_binary (path, binary, len, true);
+}
+
 char * iot_file_read (const char *path)
 {
-  assert (path);
   return (char *) iot_file_read_binary (path, NULL);
 }
 
 bool iot_file_write (const char * path, const char * str)
 {
   assert (str);
-  return iot_file_write_binary (path, (const uint8_t*) str, strlen (str));
+  return iot_file_update_binary (path, (const uint8_t*) str, strlen (str), false);
+}
+
+bool iot_file_append (const char * path, const char * str)
+{
+  assert (str);
+  return iot_file_update_binary (path, (const uint8_t*) str, strlen (str), true);
 }
 
 iot_data_t * iot_file_list (const char * directory, const char * regex_str)
@@ -160,5 +124,45 @@ DONE:
   return list;
 }
 
-#endif
+bool iot_file_exists (const char * path)
+{
+  assert (path);
+  return (access (path, F_OK) == 0);
+}
+
+const uint32_t iot_file_self_delete_flag = IN_DELETE_SELF;
+const uint32_t iot_file_delete_flag = IN_DELETE;
+const uint32_t iot_file_modify_flag = IN_MODIFY;
+
+uint32_t iot_file_watch (const char * path, uint32_t mask)
+{
+  static const uint32_t stop_flags = IN_CLOSE_WRITE | IN_DELETE_SELF | IN_DELETE;
+  assert (path);
+  uint32_t flags = 0u;
+  mask &= (iot_file_self_delete_flag | iot_file_delete_flag | iot_file_modify_flag); // Only allow supported flags
+  int fd = inotify_init ();
+  int wd = inotify_add_watch (fd, path, mask | stop_flags); // Add stop flags to watch set for termination
+  if (wd != -1)
+  {
+    char buffer[sizeof (struct inotify_event) + NAME_MAX + 1]  __attribute__ ((aligned(8)));
+    while (true)
+    {
+      ssize_t ret = read (fd, buffer, sizeof (buffer));
+      const char * ptr = buffer;
+      while (ret > 0) // Process set of events from read
+      {
+        const struct inotify_event * event = (const struct inotify_event *) ptr;
+        flags |= event->mask; // Update change flags
+        size_t size = sizeof (*event) + event->len;
+        ret -= size;
+        ptr += size;
+      }
+      if (flags & stop_flags) break; // Stop watching if stop flag set
+    }
+    inotify_rm_watch (fd, wd);
+  }
+  close (fd);
+  return flags & mask; // Only return user supplied flags
+}
+
 #endif

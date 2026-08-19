@@ -18,6 +18,9 @@
 extern "C" {
 #endif
 
+/** Type definition for container structure */
+typedef struct iot_container_t iot_container_t;
+
 /** Logger component name */
 #define IOT_LOGGER_TYPE "IOT::Logger"
 /** Default log level warning */
@@ -69,7 +72,7 @@ typedef void (*iot_log_free_fn_t) (void *ctx);
  */
 extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level, bool self_start);
 
-#if defined (IOT_HAS_FILE) && !defined (_AZURESPHERE_)
+#if defined (IOT_HAS_FILE)
 /**
  * @brief Allocate memory and initialize file logger component
  *
@@ -141,7 +144,6 @@ extern void iot_logger_start (iot_logger_t * logger);
  * @brief Stop logger and set the component state to IOT_COMPONENT_STOPPED
  *
  * @param logger  Pointer to the logger component
- * @return        'true', if the state transition occurred, 'false' otherwise
  */
 extern void iot_logger_stop (iot_logger_t * logger);
 

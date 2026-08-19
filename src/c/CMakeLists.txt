@@ -13,6 +13,9 @@ if (DEFINED CMAKE_C_COMPILER_ID)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
       set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
     endif ()
+    if (CMAKE_BUILD_TYPE MATCHES Release)
+      set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+    endif ()
   endif ()
 endif ()
 
@@ -35,10 +38,6 @@ endif ()
 
 if ("${LINUX_SYS}" STREQUAL "Alpine")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_ALPINE_")
-endif ()
-
-if ("${LINUX_SYS}" STREQUAL "AzureSphere")
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_AZURESPHERE_")
 endif ()
 
 if (IOT_BUILD_YAML)

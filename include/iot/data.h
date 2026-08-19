@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2023 IOTech Ltd
+// Copyright (c) 2019-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -103,7 +103,9 @@ typedef struct iot_data_consts_t
   iot_data_static_t category; /**< constant "category" string */
   iot_data_static_t config;   /**< constant "config" string */
   iot_data_static_t name;     /**< constant "name" string */
+  iot_data_static_t meta;     /**< constant "meta" string */
   iot_data_static_t state;    /**< constant "state" string */
+  iot_data_static_t stats;    /**< constant "stats" string */
   iot_data_static_t type;     /**< constant "type" string */
 } iot_data_consts_t;
 
@@ -269,6 +271,17 @@ extern bool iot_data_is_static (const iot_data_t * data);
  * @return     Whether the data is of the value NaN
  */
 extern bool iot_data_is_nan (const iot_data_t * data);
+
+/**
+ * @brief Check if data instance has a value of infinity.
+ * 
+ * Floating point values can have a value of infinity. If the data instance is a 
+ * floating point type, then check if the value is infinity.
+ * 
+ * @param data Pointer to data
+ * @return     Whether the data is of the value infinity
+ */
+extern bool iot_data_is_infinity (const iot_data_t * data);
 
 /**
  * @brief Get data type code
@@ -730,7 +743,7 @@ extern void iot_data_list_empty (iot_data_t * list);
 extern const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
 
 /**
- * @brief Remove matching element in a list using compare function
+ * @brief Remove matching elements in a list using a comparson function
  *
  * Applies a compare function to each element in a list until the compare
  * function returns true or the end of the list is reached. The list is searched from tail to head,
@@ -742,6 +755,17 @@ extern const iot_data_t * iot_data_list_find (const iot_data_t * list, iot_data_
  * @return        Whether an element removed
  */
 extern bool iot_data_list_remove (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
+
+/**
+ * @brief Filters out (removes) all elements in a list where a comparison function returns true
+ * for the element. Returns the number of elements removed.
+ *
+ * @param list    Input list
+ * @param cmp     A comparison function which takes an element and an argument and returns true or false
+ * @param arg     Pointer to user supplied argument that is passed to the comparison function.
+ * @return        The number of elements removed from the list
+ */
+extern uint32_t iot_data_list_filter (iot_data_t * list, iot_data_cmp_fn cmp, const void * arg);
 
 /**
  * @brief Associate a list iterator with a list
@@ -815,7 +839,7 @@ extern const char * iot_data_list_iter_string_value (const iot_data_list_iter_t 
  * @param iter  Input iterator
  * @return      Pointer type value from the list if iter is valid, NULL otherwise
  */
-extern const void * iot_data_list_iter_pointer_value (const iot_data_list_iter_t * iter);
+extern void * iot_data_list_iter_pointer_value (const iot_data_list_iter_t * iter);
 
 /**
  * @brief Remove the data associated with a list iterator. The list iterator is set to
@@ -838,10 +862,31 @@ extern bool iot_data_list_iter_remove (iot_data_list_iter_t * iter);
 extern iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value);
 
 /**
+ * @brief Insert a new element in the list after the current element
+ *
+ * @param iter  Input iterator
+ * @param value New value to store in the list
+ */
+extern void iot_data_list_iter_push_after (const iot_data_list_iter_t * iter, iot_data_t * value);
+
+/**
+ * @brief Insert a new element in the list before the current element
+ *
+ * @param iter  Input iterator
+ * @param value New value to store in the list
+ */
+extern void iot_data_list_iter_push_before (const iot_data_list_iter_t * iter, iot_data_t * value);
+
+/**
+ * @brief Push the contents of a list onto the tail of a list. Copied elements are either taken or referenced.
+ * @param dest_list  List to add values to
+ * @param src_list   List of values to add to tail of dest_list
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
+ */
+extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
+
+/**
  * @brief Push a value onto the tail of a list
- *
- * The function to push a value onto the tail of a list
- *
  * @param list  Input list
  * @param value Value to add to tail of the list
  */
@@ -849,19 +894,21 @@ extern void iot_data_list_tail_push (iot_data_t * list, iot_data_t * value);
 
 /**
  * @brief Pop a value from the tail of a list
- *
- * The function to pop a value from the tail of a list
- *
  * @param list  Input list
  * @return      Value from the list tail or NULL if list empty
  */
 extern iot_data_t * iot_data_list_tail_pop (iot_data_t * list);
 
 /**
+ * @brief Push the contents of a list onto the head of a list. Copied elements are either taken or referenced.
+ * @param dest_list  List to add values to
+ * @param src_list   List of values to add to head of dest_list
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
+ */
+extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
+
+/**
  * @brief Push a value onto the head of a list
- *
- * The function to push a value onto the head of a list
- *
  * @param list  Input list
  * @param value Value to add to head of the list
  */
@@ -869,9 +916,6 @@ extern void iot_data_list_head_push (iot_data_t * list, iot_data_t * value);
 
 /**
  * @brief Pop a value from the head of a list
- *
- * The function to pop a value from the head of a list
- *
  * @param list  Input list
  * @return      Value from the list head or NULL if list empty
  */
@@ -1229,7 +1273,7 @@ extern const char * iot_data_string (const iot_data_t * data);
  * @param data  Data pointer to retrieve value
  * @return      Returned pointer or NULL if date not of type POINTER
  */
-extern const void * iot_data_pointer (const iot_data_t * data);
+extern void * iot_data_pointer (const iot_data_t * data);
 
 /**
  * @brief Cast integer, float or boolean values
@@ -1335,11 +1379,33 @@ extern bool iot_data_string_map_remove (iot_data_t * map, const char * key);
  *
  * The function to get the value corresponding to an input key from the map
  *
- * @param map  Map to get the value
+ * @param map  Map from which to get the value
  * @param key  Input key
  * @return     Pointer to a value corresponding to the key of type iot_data
  */
 extern const iot_data_t * iot_data_map_get (const iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief  Take a value from the map for a key
+ *
+ * The function to take the value corresponding to an input key from the map (value is removed from map)
+ *
+ * @param map  Map from which to take the value
+ * @param key  Input key
+ * @return     Value taken from map corresponding to key
+ */
+extern iot_data_t * iot_data_map_take (iot_data_t * map, const iot_data_t * key);
+
+/**
+ * @brief  Take a value from the map for a string key
+ *
+ * The function to take the value corresponding to an input string key from the map (value is removed from map)
+ *
+ * @param map  Map from which to take the value
+ * @param key  Input string key
+ * @return     Value taken from map corresponding to string key
+ */
+extern iot_data_t * iot_data_string_map_take (iot_data_t * map, const char * key);
 
 /**
  * @brief  Get value from the map for a key provided. Returns NULL if cannot be found or of wring type.
@@ -1392,8 +1458,6 @@ extern bool iot_data_map_get_int (const iot_data_t * map, const iot_data_t * key
 /**
  * @brief Get int64_t value corresponding to key from a map
  *
- * Function to get a string value from a map
- *
  * @param map          Map from which get a value
  * @param key          Key for the value
  * @param default_val  Default int64 value
@@ -1404,14 +1468,32 @@ extern int64_t iot_data_map_get_i64 (const iot_data_t * map, const iot_data_t * 
 /**
  * @brief Get uint64_t value corresponding to key from a map
  *
- * Function to get a string value from a map
- *
  * @param map          Map from which get a value
  * @param key          Key for the value
  * @param default_val  Default int64 value
  * @return             int64_t value corresponding to the key, or default_val if not found
  */
 extern uint64_t iot_data_map_get_ui64 (const iot_data_t * map, const iot_data_t * key, uint64_t default_val);
+
+/**
+ * @brief Get int32_t value corresponding to key from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default int32 value
+ * @return             int32_t value corresponding to the key, or default_val if not found
+ */
+extern int32_t iot_data_map_get_i32 (const iot_data_t * map, const iot_data_t * key, int32_t default_val);
+
+/**
+ * @brief Get uint32_t value corresponding to key from a map
+ *
+ * @param map          Map from which get a value
+ * @param key          Key for the value
+ * @param default_val  Default uint32 value
+ * @return             uint32_t value corresponding to the key, or default_val if not found
+ */
+extern uint32_t iot_data_map_get_ui32 (const iot_data_t * map, const iot_data_t * key, uint32_t default_val);
 
 /**
  * @brief Get bool value corresponding to key from a map
@@ -1490,7 +1572,7 @@ extern const iot_data_t * iot_data_map_get_list (const iot_data_t * map, const i
  * @param key          Key for the value
  * @return             Pointer found by key in the map. NULL if not found or not a pointer
  */
-extern const void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key);
+extern void * iot_data_map_get_pointer (const iot_data_t * map, const iot_data_t * key);
 
 /**
  * @brief  Get value from the map for a key provided
@@ -1558,12 +1640,34 @@ extern int64_t iot_data_string_map_get_i64 (const iot_data_t * map, const char *
  *
  * @param map          Map from which get a value
  * @param key          String key for the value
- * @param default_val  Default int64 value
+ * @param default_val  Default uint64 value
  * @return             Uint64_t value corresponding to the key, else default_val
  */
 extern uint64_t iot_data_string_map_get_ui64 (const iot_data_t * map, const char * key, uint64_t default_val);
 
+  /**
+   * @brief Get int32_t value corresponding to a string key from a map
+   *
+   * The function to get a int32 value corresponding to key from the map, if the value type is IOT_DATA_INT32, else return default_val
+   *
+   * @param map          Map from which get a value
+   * @param key          String key for the value
+   * @param default_val  Default int32 value
+   * @return             Int32 value corresponding to the key, else default_val
+   */
+  extern int32_t iot_data_string_map_get_i32 (const iot_data_t * map, const char * key, int32_t default_val);
 
+  /**
+   * @brief Get uint32_t value corresponding to a string key from a map
+   *
+   * The function to get a uint32 value corresponding to key from the map, if the value type is IOT_DATA_UINT32, else return default_val
+   *
+   * @param map          Map from which get a value
+   * @param key          String key for the value
+   * @param default_val  Default uint32 value
+   * @return             Uint32 value corresponding to the key, else default_val
+   */
+  extern uint32_t iot_data_string_map_get_ui32 (const iot_data_t * map, const char * key, uint32_t default_val);
 /**
  * @brief Get bool value corresponding to key from a map
  *
@@ -1630,7 +1734,7 @@ extern const iot_data_t * iot_data_string_map_get_list (const iot_data_t * map, 
  * @param key          String key for the value
  * @return             Pointer found by key in the map. NULL if not found or not a map.
  */
-extern const void * iot_data_string_map_get_pointer (const iot_data_t * map, const char * key);
+extern void * iot_data_string_map_get_pointer (const iot_data_t * map, const char * key);
 
 /**
  * @brief  Get the key type of map
@@ -1696,7 +1800,7 @@ extern const iot_data_t * iot_data_vector_get (const iot_data_t * vector, uint32
  * @param index  Vector index for value
  * @return       Pointer from value at index (NULL if invalid index ot value not a pointer)
  */
-extern const void * iot_data_vector_get_pointer (const iot_data_t * vector, uint32_t index);
+extern void * iot_data_vector_get_pointer (const iot_data_t * vector, uint32_t index);
 
 /**
  * @brief Resize a vector
@@ -1823,7 +1927,7 @@ extern const iot_data_t * iot_data_map_start (iot_data_t * map);
  * @param  map   Input map
  * @return       Pointer from the first element in the map
  */
-extern const void * iot_data_map_start_pointer (iot_data_t * map);
+extern void * iot_data_map_start_pointer (iot_data_t * map);
 
 /**
  * @brief Return last element in a map or NULL if map empty
@@ -1839,7 +1943,7 @@ extern const iot_data_t * iot_data_map_end (iot_data_t * map);
  * @param  map   Input map
  * @return       Pointer from the last element in the map
  */
-extern const void * iot_data_map_end_pointer (iot_data_t * map);
+extern void * iot_data_map_end_pointer (iot_data_t * map);
 
 /**
  * @brief Update the iterator to point to the next element within a map
@@ -1932,7 +2036,7 @@ extern const char * iot_data_map_iter_string_value (const iot_data_map_iter_t * 
  * @param iter  Input iterator
  * @return      Pointer type value from the map if iter is valid, NULL otherwise
  */
-extern const void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter);
+extern void * iot_data_map_iter_pointer_value (const iot_data_map_iter_t * iter);
 
 /**
  * @brief Get boolean value from the map referenced by an iterator
@@ -2027,7 +2131,7 @@ extern const char * iot_data_vector_iter_string_value (const iot_data_vector_ite
  * @param iter  Input iterator
  * @return      Pointer type value from the vector if iter is valid, NULL otherwise
  */
-extern const void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t * iter);
+extern void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t * iter);
 
 /**
  * @brief Replace Value from the vector at the index referenced by iterator
@@ -2299,6 +2403,19 @@ extern iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t ** excepti
 extern bool iot_data_equal (const iot_data_t * data1, const iot_data_t * data2);
 
 /**
+ * @brief Check for equality of two iot_data types within a given bound (difference).
+ * Bound checking is applied only for integer or floating point types. For non-integer or non-floating point types
+ * the result is as per the iot_data_equal function.
+ *
+ * @param  data1 Input data1 (can be NULL)
+ * @param  data2 Input data2 (can be NULL)
+ * @param  bound Bound for equality check, if zero then exact equality is checked. Bound must be zero or a positive value.
+ * @return       'true' if data1 and data2 are of the same integer or floating point type and the value difference is within bound,
+ *                otherwise as per iot_data_equal function.
+ */
+extern bool iot_data_bounded_equal (const iot_data_t * data1, const iot_data_t * data2, float bound);
+
+/**
  * @brief Check for equality of two iot_data instances. Integer or floating types will compare as equal
  *        if they have the same value.
  *
@@ -2388,6 +2505,15 @@ extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t
  * @return        The newly created array containing the vector elements, may be empty
  */
 extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse);
+
+/**
+ * @brief Converts a vector to a list, vector elements must be of the target type or are ignored.
+ *
+ * @param vector  The vector to transform
+ * @param type    The data element type for the created list
+ * @return        The newly created list containing the vector elements, may be empty
+ */
+extern iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const iot_data_type_t type);
 
 /**
  * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements

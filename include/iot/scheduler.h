@@ -47,6 +47,13 @@ typedef void * (*iot_schedule_fn_t) (void * arg);
 /** Alias for schedule free function pointer */
 typedef void (*iot_schedule_free_fn_t) (void * arg);
 
+typedef struct iot_scheduler_counters_t
+{
+  uint64_t total_runs;
+  uint64_t skipped;
+  uint64_t dropped;
+} iot_scheduler_counters_t;
+
 /** Scheduler component name */
 #define IOT_SCHEDULER_TYPE "IOT::Scheduler"
 

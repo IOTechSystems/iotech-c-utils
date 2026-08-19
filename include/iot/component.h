@@ -58,6 +58,8 @@ typedef void (*iot_component_running_fn_t) (iot_component_t * comp, bool timeout
 typedef void (*iot_component_stopping_fn_t) (iot_component_t * comp);
 /** Type definition for component starting function pointer */
 typedef void (*iot_component_starting_fn_t) (iot_component_t * comp);
+/** Type definition for component stats function pointer */
+typedef iot_data_t *(*iot_component_stats_fn_t) (iot_component_t * comp);
 
 /**
  * Component factory structure
@@ -86,9 +88,11 @@ struct iot_component_t
   iot_component_running_fn_t running_fn;    /**< Pointer to function callback made when all components are running */
   iot_component_stopping_fn_t stopping_fn;  /**< Pointer to function callback made before components are stopped */
   iot_component_starting_fn_t starting_fn;  /**< Pointer to function callback made before components are started */
+  iot_component_stats_fn_t stats_fn;        /**< Pointer to function to return component stats */
   atomic_int_fast32_t refs;                 /**< Current reference count */
   iot_data_t * config;                      /**< Parsed configuration */
   const iot_component_factory_t * factory;  /**< Pointer to component factory structure */
+  iot_container_t * container;              /**< Pointer to container structure */
 };
 
 /**
@@ -222,6 +226,26 @@ extern bool iot_component_set_starting (iot_component_t * component);
 extern iot_component_state_t iot_component_wait (iot_component_t * component, uint32_t states);
 
 /**
+ * @brief Block until the component is in a given state 
+ *
+ * The function blocks until the component is in one of a given set of states.
+ * Expects the component to be locked prior to calling.
+ *
+ * @code
+ *
+ *   iot_component_lock (myComponent);
+ *   iot_component_state_t state = iot_component_wait_locked (myComponent, IOT_COMPONENT_DELETED | IOT_COMPONENT_RUNNING);
+ *   iot_component_unlock (myComponent);
+ *
+ * @endcode
+ *
+ * @param component  Pointer to the component
+ * @param states     Logical OR of states on which to wait
+ * @return           State of the component that resulted in unblocking (one of states)
+ */
+extern iot_component_state_t iot_component_wait_locked (iot_component_t * component, uint32_t states);
+
+/**
  * @brief Block until the component state is changed to states
  *
  * The function that acquires a lock and blocks the calling thread for the component until the state does not change to state(s) provided.
@@ -293,6 +317,30 @@ extern const char * iot_component_state_name (iot_component_state_t state);
  * @return           Data map, with keys "name", "type", "state" and "config"
  */
 extern iot_data_t * iot_component_read (iot_component_t * component);
+
+/**
+ * @brief Get component stats
+ *
+ * @param component  Pointer to component
+ * @return           Data map containing run time statistics, NULL is returned if statistics are not available.
+ */
+extern iot_data_t * iot_component_stats (iot_component_t * component);
+
+/**
+ * @brief Get component stats
+ *
+ * @param component  Pointer to component
+ * @param stats_fn   Pointer to stats fn
+ */
+extern void iot_component_set_stats_callback (iot_component_t * component, iot_component_stats_fn_t stats_fn);
+
+/**
+ * @brief Get container
+ *
+ * @param component  Pointer to component
+ * @return           Pointer to container
+ */
+extern iot_container_t * iot_component_get_container (const iot_component_t * component);
 
 #ifdef __cplusplus
 }
