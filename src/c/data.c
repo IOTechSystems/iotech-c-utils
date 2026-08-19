@@ -1353,14 +1353,14 @@ bool iot_data_is_nan (const iot_data_t * data)
 {
   const iot_data_type_t type = data ? data->type : IOT_DATA_INVALID;
   if (type != IOT_DATA_FLOAT32 && type != IOT_DATA_FLOAT64) return false;
-  return (type == IOT_DATA_FLOAT32) ? isnan (iot_data_f32 (data)) : isnan (iot_data_f64 (data)) != 0;
+  return ((type == IOT_DATA_FLOAT32) ? isnan (iot_data_f32 (data)) : isnan (iot_data_f64 (data))) != 0;
 }
 
 bool iot_data_is_infinity (const iot_data_t * data)
 {
   const iot_data_type_t type = data ? data->type : IOT_DATA_INVALID;
   if (type != IOT_DATA_FLOAT32 && type != IOT_DATA_FLOAT64) return false;
-  return (type == IOT_DATA_FLOAT32) ? isinf (iot_data_f32 (data)) : isinf (iot_data_f64 (data)) != 0;
+  return ((type == IOT_DATA_FLOAT32) ? isinf (iot_data_f32 (data)) : isinf (iot_data_f64 (data))) != 0;
 }
 
 
