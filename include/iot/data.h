@@ -273,6 +273,17 @@ extern bool iot_data_is_static (const iot_data_t * data);
 extern bool iot_data_is_nan (const iot_data_t * data);
 
 /**
+ * @brief Check if data instance has a value of infinity.
+ * 
+ * Floating point values can have a value of infinity. If the data instance is a 
+ * floating point type, then check if the value is infinity.
+ * 
+ * @param data Pointer to data
+ * @return     Whether the data is of the value infinity
+ */
+extern bool iot_data_is_infinity (const iot_data_t * data);
+
+/**
  * @brief Get data type code
  *
  * Get the type code of data
