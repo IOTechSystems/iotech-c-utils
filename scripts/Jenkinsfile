@@ -3,7 +3,8 @@
 def systems_x86_64 = ['ubuntu-26.04','ubuntu-24.04','ubuntu-22.04','alpine-3.24','alpine-3.22','debian-13','debian-12','fedora-44','oraclelinux-9','opensuse-15.6','photon-40','zephyr-2.3','clearlinux','yocto-riscv'] as String[]
 def systems_arm64 = ['ubuntu-26.04','ubuntu-24.04','ubuntu-22.04','alpine-3.24','alpine-3.22','debian-13','debian-12','fedora-44','oraclelinux-9','opensuse-15.6','photon-40'] as String[]
 def systems_arm32 = ['ubuntu-26.04','ubuntu-24.04','ubuntu-22.04','alpine-3.24','alpine-3.22','debian-13','debian-12'] as String[]
-def systems_x86 = ['alpine-3.24','alpine-3.22','debian-13','debian-12']
+// def systems_x86 = ['alpine-3.24','alpine-3.22','debian-13','debian-12']
+def systems_x86 = []
 def targets = ['x86_64','arm64','arm32','x86'] as String[]
 
 def String getReleaseName (archive)
