@@ -263,7 +263,7 @@ extern bool iot_data_is_static (const iot_data_t * data);
 
 /**
  * @brief Check if data instance has a value of NaN.
- * 
+ *
  * Floating point values can have a value of NaN. If the data instance is a 
  * floating point type, then check if the value is NaN.
  * 
@@ -271,6 +271,17 @@ extern bool iot_data_is_static (const iot_data_t * data);
  * @return     Whether the data is of the value NaN
  */
 extern bool iot_data_is_nan (const iot_data_t * data);
+
+/**
+ * @brief Check if data instance has a value of NaN or contains a NaN value.
+ *
+ * Similar to `iot_data_is_nan` but additionally recurses collection
+ * types checking floating type elements for NaN values.
+ *
+ * @param data Pointer to data
+ * @return Whether the data contains a NaN value
+ */
+extern bool iot_data_contains_nan (const iot_data_t * data);
 
 /**
  * @brief Check if data instance has a value of infinity.
@@ -282,6 +293,17 @@ extern bool iot_data_is_nan (const iot_data_t * data);
  * @return     Whether the data is of the value infinity
  */
 extern bool iot_data_is_infinity (const iot_data_t * data);
+
+/**
+ * @brief Check if data instance has or contains a value of infinity.
+ *
+ * Similar to `iot_data_is_infinity` but additionally recurses collection
+ * types checking floating type elements for infinity values.
+ * 
+ * @param data Pointer to data
+ * @return     Whether the data is of the value infinity
+ */
+extern bool iot_data_contains_infinity (const iot_data_t * data);
 
 /**
  * @brief Get data type code
