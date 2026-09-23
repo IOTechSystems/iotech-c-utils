@@ -40,4 +40,4 @@
 ## Version 1.6.6
 
 - Added `iot_data_contains_infinity` and `iot_data_contains_nan` functions to determine if iot data contains floating point values which are Infinity or NaN
-
+- iot_data_alloc_from_string (IOT_DATA_BOOL, str) now recognizes "t"/"f", "true"/"false" and "1"/"0" and rejects (returns null) other strings

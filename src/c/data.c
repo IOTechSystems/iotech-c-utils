@@ -1610,7 +1610,21 @@ iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * valu
       }
     }
   }
-  if (type == IOT_DATA_BOOL) return iot_data_alloc_bool (value[0] == 't' || value[0] == 'T');
+  if (type == IOT_DATA_BOOL)
+  {
+    if (strcasecmp (value, "t") == 0 || strcasecmp (value, "true") == 0 || strcmp (value, "1") == 0)
+    {
+      return iot_data_alloc_bool (true);
+    }
+    else if (strcasecmp (value, "f") == 0 || strcasecmp (value, "false") == 0 || strcmp (value, "0") == 0)
+    {
+      return iot_data_alloc_bool (false);
+    }
+    else
+    {
+      return NULL;
+    }
+  }
   if (type == IOT_DATA_STRING) return iot_data_alloc_string (value, IOT_DATA_COPY);
   return NULL;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023
+ * Copyright (c) 2020-2026
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -813,16 +813,33 @@ static void test_data_from_string (void)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
   CU_ASSERT (iot_data_bool (data))
   iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "T");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
+  CU_ASSERT (iot_data_bool (data))
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "1");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
+  CU_ASSERT (iot_data_bool (data))
+  iot_data_free (data);
   data = iot_data_alloc_from_string (IOT_DATA_BOOL, "False");
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
   CU_ASSERT (!iot_data_bool (data))
   iot_data_free (data);
-  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "X");
+  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "F");
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
   CU_ASSERT (!iot_data_bool (data))
   iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "0");
+  CU_ASSERT (data != NULL)
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_BOOL)
+  CU_ASSERT (!iot_data_bool (data))
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_BOOL, "X");
+  CU_ASSERT (data == NULL)
   data = iot_data_alloc_from_string (IOT_DATA_STRING, "Wibble");
   CU_ASSERT (data != NULL)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
