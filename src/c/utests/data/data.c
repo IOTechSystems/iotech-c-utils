@@ -8,6 +8,7 @@
 #include "data.h"
 #include "CUnit.h"
 #include "iot/config.h"
+#include "iot/data.h"
 #include "iot/logger.h"
 #include "iot/time.h"
 #include "iot/uuid.h"
@@ -5560,14 +5561,17 @@ static void test_data_is_nan (void)
 {
   iot_data_t * float_nan = iot_data_alloc_f32 (NAN);
   CU_ASSERT (iot_data_is_nan (float_nan))
+  CU_ASSERT (iot_data_contains_nan (float_nan))
   iot_data_free (float_nan);
 
   iot_data_t * double_nan = iot_data_alloc_f64 (NAN);
   CU_ASSERT (iot_data_is_nan (double_nan))
+  CU_ASSERT (iot_data_contains_nan (float_nan))
   iot_data_free (double_nan);
 
   iot_data_t * float_not_nan = iot_data_alloc_f32 (123.456f);
   CU_ASSERT_FALSE (iot_data_is_nan (float_not_nan))
+  CU_ASSERT_FALSE (iot_data_contains_nan (float_nan))
   iot_data_free (float_not_nan);
 
   iot_data_t * double_not_nan = iot_data_alloc_f64 (123.456);
@@ -5600,6 +5604,68 @@ static void test_data_is_infinity (void)
   iot_data_t * non_float_type = iot_data_alloc_i32 (0);
   CU_ASSERT_FALSE (iot_data_is_infinity (non_float_type))
   iot_data_free (non_float_type);
+}
+
+static void test_data_contains (void)
+{
+  iot_data_t * float_nan = iot_data_alloc_f32 (NAN);
+  CU_ASSERT (iot_data_contains_nan (float_nan))
+  CU_ASSERT_FALSE (iot_data_contains_infinity (float_nan))
+  iot_data_free (float_nan);
+
+  iot_data_t * double_nan = iot_data_alloc_f64 (NAN);
+  CU_ASSERT (iot_data_contains_nan (float_nan))
+  CU_ASSERT_FALSE (iot_data_contains_infinity (float_nan))
+  iot_data_free (double_nan);
+
+  iot_data_t * float_inf = iot_data_alloc_f32 (INFINITY);
+  CU_ASSERT_FALSE (iot_data_contains_nan (float_inf))
+  CU_ASSERT (iot_data_contains_infinity (float_inf))
+  iot_data_free (float_inf);
+
+  iot_data_t * double_inf = iot_data_alloc_f64 (INFINITY);
+  CU_ASSERT_FALSE (iot_data_contains_nan (double_inf))
+  CU_ASSERT (iot_data_contains_infinity (double_inf))
+  iot_data_free (double_inf);
+
+  //IOT_DATA_VEC
+  iot_data_t * vec = iot_data_alloc_vector (2);
+  iot_data_vector_add (vec, 0, iot_data_alloc_f32 (123.456f));
+  iot_data_vector_add (vec, 1, iot_data_alloc_f32 (NAN));
+  CU_ASSERT (iot_data_contains_nan (vec))
+  CU_ASSERT_FALSE (iot_data_contains_infinity (vec))
+  iot_data_free (vec);
+
+  vec = iot_data_alloc_vector (2);
+  iot_data_vector_add (vec, 0, iot_data_alloc_f32 (123.456f));
+  iot_data_vector_add (vec, 1, iot_data_alloc_bool (INFINITY));
+  CU_ASSERT_FALSE (iot_data_contains_nan (vec))
+  CU_ASSERT (iot_data_contains_infinity (vec))
+  iot_data_free (vec);
+
+  //recursive structs & IOT_DATA_MAP
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
+  iot_data_map_add (map, iot_data_alloc_ui32 (0), iot_data_alloc_f32 (123.456f));
+  iot_data_map_add (map, iot_data_alloc_ui32 (1), iot_data_alloc_f32 (NAN));
+  iot_data_t * recursive_vec = iot_data_alloc_vector (2);
+  iot_data_vector_add (recursive_vec, 0, iot_data_alloc_bool (false));
+  iot_data_vector_add (recursive_vec, 1, map);
+  CU_ASSERT_TRUE (iot_data_contains_nan (recursive_vec))
+  CU_ASSERT_FALSE (iot_data_contains_infinity (recursive_vec))
+  iot_data_free (recursive_vec);
+
+  //IOT_DATA_ARRAY
+  float float_array_data[2] = { 1234, NAN };
+  iot_data_t * array = iot_data_alloc_array (float_array_data, 2, IOT_DATA_FLOAT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_contains_nan (array))
+  CU_ASSERT_FALSE (iot_data_contains_infinity (array))
+  iot_data_free (array);
+
+  double double_array_data[2] = { 1234, INFINITY };
+  array = iot_data_alloc_array (double_array_data, 2, IOT_DATA_FLOAT64, IOT_DATA_REF);
+  CU_ASSERT_FALSE (iot_data_contains_nan (array))
+  CU_ASSERT (iot_data_contains_infinity (array))
+  iot_data_free (array);
 }
 
 static void test_data_tags (void)
@@ -6043,6 +6109,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "binary_take", test_binary_take);
   CU_add_test (suite, "data_is_nan", test_data_is_nan);
   CU_add_test (suite, "data_is_infinity", test_data_is_infinity);
+  CU_add_test (suite, "data_contains", test_data_contains);
   CU_add_test (suite, "data_tags", test_data_tags);
   CU_add_test (suite, "data_block", test_data_block);
   CU_add_test (suite, "data_iter", test_data_iter);
