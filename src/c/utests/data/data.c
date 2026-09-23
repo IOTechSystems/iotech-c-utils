@@ -5637,8 +5637,8 @@ static void test_data_contains (void)
   iot_data_free (vec);
 
   vec = iot_data_alloc_vector (2);
-  iot_data_vector_add (vec, 0, iot_data_alloc_f32 (123.456f));
-  iot_data_vector_add (vec, 1, iot_data_alloc_bool (INFINITY));
+  iot_data_vector_add (vec, 0, iot_data_alloc_f64 (123.456f));
+  iot_data_vector_add (vec, 1, iot_data_alloc_f64 (INFINITY));
   CU_ASSERT_FALSE (iot_data_contains_nan (vec))
   CU_ASSERT (iot_data_contains_infinity (vec))
   iot_data_free (vec);
