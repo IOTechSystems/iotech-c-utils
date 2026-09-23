@@ -1360,14 +1360,17 @@ bool iot_data_contains_nan (const iot_data_t * data)
     return isnan (iot_data_f64 (data));
   case IOT_DATA_ARRAY:
   {
-    iot_data_array_iter_t iter;
-    iot_data_array_iter (data, &iter);
-    while (iot_data_array_iter_next (&iter))
+    if (data->element_type == IOT_DATA_FLOAT32 || data->element_type == IOT_DATA_FLOAT64)
     {
-      const bool res = data->element_type == IOT_DATA_FLOAT32 ?
-          isnan (*(float *) iot_data_array_iter_value (&iter)) :
-          isnan (*(double *) iot_data_array_iter_value (&iter));
-      if (res) return true;
+      iot_data_array_iter_t iter;
+      iot_data_array_iter (data, &iter);
+      while (iot_data_array_iter_next (&iter))
+      {
+        const bool res = data->element_type == IOT_DATA_FLOAT32 ?
+            isnan (*(float *) iot_data_array_iter_value (&iter)) :
+            isnan (*(double *) iot_data_array_iter_value (&iter));
+        if (res) return true;
+      }
     }
     break;
   }
@@ -1407,14 +1410,17 @@ bool iot_data_contains_infinity (const iot_data_t * data)
     return isinf (iot_data_f64 (data));
   case IOT_DATA_ARRAY:
   {
-    iot_data_array_iter_t iter;
-    iot_data_array_iter (data, &iter);
-    while (iot_data_array_iter_next (&iter))
+    if (data->element_type == IOT_DATA_FLOAT32 || data->element_type == IOT_DATA_FLOAT64)
     {
-      const bool res = data->element_type == IOT_DATA_FLOAT32 ?
-          isinf (*(float *) iot_data_array_iter_value (&iter)) :
-          isinf (*(double *) iot_data_array_iter_value (&iter));
-      if (res) return true;
+      iot_data_array_iter_t iter;
+      iot_data_array_iter (data, &iter);
+      while (iot_data_array_iter_next (&iter))
+      {
+        const bool res = data->element_type == IOT_DATA_FLOAT32 ?
+            isinf (*(float *) iot_data_array_iter_value (&iter)) :
+            isinf (*(double *) iot_data_array_iter_value (&iter));
+        if (res) return true;
+      }
     }
     break;
   }
