@@ -37,3 +37,7 @@
 - Added function `iot_data_vector_to_list` to populate a list from a vector
 - Added `iot_data_is_infinity` function to determine if floating point data is Infinity
 
+## Version 1.6.6
+
+- Added `iot_data_contains_infinity` and `iot_data_contains_nan` functions to determine if iot data contains floating point values which are Infinity or NaN
+
