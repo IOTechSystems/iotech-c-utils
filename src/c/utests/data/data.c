@@ -5666,6 +5666,12 @@ static void test_data_contains (void)
   CU_ASSERT_FALSE (iot_data_contains_nan (array))
   CU_ASSERT (iot_data_contains_infinity (array))
   iot_data_free (array);
+
+  bool bool_array[2] = { false, true };
+  array = iot_data_alloc_array (bool_array, 2, IOT_DATA_BOOL, IOT_DATA_REF);
+  CU_ASSERT_FALSE (iot_data_contains_nan (array))
+  CU_ASSERT_FALSE (iot_data_contains_infinity (array))
+  iot_data_free (array);
 }
 
 static void test_data_tags (void)
