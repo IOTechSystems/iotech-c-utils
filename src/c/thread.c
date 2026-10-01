@@ -144,10 +144,17 @@ int iot_thread_current_get_priority (void)
   return iot_thread_get_priority (pthread_self ());
 }
 
+// Skip trying to re-set the priority if it hasn't changed
+static __thread int iot_thread_self_priority = IOT_THREAD_NO_PRIORITY;
+
 bool iot_thread_set_priority (pthread_t thread, int priority)
 {
+  bool self = pthread_equal (thread, pthread_self ());
+  if (self && (priority == iot_thread_self_priority)) return true;
   struct sched_param param = { .sched_priority = priority };
-  return (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
+  bool ok = (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
+  if (self && ok) iot_thread_self_priority = priority;
+  return ok;
 }
 
 bool iot_thread_current_set_priority (int priority)
