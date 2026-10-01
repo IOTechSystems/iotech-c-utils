@@ -110,7 +110,7 @@ case ${SYSTEM} in
       --description "${DESC_DEV}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude lib \
-      --depends "iotech-iot-${PKG_VER} (= ${VER})"
+      --depends "iotech-iot-${PKG_VER} (>= ${VER})"
 
     rm ./*.tar.gz
 
