@@ -41,3 +41,20 @@
 
 - Added `iot_data_contains_infinity` and `iot_data_contains_nan` functions to determine if iot data contains floating point values which are Infinity or NaN
 - iot_data_alloc_from_string (IOT_DATA_BOOL, str) now recognizes "t"/"f", "true"/"false" and "1"/"0" and rejects (returns null) other strings
+
+## Version 1.6.7
+- Fixed scheduler race where a schedule added while the scheduler thread was preparing to wait could be missed
+- `iot_scheduler_free` now waits for the scheduler thread to exit, rather than using fixed delays
+- Freeing a scheduler from its own thread (schedule function or run/abort callback) is now illegal and asserted
+- `iot_schedule_add_randomised` no longer updates the start time of an already queued schedule
+- Scheduler dropped event stats now count every dropped event, not only the first per schedule
+- Scheduler now logs an error if its thread cannot be created
+- `iot_threadpool_free` now waits for pool threads to exit, rather than polling
+- Removed threadpool `ShutdownDelay` configuration, as no longer used
+- Threadpool threads now restore their default priority when running jobs with no priority set
+- Threadpool now wakes all threads waiting in `iot_threadpool_wait`, not just one
+- Fixed threadpool `jobs_max` stat overflowing above 65535 queued jobs
+- `iot_threadpool_free` now logs a warning if queued jobs are discarded
+- `iot_threadpool_alloc` now asserts that the number of threads is greater than zero
+- `iot_threadpool_alloc` now logs an error and records the actual thread count if not all threads could be created
+- Corrected printf format specifiers for fixed width integer types

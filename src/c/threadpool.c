@@ -16,7 +16,6 @@
 #define IOT_PRCTL_NAME_MAX 16
 #define IOT_TP_THREADS_DEFAULT 2
 #define IOT_TP_JOBS_DEFAULT 0
-#define IOT_TP_SHUTDOWN_MIN 200
 
 #ifdef IOT_BUILD_COMPONENTS
 #define IOT_THREADPOOL_FACTORY iot_threadpool_factory ()
@@ -53,8 +52,7 @@ typedef struct iot_threadpool_t
   uint16_t threads;                  // Number of threads allocated
   _Atomic uint16_t created;          // Number of threads created
   uint32_t jobs;                     // Number of jobs in queue
-  uint16_t jobs_max;                 // Maximum value of jobs
-  uint32_t delay;                    // Shutdown delay in milliseconds
+  uint32_t jobs_max;                 // Maximum value of jobs
   uint32_t next_id;                  // Job id counter
   iot_job_t * front;                 // Front of job queue
   iot_job_t * rear;                  // Rear of job queue
@@ -63,6 +61,7 @@ typedef struct iot_threadpool_t
   pthread_cond_t work_cond;          // Work control condition
   pthread_cond_t job_cond;           // Job control condition
   pthread_cond_t queue_cond;         // Job queue control condition
+  pthread_cond_t exit_cond;          // Thread exit control condition
   iot_logger_t * logger;             // Optional logger
 } iot_threadpool_t;
 
@@ -97,6 +96,7 @@ static void iot_threadpool_final_free (iot_threadpool_t * pool)
   pthread_cond_destroy (&pool->work_cond);
   pthread_cond_destroy (&pool->queue_cond);
   pthread_cond_destroy (&pool->job_cond);
+  pthread_cond_destroy (&pool->exit_cond);
   iot_logger_free (pool->logger);
   free (pool->thread_array);
   iot_component_fini (&pool->component);
@@ -114,7 +114,10 @@ static void * iot_threadpool_thread (void * arg)
   iot_threadpool_t * pool = th->pool;
   iot_component_t * comp = &pool->component;
   pthread_t tid = pthread_self ();
-  int priority = iot_thread_get_priority (tid);
+  struct sched_param default_param;
+  int default_policy;
+  pthread_getschedparam (tid, &default_policy, &default_param); // Save default thread scheduling
+  int priority = default_param.sched_priority;
   char name[IOT_PRCTL_NAME_MAX];
   iot_component_state_t state;
   bool pending_delete = false;
@@ -135,7 +138,10 @@ static void * iot_threadpool_thread (void * arg)
     {
       pending_delete = th->pending_delete;
       th->deleted = true;
-      iot_component_unlock (comp);
+      iot_log_debug (pool->logger, "Thread %" PRIu16 " exiting", th->id);
+      atomic_fetch_sub (&pool->created, 1u);
+      pthread_cond_broadcast (&pool->exit_cond); // Signal thread exit
+      iot_component_unlock (comp); // Pool may be freed after this, unless pending_delete
       break;
     }
     iot_job_t * first = pool->front;
@@ -150,7 +156,6 @@ static void * iot_threadpool_thread (void * arg)
       {
         pool->front = NULL;
         pool->rear = NULL;
-        pthread_cond_signal (&pool->work_cond); // Signal no jobs in queue
       }
       if ((pool->jobs + 1) == pool->max_jobs)
       {
@@ -159,11 +164,18 @@ static void * iot_threadpool_thread (void * arg)
       pool->working++;
       if (pool->working > pool->working_max) pool->working_max = pool->working;
       iot_component_unlock (comp);
-      if ((job.priority != IOT_THREAD_NO_PRIORITY) && (job.priority != priority)) // If required, set thread priority
+      if (job.priority != IOT_THREAD_NO_PRIORITY)
       {
-        if (iot_thread_set_priority (tid, job.priority))
+        if ((job.priority != priority) && iot_thread_set_priority (tid, job.priority)) // If required, set thread priority
         {
           priority = job.priority;
+        }
+      }
+      else if (priority != default_param.sched_priority) // If required, restore default thread scheduling
+      {
+        if (pthread_setschedparam (tid, default_policy, &default_param) == 0)
+        {
+          priority = default_param.sched_priority;
         }
       }
       (job.function) (job.arg); // Run job
@@ -171,7 +183,7 @@ static void * iot_threadpool_thread (void * arg)
       iot_component_lock (comp);
       if (--pool->working == 0)
       {
-        pthread_cond_signal (&pool->work_cond); // Signal when no threads working
+        pthread_cond_broadcast (&pool->work_cond); // Signal when no threads working
       }
     }
     else
@@ -180,8 +192,6 @@ static void * iot_threadpool_thread (void * arg)
       pthread_cond_wait (&pool->job_cond, &comp->mutex); // Wait for new job
     }
   }
-  iot_log_debug (pool->logger, "Thread %" PRIu16 " exiting", th->id);
-  atomic_fetch_sub (&pool->created, 1u);
   if (pending_delete) iot_threadpool_final_free (pool);
   return NULL;
 }
@@ -207,20 +217,21 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
 {
   static _Atomic uint16_t pool_id = ATOMIC_VAR_INIT (0);
 
+  assert (threads > 0u); // Pool without threads cannot run jobs
   uint16_t created;
   iot_threadpool_t * pool = (iot_threadpool_t*) calloc (1, sizeof (*pool));
   pool->affinity = affinity;
   pool->logger = logger;
   *((uint16_t*) &pool->id) = (uint16_t) atomic_fetch_add (&pool_id, 1u);
   iot_logger_add_ref (logger);
-  iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max_jobs: %u default_priority: %d affinity: %d)", threads, max_jobs, default_prio, affinity);
+  iot_log_info (logger, "iot_threadpool_alloc (threads: %" PRIu16 " max_jobs: %" PRIu32 " default_priority: %d affinity: %d)", threads, max_jobs, default_prio, affinity);
   pool->thread_array = (iot_thread_t*) calloc (threads, sizeof (iot_thread_t));
   *((uint32_t*) &pool->max_jobs) = max_jobs ? max_jobs : UINT32_MAX;
-  pool->delay = IOT_TP_SHUTDOWN_MIN;
   atomic_store (&pool->created, 0u);
   pthread_cond_init (&pool->work_cond, NULL);
   pthread_cond_init (&pool->queue_cond, NULL);
   pthread_cond_init (&pool->job_cond, NULL);
+  pthread_cond_init (&pool->exit_cond, NULL);
   iot_component_init (&pool->component, IOT_THREADPOOL_FACTORY, (iot_component_start_fn_t) iot_threadpool_start, (iot_component_stop_fn_t) iot_threadpool_stop);
   iot_component_set_stats_callback (&pool->component, iot_threadpool_get_stats);
   pool->threads = threads;
@@ -237,6 +248,11 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
   while (atomic_load (&pool->created) != created)
   {
     iot_wait_usecs (100); /* Wait until all threads running */
+  }
+  if (created != threads)
+  {
+    iot_log_error (logger, "iot_threadpool_alloc only created %" PRIu16 " of %" PRIu16 " threads", created, threads);
+    pool->threads = created; // Safe as threads read this before incrementing created
   }
   return pool;
 }
@@ -262,7 +278,7 @@ static void iot_threadpool_add_work_locked (iot_threadpool_t * pool, void * (*fu
   job->priority = prio;
   job->prev = NULL;
   job->id = pool->next_id++;
-  iot_log_trace (pool->logger, "Added new job #%u", job->id);
+  iot_log_trace (pool->logger, "Added new job #%" PRIu32, job->id);
 
   if (job->priority != IOT_THREAD_NO_PRIORITY) // Order job by priority
   {
@@ -327,11 +343,11 @@ void iot_threadpool_add_work (iot_threadpool_t * pool, void * (*func) (void*), v
   iot_component_lock (&pool->component);
   while (pool->jobs == pool->max_jobs)
   {
-    iot_log_debug (pool->logger, "iot_threadpool_add_work jobs at max (%u), waiting for job completion", pool->max_jobs);
+    iot_log_debug (pool->logger, "iot_threadpool_add_work jobs at max (%" PRIu32 "), waiting for job completion", pool->max_jobs);
     pthread_cond_wait (&pool->queue_cond, &pool->component.mutex); // Wait until space in job queue
   }
   iot_threadpool_add_work_locked (pool, func, arg, prio);
-  iot_log_debug (pool->logger, "iot_threadpool_add_work jobs/max: %u/%u", pool->jobs, pool->max_jobs);
+  iot_log_debug (pool->logger, "iot_threadpool_add_work jobs/max: %" PRIu32 "/%" PRIu32, pool->jobs, pool->max_jobs);
   iot_component_unlock (&pool->component);
 }
 
@@ -342,7 +358,7 @@ void iot_threadpool_wait (iot_threadpool_t * pool)
   iot_component_lock (&pool->component);
   while (pool->jobs || pool->working)
   {
-    iot_log_debug (pool->logger, "iot_threadpool_wait (jobs:%u active threads:%u)", pool->jobs, pool->working);
+    iot_log_debug (pool->logger, "iot_threadpool_wait (jobs:%" PRIu32 " active threads:%" PRIu16 ")", pool->jobs, pool->working);
     pthread_cond_wait (&pool->work_cond, &pool->component.mutex); // Wait until all jobs processed
   }
   iot_component_unlock (&pool->component);
@@ -390,15 +406,18 @@ void iot_threadpool_free (iot_threadpool_t * pool)
     if (self_delete) iot_log_debug (pool->logger, "pool %p self delete", pool);
     iot_threadpool_stop (pool);
     iot_component_set_deleted (&pool->component);
+    iot_component_lock (&pool->component);
     while (atomic_load (&pool->created) > (self_delete ? 1 : 0))
     {
-      iot_wait_msecs (pool->delay);
+      pthread_cond_wait (&pool->exit_cond, &pool->component.mutex); // Wait until all other threads exited
     }
+    iot_component_unlock (&pool->component);
     while ((job = pool->cache))
     {
       pool->cache = job->prev;
       free (job);
     }
+    if (pool->jobs) iot_log_warn (pool->logger, "iot_threadpool_free discarding %" PRIu32 " queued job(s)", pool->jobs);
     while ((job = pool->front))
     {
       pool->front = job->prev;
@@ -417,9 +436,7 @@ static iot_component_t * iot_threadpool_config (iot_container_t * cont, const io
   uint32_t jobs = (uint32_t) iot_data_string_map_get_i64 (map, "MaxJobs", IOT_TP_JOBS_DEFAULT);
   int prio = (int) iot_data_string_map_get_i64 (map, "Priority", IOT_THREAD_NO_PRIORITY);
   int affinity = (int) iot_data_string_map_get_i64 (map, "Affinity", IOT_THREAD_NO_AFFINITY);
-  uint32_t delay = (uint32_t) iot_data_string_map_get_i64 (map, "ShutdownDelay", IOT_TP_SHUTDOWN_MIN);
   iot_threadpool_t * pool = iot_threadpool_alloc (threads, jobs, prio, affinity, logger);
-  pool->delay = (delay < IOT_TP_SHUTDOWN_MIN) ? IOT_TP_SHUTDOWN_MIN : delay;
   return &pool->component;
 }
 

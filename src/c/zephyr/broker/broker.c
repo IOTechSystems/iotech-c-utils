@@ -32,7 +32,7 @@ int main (void)
   clock_gettime (CLOCK_MONOTONIC, &start);
   publish (pub, PUB_ITERS);
   clock_gettime (CLOCK_MONOTONIC, &stop);
-  printf ("Published %d samples in %d seconds %d nanoseconds\n", PUB_ITERS, stop.tv_sec - start.tv_sec, stop.tv_nsec - start.tv_nsec);
+  printf ("Published %d samples in %lld seconds %ld nanoseconds\n", PUB_ITERS, (long long) (stop.tv_sec - start.tv_sec), (long) (stop.tv_nsec - start.tv_nsec));
   iot_bus_stop (bus);
   iot_bus_free (bus);
   printf ("Done\n");

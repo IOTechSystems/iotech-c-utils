@@ -192,7 +192,7 @@ static void cunit_logger_selfstart (void)
 static void cunit_logger_format (void)
 {
   iot_logger_t *logger = iot_logger_alloc ("MyLogger", IOT_LOG_INFO, true);
-  iot_log_info (logger, "INFO: %s %u", "testarg", 1234);
+  iot_log_info (logger, "INFO: %s %d", "testarg", 1234);
   iot_logger_free (logger);
 }
 

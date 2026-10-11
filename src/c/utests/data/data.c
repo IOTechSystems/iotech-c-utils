@@ -5538,7 +5538,7 @@ static void test_binary_take (void)
   uint16_t buff[2u] = {0u};
   iot_data_t * bin = iot_data_alloc_binary (buff, sizeof (buff), IOT_DATA_REF);
   void * ptr = iot_data_binary_take (bin, &len);
-  printf ("Length : %d\n", len);
+  printf ("Length : %" PRIu32 "\n", len);
   CU_ASSERT (len == 4)
   CU_ASSERT (ptr != buff)
   iot_data_free (bin);

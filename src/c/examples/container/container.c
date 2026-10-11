@@ -88,7 +88,6 @@ static const char * pool_config =
 "{"
   "\"Threads\":2,"
   "\"MaxJobs\":10,"
-  "\"ShutdownDelay\":500,"
   "\"Logger\":\"logger\""
 "}";
 

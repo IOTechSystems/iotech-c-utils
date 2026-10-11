@@ -62,6 +62,14 @@ static void * do_work4 (void * in)
   return NULL;
 }
 
+static void * do_block (void * in)
+{
+  pthread_mutex_t * mutex = (pthread_mutex_t*) in;
+  pthread_mutex_lock (mutex);
+  pthread_mutex_unlock (mutex);
+  return NULL;
+}
+
 static void * do_sum_100 (void * in)
 {
   (void) in;
@@ -512,6 +520,131 @@ static void cunit_scheduler_random (void)
   CU_ASSERT (atomic_load (&sum_test) >= 9u)   // Allow for one unlucky collision
 }
 
+static _Atomic bool run_cb_started;
+static _Atomic bool run_cb_done;
+
+static void * slow_run_cb (void * arg)
+{
+  (void) arg;
+  atomic_store (&run_cb_started, true);
+  iot_wait_msecs (200u);
+  atomic_store (&run_cb_done, true);
+  return NULL;
+}
+
+static uint64_t scheduler_stat (iot_scheduler_t * scheduler, const char * name)
+{
+  iot_component_t * comp = (iot_component_t*) scheduler;
+  iot_data_t * stats = comp->stats_fn (comp);
+  const iot_data_t * value = iot_data_string_map_get (stats, name);
+  uint64_t result = (iot_data_type (value) == IOT_DATA_UINT64) ? iot_data_ui64 (value) : iot_data_ui32 (value);
+  iot_data_free (stats);
+  return result;
+}
+
+static void cunit_scheduler_free_wait (void)
+{
+  atomic_store (&run_cb_started, false);
+  atomic_store (&run_cb_done, false);
+  iot_threadpool_t *pool = iot_threadpool_alloc (1u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_schedule_t *sched = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_SEC_TO_NS (1u), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_add_run_callback (scheduler, sched, slow_run_cb);
+  CU_ASSERT (iot_schedule_add (scheduler, sched))
+  iot_threadpool_start (pool);
+  iot_scheduler_start (scheduler);
+  for (int i = 0; i < 100 && ! atomic_load (&run_cb_started); i++) iot_wait_msecs (10u);
+  CU_ASSERT (atomic_load (&run_cb_started))
+  iot_scheduler_free (scheduler); // Must wait for scheduler thread, which is in run callback
+  CU_ASSERT (atomic_load (&run_cb_done))
+  iot_threadpool_free (pool);
+}
+
+static void cunit_scheduler_randomised_queued (void)
+{
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_SEC_TO_NS (1u), IOT_HOUR_TO_NS (10u), 0, NULL, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_t *sched2 = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_SEC_TO_NS (1u), IOT_HOUR_TO_NS (20u), 0, NULL, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_t *sched3 = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_SEC_TO_NS (1u), IOT_HOUR_TO_NS (30u), 0, NULL, IOT_THREAD_NO_PRIORITY);
+  CU_ASSERT (iot_schedule_add (scheduler, sched1))
+  CU_ASSERT (iot_schedule_add (scheduler, sched2))
+  CU_ASSERT (iot_schedule_add (scheduler, sched3))
+  CU_ASSERT (! iot_schedule_add_randomised (scheduler, sched3, 0u)) // Already queued, so must not change queue key
+  CU_ASSERT (iot_schedule_remove (scheduler, sched3))
+  CU_ASSERT (scheduler_stat (scheduler, "active_queue_size") == 2u)
+  CU_ASSERT (scheduler_stat (scheduler, "idle_queue_size") == 1u)
+  iot_scheduler_free (scheduler);
+}
+
+static void cunit_scheduler_dropped_count (void)
+{
+  pthread_mutex_t mutex;
+  pthread_mutex_init (&mutex, NULL);
+  pthread_mutex_lock (&mutex);
+  iot_threadpool_t *pool = iot_threadpool_alloc (1u, 1u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_start (pool);
+  iot_threadpool_add_work (pool, do_block, &mutex, IOT_THREAD_NO_PRIORITY); // Occupy pool thread
+  iot_wait_msecs (50u);
+  iot_schedule_t *sched = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_MS_TO_NS (20u), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_set_concurrent (sched, true); // So runs are dropped (pool full) rather than skipped (already running)
+  CU_ASSERT (iot_schedule_add (scheduler, sched))
+  iot_scheduler_start (scheduler);
+  iot_wait_msecs (300u);
+  iot_scheduler_stop (scheduler);
+  uint64_t dropped = iot_schedule_dropped (sched);
+  CU_ASSERT (dropped > 1u)
+  CU_ASSERT (scheduler_stat (scheduler, "dropped_runs") == dropped) // Every dropped run counted
+  pthread_mutex_unlock (&mutex);
+  iot_threadpool_wait (pool);
+  iot_scheduler_free (scheduler);
+  iot_threadpool_free (pool);
+  pthread_mutex_destroy (&mutex);
+}
+
+static void cunit_scheduler_thread_runs (void)
+{
+  reset_counters ();
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_schedule_t *sched = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_MS_TO_NS (50u), 0, 3u, NULL, IOT_THREAD_NO_PRIORITY);
+  CU_ASSERT (iot_schedule_add (scheduler, sched))
+  iot_scheduler_start (scheduler);
+  iot_wait_msecs (500u);
+  iot_scheduler_stop (scheduler);
+  CU_ASSERT (atomic_load (&sum_test) == 3u)
+  CU_ASSERT (scheduler_stat (scheduler, "schedule_runs") == 3u) // Runs in new thread are counted
+  iot_scheduler_free (scheduler);
+}
+
+static void * state_waiter (void * arg)
+{
+  iot_component_wait ((iot_component_t*) arg, IOT_COMPONENT_STOPPED);
+  return NULL;
+}
+
+static void cunit_scheduler_shared_wait (void)
+{
+  pthread_t waiter;
+  reset_counters ();
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_scheduler_start (scheduler);
+  iot_schedule_t *sched1 = iot_schedule_create (scheduler, do_work1, NULL, NULL, IOT_HOUR_TO_NS (1u), IOT_HOUR_TO_NS (2u), 0, NULL, IOT_THREAD_NO_PRIORITY);
+  CU_ASSERT (iot_schedule_add (scheduler, sched1))
+  iot_wait_msecs (100u); // Scheduler thread waiting for schedule
+  pthread_create (&waiter, NULL, state_waiter, scheduler); // Other thread waiting on component state
+  iot_wait_msecs (100u);
+  iot_schedule_t *sched2 = iot_schedule_create (scheduler, do_work1, NULL, NULL, IOT_HOUR_TO_NS (1u), IOT_HOUR_TO_NS (1u), 0, NULL, IOT_THREAD_NO_PRIORITY);
+  CU_ASSERT (iot_schedule_add (scheduler, sched2))
+  iot_wait_msecs (100u);
+  iot_schedule_t *sched3 = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_HOUR_TO_NS (1u), IOT_MS_TO_NS (100u), 0, NULL, IOT_THREAD_NO_PRIORITY);
+  CU_ASSERT (iot_schedule_add (scheduler, sched3))
+  for (int i = 0; i < 100 && atomic_load (&sum_test) == 0u; i++) iot_wait_msecs (10u);
+  CU_ASSERT (atomic_load (&sum_test) == 1u) // Scheduler thread woken despite other waiter
+  iot_scheduler_stop (scheduler);
+  pthread_join (waiter, NULL);
+  iot_scheduler_free (scheduler);
+}
+
 extern void cunit_scheduler_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("scheduler", suite_init, suite_clean);
@@ -531,4 +664,9 @@ extern void cunit_scheduler_test_init (void)
   CU_add_test (suite, "scheduler_sync", cunit_scheduler_sync);
   CU_add_test (suite, "scheduler_serialized", cunit_scheduler_serialized);
   CU_add_test (suite, "scheduler_delete_with_user_data", cunit_scheduler_delete_with_user_data);
+  CU_add_test (suite, "scheduler_free_wait", cunit_scheduler_free_wait);
+  CU_add_test (suite, "scheduler_randomised_queued", cunit_scheduler_randomised_queued);
+  CU_add_test (suite, "scheduler_dropped_count", cunit_scheduler_dropped_count);
+  CU_add_test (suite, "scheduler_thread_runs", cunit_scheduler_thread_runs);
+  CU_add_test (suite, "scheduler_shared_wait", cunit_scheduler_shared_wait);
 }

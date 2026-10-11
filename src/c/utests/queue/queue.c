@@ -109,7 +109,7 @@ static void test_run_multi (void)
   {
     iot_queue_enqueue (q, iot_data_alloc_ui32 (i));
   }
-  printf ("residual queue size %u/%u ...", iot_queue_size (q), MULTI_SIZE);
+  printf ("residual queue size %" PRIu32 "/%d ...", iot_queue_size (q), MULTI_SIZE);
   while (iot_queue_size (q))
   {
     sched_yield ();
