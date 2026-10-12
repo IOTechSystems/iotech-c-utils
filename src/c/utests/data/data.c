@@ -5874,6 +5874,67 @@ static void test_array_take_empty (void)
   iot_data_free (array);
 }
 
+static void test_vector_resize_hash (void)
+{
+  // Resize must not lose a pending hash recalculation
+  iot_data_t * vector = iot_data_alloc_vector (2u);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_ui32 (1u));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_ui32 (2u));
+  iot_data_hash (vector);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_ui32 (3u));
+  iot_data_vector_resize (vector, 2u);
+  iot_data_t * expected = iot_data_alloc_vector (2u);
+  iot_data_vector_add (expected, 0u, iot_data_alloc_ui32 (3u));
+  iot_data_vector_add (expected, 1u, iot_data_alloc_ui32 (2u));
+  CU_ASSERT (iot_data_hash (vector) == iot_data_hash (expected))
+  CU_ASSERT (iot_data_equal (vector, expected))
+
+  iot_data_vector_resize (vector, 4u);
+  iot_data_vector_resize (expected, 4u);
+  CU_ASSERT (iot_data_equal (vector, expected))
+  iot_data_vector_resize (vector, 1u);
+  iot_data_vector_resize (expected, 1u);
+  CU_ASSERT (iot_data_hash (vector) == iot_data_hash (expected))
+  CU_ASSERT (iot_data_equal (vector, expected))
+  iot_data_free (expected);
+  iot_data_free (vector);
+}
+
+static iot_data_t * test_push_list_alloc (uint32_t from, uint32_t to)
+{
+  iot_data_t * list = iot_data_alloc_list ();
+  for (uint32_t i = from; i <= to; i++) iot_data_list_tail_push (list, iot_data_alloc_ui32 (i));
+  return list;
+}
+
+static void test_list_push_list_take_hash (void)
+{
+  // Taking a list with a pending hash recalculation must give correct hashes for both lists
+  for (int head = 0; head < 2; head++)
+  {
+    iot_data_t * dest = test_push_list_alloc (1u, 2u);
+    iot_data_t * src = test_push_list_alloc (3u, 5u);
+    iot_data_hash (src);
+    iot_data_free (iot_data_list_tail_pop (src)); // Hash now pending
+    head ? iot_data_list_head_push_list (dest, src, IOT_DATA_TAKE) : iot_data_list_tail_push_list (dest, src, IOT_DATA_TAKE);
+    iot_data_t * expected = test_push_list_alloc (1u, 2u);
+    iot_data_t * part = test_push_list_alloc (3u, 5u);
+    iot_data_free (iot_data_list_tail_pop (part));
+    head ? iot_data_list_head_push_list (expected, part, IOT_DATA_COPY) : iot_data_list_tail_push_list (expected, part, IOT_DATA_COPY);
+    iot_data_free (part);
+    CU_ASSERT (iot_data_list_length (dest) == 4u)
+    CU_ASSERT (iot_data_hash (dest) == iot_data_hash (expected))
+    CU_ASSERT (iot_data_equal (dest, expected))
+    iot_data_t * empty = iot_data_alloc_list ();
+    CU_ASSERT (iot_data_hash (src) == 0u)
+    CU_ASSERT (iot_data_equal (src, empty))
+    iot_data_free (empty);
+    iot_data_free (expected);
+    iot_data_free (src);
+    iot_data_free (dest);
+  }
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -6619,6 +6680,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "vector_empty_slot", test_vector_empty_slot);
   CU_add_test (suite, "data_copy_pointer_metadata", test_data_copy_pointer_metadata);
   CU_add_test (suite, "array_take_empty", test_array_take_empty);
+  CU_add_test (suite, "vector_resize_hash", test_vector_resize_hash);
+  CU_add_test (suite, "list_push_list_take_hash", test_list_push_list_take_hash);
 #ifdef NDEBUG
   CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
 #endif

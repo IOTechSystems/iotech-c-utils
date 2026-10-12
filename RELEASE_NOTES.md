@@ -73,3 +73,6 @@
 - Clarified that `iot_data_map_add_unused` leaves ownership of key and value with the caller when the key is already in use
 - Fixed crashes when converting vectors with unset elements to a list or JSON, compressing them, or iterating them with `iot_data_vector_iter_string`
 - Fixed `iot_data_restrict_element` setting an invalid element type for vectors with unset elements
+- Fixed `iot_data_vector_resize` discarding a pending vector hash recalculation
+- Fixed list hashes after `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` with `IOT_DATA_TAKE` when the source list hash was out of date
+- Documented that a container hash is not updated when an element already in the container is modified

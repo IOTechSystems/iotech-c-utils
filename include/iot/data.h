@@ -184,7 +184,11 @@ extern iot_data_cmp_fn iot_data_string_cmp;
 extern bool iot_data_alloc_heap (bool set);
 
 /**
- * @brief Return the hash of a String, Array or Binary data type
+ * @brief Return the hash of a data value
+ *
+ * The hash of a list or vector combines the hashes of its elements, and the hash of a map combines the hashes
+ * of its keys. A container's hash is updated as the container is modified, but not when an element already in
+ * the container is itself modified (for example, by iot_data_increment), so modify elements before adding them.
  *
  * @param data  The data (can be NULL)
  * @return      The hash value or zero if data is NULL

@@ -1228,6 +1228,7 @@ extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * s
     iot_data_list_t * src = (iot_data_list_t*) src_list;
     if (src->tail)
     {
+      dest_list->hash ^= iot_data_hash (src_list); // Calculate any pending src hash before lists are joined
       if (dest->tail)
       {
         dest->tail->prev = src->head;
@@ -1242,7 +1243,7 @@ extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * s
       }
       src->tail = NULL;
       src->head = NULL;
-      dest_list->hash ^= src_list->hash;
+      src_list->hash = 0u;
     }
   }
   else
@@ -1266,6 +1267,7 @@ extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * s
     iot_data_list_t * src = (iot_data_list_t*) src_list;
     if (src->head)
     {
+      dest_list->hash ^= iot_data_hash (src_list); // Calculate any pending src hash before lists are joined
       if (dest->head)
       {
         dest->head->next = src->tail;
@@ -1280,7 +1282,7 @@ extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * s
       }
       src->tail = NULL;
       src->head = NULL;
-      dest_list->hash ^= src_list->hash;
+      src_list->hash = 0u;
     }
   }
   else
@@ -2546,14 +2548,14 @@ void iot_data_vector_resize (iot_data_t * vector, uint32_t size)
     {
       iot_data_free (vec->values[i]);
     }
+    iot_data_set_rehash (vector, true);
   }
   else if (size > vec->size)
   {
     vec->values = realloc (vec->values, size * sizeof (iot_data_t*));
     memset (&vec->values[vec->size], 0, (size - vec->size) * sizeof (iot_data_t*));
   }
-  iot_data_set_rehash (vector, vec->size != size);
-  vec->size = size;
+  vec->size = size; // Added slots are empty so do not change hash
 }
 
 uint32_t iot_data_vector_compact (iot_data_t * vector)
