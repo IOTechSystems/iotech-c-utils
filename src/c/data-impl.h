@@ -35,12 +35,12 @@ struct iot_data_t
   iot_data_type_t type;
   iot_data_type_t element_type;
   iot_data_type_t key_type;
+  _Atomic bool rehash; // Whether hash needs recalculating, atomic as calculated lazily by iot_data_hash on (possibly shared) data
   bool release : 1;
   bool release_block : 1;
   bool heap : 1;
   bool constant : 1;
   bool composed : 1;
-  bool rehash : 1;
   bool tag1 : 1;
   bool tag2 : 1;
 };

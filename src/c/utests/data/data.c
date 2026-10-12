@@ -5692,6 +5692,110 @@ static void test_data_compare_value_signed (void)
   iot_data_free (ui64);
 }
 
+#ifdef NDEBUG
+#define TEST_CACHE_BLOCKS 500u
+
+static void * test_cache_free_thread (void * arg)
+{
+  // Allocate and free blocks (retained in thread local cache), then exit
+  void ** blocks = (void**) arg;
+  for (uint32_t i = 0; i < TEST_CACHE_BLOCKS; i++) blocks[i] = iot_data_block_alloc (iot_data_block_size ());
+  for (uint32_t i = 0; i < TEST_CACHE_BLOCKS; i++) iot_data_block_free (blocks[i]);
+  return NULL;
+}
+
+static void * test_cache_alloc_thread (void * arg)
+{
+  void ** blocks = (void**) arg;
+  for (uint32_t i = 0; i < TEST_CACHE_BLOCKS; i++) blocks[i] = iot_data_block_alloc (iot_data_block_size ());
+  return NULL;
+}
+
+static void test_data_thread_cache_release (void)
+{
+  // Blocks cached by an exited thread must be returned to the shared cache, for reuse by other threads
+  void * freed[TEST_CACHE_BLOCKS];
+  void * alloced[TEST_CACHE_BLOCKS];
+  pthread_t tid;
+  pthread_create (&tid, NULL, test_cache_free_thread, freed);
+  pthread_join (tid, NULL);
+  pthread_create (&tid, NULL, test_cache_alloc_thread, alloced);
+  pthread_join (tid, NULL);
+  uint32_t reused = 0u;
+  for (uint32_t i = 0; i < TEST_CACHE_BLOCKS; i++)
+  {
+    for (uint32_t j = 0; j < TEST_CACHE_BLOCKS; j++)
+    {
+      if (alloced[i] == freed[j])
+      {
+        reused++;
+        break;
+      }
+    }
+  }
+  CU_ASSERT (reused > 0u)
+  for (uint32_t i = 0; i < TEST_CACHE_BLOCKS; i++) iot_data_block_free (alloced[i]);
+}
+#endif
+
+#define TEST_HASH_THREADS 8u
+#define TEST_HASH_ELEMENTS 20000u
+
+typedef struct test_hash_arg_t
+{
+  pthread_barrier_t * barrier;
+  const iot_data_t * data;
+  uint32_t hash;
+} test_hash_arg_t;
+
+static void * test_hash_thread (void * arg)
+{
+  test_hash_arg_t * ha = (test_hash_arg_t*) arg;
+  pthread_barrier_wait (ha->barrier);
+  ha->hash = iot_data_hash (ha->data);
+  return NULL;
+}
+
+static iot_data_t * test_hash_list_alloc (void)
+{
+  // List with hash requiring recalculation
+  iot_data_t * list = iot_data_alloc_list ();
+  for (uint32_t i = 0; i <= TEST_HASH_ELEMENTS; i++) iot_data_list_tail_push (list, iot_data_alloc_ui32 (i * 7919u));
+  iot_data_free (iot_data_list_tail_pop (list));
+  return list;
+}
+
+static void test_data_hash_threads (void)
+{
+  // Concurrent lazy hash calculation of shared data must give consistent results
+  pthread_barrier_t barrier;
+  pthread_t tids[TEST_HASH_THREADS];
+  test_hash_arg_t args[TEST_HASH_THREADS];
+  iot_data_t * expected = test_hash_list_alloc ();
+  uint32_t hash = iot_data_hash (expected);
+  for (uint32_t round = 0; round < 20u; round++)
+  {
+    iot_data_t * list = test_hash_list_alloc ();
+    pthread_barrier_init (&barrier, NULL, TEST_HASH_THREADS);
+    for (uint32_t i = 0; i < TEST_HASH_THREADS; i++)
+    {
+      args[i].barrier = &barrier;
+      args[i].data = list;
+      pthread_create (&tids[i], NULL, test_hash_thread, &args[i]);
+    }
+    for (uint32_t i = 0; i < TEST_HASH_THREADS; i++)
+    {
+      pthread_join (tids[i], NULL);
+      CU_ASSERT (args[i].hash == hash)
+    }
+    CU_ASSERT (iot_data_hash (list) == hash)
+    CU_ASSERT (iot_data_equal (list, expected))
+    pthread_barrier_destroy (&barrier);
+    iot_data_free (list);
+  }
+  iot_data_free (expected);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -6433,6 +6537,10 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_list_head_push_list_lengths", test_list_head_push_list_lengths);
   CU_add_test (suite, "data_increment_equal", test_data_increment_equal);
   CU_add_test (suite, "data_compare_value_signed", test_data_compare_value_signed);
+  CU_add_test (suite, "data_hash_threads", test_data_hash_threads);
+#ifdef NDEBUG
+  CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
+#endif
   CU_add_test (suite, "array_to_binary", test_array_to_binary);
   CU_add_test (suite, "binary_to_array", test_binary_to_array);
   CU_add_test (suite, "binary_take", test_binary_take);

@@ -65,3 +65,6 @@
 - `iot_data_increment` and `iot_data_decrement` now update the data hash, so modified values compare equal and map lookups work
 - Fixed `iot_data_compare_value` and `iot_data_equal_value` for negative signed values compared with unsigned values
 - `iot_data_get_at`, `iot_data_add_at`, `iot_data_remove_at` and `iot_data_update_at` now handle paths that do not match the data (missing keys, out of range vector indexes, paths longer than nesting) rather than asserting or crashing. `iot_data_add_at` returns NULL in this case
+- Data memory blocks cached by a thread are now returned to the shared cache when the thread exits, preventing memory growth when threads are repeatedly created
+- Data memory pool no longer freed at process exit, so data can be safely used by threads still running during exit
+- Lazy data hash calculation is now thread safe, so shared data can be compared and hashed concurrently
