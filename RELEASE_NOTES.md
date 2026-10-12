@@ -42,7 +42,7 @@
 - Added `iot_data_contains_infinity` and `iot_data_contains_nan` functions to determine if iot data contains floating point values which are Infinity or NaN
 - iot_data_alloc_from_string (IOT_DATA_BOOL, str) now recognizes "t"/"f", "true"/"false" and "1"/"0" and rejects (returns null) other strings
 
-## Version 1.6.7
+## Version 1.7.0
 - Fixed scheduler race where a schedule added while the scheduler thread was preparing to wait could be missed
 - `iot_scheduler_free` now waits for the scheduler thread to exit, rather than using fixed delays
 - Freeing a scheduler from its own thread (schedule function or run/abort callback) is now illegal and asserted
