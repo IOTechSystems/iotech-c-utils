@@ -618,6 +618,10 @@ extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata, con
     if (data->base.meta == NULL) data->base.meta = iot_data_alloc_map (IOT_DATA_MULTI);
     iot_data_map_add (data->base.meta, iot_data_add_ref (key), metadata);
   }
+  else
+  {
+    iot_data_free (metadata);
+  }
 }
 
 extern const iot_data_t * iot_data_get_metadata (const iot_data_t * data, const iot_data_t * key)
@@ -1146,6 +1150,10 @@ iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_
     iot_data_t * base = (iot_data_t*) &iter->_list->base;
     iot_data_set_rehash (base, true);
     iter->_element->value = value;
+  }
+  else
+  {
+    iot_data_free (value);
   }
   return res;
 }
@@ -2238,6 +2246,11 @@ bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * v
     iot_node_add ((iot_data_map_t *) map, key, val);
     ((iot_data_map_t *) map)->size++;
   }
+  else
+  {
+    iot_data_free (key);
+    iot_data_free (val);
+  }
   return add;
 }
 
@@ -2880,7 +2893,14 @@ iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, 
 {
   assert (iter && iter->_map && value && (iter->_map->base.element_type == IOT_DATA_MULTI || iter->_map->base.element_type == value->type));
   iot_data_t * res = (iter->_node) ? iter->_node->value : NULL;
-  if (res) iter->_node->value = value;
+  if (res)
+  {
+    iter->_node->value = value;
+  }
+  else
+  {
+    iot_data_free (value);
+  }
   return res;
 }
 
@@ -3016,6 +3036,10 @@ iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * 
       if (value) vector->base.hash ^= iot_data_hash (value);
     }
     vector->values[iter->_index] = value;
+  }
+  else
+  {
+    iot_data_free (value);
   }
   return res;
 }

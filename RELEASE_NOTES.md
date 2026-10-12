@@ -70,7 +70,7 @@
 - Lazy data hash calculation is now thread safe, so shared data can be compared and hashed concurrently
 - Fixed memory leak of metadata when copying pointer data
 - Fixed memory leak of buffer when allocating a zero length array or binary with `IOT_DATA_TAKE`, or an array from an empty base64 string
-- Clarified that `iot_data_map_add_unused` leaves ownership of key and value with the caller when the key is already in use
+- Data functions that take ownership of arguments now free them on failure: `iot_data_map_add_unused` (key in use), `iot_data_set_metadata` (NULL data or key), `iot_data_list_iter_replace` and `iot_data_map_iter_replace_value` (invalid iterator), and `iot_data_vector_iter_replace_value` (index out of range). Callers must no longer free these arguments on failure
 - Fixed crashes when converting vectors with unset elements to a list or JSON, compressing them, or iterating them with `iot_data_vector_iter_string`
 - Fixed `iot_data_restrict_element` setting an invalid element type for vectors with unset elements
 - Fixed `iot_data_vector_resize` discarding a pending vector hash recalculation

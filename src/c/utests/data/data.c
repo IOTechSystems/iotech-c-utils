@@ -2617,10 +2617,8 @@ static void test_list_iter_replace (void)
   value = iot_data_list_iter_value (&iter);
   CU_ASSERT (value && iot_data_ui32 (value) == 3u)
   iot_data_list_iter (list, &iter);
-  iot_data_t * val = iot_data_alloc_ui32 (4u);
-  old = iot_data_list_iter_replace (&iter, val);
+  old = iot_data_list_iter_replace (&iter, iot_data_alloc_ui32 (4u)); // Freed as iterator not valid
   CU_ASSERT (old == NULL)
-  iot_data_free (val);
   iot_data_free (list);
 }
 
@@ -2934,7 +2932,7 @@ static void test_data_map_iter_replace (void)
   CU_ASSERT (iot_data_map_iter_value (&it) == NULL)
   CU_ASSERT (iot_data_map_iter_string_key (&it) == NULL)
   CU_ASSERT (iot_data_map_iter_string_value (&it) == NULL)
-  CU_ASSERT (iot_data_map_iter_replace_value (&it, map) == NULL)
+  CU_ASSERT (iot_data_map_iter_replace_value (&it, iot_data_alloc_string ("None", IOT_DATA_REF)) == NULL) // Freed as iterator not valid
   while (iot_data_map_iter_next (&it))
   {
     if (strcmp (iot_data_map_iter_string_key (&it), "1") == 0)
@@ -4608,11 +4606,10 @@ static void test_data_map_add_unused (void)
   CU_ASSERT (added)
   val = iot_data_alloc_ui32 (3u);
   key = iot_data_alloc_string ("Two", IOT_DATA_REF);
-  added = iot_data_map_add_unused (map, key, val);
+  added = iot_data_map_add_unused (map, key, val); // Key and value freed as key in use
   CU_ASSERT (!added)
   CU_ASSERT (iot_data_map_size (map) == 2)
-  iot_data_free (val);
-  iot_data_free (key);
+  CU_ASSERT (iot_data_ui32 (iot_data_string_map_get (map, "Two")) == 2u)
   iot_data_free (map);
 }
 
@@ -5935,6 +5932,41 @@ static void test_list_push_list_take_hash (void)
   }
 }
 
+static void test_data_failed_take_frees (void)
+{
+  // Functions that take ownership of an argument free it when they fail (checked by valgrind)
+  iot_data_t * key = iot_data_alloc_string ("meta", IOT_DATA_REF);
+  iot_data_t * data = iot_data_alloc_ui32 (1u);
+  iot_data_set_metadata (NULL, iot_data_alloc_ui32 (2u), key);
+  iot_data_set_metadata (data, iot_data_alloc_ui32 (2u), NULL);
+  CU_ASSERT (iot_data_get_metadata (data, key) == NULL)
+  iot_data_free (data);
+  iot_data_free (key);
+
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_list_iter_t list_iter;
+  iot_data_list_iter (list, &list_iter);
+  CU_ASSERT (iot_data_list_iter_replace (&list_iter, iot_data_alloc_ui32 (1u)) == NULL)
+  CU_ASSERT (iot_data_list_length (list) == 0u)
+  iot_data_free (list);
+
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
+  iot_data_map_iter_t map_iter;
+  iot_data_map_iter (map, &map_iter);
+  CU_ASSERT (iot_data_map_iter_replace_value (&map_iter, iot_data_alloc_ui32 (1u)) == NULL)
+  CU_ASSERT (iot_data_map_add_unused (map, iot_data_alloc_ui32 (1u), iot_data_alloc_ui32 (1u)))
+  CU_ASSERT (!iot_data_map_add_unused (map, iot_data_alloc_ui32 (1u), iot_data_alloc_ui32 (2u)))
+  CU_ASSERT (iot_data_map_size (map) == 1u)
+  iot_data_free (map);
+
+  iot_data_t * vector = iot_data_alloc_vector (1u);
+  iot_data_vector_iter_t vector_iter;
+  iot_data_vector_iter (vector, &vector_iter);
+  CU_ASSERT (iot_data_vector_iter_replace_value (&vector_iter, iot_data_alloc_ui32 (1u)) == NULL)
+  CU_ASSERT (iot_data_vector_get (vector, 0u) == NULL)
+  iot_data_free (vector);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -6122,12 +6154,12 @@ static void test_data_is_nan (void)
 
   iot_data_t * double_nan = iot_data_alloc_f64 (NAN);
   CU_ASSERT (iot_data_is_nan (double_nan))
-  CU_ASSERT (iot_data_contains_nan (float_nan))
+  CU_ASSERT (iot_data_contains_nan (double_nan))
   iot_data_free (double_nan);
 
   iot_data_t * float_not_nan = iot_data_alloc_f32 (123.456f);
   CU_ASSERT_FALSE (iot_data_is_nan (float_not_nan))
-  CU_ASSERT_FALSE (iot_data_contains_nan (float_nan))
+  CU_ASSERT_FALSE (iot_data_contains_nan (float_not_nan))
   iot_data_free (float_not_nan);
 
   iot_data_t * double_not_nan = iot_data_alloc_f64 (123.456);
@@ -6170,8 +6202,8 @@ static void test_data_contains (void)
   iot_data_free (float_nan);
 
   iot_data_t * double_nan = iot_data_alloc_f64 (NAN);
-  CU_ASSERT (iot_data_contains_nan (float_nan))
-  CU_ASSERT_FALSE (iot_data_contains_infinity (float_nan))
+  CU_ASSERT (iot_data_contains_nan (double_nan))
+  CU_ASSERT_FALSE (iot_data_contains_infinity (double_nan))
   iot_data_free (double_nan);
 
   iot_data_t * float_inf = iot_data_alloc_f32 (INFINITY);
@@ -6682,6 +6714,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "array_take_empty", test_array_take_empty);
   CU_add_test (suite, "vector_resize_hash", test_vector_resize_hash);
   CU_add_test (suite, "list_push_list_take_hash", test_list_push_list_take_hash);
+  CU_add_test (suite, "data_failed_take_frees", test_data_failed_take_frees);
 #ifdef NDEBUG
   CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
 #endif

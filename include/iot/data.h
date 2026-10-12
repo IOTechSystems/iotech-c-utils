@@ -352,8 +352,8 @@ extern const char * iot_data_type_string (iot_data_type_t type);
 /**
  * @brief Set metadata for data
  *
- * Set metadata on a data item. Meta data is freed when the containing data is freed.
- * This function should not be used with null or boolean data types as these are implemented as shared
+ * Set metadata on a data item. Meta data is freed when the containing data is freed, or immediately
+ * if data or key is NULL. This function should not be used with null or boolean data types as these are implemented as shared
  * constant instances.
  *
  * @param  data      Pointer to data
@@ -882,7 +882,7 @@ extern bool iot_data_list_iter_remove (iot_data_list_iter_t * iter);
  * The function to replace a value in a list referenced by the iterator
  *
  * @param iter  Input iterator
- * @param value New value to store in the list
+ * @param value New value to store in the list. Freed if the iterator is not valid
  * @return      Pointer to the previous value associated with the iterator if valid, NULL otherwise
  */
 extern iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value);
@@ -1335,8 +1335,8 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
  * @param key  Input key
  * @param val  Input value
  * @return     Whether key-value pair has been added
- * Note: If added, the key and value are owned by the map and cannot be reused, unless reference counted.
- *       If not added (key already in use), ownership of key and value remains with the caller.
+ * Note: The key and value are owned by the map and cannot be reused, unless reference counted.
+ *       If not added (key already in use), the key and value are freed.
  */
 extern bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
@@ -2030,7 +2030,7 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
  * The function to replace the value from the map referenced by the iterator
  *
  * @param iter  Input iterator
- * @param value New value to store in the map
+ * @param value New value to store in the map. Freed if the iterator is not valid
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
 extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t * value);
@@ -2164,7 +2164,7 @@ extern void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t *
  * @brief Replace Value from the vector at the index referenced by iterator
  *
  * The function to replace the value in the the vector at an index referenced by iterator. If iterator index exceeds
- * the size of an vector, no replacement is made and NULL is returned.
+ * the size of an vector, no replacement is made, value is freed and NULL is returned.
  *
  * @param iter  Input iterator
  * @param value New value to store in the vector
