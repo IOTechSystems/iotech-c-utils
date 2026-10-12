@@ -68,3 +68,8 @@
 - Data memory blocks cached by a thread are now returned to the shared cache when the thread exits, preventing memory growth when threads are repeatedly created
 - Data memory pool no longer freed at process exit, so data can be safely used by threads still running during exit
 - Lazy data hash calculation is now thread safe, so shared data can be compared and hashed concurrently
+- Fixed memory leak of metadata when copying pointer data
+- Fixed memory leak of buffer when allocating a zero length array or binary with `IOT_DATA_TAKE`, or an array from an empty base64 string
+- Clarified that `iot_data_map_add_unused` leaves ownership of key and value with the caller when the key is already in use
+- Fixed crashes when converting vectors with unset elements to a list or JSON, compressing them, or iterating them with `iot_data_vector_iter_string`
+- Fixed `iot_data_restrict_element` setting an invalid element type for vectors with unset elements

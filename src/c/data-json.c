@@ -147,7 +147,8 @@ static void iot_data_dump_json (iot_string_holder_t * holder, const iot_data_t *
       iot_data_strcat (holder, "[");
       while (iot_data_vector_iter_next (&iter))
       {
-        iot_data_dump_json (holder, iot_data_vector_iter_value (&iter));
+        const iot_data_t * value = iot_data_vector_iter_value (&iter);
+        if (value) iot_data_dump_json (holder, value); else iot_data_strcat (holder, "null"); // Empty slot
         if (iot_data_vector_iter_has_next (&iter)) iot_data_strcat (holder, ",");
       }
       iot_data_strcat (holder, "]");

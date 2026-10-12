@@ -1531,7 +1531,7 @@ void iot_data_compress_with_cache (iot_data_t * data, iot_data_t * cache)
       iot_data_vector_iter (data, &iter);
       while (iot_data_vector_iter_next (&iter))
       {
-        iot_data_cache_add (cache, &(iter._vector->values[iter._index]));
+        if (iter._vector->values[iter._index]) iot_data_cache_add (cache, &(iter._vector->values[iter._index]));
       }
     }
     else if (data->type == IOT_DATA_LIST)
@@ -2044,12 +2044,13 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
   array->base.element_type = type;
   array->data = length ? data : NULL;
   array->length = length;
+  if (!length && data && (ownership == IOT_DATA_TAKE)) free (data);
 
   //defer hashing
   array->base.hash = 0;
   iot_data_set_rehash (&array->base, true);
 
-  array->base.release = data ? (ownership != IOT_DATA_REF) : false;
+  array->base.release = array->data ? (ownership != IOT_DATA_REF) : false;
   if (length && data && (ownership == IOT_DATA_COPY))
   {
     array->data = malloc (size);
@@ -2764,7 +2765,7 @@ iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const iot_data_
   while (iot_data_vector_iter_next (&iter))
   {
     const iot_data_t * entry = iot_data_vector_iter_value (&iter);
-    if (type == IOT_DATA_MULTI || entry->type == type)
+    if (entry && (type == IOT_DATA_MULTI || entry->type == type))
     {
       iot_data_list_head_push (list, iot_data_add_ref (entry));
     }
@@ -3020,7 +3021,7 @@ iot_data_t * iot_data_vector_iter_replace_value (const iot_data_vector_iter_t * 
 const char * iot_data_vector_iter_string (const iot_data_vector_iter_t * iter)
 {
   assert (iter);
-  return (iter->_index < iter->_vector->size) ? iot_data_string (iter->_vector->values[iter->_index]) : NULL;
+  return iot_data_vector_iter_string_value (iter);
 }
 
 const iot_data_t * iot_data_vector_find (const iot_data_t * vector, iot_data_cmp_fn cmp, const void * arg)
@@ -3197,12 +3198,7 @@ iot_data_t * iot_data_copy (const iot_data_t * data)
       }
       break;
     }
-    case IOT_DATA_POINTER:
-    {
-      ret = (iot_data_t*) data;
-      iot_data_add_ref (ret);
-      break;
-    }
+    case IOT_DATA_POINTER: return iot_data_add_ref (data); // Shared, so keeps its metadata
     default: // basic types
     {
       iot_data_value_t * val = iot_data_value_alloc (data->type, false);
@@ -3418,19 +3414,24 @@ iot_data_type_t iot_data_restricted_element_type (const iot_data_t * data)
   assert (data && (data->type == IOT_DATA_VECTOR || data->type == IOT_DATA_LIST || data->type == IOT_DATA_ARRAY || data->type == IOT_DATA_MAP));
   iot_data_type_t restricted_type = data->element_type;
   if (restricted_type != IOT_DATA_MULTI || data->type == IOT_DATA_ARRAY) goto done;
+  iot_data_type_t found = IOT_DATA_INVALID;
   iot_data_iter_t iter;
   iot_data_iter (data, &iter);
-  if (!iot_data_iter_next (&iter)) goto done;
-  restricted_type = iot_data_type (iot_data_iter_value (&iter));
   while (iot_data_iter_next (&iter))
   {
-    iot_data_type_t test_type = iot_data_type (iot_data_iter_value (&iter));
-    if (test_type != restricted_type)
+    const iot_data_t * value = iot_data_iter_value (&iter);
+    if (value == NULL) continue; // Empty vector slot
+    if (found == IOT_DATA_INVALID)
     {
-      restricted_type = IOT_DATA_MULTI;
+      found = value->type;
+    }
+    else if (value->type != found)
+    {
+      found = IOT_DATA_MULTI;
       break;
     }
   }
+  if (found != IOT_DATA_INVALID) restricted_type = found;
 done:
   return restricted_type;
 }

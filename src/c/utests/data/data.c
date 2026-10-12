@@ -5796,6 +5796,84 @@ static void test_data_hash_threads (void)
   iot_data_free (expected);
 }
 
+static iot_data_t * test_vector_empty_slot_alloc (void)
+{
+  iot_data_t * vector = iot_data_alloc_vector (3u);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_string ("a", IOT_DATA_REF));
+  iot_data_vector_add (vector, 2u, iot_data_alloc_string ("b", IOT_DATA_REF));
+  return vector;
+}
+
+static void test_vector_empty_slot (void)
+{
+  // Unset vector slots are NULL and must be skipped or handled
+  iot_data_t * vector = test_vector_empty_slot_alloc ();
+  iot_data_t * list = iot_data_vector_to_list (vector, IOT_DATA_MULTI);
+  CU_ASSERT (iot_data_list_length (list) == 2u)
+  iot_data_free (list);
+  list = iot_data_vector_to_list (vector, IOT_DATA_STRING);
+  CU_ASSERT (iot_data_list_length (list) == 2u)
+  iot_data_free (list);
+
+  uint32_t count = 0u;
+  iot_data_vector_iter_t iter;
+  iot_data_vector_iter (vector, &iter);
+  while (iot_data_vector_iter_next (&iter))
+  {
+    if (iot_data_vector_iter_string (&iter)) count++;
+  }
+  CU_ASSERT (count == 2u)
+
+  char * json = iot_data_to_json (vector);
+  CU_ASSERT (strcmp (json, "[\"a\",null,\"b\"]") == 0)
+  free (json);
+
+  iot_data_compress (vector);
+  CU_ASSERT (iot_data_vector_get (vector, 1u) == NULL)
+  CU_ASSERT (strcmp (iot_data_string (iot_data_vector_get (vector, 2u)), "b") == 0)
+
+  iot_data_restrict_element (vector);
+  CU_ASSERT (iot_data_vector_type (vector) == IOT_DATA_STRING)
+  iot_data_vector_add (vector, 1u, iot_data_alloc_string ("c", IOT_DATA_REF));
+  iot_data_free (vector);
+
+  vector = iot_data_alloc_vector (2u);
+  iot_data_restrict_element (vector);
+  CU_ASSERT (iot_data_vector_type (vector) == IOT_DATA_MULTI)
+  iot_data_free (vector);
+}
+
+static void test_data_copy_pointer_metadata (void)
+{
+  // Copy of a pointer is shared, so must not leak a reference to its metadata
+  static int value = 1;
+  iot_data_t * key = iot_data_alloc_string ("meta", IOT_DATA_REF);
+  iot_data_t * ptr = iot_data_alloc_pointer (&value, NULL);
+  iot_data_set_metadata (ptr, iot_data_alloc_ui32 (1u), key);
+  iot_data_t * copy = iot_data_copy (ptr);
+  CU_ASSERT (copy == ptr)
+  CU_ASSERT (iot_data_get_metadata (copy, key) != NULL)
+  iot_data_free (copy);
+  iot_data_free (ptr);
+  iot_data_free (key);
+}
+
+static void test_array_take_empty (void)
+{
+  // Buffer taken with zero length must be freed (checked by valgrind)
+  iot_data_t * array = iot_data_alloc_array (malloc (4u), 0u, IOT_DATA_UINT32, IOT_DATA_TAKE);
+  CU_ASSERT (iot_data_array_length (array) == 0u)
+  CU_ASSERT (iot_data_address (array) == NULL)
+  iot_data_free (array);
+  array = iot_data_alloc_binary (malloc (4u), 0u, IOT_DATA_TAKE);
+  CU_ASSERT (iot_data_array_length (array) == 0u)
+  iot_data_free (array);
+  array = iot_data_alloc_array_from_base64 ("");
+  CU_ASSERT (array != NULL)
+  CU_ASSERT (iot_data_array_length (array) == 0u)
+  iot_data_free (array);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -6538,6 +6616,9 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_increment_equal", test_data_increment_equal);
   CU_add_test (suite, "data_compare_value_signed", test_data_compare_value_signed);
   CU_add_test (suite, "data_hash_threads", test_data_hash_threads);
+  CU_add_test (suite, "vector_empty_slot", test_vector_empty_slot);
+  CU_add_test (suite, "data_copy_pointer_metadata", test_data_copy_pointer_metadata);
+  CU_add_test (suite, "array_take_empty", test_array_take_empty);
 #ifdef NDEBUG
   CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
 #endif

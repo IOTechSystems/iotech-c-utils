@@ -1331,7 +1331,8 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
  * @param key  Input key
  * @param val  Input value
  * @return     Whether key-value pair has been added
- * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
+ * Note: If added, the key and value are owned by the map and cannot be reused, unless reference counted.
+ *       If not added (key already in use), ownership of key and value remains with the caller.
  */
 extern bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
