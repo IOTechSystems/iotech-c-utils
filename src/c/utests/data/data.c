@@ -15,6 +15,13 @@
 #include <float.h>
 #include <math.h>
 
+#ifndef NDEBUG
+extern bool iot_data_map_check (const iot_data_t * map);
+#define CHECK_MAP(m) CU_ASSERT (iot_data_map_check (m))
+#else
+#define CHECK_MAP(m)
+#endif
+
 
 static int suite_init (void)
 {
@@ -5396,6 +5403,295 @@ static void test_update_at (void)
   iot_data_free (map);
 }
 
+static iot_data_t * test_path_alloc (const char * key1, uint32_t index, const char * key2)
+{
+  iot_data_t * path = iot_data_alloc_list ();
+  if (key1) iot_data_list_tail_push (path, iot_data_alloc_string (key1, IOT_DATA_REF));
+  iot_data_list_tail_push (path, iot_data_alloc_ui32 (index));
+  if (key2) iot_data_list_tail_push (path, iot_data_alloc_string (key2, IOT_DATA_REF));
+  return path;
+}
+
+static void test_get_at_unmatched (void)
+{
+  iot_data_t * map = iot_data_from_json (test_config);
+  iot_data_t * path = test_path_alloc ("Missing", 0u, "Priority"); // Missing intermediate map key
+  CU_ASSERT (iot_data_get_at (map, path) == NULL)
+  iot_data_free (path);
+  path = test_path_alloc ("Topics", 0u, "Missing"); // Missing leaf map key
+  CU_ASSERT (iot_data_get_at (map, path) == NULL)
+  iot_data_free (path);
+  path = test_path_alloc ("Topics", 1u, "Priority"); // Vector index out of range
+  CU_ASSERT (iot_data_get_at (map, path) == NULL)
+  iot_data_free (path);
+  path = test_path_alloc ("Vector", 0u, "Priority"); // Path longer than nesting
+  CU_ASSERT (iot_data_get_at (map, path) == NULL)
+  iot_data_free (path);
+  path = test_path_alloc ("Vector", 1u, NULL);
+  CU_ASSERT (strcmp (iot_data_string (iot_data_get_at (map, path)), "B") == 0)
+  iot_data_free (path);
+  iot_data_free (map);
+}
+
+static void test_add_at_unmatched (void)
+{
+  iot_data_t * map = iot_data_from_json (test_config);
+  iot_data_t * path = test_path_alloc ("Missing", 0u, "Priority"); // Missing intermediate map key
+  CU_ASSERT (iot_data_add_at (map, path, iot_data_alloc_ui32 (1u)) == NULL)
+  iot_data_free (path);
+  path = test_path_alloc ("Topics", 1u, "Priority"); // Vector index out of range
+  CU_ASSERT (iot_data_add_at (map, path, iot_data_alloc_ui32 (1u)) == NULL)
+  iot_data_free (path);
+  path = test_path_alloc ("Vector", 2u, NULL); // Leaf vector index out of range
+  CU_ASSERT (iot_data_add_at (map, path, iot_data_alloc_ui32 (1u)) == NULL)
+  iot_data_free (path);
+  path = test_path_alloc ("Vector", 0u, "Priority"); // Path longer than nesting
+  CU_ASSERT (iot_data_add_at (map, path, iot_data_alloc_ui32 (1u)) == NULL)
+  iot_data_free (path);
+  path = test_path_alloc ("Topics", 0u, "New"); // Missing leaf map key added
+  iot_data_t * modified = iot_data_add_at (map, path, iot_data_alloc_ui32 (1u));
+  CU_ASSERT (modified != NULL)
+  CU_ASSERT (iot_data_ui32 (iot_data_get_at (modified, path)) == 1u)
+  CU_ASSERT (iot_data_get_at (map, path) == NULL)
+  iot_data_free (modified);
+  iot_data_free (path);
+  iot_data_free (map);
+}
+
+static void test_remove_at_unmatched (void)
+{
+  iot_data_t * map = iot_data_from_json (test_config);
+  const char * keys[] = { "Missing", "Topics", "Vector" };
+  const uint32_t indexes[] = { 0u, 1u, 0u };
+  for (uint32_t i = 0; i < 3u; i++) // Missing intermediate key, vector index out of range, path longer than nesting
+  {
+    iot_data_t * path = test_path_alloc (keys[i], indexes[i], "Priority");
+    iot_data_t * modified = iot_data_remove_at (map, path);
+    CU_ASSERT (iot_data_equal (modified, map))
+    iot_data_free (modified);
+    iot_data_free (path);
+  }
+  iot_data_t * path = test_path_alloc ("Vector", 2u, NULL); // Leaf vector index out of range
+  iot_data_t * modified = iot_data_remove_at (map, path);
+  CU_ASSERT (iot_data_equal (modified, map))
+  iot_data_free (modified);
+  iot_data_free (path);
+  iot_data_free (map);
+}
+
+static iot_data_t * count_fn (const iot_data_t * data, void * arg)
+{
+  (*((uint32_t *) arg))++;
+  return iot_data_add_ref (data);
+}
+
+static void test_update_at_unmatched (void)
+{
+  iot_data_t * map = iot_data_from_json (test_config);
+  const char * keys[] = { "Missing", "Topics", "Vector", "Topics" };
+  const uint32_t indexes[] = { 0u, 1u, 0u, 0u };
+  uint32_t count = 0u;
+  for (uint32_t i = 0; i < 4u; i++) // Missing intermediate key, vector index out of range, path longer than nesting, missing leaf key
+  {
+    iot_data_t * path = test_path_alloc (keys[i], indexes[i], (i < 3u) ? "Priority" : "Missing");
+    iot_data_t * modified = iot_data_update_at (map, path, count_fn, &count);
+    CU_ASSERT (iot_data_equal (modified, map))
+    iot_data_free (modified);
+    iot_data_free (path);
+  }
+  CU_ASSERT (count == 0u)
+  iot_data_free (map);
+}
+
+static void test_data_map_balance (void)
+{
+  // Remove black leaf from small tree
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
+  for (uint32_t i = 1u; i <= 4u; i++) iot_data_map_add (map, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
+  CHECK_MAP (map)
+  iot_data_t * key = iot_data_alloc_ui32 (1u);
+  CU_ASSERT (iot_data_map_remove (map, key))
+  iot_data_free (key);
+  CHECK_MAP (map)
+  CU_ASSERT (iot_data_map_size (map) == 3u)
+  iot_data_free (map);
+
+  // Repeated add and remove
+  map = iot_data_alloc_map (IOT_DATA_UINT32);
+  uint32_t next = 0u;
+  for (uint32_t round = 0u; round < 200u; round++)
+  {
+    for (uint32_t i = 0u; i < 50u; i++, next++) iot_data_map_add (map, iot_data_alloc_ui32 (next), iot_data_alloc_ui32 (next));
+    for (uint32_t i = 1u; i < 50u; i++)
+    {
+      key = iot_data_alloc_ui32 (next - i);
+      CU_ASSERT (iot_data_map_remove (map, key))
+      iot_data_free (key);
+    }
+    CHECK_MAP (map)
+  }
+  CU_ASSERT (iot_data_map_size (map) == 200u)
+  for (uint32_t round = 0u; round < 200u; round++)
+  {
+    key = iot_data_alloc_ui32 (round * 50u);
+    CU_ASSERT (iot_data_ui32 (iot_data_map_get (map, key)) == round * 50u)
+    iot_data_free (key);
+  }
+
+  // Remove every other key, then the remainder
+  for (uint32_t pass = 0u; pass < 2u; pass++)
+  {
+    for (uint32_t round = pass; round < 200u; round += 2u)
+    {
+      key = iot_data_alloc_ui32 (round * 50u);
+      CU_ASSERT (iot_data_map_remove (map, key))
+      iot_data_free (key);
+      CHECK_MAP (map)
+    }
+  }
+  CU_ASSERT (iot_data_map_size (map) == 0u)
+  iot_data_free (map);
+}
+
+static void test_vector_dimensions_mismatched (void)
+{
+  // Sub vectors of differing depths regarded as single dimension
+  const char * json[] = { "[[1],[[2]]]", "[[[1]],[2]]", "[[[1],[2]],[[[3]],[4]]]" };
+  const uint32_t sizes[] = { 2u, 2u, 2u };
+  for (uint32_t i = 0; i < 3u; i++)
+  {
+    uint32_t total;
+    iot_data_t * vector = iot_data_from_json (json[i]);
+    iot_data_t * dims = iot_data_vector_dimensions (vector, &total);
+    CU_ASSERT (dims != NULL)
+    CU_ASSERT (iot_data_array_length (dims) == 1u)
+    CU_ASSERT (((const uint32_t*) iot_data_address (dims))[0] == sizes[i])
+    CU_ASSERT (total == sizes[i])
+    iot_data_free (dims);
+    iot_data_free (vector);
+  }
+}
+
+static void test_binary_take_array (void)
+{
+  uint32_t len;
+  uint32_t vals[4u] = { 1u, 2u, 3u, 4u };
+
+  // Array data copied, as referenced
+  iot_data_t * array = iot_data_alloc_array (vals, 4u, IOT_DATA_UINT32, IOT_DATA_REF);
+  uint32_t * ptr = iot_data_binary_take (array, &len);
+  CU_ASSERT (len == sizeof (vals))
+  CU_ASSERT (ptr != vals)
+  CU_ASSERT (memcmp (ptr, vals, sizeof (vals)) == 0)
+  iot_data_free (array);
+  free (ptr);
+
+  // Array data copied, as ref counted
+  array = iot_data_alloc_array (vals, 4u, IOT_DATA_UINT32, IOT_DATA_COPY);
+  iot_data_add_ref (array);
+  ptr = iot_data_binary_take (array, &len);
+  CU_ASSERT (len == sizeof (vals))
+  CU_ASSERT (memcmp (ptr, vals, sizeof (vals)) == 0)
+  iot_data_free (array);
+  iot_data_free (array);
+  free (ptr);
+
+  // Array data taken, hash updated
+  array = iot_data_alloc_array (vals, 4u, IOT_DATA_UINT32, IOT_DATA_COPY);
+  iot_data_t * empty = iot_data_alloc_array (vals, 4u, IOT_DATA_UINT32, IOT_DATA_COPY);
+  free (iot_data_binary_take (empty, &len));
+  CU_ASSERT (iot_data_hash (array) != 0u)
+  ptr = iot_data_binary_take (array, &len);
+  CU_ASSERT (len == sizeof (vals))
+  CU_ASSERT (iot_data_hash (array) == iot_data_hash (empty))
+  CU_ASSERT (iot_data_equal (array, empty))
+  iot_data_free (array);
+  iot_data_free (empty);
+  free (ptr);
+}
+
+static void test_list_head_push_list_lengths (void)
+{
+  iot_data_t * dest = iot_data_alloc_list ();
+  iot_data_t * src = iot_data_alloc_list ();
+  for (uint32_t i = 0u; i < 5u; i++) iot_data_list_tail_push (dest, iot_data_alloc_ui32 (i));
+  for (uint32_t i = 10u; i < 12u; i++) iot_data_list_tail_push (src, iot_data_alloc_ui32 (i));
+  iot_data_list_head_push_list (dest, src, IOT_DATA_TAKE);
+  CU_ASSERT (iot_data_list_length (dest) == 7u)
+  CU_ASSERT (iot_data_list_length (src) == 0u)
+  iot_data_t * val = iot_data_list_head_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 10u)
+  iot_data_free (val);
+  val = iot_data_list_tail_pop (dest);
+  CU_ASSERT (iot_data_ui32 (val) == 4u)
+  iot_data_free (val);
+  CU_ASSERT (iot_data_list_length (dest) == 5u)
+  iot_data_free (src);
+  iot_data_free (dest);
+}
+
+static void test_data_increment_equal (void)
+{
+  iot_data_t * data[] = { iot_data_alloc_i8 (5), iot_data_alloc_ui16 (5u), iot_data_alloc_i32 (5), iot_data_alloc_ui64 (5u), iot_data_alloc_f64 (5.0) };
+  iot_data_t * inc[] = { iot_data_alloc_i8 (6), iot_data_alloc_ui16 (6u), iot_data_alloc_i32 (6), iot_data_alloc_ui64 (6u), iot_data_alloc_f64 (6.0) };
+  iot_data_t * orig[] = { iot_data_alloc_i8 (5), iot_data_alloc_ui16 (5u), iot_data_alloc_i32 (5), iot_data_alloc_ui64 (5u), iot_data_alloc_f64 (5.0) };
+  for (uint32_t i = 0; i < 5u; i++)
+  {
+    iot_data_increment (data[i]);
+    CU_ASSERT (iot_data_equal (data[i], inc[i]))
+    CU_ASSERT (iot_data_hash (data[i]) == iot_data_hash (inc[i]))
+    iot_data_decrement (data[i]);
+    CU_ASSERT (iot_data_equal (data[i], orig[i]))
+    iot_data_free (data[i]);
+    iot_data_free (inc[i]);
+    iot_data_free (orig[i]);
+  }
+
+  // Incremented key found in map
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_INT32);
+  iot_data_map_add (map, iot_data_alloc_i32 (6), iot_data_alloc_bool (true));
+  iot_data_t * key = iot_data_alloc_i32 (5);
+  iot_data_increment (key);
+  CU_ASSERT (iot_data_map_get (map, key) != NULL)
+  iot_data_free (key);
+  iot_data_free (map);
+}
+
+static void test_data_compare_value_signed (void)
+{
+  iot_data_t * neg8 = iot_data_alloc_i8 (-1);
+  iot_data_t * ui8 = iot_data_alloc_ui8 (5u);
+  iot_data_t * neg64 = iot_data_alloc_i64 (-1);
+  iot_data_t * max64 = iot_data_alloc_ui64 (UINT64_MAX);
+  iot_data_t * i32 = iot_data_alloc_i32 (5);
+  iot_data_t * ui32 = iot_data_alloc_ui32 (5u);
+  iot_data_t * i64 = iot_data_alloc_i64 (INT64_MAX);
+  iot_data_t * ui64 = iot_data_alloc_ui64 ((uint64_t) INT64_MAX + 1u);
+
+  CU_ASSERT (iot_data_compare_value (neg8, ui8) < 0)
+  CU_ASSERT (iot_data_compare_value (ui8, neg8) > 0)
+  CU_ASSERT (iot_data_compare_value (neg64, max64) < 0)
+  CU_ASSERT (iot_data_compare_value (max64, neg64) > 0)
+  CU_ASSERT (! iot_data_equal_value (neg64, max64))
+  CU_ASSERT (! iot_data_equal_value (max64, neg64))
+  CU_ASSERT (iot_data_equal_value (i32, ui32))
+  CU_ASSERT (iot_data_equal_value (ui32, i32))
+  CU_ASSERT (iot_data_compare_value (i32, ui8) == 0)
+  CU_ASSERT (iot_data_compare_value (i64, ui64) < 0)
+  CU_ASSERT (iot_data_compare_value (ui64, i64) > 0)
+  CU_ASSERT (iot_data_compare_value (i32, ui64) < 0)
+  CU_ASSERT (iot_data_compare_value (ui64, i32) > 0)
+
+  iot_data_free (neg8);
+  iot_data_free (ui8);
+  iot_data_free (neg64);
+  iot_data_free (max64);
+  iot_data_free (i32);
+  iot_data_free (ui32);
+  iot_data_free (i64);
+  iot_data_free (ui64);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -6127,6 +6423,16 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "add_at", test_add_at);
   CU_add_test (suite, "remove_at", test_remove_at);
   CU_add_test (suite, "update_at", test_update_at);
+  CU_add_test (suite, "get_at_unmatched", test_get_at_unmatched);
+  CU_add_test (suite, "add_at_unmatched", test_add_at_unmatched);
+  CU_add_test (suite, "remove_at_unmatched", test_remove_at_unmatched);
+  CU_add_test (suite, "update_at_unmatched", test_update_at_unmatched);
+  CU_add_test (suite, "data_map_balance", test_data_map_balance);
+  CU_add_test (suite, "vector_dimensions_mismatched", test_vector_dimensions_mismatched);
+  CU_add_test (suite, "binary_take_array", test_binary_take_array);
+  CU_add_test (suite, "data_list_head_push_list_lengths", test_list_head_push_list_lengths);
+  CU_add_test (suite, "data_increment_equal", test_data_increment_equal);
+  CU_add_test (suite, "data_compare_value_signed", test_data_compare_value_signed);
   CU_add_test (suite, "array_to_binary", test_array_to_binary);
   CU_add_test (suite, "binary_to_array", test_binary_to_array);
   CU_add_test (suite, "binary_take", test_binary_take);

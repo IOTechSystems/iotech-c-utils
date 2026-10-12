@@ -58,3 +58,10 @@
 - `iot_threadpool_alloc` now asserts that the number of threads is greater than zero
 - `iot_threadpool_alloc` now logs an error and records the actual thread count if not all threads could be created
 - Corrected printf format specifiers for fixed width integer types
+- Fixed map red/black tree not rebalancing after some deletions, which could degrade map performance to linear
+- Fixed buffer overflow in `iot_data_vector_dimensions` for vectors with sub vectors of differing depths
+- Fixed buffer overflow in `iot_data_binary_take` when copying non byte arrays
+- Fixed list length in `iot_data_list_head_push_list` when taking ownership of the source list
+- `iot_data_increment` and `iot_data_decrement` now update the data hash, so modified values compare equal and map lookups work
+- Fixed `iot_data_compare_value` and `iot_data_equal_value` for negative signed values compared with unsigned values
+- `iot_data_get_at`, `iot_data_add_at`, `iot_data_remove_at` and `iot_data_update_at` now handle paths that do not match the data (missing keys, out of range vector indexes, paths longer than nesting) rather than asserting or crashing. `iot_data_add_at` returns NULL in this case

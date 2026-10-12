@@ -2593,8 +2593,9 @@ extern uint32_t iot_data_type_size (iot_data_type_t type);
  *         Each entry in path must be of the correct type for the corresponding map or an unsigned 32 bit integer
  *         for vectors.
  * @param  data The starting data structure
- * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
- * @return The data found by traversing the path or NULL if the path does not match the supplied data
+ * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty the data parameter is returned
+ * @return The data found by traversing the path or NULL if the path does not match the supplied data (missing map key,
+ *         vector index out of range or path longer than the nesting of the data)
  *
  */
 extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_data_t * path);
@@ -2605,10 +2606,12 @@ extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_da
  *         supplied in path. Each entry in path must be of the correct type for the corresponding map or an unsigned
  *         32 bit integer for vectors.
  * @param  data The starting data structure
- * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty val is returned
  * @param  val  The value to add
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
- *         the data parameter, as will intermediate objects along the specified path.
+ *         the data parameter, as will intermediate objects along the specified path. If the path does not match
+ *         the supplied data (missing intermediate map key, vector index out of range or path longer than the nesting
+ *         of the data) NULL is returned and val is freed.
  *
  */
 extern iot_data_t * iot_data_add_at (const iot_data_t * data, const iot_data_t * path, iot_data_t * val);
@@ -2618,9 +2621,10 @@ extern iot_data_t * iot_data_add_at (const iot_data_t * data, const iot_data_t *
  *         Each entry in path must be of the correct type for the corresponding map or an unsigned 32 bit integer
  *         for vectors.
  * @param  data The starting data structure
- * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty a shallow copy of data is returned
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
- *         the data parameter, as will intermediate objects along the specified path.
+ *         the data parameter, as will intermediate objects along the specified path. If the path does not match
+ *         the supplied data nothing is removed.
  *
  */
 extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_t * path);
@@ -2631,12 +2635,14 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
  *         supplied in path. Each entry in path must be of the correct type for the corresponding map key
  *         or an unsigned 32 bit integer for vectors.
  * @param  data The starting data structure
- * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty the update function is
+ *         called with the data parameter
  * @param  fn Pointer to an update function. The function will be passed the existing value specified by the path and the arg parameter.
  *         The function must return the new value.
  * @param  arg User specified pointer supplied to the update function.
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
- *         the data parameter, as will intermediate objects along the specified path.
+ *         the data parameter, as will intermediate objects along the specified path. If the path does not match
+ *         the supplied data nothing is updated and the update function is not called.
  *
  */
 extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_t * path, iot_data_update_fn fn, void * arg);
