@@ -200,7 +200,7 @@ extern bool iot_data_map_check (const iot_data_t * map);
 static void iot_node_free (iot_data_map_t * map, iot_node_t * node);
 static iot_node_t * iot_node_next (iot_node_t * iter);
 static iot_node_t * iot_node_prev (iot_node_t * iter);
-static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value);
+static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value, bool replace);
 static iot_data_t * iot_node_remove (iot_data_map_t * map, const iot_data_t * key);
 static iot_node_t * iot_node_find (const iot_node_t * node, const iot_data_t * key);
 
@@ -2327,10 +2327,7 @@ void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val)
   assert (map->type == IOT_DATA_MAP);
   assert (key->type == map->key_type || map->key_type == IOT_DATA_MULTI);
   assert (map->element_type == val->type || map->element_type == IOT_DATA_MULTI);
-  if (iot_node_add ((iot_data_map_t*) map, key, val))
-  {
-    ((iot_data_map_t*) map)->size++;
-  }
+  iot_node_add ((iot_data_map_t*) map, key, val, true);
 }
 
 bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * val)
@@ -2339,13 +2336,8 @@ bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * v
   assert (map->type == IOT_DATA_MAP);
   assert (key->type == map->key_type || map->key_type == IOT_DATA_MULTI);
   assert (map->element_type == val->type || map->element_type == IOT_DATA_MULTI);
-  bool add = iot_node_find (((const iot_data_map_t*) map)->tree, key) == NULL;
-  if (add)
-  {
-    iot_node_add ((iot_data_map_t *) map, key, val);
-    ((iot_data_map_t *) map)->size++;
-  }
-  else
+  bool add = iot_node_add ((iot_data_map_t *) map, key, val, false);
+  if (! add)
   {
     iot_data_free (key);
     iot_data_free (val);
@@ -2917,8 +2909,13 @@ static inline iot_node_t * iot_node_start (iot_node_t * node)
 
 extern void iot_data_map_empty (iot_data_t * map)
 {
-  const iot_node_t * node;
-  while ((node = iot_node_start (((iot_data_map_t*) map)->tree))) iot_data_map_remove (map, node->key);
+  assert (map && (map->type == IOT_DATA_MAP));
+  iot_data_map_t * mp = (iot_data_map_t*) map;
+  iot_node_free (mp, mp->tree); // Free whole tree, rather than removing and rebalancing for each key
+  mp->tree = NULL;
+  mp->size = 0u;
+  map->hash = 0u;
+  iot_data_set_rehash (map, false);
 }
 
 bool iot_data_map_iter_next (iot_data_map_iter_t * iter)
@@ -3804,30 +3801,6 @@ static inline iot_node_t * iot_node_find (const iot_node_t * node, const iot_dat
   return (iot_node_t*) node;
 }
 
-static void iot_node_insert (iot_data_map_t * map, iot_data_t * key, iot_data_t * value)
-{
-  iot_node_t * node = iot_node_alloc (NULL, key, value);
-  iot_node_t * y = NULL;
-  iot_node_t * x = map->tree;
-  while (x)
-  {
-    y = x;
-    x = (iot_data_cmp (key, x->key, false) < 0) ? x->left : x->right;
-  }
-  node->parent = y;
-  if (y == NULL) map->tree = node;
-  else if (iot_data_cmp (key, y->key, false) < 0) y->left = node;
-  else y->right = node;
-
-  if (node->parent)
-  {
-    if (node->parent->parent) iot_node_insert_balance (map, node);
-  }
-  else
-  {
-    node->colour = IOT_NODE_BLACK;
-  }
-}
 
 static void iot_node_transplant (iot_data_map_t * map, iot_node_t * u, iot_node_t * v)
 {
@@ -3886,22 +3859,44 @@ static iot_data_t * iot_node_remove (iot_data_map_t * map, const iot_data_t * ke
   return val;
 }
 
-static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value)
+// Add key and value with a single tree walk, either inserting a new node or, if the key is in use and replace is set,
+// replacing the existing value. Returns whether a new node was inserted. If not, key and value are not used.
+
+static bool iot_node_add (iot_data_map_t * map, iot_data_t * key, iot_data_t * value, bool replace)
 {
-  iot_node_t * node = iot_node_find (map->tree, key);
-  if (node)
+  iot_node_t * parent = NULL;
+  iot_node_t * node = map->tree;
+  int cmp = 0;
+  while (node)
   {
-    iot_data_set_rehash (&map->base, true);
-    iot_data_free (key);
-    iot_data_free (node->value);
-    node->value = value;
+    cmp = iot_data_cmp (key, node->key, false);
+    if (cmp == 0)
+    {
+      if (replace) // Map hash only covers keys, so unchanged
+      {
+        iot_data_free (key);
+        iot_data_free (node->value);
+        node->value = value;
+      }
+      return false;
+    }
+    parent = node;
+    node = (cmp < 0) ? node->left : node->right;
+  }
+  node = iot_node_alloc (parent, key, value);
+  if (parent == NULL)
+  {
+    map->tree = node;
+    node->colour = IOT_NODE_BLACK;
   }
   else
   {
-    iot_node_insert (map, key, value);
-    iot_data_map_hash (&map->base, key);
+    if (cmp < 0) parent->left = node; else parent->right = node;
+    if (parent->parent) iot_node_insert_balance (map, node);
   }
-  return (node == NULL);
+  map->size++;
+  iot_data_map_hash (&map->base, key);
+  return true;
 }
 
 static void iot_node_free (iot_data_map_t * map, iot_node_t * node)

@@ -6285,6 +6285,71 @@ static void test_data_sanitizer_edges (void)
   iot_data_free (val);
 }
 
+#define TEST_MAP_KEYS 2000u
+
+static void test_data_map_add_replace (void)
+{
+  // Single walk add and replace must keep tree valid, size, values and hash correct
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
+  iot_data_t * expected = iot_data_alloc_map (IOT_DATA_UINT32);
+  uint32_t seed = 1u;
+  for (uint32_t i = 0; i < TEST_MAP_KEYS; i++)
+  {
+    seed = seed * 1103515245u + 12345u;
+    uint32_t key = (seed >> 8) % (TEST_MAP_KEYS / 2u); // About half adds are replacements
+    iot_data_map_add (map, iot_data_alloc_ui32 (key), iot_data_alloc_ui32 (i));
+    iot_data_map_add (expected, iot_data_alloc_ui32 (key), iot_data_alloc_ui32 (i));
+    CU_ASSERT (!iot_data_map_add_unused (map, iot_data_alloc_ui32 (key), iot_data_alloc_ui32 (0u)))
+  }
+  CHECK_MAP (map)
+  CU_ASSERT (iot_data_map_size (map) == iot_data_map_size (expected))
+  uint32_t count = 0u;
+  iot_data_map_iter_t iter;
+  iot_data_map_iter (map, &iter);
+  while (iot_data_map_iter_next (&iter))
+  {
+    const iot_data_t * val = iot_data_map_get (expected, iot_data_map_iter_key (&iter));
+    CU_ASSERT (val && iot_data_ui32 (val) == iot_data_ui32 (iot_data_map_iter_value (&iter)))
+    count++;
+  }
+  CU_ASSERT (count == iot_data_map_size (map))
+  iot_data_t * keys = iot_data_alloc_map (IOT_DATA_UINT32); // Same keys, different values
+  iot_data_map_iter (map, &iter);
+  while (iot_data_map_iter_next (&iter)) iot_data_map_add (keys, iot_data_add_ref (iot_data_map_iter_key (&iter)), iot_data_alloc_null ());
+  CU_ASSERT (iot_data_hash (map) == iot_data_hash (keys))
+  CU_ASSERT (iot_data_equal (map, expected))
+  iot_data_free (keys);
+  iot_data_free (expected);
+  iot_data_free (map);
+}
+
+static void test_data_map_empty_reuse (void)
+{
+  // Emptied map must be equivalent to a new map, and reusable
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
+  iot_data_t * empty = iot_data_alloc_map (IOT_DATA_UINT32);
+  for (uint32_t i = 0; i < TEST_MAP_KEYS; i++) iot_data_map_add (map, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
+  iot_data_map_empty (map);
+  CU_ASSERT (iot_data_map_size (map) == 0u)
+  CU_ASSERT (iot_data_hash (map) == iot_data_hash (empty))
+  CU_ASSERT (iot_data_equal (map, empty))
+  iot_data_map_iter_t iter;
+  iot_data_map_iter (map, &iter);
+  CU_ASSERT (!iot_data_map_iter_next (&iter))
+  iot_data_map_empty (map);
+  CU_ASSERT (iot_data_map_size (map) == 0u)
+  for (uint32_t i = 0; i < TEST_MAP_KEYS; i++)
+  {
+    CU_ASSERT (iot_data_map_add_unused (map, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i)))
+    iot_data_map_add (empty, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
+  }
+  CHECK_MAP (map)
+  CU_ASSERT (iot_data_map_size (map) == TEST_MAP_KEYS)
+  CU_ASSERT (iot_data_equal (map, empty))
+  iot_data_free (map);
+  iot_data_free (empty);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -7042,6 +7107,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_array_hash_all_bytes", test_data_array_hash_all_bytes);
   CU_add_test (suite, "data_float_hash", test_data_float_hash);
   CU_add_test (suite, "data_sanitizer_edges", test_data_sanitizer_edges);
+  CU_add_test (suite, "data_map_add_replace", test_data_map_add_replace);
+  CU_add_test (suite, "data_map_empty_reuse", test_data_map_empty_reuse);
 #ifdef NDEBUG
   CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
 #endif

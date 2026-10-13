@@ -85,3 +85,4 @@
 - Float data hashes now use the value bit pattern, avoiding undefined behaviour for negative, NaN and out of range values, and collisions between values with the same integer part
 - Fixed CBOR encoding of float values whose bit pattern is small (including 0.0), which were encoded as CBOR simple values or half precision floats
 - Fixed undefined behaviour found by sanitizer in empty array comparison, `iot_data_array_transform`, CBOR integer encoding and JSON parsing of INT64_MIN
+- Map add and `iot_data_map_add_unused` now use a single tree walk, and `iot_data_map_empty` frees the tree in one pass, making map inserts about 30% faster
