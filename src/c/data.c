@@ -2832,7 +2832,8 @@ static void iot_data_vector_copy_to_vector (const iot_data_t * from, iot_data_t 
       }
       else
       {
-        iot_data_t * val = iot_data_transform (element, to->element_type);
+        // Elements referenced if any type allowed, as cannot be transformed to IOT_DATA_MULTI
+        iot_data_t * val = (to->element_type == IOT_DATA_MULTI) ? iot_data_add_ref (element) : iot_data_transform (element, to->element_type);
         if (val) iot_data_vector_add (to, (*index)++, val);
       }
     }
@@ -2881,7 +2882,7 @@ iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const iot_data_
 iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type_t type, bool recurse)
 {
   assert (vector && (vector->type == IOT_DATA_VECTOR));
-  uint32_t size = iot_data_vector_elements (vector, type, recurse, true);
+  uint32_t size = iot_data_vector_elements (vector, type, recurse, type != IOT_DATA_MULTI); // For IOT_DATA_MULTI count all elements
   void * to = iot_data_alloc_typed_vector (size, type);
 
   if (size)

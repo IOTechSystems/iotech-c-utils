@@ -2549,6 +2549,7 @@ extern iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const io
 /**
  * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements
  * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty vector is returned.
+ * If type is IOT_DATA_MULTI, all elements are referenced in the new vector (flattening contained vectors if recurse set).
  *
  * @param vector  The vector to transform
  * @param type    The data element type for the created vector

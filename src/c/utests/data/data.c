@@ -6466,6 +6466,37 @@ static void test_list_push_list_take_type (void)
 }
 #endif
 
+static void test_data_vector_to_vector_multi (void)
+{
+  // Converting to IOT_DATA_MULTI keeps all elements, flattening contained vectors if recursing
+  static const struct { const char * json; bool recurse; const char * expected; } cases[] =
+  {
+    { "[1,\"a\",true,null]", false, "[1,\"a\",true,null]" }, { "[1,[2,[\"b\"]],3]", true, "[1,2,\"b\",3]" },
+    { "[1,[2,[\"b\"]],3]", false, "[1,[2,[\"b\"]],3]" }, { "[]", true, "[]" }
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * vector = iot_data_from_json (cases[i].json);
+    iot_data_t * out = iot_data_vector_to_vector (vector, IOT_DATA_MULTI, cases[i].recurse);
+    CU_ASSERT (iot_data_vector_type (out) == IOT_DATA_MULTI)
+    char * json = iot_data_to_json (out);
+    CU_ASSERT (strcmp (json, cases[i].expected) == 0)
+    free (json);
+    iot_data_free (out);
+    iot_data_free (vector);
+  }
+  // Empty slots skipped, and elements referenced rather than copied
+  iot_data_t * vector = iot_data_alloc_vector (3u);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_string ("x", IOT_DATA_COPY));
+  iot_data_vector_add (vector, 2u, iot_data_alloc_ui32 (2u));
+  iot_data_t * out = iot_data_vector_to_vector (vector, IOT_DATA_MULTI, false);
+  CU_ASSERT (iot_data_vector_size (out) == 2u)
+  CU_ASSERT (iot_data_vector_get (out, 0u) == iot_data_vector_get (vector, 0u))
+  CU_ASSERT (iot_data_vector_get (out, 1u) == iot_data_vector_get (vector, 2u))
+  iot_data_free (out);
+  iot_data_free (vector);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -7228,6 +7259,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_vector_compact_order", test_data_vector_compact_order);
   CU_add_test (suite, "data_vector_dimensions_shapes", test_data_vector_dimensions_shapes);
   CU_add_test (suite, "list_push_list_self", test_list_push_list_self);
+  CU_add_test (suite, "data_vector_to_vector_multi", test_data_vector_to_vector_multi);
 #ifndef NDEBUG
   CU_add_test (suite, "list_push_list_take_type", test_list_push_list_take_type);
 #endif
