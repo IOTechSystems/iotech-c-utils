@@ -8,6 +8,8 @@
 #include "data.h"
 #include "CUnit.h"
 #include <signal.h>
+#include <stdatomic.h>
+#include <sched.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include "iot/config.h"
@@ -6622,6 +6624,88 @@ static void test_data_hash_incremental (void)
   iot_data_free (bin);
 }
 
+#define TEST_HANDOFF_PAIRS 4u
+#define TEST_HANDOFF_MSGS 20000u
+#define TEST_HANDOFF_RING 256u
+
+typedef struct test_handoff_t
+{
+  iot_data_t * slots[TEST_HANDOFF_RING];
+  _Atomic uint32_t head;
+  _Atomic uint32_t tail;
+  uint32_t errors;
+} test_handoff_t;
+
+static void * test_handoff_producer (void * arg)
+{
+  test_handoff_t * ring = arg;
+  for (uint32_t i = 0; i < TEST_HANDOFF_MSGS; i++)
+  {
+    iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+    iot_data_string_map_add (map, "id", iot_data_alloc_ui32 (i));
+    iot_data_string_map_add (map, "name", iot_data_alloc_string_fmt ("msg-%u", i));
+    uint32_t head = atomic_load_explicit (&ring->head, memory_order_relaxed);
+    while (head - atomic_load_explicit (&ring->tail, memory_order_acquire) >= TEST_HANDOFF_RING) sched_yield ();
+    ring->slots[head % TEST_HANDOFF_RING] = map;
+    atomic_store_explicit (&ring->head, head + 1u, memory_order_release);
+  }
+  return NULL;
+}
+
+static void * test_handoff_consumer (void * arg)
+{
+  test_handoff_t * ring = arg;
+  char name[32];
+  for (uint32_t i = 0; i < TEST_HANDOFF_MSGS; i++)
+  {
+    uint32_t tail = atomic_load_explicit (&ring->tail, memory_order_relaxed);
+    while (atomic_load_explicit (&ring->head, memory_order_acquire) == tail) sched_yield ();
+    iot_data_t * map = ring->slots[tail % TEST_HANDOFF_RING];
+    snprintf (name, sizeof (name), "msg-%u", i);
+    if (iot_data_ui32 (iot_data_string_map_get (map, "id")) != i || strcmp (iot_data_string_map_get_string (map, "name"), name) != 0) ring->errors++;
+    iot_data_free (map); // Freed in different thread to allocation, so blocks move through shared cache
+    atomic_store_explicit (&ring->tail, tail + 1u, memory_order_release);
+  }
+  return NULL;
+}
+
+static void test_data_cache_handoff (void)
+{
+  // Data allocated in one thread and freed in another must remain intact (exercises shared block cache batches)
+  pthread_t threads[TEST_HANDOFF_PAIRS * 2u];
+  test_handoff_t * rings = calloc (TEST_HANDOFF_PAIRS, sizeof (test_handoff_t));
+  for (uint32_t i = 0; i < TEST_HANDOFF_PAIRS; i++)
+  {
+    pthread_create (&threads[i * 2u], NULL, test_handoff_producer, &rings[i]);
+    pthread_create (&threads[i * 2u + 1u], NULL, test_handoff_consumer, &rings[i]);
+  }
+  for (uint32_t i = 0; i < TEST_HANDOFF_PAIRS * 2u; i++) pthread_join (threads[i], NULL);
+  for (uint32_t i = 0; i < TEST_HANDOFF_PAIRS; i++) CU_ASSERT (rings[i].errors == 0u)
+  free (rings);
+}
+
+static void test_data_string_sizes (void)
+{
+  // Strings of lengths around storage boundaries (value buffer, block, heap) and format buffer must be intact
+  char str[300];
+  for (uint32_t len = 0; len < sizeof (str) - 1u; len++)
+  {
+    for (uint32_t i = 0; i < len; i++) str[i] = (char) ('a' + (i % 26u));
+    str[len] = '\0';
+    iot_data_t * copy = iot_data_alloc_string (str, IOT_DATA_COPY);
+    iot_data_t * ref = iot_data_alloc_string (str, IOT_DATA_REF);
+    iot_data_t * fmt = iot_data_alloc_string_fmt ("%s", str);
+    CU_ASSERT (strcmp (iot_data_string (copy), str) == 0)
+    CU_ASSERT (strcmp (iot_data_string (fmt), str) == 0)
+    CU_ASSERT (iot_data_hash (copy) == iot_data_hash (ref))
+    CU_ASSERT (iot_data_hash (fmt) == iot_data_hash (ref))
+    CU_ASSERT (iot_data_equal (copy, fmt))
+    iot_data_free (copy);
+    iot_data_free (ref);
+    iot_data_free (fmt);
+  }
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -7400,6 +7484,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_vector_to_vector_multi", test_data_vector_to_vector_multi);
   CU_add_test (suite, "data_hash_duplicates", test_data_hash_duplicates);
   CU_add_test (suite, "data_hash_incremental", test_data_hash_incremental);
+  CU_add_test (suite, "data_cache_handoff", test_data_cache_handoff);
+  CU_add_test (suite, "data_string_sizes", test_data_string_sizes);
 #ifndef NDEBUG
   CU_add_test (suite, "list_push_list_take_type", test_list_push_list_take_type);
 #endif

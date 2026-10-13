@@ -25,8 +25,7 @@
 #define IOT_DATA_CACHE_KEY // Return thread local cache to shared cache on (pthread) thread exit
 #endif
 #define IOT_LOCAL_CACHE_LIMIT 2048u
-#define IOT_LOCAL_LOW_WATER 64
-#define IOT_BATCH_SIZE 64
+#define IOT_BATCH_SIZE 64u
 #endif
 
 #define IOT_DATA_IS_COMPOSED_TYPE(t) ((t) >= IOT_DATA_VECTOR && (t) <= IOT_DATA_MAP)
@@ -172,6 +171,9 @@ _Static_assert (sizeof (iot_data_value_t) == IOT_DATA_BLOCK_SIZE, "size of iot_d
 _Static_assert (sizeof (iot_data_map_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_map bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_pointer_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_pointer bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_data_vector_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_vector bigger than IOT_DATA_BLOCK_SIZE");
+#ifdef IOT_DATA_CACHE
+_Static_assert (sizeof (iot_block_batch_t) <= IOT_DATA_BLOCK_SIZE, "iot_block_batch bigger than IOT_DATA_BLOCK_SIZE");
+#endif
 _Static_assert (sizeof (iot_data_array_t) <= IOT_DATA_BLOCK_SIZE, "iot_data_array bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_typecode_t) <= IOT_DATA_BLOCK_SIZE, "iot_typecode bigger than IOT_DATA_BLOCK_SIZE");
 _Static_assert (sizeof (iot_memory_block_t) <= IOT_MEMORY_BLOCK_SIZE, "iot_memory_block bigger than IOT_MEMORY_BLOCK_SIZE");
@@ -326,14 +328,18 @@ bool iot_data_alloc_heap (bool set)
 
 #ifdef IOT_DATA_CACHE
 
-static void iot_data_cache_push_chain (iot_block_t * first, iot_block_t * last)
+// The shared cache is a lock free stack of batches of blocks, so that a thread local cache is refilled or drained with
+// a single atomic operation. Blocks within a batch are linked by next, and the batch header is held in the first block.
+
+static void iot_data_cache_push_batch (iot_block_t * first, uint32_t count)
 {
-  // Push linked chain of blocks (first to last) onto shared cache
+  iot_block_batch_t * batch = (iot_block_batch_t*) first;
   iot_cache_head_t orig = atomic_load (&iot_data_cache_head);
   iot_cache_head_t next;
+  batch->count = count;
   while (true)
   {
-    last->next = orig.node;
+    batch->batch = (iot_block_batch_t*) orig.node;
     next.node = first;
     next.tag = orig.tag + 1; // There is a 2^32 (or 2^64) chance this wraps around while the thread is sleeping and cause a problem
     if (atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next)) break;
@@ -341,9 +347,45 @@ static void iot_data_cache_push_chain (iot_block_t * first, iot_block_t * last)
   }
 }
 
-static inline void iot_data_cache_push (iot_block_t * block)
+static iot_block_t * iot_data_cache_pop_batch (uint32_t * count)
 {
-  iot_data_cache_push_chain (block, block);
+  iot_cache_head_t next;
+  iot_cache_head_t orig = atomic_load (&iot_data_cache_head);
+  while (true)
+  {
+    if (orig.node == NULL) return NULL; // Cache empty
+    next.node = (iot_block_t*) ((iot_block_batch_t*) orig.node)->batch; // Block memory never freed, so always readable
+    next.tag = orig.tag + 1;
+    if (atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next)) break;
+    cpu_relax ();
+  }
+  *count = ((iot_block_batch_t*) orig.node)->count;
+  return orig.node;
+}
+
+// Split a chain of blocks after count blocks, returning the remainder of the chain
+
+static iot_block_t * iot_block_chain_split (iot_block_t * first, uint32_t count)
+{
+  iot_block_t * last = first;
+  while (--count && last->next) last = last->next;
+  iot_block_t * rest = last->next;
+  last->next = NULL;
+  return rest;
+}
+
+// Push a chain of blocks onto the shared cache, in batches
+
+static void iot_data_cache_push_chain (iot_block_t * chain, uint32_t count)
+{
+  while (chain)
+  {
+    uint32_t batch = (count < IOT_BATCH_SIZE) ? count : IOT_BATCH_SIZE;
+    iot_block_t * rest = iot_block_chain_split (chain, batch);
+    iot_data_cache_push_batch (chain, batch);
+    chain = rest;
+    count -= batch;
+  }
 }
 
 #ifdef IOT_DATA_CACHE_KEY
@@ -351,12 +393,7 @@ static void iot_local_cache_release (void * arg)
 {
   // Thread exit, return thread local cache to shared cache
   (void) arg;
-  iot_block_t * last = iot_local_cache_head;
-  if (last)
-  {
-    while (last->next) last = last->next;
-    iot_data_cache_push_chain (iot_local_cache_head, last);
-  }
+  iot_data_cache_push_chain (iot_local_cache_head, iot_local_cache_count);
   iot_local_cache_head = NULL;
   iot_local_cache_count = 0;
   iot_local_cache_registered = false; // Re-register if thread frees data in a subsequent destructor
@@ -374,20 +411,6 @@ static inline void iot_local_cache_register (void)
 #define iot_local_cache_register()
 #endif
 
-static iot_block_t * iot_data_cache_pop (void)
-{
-  iot_cache_head_t next;
-  iot_cache_head_t orig = atomic_load (&iot_data_cache_head);
-  while (true)
-  {
-    if (orig.node == NULL) return NULL; // Cache empty
-    next.node = orig.node->next;
-    next.tag = orig.tag + 1;
-    if (atomic_compare_exchange_weak (&iot_data_cache_head, &orig, next)) return orig.node;
-    cpu_relax ();
-  }
-}
-
 static void iot_data_expand_pool (void)
 {
   pthread_mutex_lock (&iot_chunk_mutex);
@@ -396,43 +419,41 @@ static void iot_data_expand_pool (void)
   chunk->next = iot_data_chunk_list;
   iot_data_chunk_list = chunk;
 
+  // Link chunk blocks into a chain, then push in batches
   uint8_t * iter = (uint8_t*) chunk->chunks;
   for (unsigned i = 0; i < IOT_DATA_BLOCKS; i++)
   {
-    iot_data_cache_push ((iot_block_t*) iter);
+    ((iot_block_t*) iter)->next = (i + 1u < IOT_DATA_BLOCKS) ? (iot_block_t*) (iter + IOT_DATA_BLOCK_SIZE) : NULL;
     iter += IOT_DATA_BLOCK_SIZE;
   }
+  iot_data_cache_push_chain ((iot_block_t*) chunk->chunks, IOT_DATA_BLOCKS);
   pthread_mutex_unlock (&iot_chunk_mutex);
 }
 
 static void iot_local_cache_refill (void)
 {
+  // Only called when thread local cache empty
+  uint32_t count = 0u;
   iot_local_cache_register ();
-  for (unsigned i = 0; i < IOT_BATCH_SIZE; i++)
+  iot_block_t * batch = iot_data_cache_pop_batch (&count);
+  if (! batch)
   {
-    iot_block_t *block = iot_data_cache_pop ();
-    if (!block)
-    {
-      iot_data_expand_pool ();
-      block = iot_data_cache_pop ();
-    }
-    if (!block) break;
-
-    block->next = iot_local_cache_head;
-    iot_local_cache_head = block;
-    iot_local_cache_count++;
+    iot_data_expand_pool ();
+    batch = iot_data_cache_pop_batch (&count);
+  }
+  if (batch)
+  {
+    iot_local_cache_head = batch;
+    iot_local_cache_count = count;
   }
 }
 
 static void iot_local_cache_drain (void)
 {
-  for (unsigned i = 0; i < IOT_BATCH_SIZE && iot_local_cache_count > IOT_LOCAL_LOW_WATER; i++)
-  {
-    iot_block_t *block = iot_local_cache_head;
-    iot_local_cache_head = block->next;
-    iot_local_cache_count--;
-    iot_data_cache_push (block);
-  }
+  iot_block_t * batch = iot_local_cache_head;
+  iot_local_cache_head = iot_block_chain_split (batch, IOT_BATCH_SIZE);
+  iot_local_cache_count -= IOT_BATCH_SIZE;
+  iot_data_cache_push_batch (batch, IOT_BATCH_SIZE);
 }
 #endif
 
@@ -2119,40 +2140,46 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
   assert (val);
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_STRING, ownership);
   data->value.str = (char*) val;
-  data->base.hash = iot_hash (val);
   if (ownership == IOT_DATA_COPY)
   {
     size_t len = strlen (val);
+    data->base.hash = iot_hash_data ((const uint8_t*) val, len); // Same as iot_hash, using known length
     if (len < IOT_DATA_VALUE_BUFF_SIZE) // If string small enough save in iot_data_value_t buffer
     {
       data->value.str = data->buff;
-      strcpy (data->buff, val);
     }
     else if (len < IOT_DATA_BLOCK_SIZE) // If less than size of block save in block
     {
       data->value.str = iot_data_alloc_block ();
-      strcpy (data->value.str, val);
       data->base.release_block = true;
     }
     else // Allocate as last resort
     {
-      data->value.str = strdup (val);
+      data->value.str = malloc (len + 1u);
     }
+    memcpy (data->value.str, val, len + 1u);
+  }
+  else
+  {
+    data->base.hash = iot_hash (val);
   }
   return (iot_data_t*) data;
 }
 
 iot_data_t * iot_data_alloc_string_fmt (const char *format, ...)
 {
+  char buff[128];
   va_list args = { 0 };
 
+  // Format into local buffer, only formatting again if result too long for buffer
   va_start (args, format);
-  const size_t n = 1u + (size_t) vsnprintf (NULL, 0, format, args);
+  const size_t n = 1u + (size_t) vsnprintf (buff, sizeof (buff), format, args);
   va_end (args);
+  if (n <= sizeof (buff)) return iot_data_alloc_string (buff, IOT_DATA_COPY); // Short strings held in data block
 
   char * str = malloc (n);
   va_start (args, format);
-  vsprintf (str, format, args);
+  vsnprintf (str, n, format, args);
   va_end (args);
   return iot_data_alloc_string (str, IOT_DATA_TAKE);
 }
@@ -3250,7 +3277,7 @@ void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, boo
   else
   {
     static const char * hex = "0123456789abcdef";
-    assert (strlen (holder->str) == (holder->size - holder->free - 1));
+    assert (holder->str[holder->size - holder->free - 1] == '\0'); // Terminator at tracked length (strlen would make appends quadratic)
     uint8_t * ptr = (uint8_t*) holder->str + holder->size - holder->free - 1;
     for (i = 0; i < len; i++)
     {

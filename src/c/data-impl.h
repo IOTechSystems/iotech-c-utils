@@ -15,6 +15,13 @@ typedef struct iot_block_t
   struct iot_block_t * next;
 } iot_block_t;
 
+typedef struct iot_block_batch_t // Header of a batch of blocks in the shared block cache, held in the first block
+{
+  iot_block_t block;                 // Links blocks within the batch
+  struct iot_block_batch_t * batch;  // Next batch in the shared cache
+  uint32_t count;                    // Number of blocks in the batch
+} iot_block_batch_t;
+
 typedef struct iot_cache_head_t
 {
   alignas(2 * sizeof(void*)) iot_block_t * node; // CMPXCHG16B can crash if struct is not 16 byte aligned on 64bit systems

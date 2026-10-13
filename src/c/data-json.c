@@ -32,7 +32,7 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
   if (inLen)
   {
     const uint8_t *data = iot_data_address (array);
-    assert (strlen (holder->str) == (holder->size - holder->free - 1));
+    assert (holder->str[holder->size - holder->free - 1] == '\0'); // Terminator at tracked length (strlen would make appends quadratic)
     size_t len = iot_b64_encodesize (inLen) - 1; /* Allow for string terminator */
     char *out;
 
@@ -44,7 +44,7 @@ static void iot_data_base64_encode (iot_string_holder_t * holder, const iot_data
     out = holder->str + holder->size - holder->free - 1;
     iot_b64_encode (data, inLen, out, holder->free + 1);
     holder->free -= len;
-    assert (strlen (holder->str) == (holder->size - holder->free - 1));
+    assert (holder->str[holder->size - holder->free - 1] == '\0'); // Terminator at tracked length (strlen would make appends quadratic)
   }
 }
 

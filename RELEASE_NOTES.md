@@ -98,3 +98,6 @@
 - List, vector and map hashes now combine element hashes by summing mixed hashes rather than xor, so duplicate elements no longer cancel (e.g. [7,7] and [] previously had the same hash). Container hash values change as a result
 - Container hashes are now updated incrementally when elements are removed or replaced (list pops and removal, vector and iterator replacement, vector resize, map take and remove), rather than requiring full recalculation
 - Boolean true now has hash 1, distinguishing it from false
+- The shared data block cache now moves blocks between threads in batches with a single atomic operation, greatly reducing contention when data is allocated and freed in different threads (up to 25x throughput with 8 thread pairs)
+- `iot_data_alloc_string_fmt` now formats once for strings under 128 bytes, and stores short results in the data block without allocation
+- Debug build JSON output no longer becomes quadratic in output size for escaped strings
