@@ -76,3 +76,9 @@
 - Fixed `iot_data_vector_resize` discarding a pending vector hash recalculation
 - Fixed list hashes after `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` with `IOT_DATA_TAKE` when the source list hash was out of date
 - Documented that a container hash is not updated when an element already in the container is modified
+- `iot_data_set_metadata` no longer sets metadata on constant data (including shared null and boolean values); the metadata is freed
+- Fixed list, array, vector and map iterator `has_next` functions returning true for empty containers, and map `has_next` after `prev`
+- `iot_data_alloc_from_string` now rejects numbers with trailing characters or out of range for the type (e.g. "12abc", "300" for UINT8, "-1" for UINT32)
+- Fixed `iot_data_cast` range checks at 64 bit integer limits and casting NaN to integer types
+- Fixed `iot_data_bounded_equal` comparing 64 bit integers via double, which treated nearby large values as equal
+- Array and binary hashes now include all data bytes rather than only the first `length` bytes

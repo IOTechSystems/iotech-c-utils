@@ -119,7 +119,7 @@ typedef struct iot_data_map_iter_t
 {
   const struct iot_data_map_t * _map; /**< Pointer to data map structure */
   struct iot_node_t * _node;          /**< Pointer to map node structure */
-  uint32_t _count;                    /**< Position counter */
+  uint32_t _count;                    /**< Unused, retained for compatibility */
 } iot_data_map_iter_t;
 
 /**
@@ -353,8 +353,8 @@ extern const char * iot_data_type_string (iot_data_type_t type);
  * @brief Set metadata for data
  *
  * Set metadata on a data item. Meta data is freed when the containing data is freed, or immediately
- * if data or key is NULL. This function should not be used with null or boolean data types as these are implemented as shared
- * constant instances.
+ * if data or key is NULL. Metadata cannot be set on constant data (including null and boolean values,
+ * which are shared constant instances), in which case the metadata is also freed immediately.
  *
  * @param  data      Pointer to data
  * @param  metadata  Pointer to metadata
@@ -1115,8 +1115,9 @@ extern iot_data_type_t iot_data_vector_type (const iot_data_t * vector);
  * The function to allocate memory of data_type type for a string value
  *
  * @param type   Datatype for memory allocation
- * @param value  String value
- * @return       Pointer to the allocated memory for valid type, NULL on error
+ * @param value  String value. For numeric types, a decimal integer or floating point number, optionally
+ *               surrounded by white space, and for integer types within the range of the type
+ * @return       Pointer to the allocated memory for valid type and value, NULL on error
  *
  */
 extern iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value);

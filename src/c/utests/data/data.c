@@ -5967,6 +5967,238 @@ static void test_data_failed_take_frees (void)
   iot_data_free (vector);
 }
 
+static void test_data_metadata_constant (void)
+{
+  // Metadata cannot be set on shared constant data, so is freed (checked by valgrind)
+  iot_data_t * key = iot_data_alloc_string ("meta", IOT_DATA_REF);
+  iot_data_t * data = iot_data_alloc_bool (true);
+  iot_data_set_metadata (data, iot_data_alloc_ui32 (1u), key);
+  CU_ASSERT (iot_data_get_metadata (data, key) == NULL)
+  CU_ASSERT (iot_data_get_metadata (iot_data_alloc_bool (true), key) == NULL)
+  data = iot_data_alloc_null ();
+  iot_data_set_metadata (data, iot_data_alloc_ui32 (1u), key);
+  CU_ASSERT (iot_data_get_metadata (data, key) == NULL)
+  iot_data_static_t sdata;
+  data = iot_data_alloc_const_ui32 (&sdata, 1u);
+  iot_data_set_metadata (data, iot_data_alloc_ui32 (1u), key);
+  CU_ASSERT (iot_data_get_metadata (data, key) == NULL)
+  data = iot_data_alloc_ui32 (1u);
+  iot_data_set_metadata (data, iot_data_alloc_ui32 (1u), key);
+  CU_ASSERT (iot_data_get_metadata (data, key) != NULL)
+  iot_data_free (data);
+  iot_data_free (key);
+}
+
+static void test_data_iter_has_next_empty (void)
+{
+  // has_next must agree with next for empty containers
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_list_iter_t list_iter;
+  iot_data_list_iter (list, &list_iter);
+  CU_ASSERT (!iot_data_list_iter_has_next (&list_iter))
+  CU_ASSERT (!iot_data_list_iter_next (&list_iter))
+
+  iot_data_t * vector = iot_data_alloc_vector (0u);
+  iot_data_vector_iter_t vector_iter;
+  iot_data_vector_iter (vector, &vector_iter);
+  CU_ASSERT (!iot_data_vector_iter_has_next (&vector_iter))
+  CU_ASSERT (!iot_data_vector_iter_next (&vector_iter))
+
+  iot_data_t * array = iot_data_alloc_array (NULL, 0u, IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_array_iter_t array_iter;
+  iot_data_array_iter (array, &array_iter);
+  CU_ASSERT (!iot_data_array_iter_has_next (&array_iter))
+  CU_ASSERT (!iot_data_array_iter_next (&array_iter))
+
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
+  iot_data_map_iter_t map_iter;
+  iot_data_map_iter (map, &map_iter);
+  CU_ASSERT (!iot_data_map_iter_has_next (&map_iter))
+  CU_ASSERT (!iot_data_map_iter_next (&map_iter))
+
+  iot_data_iter_t iter;
+  iot_data_iter (list, &iter);
+  CU_ASSERT (!iot_data_iter_has_next (&iter))
+  iot_data_iter (vector, &iter);
+  CU_ASSERT (!iot_data_iter_has_next (&iter))
+  iot_data_free (list);
+  iot_data_free (vector);
+  iot_data_free (array);
+  iot_data_free (map);
+}
+
+static void test_data_iter_has_next (void)
+{
+  // has_next must agree with next, including after prev
+  uint32_t vals[] = { 1u, 2u, 3u };
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_t * vector = iot_data_alloc_vector (3u);
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
+  iot_data_t * array = iot_data_alloc_array (vals, 3u, IOT_DATA_UINT32, IOT_DATA_REF);
+  for (uint32_t i = 0; i < 3u; i++)
+  {
+    iot_data_list_tail_push (list, iot_data_alloc_ui32 (i));
+    iot_data_vector_add (vector, i, iot_data_alloc_ui32 (i));
+    iot_data_map_add (map, iot_data_alloc_ui32 (i), iot_data_alloc_ui32 (i));
+  }
+  iot_data_list_iter_t list_iter;
+  iot_data_vector_iter_t vector_iter;
+  iot_data_array_iter_t array_iter;
+  iot_data_map_iter_t map_iter;
+  iot_data_list_iter (list, &list_iter);
+  iot_data_vector_iter (vector, &vector_iter);
+  iot_data_array_iter (array, &array_iter);
+  iot_data_map_iter (map, &map_iter);
+  for (uint32_t i = 0; i < 4u; i++)
+  {
+    bool next = iot_data_list_iter_has_next (&list_iter);
+    CU_ASSERT (iot_data_list_iter_next (&list_iter) == next)
+    next = iot_data_vector_iter_has_next (&vector_iter);
+    CU_ASSERT (iot_data_vector_iter_next (&vector_iter) == next)
+    next = iot_data_array_iter_has_next (&array_iter);
+    CU_ASSERT (iot_data_array_iter_next (&array_iter) == next)
+    next = iot_data_map_iter_has_next (&map_iter);
+    CU_ASSERT (iot_data_map_iter_next (&map_iter) == next)
+  }
+  // From last element, moving back
+  iot_data_map_iter (map, &map_iter);
+  CU_ASSERT (iot_data_map_iter_prev (&map_iter))
+  CU_ASSERT (!iot_data_map_iter_has_next (&map_iter))
+  CU_ASSERT (iot_data_map_iter_prev (&map_iter))
+  CU_ASSERT (iot_data_map_iter_has_next (&map_iter))
+  CU_ASSERT (iot_data_map_iter_next (&map_iter))
+  CU_ASSERT (!iot_data_map_iter_has_next (&map_iter))
+  CU_ASSERT (!iot_data_map_iter_next (&map_iter))
+  iot_data_free (list);
+  iot_data_free (vector);
+  iot_data_free (array);
+  iot_data_free (map);
+}
+
+static void test_data_from_string_numbers (void)
+{
+  // Numbers must be fully parsed and in range for their type
+  static const struct { iot_data_type_t type; const char * str; bool valid; } cases[] =
+  {
+    { IOT_DATA_INT32, "12abc", false }, { IOT_DATA_INT32, "abc", false }, { IOT_DATA_INT32, " 42 ", true },
+    { IOT_DATA_UINT8, "255", true }, { IOT_DATA_UINT8, "300", false }, { IOT_DATA_UINT32, "-1", false },
+    { IOT_DATA_UINT32, " -1", false }, { IOT_DATA_INT8, "-128", true }, { IOT_DATA_INT8, "-129", false },
+    { IOT_DATA_INT16, "32768", false }, { IOT_DATA_UINT16, "65535", true }, { IOT_DATA_INT32, "1.5", false },
+    { IOT_DATA_INT64, "-9223372036854775808", true }, { IOT_DATA_INT64, "9223372036854775808", false },
+    { IOT_DATA_UINT64, "18446744073709551615", true }, { IOT_DATA_UINT64, "18446744073709551616", false },
+    { IOT_DATA_FLOAT32, "1.5", true }, { IOT_DATA_FLOAT32, "1.5x", false }, { IOT_DATA_FLOAT64, "-2.5e3\n", true },
+    { IOT_DATA_FLOAT64, "x", false }
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * data = iot_data_alloc_from_string (cases[i].type, cases[i].str);
+    CU_ASSERT ((data != NULL) == cases[i].valid)
+    if (data) CU_ASSERT (iot_data_type (data) == cases[i].type)
+    iot_data_free (data);
+  }
+  iot_data_t * data = iot_data_alloc_from_string (IOT_DATA_INT8, "-128");
+  CU_ASSERT (iot_data_i8 (data) == INT8_MIN)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_UINT64, "18446744073709551615");
+  CU_ASSERT (iot_data_ui64 (data) == UINT64_MAX)
+  iot_data_free (data);
+  data = iot_data_alloc_from_string (IOT_DATA_FLOAT64, "-2.5e3\n");
+  CU_ASSERT (iot_data_f64 (data) == -2500.0)
+  iot_data_free (data);
+}
+
+static void test_data_cast_limits (void)
+{
+  // Casts must fail where the value cannot be represented by the target type
+  int64_t i64 = 0;
+  uint64_t ui64 = 0;
+  int32_t i32 = 0;
+  uint8_t ui8 = 0;
+  float f32 = 0.0f;
+  iot_data_t * data = iot_data_alloc_ui64 (9223372036854775808u);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &ui64) && ui64 == 9223372036854775808u)
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_FLOAT32, &f32))
+  iot_data_free (data);
+  data = iot_data_alloc_ui64 (INT64_MAX);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64) && i64 == INT64_MAX)
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (-1);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT64, &ui64))
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT32, &i32) && i32 == -1)
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (INT64_MIN);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64) && i64 == INT64_MIN)
+  iot_data_free (data);
+  data = iot_data_alloc_i64 (INT64_MAX);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &ui64) && ui64 == INT64_MAX)
+  iot_data_free (data);
+  data = iot_data_alloc_f64 (NAN);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_INT32, &i32))
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT64, &ui64))
+  iot_data_free (data);
+  data = iot_data_alloc_f64 (9223372036854775808.0);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_INT64, &i64))
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_UINT64, &ui64) && ui64 == 9223372036854775808u)
+  iot_data_free (data);
+  data = iot_data_alloc_f64 (18446744073709551616.0);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT64, &ui64))
+  iot_data_free (data);
+  data = iot_data_alloc_f64 (-9223372036854775808.0);
+  CU_ASSERT (iot_data_cast (data, IOT_DATA_INT64, &i64) && i64 == INT64_MIN)
+  iot_data_free (data);
+  data = iot_data_alloc_f64 (-1.0);
+  CU_ASSERT (!iot_data_cast (data, IOT_DATA_UINT8, &ui8))
+  iot_data_free (data);
+}
+
+static void test_data_bounded_equal_64 (void)
+{
+  // 64 bit integers must be compared exactly, not via double
+  iot_data_t * a = iot_data_alloc_i64 (INT64_MAX);
+  iot_data_t * b = iot_data_alloc_i64 (INT64_MAX - 1);
+  CU_ASSERT (!iot_data_bounded_equal (a, b, 0.0f))
+  CU_ASSERT (iot_data_bounded_equal (a, b, 1.0f))
+  CU_ASSERT (iot_data_bounded_equal (b, a, 1.0f))
+  CU_ASSERT (iot_data_bounded_equal (a, a, 0.0f))
+  iot_data_free (b);
+  b = iot_data_alloc_i64 (INT64_MIN);
+  CU_ASSERT (!iot_data_bounded_equal (a, b, 1.0e6f))
+  CU_ASSERT (iot_data_bounded_equal (a, b, 2.0e19f))
+  iot_data_free (a);
+  iot_data_free (b);
+  a = iot_data_alloc_ui64 (UINT64_MAX);
+  b = iot_data_alloc_ui64 (UINT64_MAX - 1);
+  CU_ASSERT (!iot_data_bounded_equal (a, b, 0.0f))
+  CU_ASSERT (iot_data_bounded_equal (b, a, 1.0f))
+  iot_data_free (a);
+  iot_data_free (b);
+  a = iot_data_alloc_i32 (10);
+  b = iot_data_alloc_i32 (12);
+  CU_ASSERT (!iot_data_bounded_equal (a, b, 1.0f))
+  CU_ASSERT (iot_data_bounded_equal (a, b, 2.0f))
+  iot_data_free (a);
+  iot_data_free (b);
+}
+
+static void test_data_array_hash_all_bytes (void)
+{
+  // Array hash must cover all elements, not just the first length bytes
+  uint32_t vals1[] = { 1u, 2u, 3u, 4u };
+  uint32_t vals2[] = { 1u, 2u, 3u, 5u };
+  iot_data_t * a1 = iot_data_alloc_array (vals1, 4u, IOT_DATA_UINT32, IOT_DATA_REF);
+  iot_data_t * a2 = iot_data_alloc_array (vals2, 4u, IOT_DATA_UINT32, IOT_DATA_REF);
+  iot_data_t * a3 = iot_data_alloc_array (vals1, 4u, IOT_DATA_UINT32, IOT_DATA_COPY);
+  CU_ASSERT (iot_data_hash (a1) != iot_data_hash (a2))
+  CU_ASSERT (iot_data_hash (a1) == iot_data_hash (a3))
+  CU_ASSERT (!iot_data_equal (a1, a2))
+  CU_ASSERT (iot_data_equal (a1, a3))
+  iot_data_free (a1);
+  iot_data_free (a2);
+  iot_data_free (a3);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -6715,6 +6947,13 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "vector_resize_hash", test_vector_resize_hash);
   CU_add_test (suite, "list_push_list_take_hash", test_list_push_list_take_hash);
   CU_add_test (suite, "data_failed_take_frees", test_data_failed_take_frees);
+  CU_add_test (suite, "data_metadata_constant", test_data_metadata_constant);
+  CU_add_test (suite, "data_iter_has_next_empty", test_data_iter_has_next_empty);
+  CU_add_test (suite, "data_iter_has_next", test_data_iter_has_next);
+  CU_add_test (suite, "data_from_string_numbers", test_data_from_string_numbers);
+  CU_add_test (suite, "data_cast_limits", test_data_cast_limits);
+  CU_add_test (suite, "data_bounded_equal_64", test_data_bounded_equal_64);
+  CU_add_test (suite, "data_array_hash_all_bytes", test_data_array_hash_all_bytes);
 #ifdef NDEBUG
   CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
 #endif
