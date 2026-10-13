@@ -88,3 +88,7 @@
 - Map add and `iot_data_map_add_unused` now use a single tree walk, and `iot_data_map_empty` frees the tree in one pass, making map inserts about 30% faster
 - `iot_data_vector_compact` now runs in a single pass (previously quadratic), and `iot_data_vector_dimensions` no longer walks vectors of values
 - Fixed `iot_data_vector_dimensions` accepting irregular vectors where an empty vector precedes a non empty one, e.g. [[],[1,2]]
+- `iot_data_from_cbor` now converts CBOR undefined values to null, and returns NULL for unsupported values rather than asserting, substituting null array elements or dropping map entries
+- `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` now duplicate the contents when a list is pushed onto itself, rather than never completing
+- `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` with `IOT_DATA_TAKE` now check element types match a typed destination list in debug builds
+- JSON, XML and CBOR output buffers now grow geometrically, reducing reallocation for large outputs

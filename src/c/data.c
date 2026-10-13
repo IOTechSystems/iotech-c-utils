@@ -37,8 +37,6 @@
 #define IOT_DATA_TYPES (IOT_DATA_INVALID + 1)
 #define IOT_MEMORY_BLOCK_SIZE 4096u
 #define IOT_VAL_BUFF_SIZE 31u
-#define IOT_STR_BUFF_DOUBLING_LIMIT 4096u
-#define IOT_STR_BUFF_INCREMENT 1024u
 
 static const char * iot_data_type_names [IOT_DATA_TYPES] = {"Int8","UInt8","Int16","UInt16","Int32","UInt32","Int64","UInt64","Float32","Float64","Bool","Pointer","String","Null","Binary","Array","Vector","List","Map","Multi", "Invalid"};
 static const uint8_t iot_data_type_sizes [IOT_DATA_BINARY + 1] = {1u, 1u, 2u, 2u, 4u, 4u, 8u, 8u, 4u, 8u, sizeof (bool), sizeof (void*), sizeof (char*), 0u, 1u };
@@ -1281,11 +1279,28 @@ bool iot_data_list_iter_remove (iot_data_list_iter_t * iter)
   return element != NULL;
 }
 
+#ifndef NDEBUG
+// Check all elements of src are valid for the element type of dest
+static bool iot_data_list_types_match (const iot_data_t * dest, const iot_data_t * src)
+{
+  if ((dest->element_type == IOT_DATA_MULTI) || (dest->element_type == src->element_type)) return true;
+  iot_data_list_iter_t iter;
+  iot_data_list_iter (src, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    if (iot_data_list_iter_value (&iter)->type != dest->element_type) return false;
+  }
+  return true;
+}
+#endif
+
 extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership)
 {
   assert (dest_list && src_list && dest_list->type == IOT_DATA_LIST && src_list->type == IOT_DATA_LIST);
+  if ((ownership == IOT_DATA_TAKE) && (dest_list == src_list)) ownership = IOT_DATA_REF; // Cannot take list into itself, so contents duplicated
   if (ownership == IOT_DATA_TAKE)
   {
+    assert (iot_data_list_types_match (dest_list, src_list));
     iot_data_list_t * dest = (iot_data_list_t*) dest_list;
     iot_data_list_t * src = (iot_data_list_t*) src_list;
     if (src->tail)
@@ -1311,8 +1326,9 @@ extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * s
   else
   {
     iot_data_list_iter_t iter;
+    uint32_t count = iot_data_list_length (src_list); // Bounded, as src_list may be dest_list
     iot_data_list_iter (src_list, &iter);
-    while (iot_data_list_iter_prev (&iter))
+    while (count-- && iot_data_list_iter_prev (&iter))
     {
       const iot_data_t * value = iot_data_list_iter_value (&iter);
       iot_data_list_tail_push (dest_list, ownership == IOT_DATA_REF ? iot_data_add_ref (value) : iot_data_copy (value));
@@ -1323,8 +1339,10 @@ extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * s
 extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership)
 {
   assert (dest_list && src_list && dest_list->type == IOT_DATA_LIST && src_list->type == IOT_DATA_LIST);
+  if ((ownership == IOT_DATA_TAKE) && (dest_list == src_list)) ownership = IOT_DATA_REF; // Cannot take list into itself, so contents duplicated
   if (ownership == IOT_DATA_TAKE)
   {
+    assert (iot_data_list_types_match (dest_list, src_list));
     iot_data_list_t * dest = (iot_data_list_t*) dest_list;
     iot_data_list_t * src = (iot_data_list_t*) src_list;
     if (src->head)
@@ -1350,8 +1368,9 @@ extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * s
   else
   {
     iot_data_list_iter_t iter;
+    uint32_t count = iot_data_list_length (src_list); // Bounded, as src_list may be dest_list
     iot_data_list_iter (src_list, &iter);
-    while (iot_data_list_iter_next (&iter))
+    while (count-- && iot_data_list_iter_next (&iter))
     {
       const iot_data_t * value = iot_data_list_iter_value (&iter);
       iot_data_list_head_push (dest_list, ownership == IOT_DATA_REF ? iot_data_add_ref (value) : iot_data_copy (value));
@@ -3156,7 +3175,7 @@ static size_t iot_data_repr_size (char c)
 
 void iot_data_holder_realloc (iot_string_holder_t * holder, size_t required)
 {
-  size_t inc = holder->size > IOT_STR_BUFF_DOUBLING_LIMIT ? IOT_STR_BUFF_INCREMENT : holder->size;
+  size_t inc = holder->size; // Double size, so number of reallocations is logarithmic in output size
   if (inc < required) inc = required;
   holder->size += inc;
   holder->free += inc;

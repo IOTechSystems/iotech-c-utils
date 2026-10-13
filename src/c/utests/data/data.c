@@ -7,6 +7,9 @@
 
 #include "data.h"
 #include "CUnit.h"
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include "iot/config.h"
 #include "iot/data.h"
 #include "iot/logger.h"
@@ -6403,6 +6406,66 @@ static void test_data_vector_dimensions_shapes (void)
   }
 }
 
+static void test_list_push_list_self (void)
+{
+  // Pushing a list onto itself duplicates its contents, for all ownership modes
+  static const iot_data_ownership_t modes[] = { IOT_DATA_REF, IOT_DATA_COPY, IOT_DATA_TAKE };
+  for (uint32_t m = 0; m < 3u; m++)
+  {
+    for (int head = 0; head < 2; head++)
+    {
+      iot_data_t * list = iot_data_alloc_list ();
+      iot_data_t * expected = iot_data_alloc_list ();
+      for (uint32_t i = 0; i < 3u; i++)
+      {
+        iot_data_list_tail_push (list, iot_data_alloc_ui32 (i));
+        iot_data_list_tail_push (expected, iot_data_alloc_ui32 (i));
+      }
+      iot_data_t * copy = iot_data_copy (expected);
+      head ? iot_data_list_head_push_list (list, list, modes[m]) : iot_data_list_tail_push_list (list, list, modes[m]);
+      head ? iot_data_list_head_push_list (expected, copy, IOT_DATA_COPY) : iot_data_list_tail_push_list (expected, copy, IOT_DATA_COPY);
+      CU_ASSERT (iot_data_list_length (list) == 6u)
+      CU_ASSERT (iot_data_hash (list) == iot_data_hash (expected))
+      CU_ASSERT (iot_data_equal (list, expected))
+      iot_data_free (copy);
+      iot_data_free (expected);
+      iot_data_free (list);
+    }
+  }
+}
+
+#ifndef NDEBUG
+static void test_list_push_list_take_type (void)
+{
+  // Taking elements of the wrong type into a typed list must assert, as for other list pushes
+  for (int head = 0; head < 2; head++)
+  {
+    fflush (NULL);
+    pid_t pid = fork ();
+    if (pid == 0)
+    {
+      iot_data_t * dest = iot_data_alloc_typed_list (IOT_DATA_UINT32);
+      iot_data_t * src = iot_data_alloc_list ();
+      iot_data_list_tail_push (src, iot_data_alloc_ui32 (1u));
+      iot_data_list_tail_push (src, iot_data_alloc_string ("wrong", IOT_DATA_REF));
+      head ? iot_data_list_head_push_list (dest, src, IOT_DATA_TAKE) : iot_data_list_tail_push_list (dest, src, IOT_DATA_TAKE);
+      _exit (0);
+    }
+    int status = 0;
+    waitpid (pid, &status, 0);
+    CU_ASSERT (WIFSIGNALED (status) && WTERMSIG (status) == SIGABRT)
+  }
+  // Matching types are accepted
+  iot_data_t * dest = iot_data_alloc_typed_list (IOT_DATA_UINT32);
+  iot_data_t * src = iot_data_alloc_list ();
+  iot_data_list_tail_push (src, iot_data_alloc_ui32 (1u));
+  iot_data_list_tail_push_list (dest, src, IOT_DATA_TAKE);
+  CU_ASSERT (iot_data_list_length (dest) == 1u)
+  iot_data_free (src);
+  iot_data_free (dest);
+}
+#endif
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -7164,6 +7227,10 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_map_empty_reuse", test_data_map_empty_reuse);
   CU_add_test (suite, "data_vector_compact_order", test_data_vector_compact_order);
   CU_add_test (suite, "data_vector_dimensions_shapes", test_data_vector_dimensions_shapes);
+  CU_add_test (suite, "list_push_list_self", test_list_push_list_self);
+#ifndef NDEBUG
+  CU_add_test (suite, "list_push_list_take_type", test_list_push_list_take_type);
+#endif
 #ifdef NDEBUG
   CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
 #endif

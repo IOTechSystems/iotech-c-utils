@@ -907,7 +907,8 @@ extern void iot_data_list_iter_push_before (const iot_data_list_iter_t * iter, i
  * @brief Push the contents of a list onto the tail of a list. Copied elements are either taken or referenced.
  * @param dest_list  List to add values to
  * @param src_list   List of values to add to tail of dest_list
- * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list.
+ *                   If dest_list and src_list are the same list, its contents are duplicated (IOT_DATA_TAKE is treated as IOT_DATA_REF)
  */
 extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
 
@@ -929,7 +930,8 @@ extern iot_data_t * iot_data_list_tail_pop (iot_data_t * list);
  * @brief Push the contents of a list onto the head of a list. Copied elements are either taken or referenced.
  * @param dest_list  List to add values to
  * @param src_list   List of values to add to head of dest_list
- * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list.
+ *                   If dest_list and src_list are the same list, its contents are duplicated (IOT_DATA_TAKE is treated as IOT_DATA_REF)
  */
 extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
 
@@ -1322,8 +1324,7 @@ extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void *
  *
  * @param map  Map to add a new key-value pair
  * @param key  Input key
- * @param val  Input value
- * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
+ * @param val  InpNote: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
  */
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
@@ -2372,11 +2373,13 @@ extern iot_data_t * iot_data_to_cbor (const iot_data_t * data);
 extern iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size);
 
 /**
- * @bief Convert cbor data to iot_data_t structure
+ * @brief Convert cbor data to iot_data_t structure
+ *
+ * CBOR undefined values are converted to null. Other CBOR simple values are not supported.
  *
  * @param data Input data
  * @param size size of input data
- * @return iot_data struct
+ * @return iot_data struct, or NULL if data is not valid CBOR or contains unsupported values
  */
 extern iot_data_t * iot_data_from_cbor (const uint8_t *data, uint32_t size);
 

@@ -365,7 +365,52 @@ static void test_data_from_xml (void)
 }
 #endif
 
+static void test_data_to_json_large (void)
+{
+  // Output well beyond initial buffer size must be complete, and parse back to the same data
+  iot_data_t * list = iot_data_alloc_list ();
+  char buf[64];
+  for (uint32_t i = 0; i < 20000u; i++)
+  {
+    snprintf (buf, sizeof (buf), "value \"%u\"\n", i); // Escaped characters change output length
+    iot_data_list_tail_push (list, iot_data_alloc_string (buf, IOT_DATA_COPY));
+  }
+  char * json = iot_data_to_json (list);
+  CU_ASSERT (strlen (json) > 100000u)
+  iot_data_t * vector = iot_data_from_json (json);
+  CU_ASSERT (iot_data_vector_size (vector) == 20000u)
+  char * json2 = iot_data_to_json (vector); // Lists and vectors are both output as JSON arrays
+  CU_ASSERT (strcmp (json, json2) == 0)
+  free (json2);
+  iot_data_free (vector);
+  free (json);
+  iot_data_free (list);
+}
+
 #ifdef IOT_HAS_CBOR
+static void test_cbor_decode_robust (void)
+{
+  // Decoding must not assert or leak on undefined, unsupported or invalid input
+  static const struct { const uint8_t bytes[8]; uint32_t len; const char * json; } cases[] =
+  {
+    { { 0xf7 }, 1, "null" }, { { 0x82, 0x01, 0xf7 }, 3, "[1,null]" }, { { 0xa1, 0x61, 0x61, 0xf7 }, 4, "{\"a\":null}" },
+    { { 0x40 }, 1, "\"\"" }, { { 0x60 }, 1, "\"\"" }, { { 0x82, 0x01 }, 2, NULL }, { { 0xf8, 0x20 }, 2, NULL },
+    { { 0x82, 0x01, 0xf8, 0x20 }, 4, NULL }, { { 0xa1, 0x01, 0xf8, 0x20 }, 4, NULL }, { { 0xa1, 0xf8, 0x20, 0x01 }, 4, NULL }
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * data = iot_data_from_cbor (cases[i].bytes, cases[i].len);
+    CU_ASSERT ((data == NULL) == (cases[i].json == NULL))
+    if (data && cases[i].json)
+    {
+      char * json = iot_data_to_json (data);
+      CU_ASSERT (strcmp (json, cases[i].json) == 0)
+      free (json);
+    }
+    iot_data_free (data);
+  }
+}
+
 static void test_cbor_float_round_trip (void)
 {
   // Floats must be encoded at full width, as zero or small values previously encoded as other types
@@ -749,7 +794,9 @@ void cunit_data_io_test_init (void)
   CU_add_test (suite, "data_to_cbor", test_data_to_cbor);
   CU_add_test (suite, "cbor_to_data", test_cbor_to_data);
   CU_add_test (suite, "cbor_float_round_trip", test_cbor_float_round_trip);
+  CU_add_test (suite, "cbor_decode_robust", test_cbor_decode_robust);
 #endif
+  CU_add_test (suite, "data_to_json_large", test_data_to_json_large);
 #ifdef IOT_HAS_YAML
   CU_add_test (suite, "data_from_yaml", test_data_from_yaml);
 #endif
