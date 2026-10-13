@@ -235,7 +235,14 @@ static inline uint32_t iot_data_hash_f64 (double val)
 static inline void iot_data_set_rehash (iot_data_t * data, bool rehash)
 {
   // Relaxed as data only modified when not shared between threads
-  atomic_store_explicit (&data->rehash, rehash, memory_order_relaxed);
+  if (rehash)
+  {
+    atomic_fetch_or_explicit (&data->refs, IOT_DATA_REHASH, memory_order_relaxed);
+  }
+  else
+  {
+    atomic_fetch_and_explicit (&data->refs, IOT_DATA_REFS_MASK, memory_order_relaxed);
+  }
 }
 
 __attribute__((constructor)) static void iot_data_init (void);
@@ -249,23 +256,28 @@ iot_data_cmp_fn iot_data_string_cmp = iot_data_string_cmp_fn;
 
 bool iot_data_get_tag (const iot_data_t * data, iot_data_tag_t tag)
 {
-  assert (data && (tag == IOT_DATA_TAG_USER1 || tag == IOT_DATA_TAG_USER2));
-  return (tag == IOT_DATA_TAG_USER1) ? data->tag1 : data->tag2;
+  assert (data && (tag == IOT_DATA_TAG_USER1 || tag == IOT_DATA_TAG_USER2 || tag == IOT_DATA_TAG_USER3));
+  return (tag == IOT_DATA_TAG_USER1) ? data->tag1 : ((tag == IOT_DATA_TAG_USER2) ? data->tag2 : data->tag3);
 }
 
 bool iot_data_set_tag (iot_data_t * data, iot_data_tag_t tag, bool value)
 {
   bool old;
-  assert (data && (tag == IOT_DATA_TAG_USER1 || tag == IOT_DATA_TAG_USER2));
+  assert (data && (tag == IOT_DATA_TAG_USER1 || tag == IOT_DATA_TAG_USER2 || tag == IOT_DATA_TAG_USER3));
   if (tag == IOT_DATA_TAG_USER1)
   {
     old = data->tag1;
     data->tag1 = value;
   }
-  else
+  else if (tag == IOT_DATA_TAG_USER2)
   {
     old = data->tag2;
     data->tag2 = value;
+  }
+  else
+  {
+    old = data->tag3;
+    data->tag3 = value;
   }
   return old;
 }
@@ -475,7 +487,7 @@ uint32_t iot_data_hash (const iot_data_t * data)
 {
   if (data == NULL) return 0u;
   iot_data_t * da = (iot_data_t*) data;
-  if (! atomic_load_explicit (&da->rehash, memory_order_acquire)) return da->hash;
+  if (! (atomic_load_explicit (&da->refs, memory_order_acquire) & IOT_DATA_REHASH)) return da->hash;
 
   // Lazy hash calculation. As data may be shared between threads, calculate locally and only then publish
   uint32_t hash = 0u;
@@ -514,10 +526,10 @@ uint32_t iot_data_hash (const iot_data_t * data)
       break;
   }
   pthread_mutex_lock (&iot_data_hash_mutex);
-  if (atomic_load_explicit (&da->rehash, memory_order_relaxed)) // Not already published by another thread
+  if (atomic_load_explicit (&da->refs, memory_order_relaxed) & IOT_DATA_REHASH) // Not already published by another thread
   {
     da->hash = hash;
-    atomic_store_explicit (&da->rehash, false, memory_order_release);
+    atomic_fetch_and_explicit (&da->refs, IOT_DATA_REFS_MASK, memory_order_release);
   }
   pthread_mutex_unlock (&iot_data_hash_mutex);
   return hash;
@@ -603,7 +615,7 @@ iot_data_t * iot_data_add_ref (const iot_data_t * data)
 
 uint32_t iot_data_ref_count (const iot_data_t * data)
 {
-  return data ? atomic_load (&data->refs) : 0u;
+  return data ? (atomic_load (&data->refs) & IOT_DATA_REFS_MASK) : 0u;
 }
 
 iot_data_type_t iot_data_name_type (const char * name)
@@ -1659,7 +1671,7 @@ const void * iot_data_address (const iot_data_t * data)
 
 void iot_data_free (iot_data_t * data)
 {
-  if (data && !data->constant && (atomic_fetch_sub (&data->refs, 1u) <= 1u))
+  if (data && !data->constant && ((atomic_fetch_sub (&data->refs, 1u) & IOT_DATA_REFS_MASK) <= 1u))
   {
     if (data->base.meta) iot_data_free (data->base.meta);
     switch (data->type)
@@ -2119,7 +2131,7 @@ extern void * iot_data_binary_take (iot_data_t * data, uint32_t * len)
   assert (data && len && (data->type == IOT_DATA_BINARY || data->type == IOT_DATA_ARRAY));
   iot_data_array_t * array = (iot_data_array_t*) data;
   *len = iot_data_array_size (data);
-  if (array->base.release && (atomic_load (&data->refs) == 1u))
+  if (array->base.release && ((atomic_load (&data->refs) & IOT_DATA_REFS_MASK) == 1u))
   {
     ret = array->data;
     array->data = NULL;

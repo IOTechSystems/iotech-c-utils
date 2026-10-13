@@ -93,3 +93,5 @@
 - `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` with `IOT_DATA_TAKE` now check element types match a typed destination list in debug builds
 - JSON, XML and CBOR output buffers now grow geometrically, reducing reallocation for large outputs
 - Fixed `iot_data_vector_to_vector` always returning an empty vector for type `IOT_DATA_MULTI`; all elements are now referenced
+- Added third user data tag `IOT_DATA_TAG_USER3`
+- Fixed 32 bit build static assertion failures caused by the size of the data header; the data rehash flag is now held in the reference count

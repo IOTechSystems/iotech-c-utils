@@ -6798,14 +6798,27 @@ static void test_data_tags (void)
   iot_data_t * data = iot_data_alloc_ui32 (0u);
   CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER1))
   CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER3))
   old = iot_data_set_tag (data, IOT_DATA_TAG_USER1, true);
   CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER1))
   CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER3))
   CU_ASSERT_FALSE (old)
   old = iot_data_set_tag (data, IOT_DATA_TAG_USER2, true);
   CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER1))
   CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER3))
   CU_ASSERT_FALSE (old)
+  old = iot_data_set_tag (data, IOT_DATA_TAG_USER3, true);
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER1))
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER3))
+  CU_ASSERT_FALSE (old)
+  old = iot_data_set_tag (data, IOT_DATA_TAG_USER3, false);
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER1))
+  CU_ASSERT (iot_data_get_tag (data, IOT_DATA_TAG_USER2))
+  CU_ASSERT_FALSE (iot_data_get_tag (data, IOT_DATA_TAG_USER3))
+  CU_ASSERT (old)
   iot_data_free (data);
 }
 
