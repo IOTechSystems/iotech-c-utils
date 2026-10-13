@@ -6706,6 +6706,26 @@ static void test_data_string_sizes (void)
   }
 }
 
+static void test_data_map_base64_multi (void)
+{
+  // Base64 conversion with IOT_DATA_MULTI keys, and refused if map element type cannot hold an array
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_MULTI);
+  iot_data_t * key = iot_data_alloc_ui32 (1u);
+  iot_data_map_add (map, iot_data_add_ref (key), iot_data_alloc_string ("SGVsbG8=", IOT_DATA_REF));
+  CU_ASSERT (iot_data_map_base64_to_array (map, key))
+  const iot_data_t * data = iot_data_map_get (map, key);
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_ARRAY)
+  CU_ASSERT (iot_data_array_length (data) == 5u && memcmp (iot_data_address (data), "Hello", 5u) == 0)
+  iot_data_free (map);
+
+  map = iot_data_alloc_typed_map (IOT_DATA_UINT32, IOT_DATA_STRING);
+  iot_data_map_add (map, iot_data_add_ref (key), iot_data_alloc_string ("SGVsbG8=", IOT_DATA_REF));
+  CU_ASSERT (!iot_data_map_base64_to_array (map, key))
+  CU_ASSERT (iot_data_type (iot_data_map_get (map, key)) == IOT_DATA_STRING)
+  iot_data_free (map);
+  iot_data_free (key);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -7486,6 +7506,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_hash_incremental", test_data_hash_incremental);
   CU_add_test (suite, "data_cache_handoff", test_data_cache_handoff);
   CU_add_test (suite, "data_string_sizes", test_data_string_sizes);
+  CU_add_test (suite, "data_map_base64_multi", test_data_map_base64_multi);
 #ifndef NDEBUG
   CU_add_test (suite, "list_push_list_take_type", test_list_push_list_take_type);
 #endif

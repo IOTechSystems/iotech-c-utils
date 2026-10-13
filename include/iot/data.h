@@ -1054,7 +1054,8 @@ extern uint32_t iot_data_array_size (const iot_data_t * array);
 /**
  * @brief  Allocate map data type
  *
- * The function to allocate a data map with a key type
+ * The function to allocate a data map with a key type. Floating point NaN keys should not be used, as NaN never
+ * compares equal so the key cannot be found.
  *
  * @param key_type  Datatype of the map keys
  * @return          Pointer to the allocated data map
@@ -1321,11 +1322,13 @@ extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void *
 /**
  * @brief Add key-value pair to a map
  *
- * The function to add a key-value pair to a map
+ * The function to add a key-value pair to a map. If the key is already in use, its value is replaced.
+ * Floating point NaN keys should not be used, as NaN never compares equal so the key cannot be found or replaced.
  *
  * @param map  Map to add a new key-value pair
  * @param key  Input key
- * @param val  InpNote: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
+ * @param val  Input value
+ * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
  */
 extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
@@ -1792,9 +1795,10 @@ extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t
  *
  * The function to decode base64 value in a map store it as a byte array for an input key
  *
- * @param map  Input map
+ * @param map  Input map. The map element type must be IOT_DATA_MULTI, as the string value is replaced by an array
  * @param key  Input key
- * @return     'true' on Success, 'false' on Failure
+ * @return     'true' on Success, 'false' on Failure (key not found, value not a valid base64 string, or map element type
+ *             not IOT_DATA_MULTI)
  */
 extern bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data_t * key);
 
@@ -2635,7 +2639,8 @@ extern iot_data_t * iot_data_add_at (const iot_data_t * data, const iot_data_t *
  * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty a shallow copy of data is returned
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
  *         the data parameter, as will intermediate objects along the specified path. If the path does not match
- *         the supplied data nothing is removed.
+ *         the supplied data nothing is removed. Removing a vector element compacts the vector copy, so later
+ *         elements move down one index, and any empty (NULL) elements in the vector copy are also removed.
  *
  */
 extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_t * path);

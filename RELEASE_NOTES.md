@@ -101,3 +101,5 @@
 - The shared data block cache now moves blocks between threads in batches with a single atomic operation, greatly reducing contention when data is allocated and freed in different threads (up to 25x throughput with 8 thread pairs)
 - `iot_data_alloc_string_fmt` now formats once for strings under 128 bytes, and stores short results in the data block without allocation
 - Debug build JSON output no longer becomes quadratic in output size for escaped strings
+- `iot_data_map_base64_to_array` now supports maps with `IOT_DATA_MULTI` keys, and returns false rather than breaking the element type of maps whose element type is not `IOT_DATA_MULTI`
+- Documented vector compaction by `iot_data_remove_at` and that NaN map keys cannot be found

@@ -2469,13 +2469,14 @@ uint32_t iot_data_map_size (const iot_data_t * map)
 bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data_t * key)
 {
   assert (map && (map->type == IOT_DATA_MAP));
-  assert (key && key->type == map->key_type);
+  assert (key && ((map->key_type == IOT_DATA_MULTI) || (key->type == map->key_type)));
 
   iot_data_t * array = NULL;
   const iot_data_map_t * mp = (const iot_data_map_t*) map;
   iot_node_t * node = iot_node_find (mp->tree, key);
 
-  if (node && (node->value->type == IOT_DATA_STRING))
+  // Value can only be replaced by an array if map element type allows it
+  if (node && (node->value->type == IOT_DATA_STRING) && (map->element_type == IOT_DATA_MULTI))
   {
     array = iot_data_alloc_array_from_base64 (((iot_data_value_t*) node->value)->value.str);
     if (array)
