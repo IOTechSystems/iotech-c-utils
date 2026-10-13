@@ -79,6 +79,13 @@ static void * cunit_pool_prio_worker (void * arg)
   return NULL;
 }
 
+static void * cunit_pool_prio_changer (void * arg)
+{
+  cunit_pool_prio_worker (arg);
+  iot_thread_current_set_priority (prio3); // Job changes its own thread priority (e.g. publishing on a higher priority bus topic)
+  return NULL;
+}
+
 static void cunit_threadpool_priority_range (void)
 {
   CU_ASSERT (prio_max > prio_min)
@@ -99,6 +106,20 @@ static void cunit_threadpool_priority (void)
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, prio2);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio3, prio3);
   iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio2, prio2);
+  iot_threadpool_wait (pool);
+  iot_threadpool_free (pool);
+}
+
+static void cunit_threadpool_priority_restore (void)
+{
+  prio1 = prio_min + 1;
+  prio3 = prio1 + 2;
+  iot_threadpool_t * pool = iot_threadpool_alloc (1u, 0u, prio_min, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_start (pool);
+  // Wait for each job, so not reordered by priority. Second job must run at its own priority, not that left by the first
+  iot_threadpool_add_work (pool, cunit_pool_prio_changer, &prio1, prio1);
+  iot_threadpool_wait (pool);
+  iot_threadpool_add_work (pool, cunit_pool_prio_worker, &prio1, prio1);
   iot_threadpool_wait (pool);
   iot_threadpool_free (pool);
 }
@@ -174,6 +195,7 @@ void cunit_threadpool_test_init (void)
   CU_pSuite suite = CU_add_suite ("threadpool", suite_init, suite_clean);
   CU_add_test (suite, "threadpool_priority_range", cunit_threadpool_priority_range);
   CU_add_test (suite, "threadpool_priority", cunit_threadpool_priority);
+  CU_add_test (suite, "threadpool_priority_restore", cunit_threadpool_priority_restore);
   CU_add_test (suite, "threadpool_block", cunit_threadpool_block);
   CU_add_test (suite, "threadpool_try_work", cunit_threadpool_try_work);
   CU_add_test (suite, "threadpool_stop_start", cunit_threadpool_stop_start);

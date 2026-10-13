@@ -114,7 +114,6 @@ static void * iot_threadpool_thread (void * arg)
   iot_threadpool_t * pool = th->pool;
   iot_component_t * comp = &pool->component;
   pthread_t tid = pthread_self ();
-  int priority = iot_thread_get_priority (tid);
   char name[IOT_PRCTL_NAME_MAX];
   iot_component_state_t state;
   bool pending_delete = false;
@@ -159,12 +158,9 @@ static void * iot_threadpool_thread (void * arg)
       pool->working++;
       if (pool->working > pool->working_max) pool->working_max = pool->working;
       iot_component_unlock (comp);
-      if ((job.priority != IOT_THREAD_NO_PRIORITY) && (job.priority != priority)) // If required, set thread priority
+      if (job.priority != IOT_THREAD_NO_PRIORITY) // If required, set thread priority (a no-op if unchanged, previous job may have changed it)
       {
-        if (iot_thread_set_priority (tid, job.priority))
-        {
-          priority = job.priority;
-        }
+        iot_thread_set_priority (tid, job.priority);
       }
       (job.function) (job.arg); // Run job
       iot_log_trace (pool->logger, "Thread %" PRIu16 " completed job %" PRIu32, th->id, job.id);

@@ -41,3 +41,5 @@
 
 - Added `iot_data_contains_infinity` and `iot_data_contains_nan` functions to determine if iot data contains floating point values which are Infinity or NaN
 - iot_data_alloc_from_string (IOT_DATA_BOOL, str) now recognizes "t"/"f", "true"/"false" and "1"/"0" and rejects (returns null) other strings
+- `iot_thread_set_priority` skips the system call when a thread sets its own priority to its current value
+- Fix `iot_threadpool_t` jobs running at the wrong priority if a previous job changed its thread's priority
