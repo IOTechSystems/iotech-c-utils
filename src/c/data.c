@@ -215,6 +215,25 @@ static _Thread_local bool iot_local_cache_registered = false;
 #endif
 static pthread_mutex_t iot_data_hash_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+// Float hashes use the bit pattern, as conversion to an integer is undefined for negative, NaN and out of range values.
+// Zero is normalised, as -0.0 and 0.0 compare equal so must have the same hash.
+
+static inline uint32_t iot_data_hash_f32 (float val)
+{
+  uint32_t bits;
+  if (val == 0.0f) val = 0.0f;
+  memcpy (&bits, &val, sizeof (bits));
+  return bits;
+}
+
+static inline uint32_t iot_data_hash_f64 (double val)
+{
+  uint64_t bits;
+  if (val == 0.0) val = 0.0;
+  memcpy (&bits, &val, sizeof (bits));
+  return (uint32_t) (bits ^ (bits >> 32));
+}
+
 static inline void iot_data_set_rehash (iot_data_t * data, bool rehash)
 {
   // Relaxed as data only modified when not shared between threads
@@ -787,7 +806,7 @@ static int iot_data_cmp (const iot_data_t * v1, const iot_data_t * v2, bool by_v
       const iot_data_array_t * a2 = (const iot_data_array_t*) v2;
       if (a1->length != a2->length) return a1->length < a2->length ? -1 : 1;
       if (v1->element_type != v2->element_type) return v1->element_type < v2->element_type ? -1 : 1;
-      return memcmp (a1->data, a2->data, a1->length * iot_data_type_sizes[a1->base.element_type]);
+      return a1->length ? memcmp (a1->data, a2->data, a1->length * iot_data_type_sizes[a1->base.element_type]) : 0; // Data NULL if empty
     }
     case IOT_DATA_VECTOR:
     {
@@ -959,8 +978,9 @@ iot_data_t * iot_data_array_transform (const iot_data_t * array, iot_data_type_t
     iot_data_array_iter (array, &iter);
     while (iot_data_array_iter_next (&iter))
     {
-      const iot_data_union_t * element = iot_data_array_iter_value (&iter);
-      if (iot_data_cast_val (*element, ptr, array->element_type, type))
+      iot_data_union_t element; // Copied as array elements are only aligned for their own type
+      memcpy (&element, iot_data_array_iter_value (&iter), iot_data_type_sizes[array->element_type]);
+      if (iot_data_cast_val (element, ptr, array->element_type, type))
       {
         ptr += esize;
         asize++;
@@ -1784,8 +1804,8 @@ static void iot_data_inc_dec (iot_data_t * data, bool inc)
     case IOT_DATA_UINT32: inc ? val->ui32++ : val->ui32--; data->hash = (uint32_t) val->ui32; break;
     case IOT_DATA_INT64: inc ? val->i64++ : val->i64--; data->hash = (uint32_t) val->i64; break;
     case IOT_DATA_UINT64: inc ? val->ui64++ : val->ui64--; data->hash = (uint32_t) val->ui64; break;
-    case IOT_DATA_FLOAT32: inc ? val->f32++ : val->f32--; data->hash = (uint32_t) val->f32; break;
-    case IOT_DATA_FLOAT64: inc ? val->f64++ : val->f64--; data->hash = (uint32_t) val->f64; break;
+    case IOT_DATA_FLOAT32: inc ? val->f32++ : val->f32--; data->hash = iot_data_hash_f32 (val->f32); break;
+    case IOT_DATA_FLOAT64: inc ? val->f64++ : val->f64--; data->hash = iot_data_hash_f64 (val->f64); break;
     default: break;
   }
 }
@@ -1947,7 +1967,7 @@ iot_data_t * iot_data_alloc_const_f32 (iot_data_static_t * data, float val)
 {
   iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_FLOAT32);
   bval->value.f32 = val;
-  bval->base.hash = val;
+  bval->base.hash = iot_data_hash_f32 (val);
   return (iot_data_t*) data;
 }
 
@@ -1955,7 +1975,7 @@ iot_data_t * iot_data_alloc_const_f64 (iot_data_static_t * data, double val)
 {
   iot_data_value_base_t * bval = iot_data_alloc_const_base (data, IOT_DATA_FLOAT64);
   bval->value.f64 = val;
-  bval->base.hash = val;
+  bval->base.hash = iot_data_hash_f64 (val);
   return (iot_data_t*) data;
 }
 
@@ -1963,7 +1983,7 @@ iot_data_t * iot_data_alloc_f32 (float val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT32, false);
   data->value.f32 = val;
-  data->base.hash = (uint32_t) val;
+  data->base.hash = iot_data_hash_f32 (val);
   return (iot_data_t*) data;
 }
 
@@ -1971,7 +1991,7 @@ iot_data_t * iot_data_alloc_f64 (double val)
 {
   iot_data_value_t * data = iot_data_value_alloc (IOT_DATA_FLOAT64, false);
   data->value.f64 = val;
-  data->base.hash = (uint32_t) val;
+  data->base.hash = iot_data_hash_f64 (val);
   return (iot_data_t*) data;
 }
 

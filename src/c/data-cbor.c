@@ -38,6 +38,30 @@ static void iot_data_cbor_write_bytes (iot_cbor_holder_t * holder, const void *d
   holder->index += length;
 }
 
+// Floats always written at full width, as the shortest integer encoding of the bits is not a valid float encoding
+
+static void iot_data_cbor_write_f32 (iot_cbor_holder_t * holder, float value)
+{
+  uint32_t bits;
+  memcpy (&bits, &value, sizeof (bits));
+  bits = htobe32 (bits);
+  iot_cbor_holder_check_size (holder, 5);
+  holder->data[holder->index++] = 0xfa;
+  memcpy (holder->data + holder->index, &bits, sizeof (bits));
+  holder->index += 4;
+}
+
+static void iot_data_cbor_write_f64 (iot_cbor_holder_t * holder, double value)
+{
+  uint64_t bits;
+  memcpy (&bits, &value, sizeof (bits));
+  bits = htobe64 (bits);
+  iot_cbor_holder_check_size (holder, 9);
+  holder->data[holder->index++] = 0xfb;
+  memcpy (holder->data + holder->index, &bits, sizeof (bits));
+  holder->index += 8;
+}
+
 static void iot_data_cbor_write_uint (iot_cbor_holder_t * holder, uint64_t value, uint8_t tag)
 {
   if (value < 0x18)
@@ -55,21 +79,24 @@ static void iot_data_cbor_write_uint (iot_cbor_holder_t * holder, uint64_t value
   {
     iot_cbor_holder_check_size (holder, 3);
     holder->data[holder->index++] = 0x19 + tag;
-    *(uint16_t *)(holder->data + holder->index) = htobe16 (value);
+    uint16_t be = htobe16 (value);
+    memcpy (holder->data + holder->index, &be, sizeof (be)); // Buffer position may be unaligned
     holder->index += 2;
   }
   else if (value <= UINT32_MAX)
   {
     iot_cbor_holder_check_size (holder, 5);
     holder->data[holder->index++] = 0x1a + tag;
-    *(uint32_t *)(holder->data + holder->index) = htobe32 (value);
+    uint32_t be = htobe32 (value);
+    memcpy (holder->data + holder->index, &be, sizeof (be));
     holder->index += 4;
   }
   else
   {
     iot_cbor_holder_check_size (holder, 9);
     holder->data[holder->index++] = 0x1b + tag;
-    *(uint64_t *)(holder->data + holder->index) = htobe64 (value);
+    uint64_t be = htobe64 (value);
+    memcpy (holder->data + holder->index, &be, sizeof (be));
     holder->index += 8;
   }
 }
@@ -91,8 +118,8 @@ static void iot_data_dump_cbor_ptr (iot_cbor_holder_t * holder, const void * ptr
     case IOT_DATA_UINT32: iot_data_cbor_write_uint (holder, *(const uint32_t *) ptr, 0); break;
     case IOT_DATA_INT64: iot_data_cbor_write_int (holder, *(const int64_t *) ptr); break;
     case IOT_DATA_UINT64: iot_data_cbor_write_uint (holder, *(const uint64_t *) ptr, 0); break;
-    case IOT_DATA_FLOAT32: iot_data_cbor_write_uint (holder, *(const uint32_t *) ptr, 0xe0); break;
-    case IOT_DATA_FLOAT64: iot_data_cbor_write_uint (holder, *(const uint64_t *) ptr, 0xe0); break;
+    case IOT_DATA_FLOAT32: iot_data_cbor_write_f32 (holder, *(const float *) ptr); break;
+    case IOT_DATA_FLOAT64: iot_data_cbor_write_f64 (holder, *(const double *) ptr); break;
     case IOT_DATA_NULL:
       iot_cbor_holder_check_size (holder, 1); holder->data[holder->index++] = 0xf6; break;
     default:
@@ -129,21 +156,11 @@ static void iot_data_dump_cbor (iot_cbor_holder_t * holder, const iot_data_t * d
       iot_data_cbor_write_int (holder, iot_data_i64 (data));
       break;
     case IOT_DATA_FLOAT32:
-    {
-      uint32_t v;
-      float f = iot_data_f32 (data);
-      memcpy (&v, &f, sizeof (v));
-      iot_data_cbor_write_uint (holder, v, 0xe0);
+      iot_data_cbor_write_f32 (holder, iot_data_f32 (data));
       break;
-    }
     case IOT_DATA_FLOAT64:
-    {
-      uint64_t v;
-      double d = iot_data_f64 (data);
-      memcpy (&v, &d, sizeof (v));
-      iot_data_cbor_write_uint (holder, v, 0xe0);
+      iot_data_cbor_write_f64 (holder, iot_data_f64 (data));
       break;
-    }
     case IOT_DATA_BOOL:
       iot_cbor_holder_check_size (holder, 1);
       holder->data[holder->index++] = iot_data_bool (data) ? 0xf5 : 0xf4;

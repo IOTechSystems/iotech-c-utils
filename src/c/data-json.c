@@ -280,7 +280,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_tok_t ** tokens, cons
         errno = 0;
         unsigned long long int temp = strtoull (str + 1, NULL, 10); // Skip '-' for strtoull
         if (errno == ERANGE || temp > (unsigned long long) INT64_MAX + 1) ret = NULL;
-        else ret = iot_data_alloc_i64 (-(int64_t)temp); // add the '-' back
+        else ret = iot_data_alloc_i64 ((temp > INT64_MAX) ? INT64_MIN : -(int64_t) temp); // add the '-' back, INT64_MIN cannot be negated
       }
       else
       {

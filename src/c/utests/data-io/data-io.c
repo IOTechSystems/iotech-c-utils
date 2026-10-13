@@ -366,6 +366,39 @@ static void test_data_from_xml (void)
 #endif
 
 #ifdef IOT_HAS_CBOR
+static void test_cbor_float_round_trip (void)
+{
+  // Floats must be encoded at full width, as zero or small values previously encoded as other types
+  static const double vals[] = { 0.0, -0.0, 1.0e-320, 1.5, -2.25e10 };
+  for (uint32_t i = 0; i < sizeof (vals) / sizeof (vals[0]); i++)
+  {
+    iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+    iot_data_string_map_add (map, "f32", iot_data_alloc_f32 ((float) vals[i]));
+    iot_data_string_map_add (map, "f64", iot_data_alloc_f64 (vals[i]));
+    float farr[] = { (float) vals[i] };
+    double darr[] = { vals[i] };
+    iot_data_string_map_add (map, "a32", iot_data_alloc_array (farr, 1u, IOT_DATA_FLOAT32, IOT_DATA_COPY));
+    iot_data_string_map_add (map, "a64", iot_data_alloc_array (darr, 1u, IOT_DATA_FLOAT64, IOT_DATA_COPY));
+    iot_data_t * cbor = iot_data_to_cbor (map);
+    iot_data_t * res = iot_data_from_cbor (iot_data_address (cbor), iot_data_array_length (cbor));
+    CU_ASSERT (res != NULL)
+    if (res)
+    {
+      const iot_data_t * f32 = iot_data_string_map_get (res, "f32");
+      const iot_data_t * f64 = iot_data_string_map_get (res, "f64");
+      CU_ASSERT (iot_data_type (f32) == IOT_DATA_FLOAT32 && iot_data_f32 (f32) == (float) vals[i])
+      CU_ASSERT (iot_data_type (f64) == IOT_DATA_FLOAT64 && iot_data_f64 (f64) == vals[i])
+      const iot_data_t * a32 = iot_data_string_map_get (res, "a32");
+      const iot_data_t * a64 = iot_data_string_map_get (res, "a64");
+      CU_ASSERT (iot_data_type (a32) == IOT_DATA_VECTOR && iot_data_f32 (iot_data_vector_get (a32, 0u)) == (float) vals[i])
+      CU_ASSERT (iot_data_type (a64) == IOT_DATA_VECTOR && iot_data_f64 (iot_data_vector_get (a64, 0u)) == vals[i])
+    }
+    iot_data_free (res);
+    iot_data_free (cbor);
+    iot_data_free (map);
+  }
+}
+
 static void test_data_to_cbor (void)
 {
   iot_data_t *map = test_sample_map1 ();
@@ -715,6 +748,7 @@ void cunit_data_io_test_init (void)
 #ifdef IOT_HAS_CBOR
   CU_add_test (suite, "data_to_cbor", test_data_to_cbor);
   CU_add_test (suite, "cbor_to_data", test_cbor_to_data);
+  CU_add_test (suite, "cbor_float_round_trip", test_cbor_float_round_trip);
 #endif
 #ifdef IOT_HAS_YAML
   CU_add_test (suite, "data_from_yaml", test_data_from_yaml);

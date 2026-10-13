@@ -6199,6 +6199,92 @@ static void test_data_array_hash_all_bytes (void)
   iot_data_free (a3);
 }
 
+static void test_data_float_hash (void)
+{
+  // Float hashes must be defined for all values, equal for equal values and distinguish fractional values
+  static const double vals[] = { -1.5, 1.1, 1.9, -1.0e300, 1.0e300, 0.0, -0.0, INFINITY, -INFINITY };
+  for (uint32_t i = 0; i < sizeof (vals) / sizeof (vals[0]); i++)
+  {
+    iot_data_static_t s32, s64;
+    iot_data_t * f32 = iot_data_alloc_f32 ((float) vals[i]);
+    iot_data_t * f64 = iot_data_alloc_f64 (vals[i]);
+    CU_ASSERT (iot_data_hash (f32) == iot_data_hash (iot_data_alloc_const_f32 (&s32, (float) vals[i])))
+    CU_ASSERT (iot_data_equal (f32, iot_data_alloc_const_f32 (&s32, (float) vals[i])))
+    CU_ASSERT (iot_data_hash (f64) == iot_data_hash (iot_data_alloc_const_f64 (&s64, vals[i])))
+    CU_ASSERT (iot_data_equal (f64, iot_data_alloc_const_f64 (&s64, vals[i])))
+    iot_data_free (f32);
+    iot_data_free (f64);
+  }
+  iot_data_t * a = iot_data_alloc_f64 (1.1);
+  iot_data_t * b = iot_data_alloc_f64 (1.9);
+  CU_ASSERT (iot_data_hash (a) != iot_data_hash (b))
+  iot_data_free (a);
+  iot_data_free (b);
+  a = iot_data_alloc_f32 (1.1f);
+  b = iot_data_alloc_f32 (1.9f);
+  CU_ASSERT (iot_data_hash (a) != iot_data_hash (b))
+  iot_data_free (a);
+  iot_data_free (b);
+
+  // Negative and positive zero compare equal so must hash the same
+  a = iot_data_alloc_f64 (-0.0);
+  b = iot_data_alloc_f64 (0.0);
+  CU_ASSERT (iot_data_hash (a) == iot_data_hash (b))
+  CU_ASSERT (iot_data_equal (a, b))
+  iot_data_free (a);
+  iot_data_free (b);
+  a = iot_data_alloc_f32 (-0.0f);
+  b = iot_data_alloc_f32 (0.0f);
+  CU_ASSERT (iot_data_equal (a, b))
+  iot_data_free (a);
+  iot_data_free (b);
+
+  // Increment and decrement keep hash consistent with value
+  a = iot_data_alloc_f64 (-1.5);
+  iot_data_increment (a);
+  b = iot_data_alloc_f64 (-0.5);
+  CU_ASSERT (iot_data_equal (a, b))
+  iot_data_free (a);
+  iot_data_free (b);
+  a = iot_data_alloc_f32 (0.5f);
+  iot_data_decrement (a);
+  b = iot_data_alloc_f32 (-0.5f);
+  CU_ASSERT (iot_data_equal (a, b))
+  iot_data_free (a);
+  iot_data_free (b);
+
+  a = iot_data_alloc_f64 (NAN); // Hash must be defined (checked by undefined behaviour sanitizer)
+  b = iot_data_alloc_f32 (NAN);
+  iot_data_hash (a);
+  iot_data_hash (b);
+  iot_data_free (a);
+  iot_data_free (b);
+}
+
+static void test_data_sanitizer_edges (void)
+{
+  // Paths previously relying on undefined behaviour (checked by undefined behaviour sanitizer)
+  iot_data_t * a1 = iot_data_alloc_array (NULL, 0u, IOT_DATA_UINT32, IOT_DATA_REF);
+  iot_data_t * a2 = iot_data_alloc_array (NULL, 0u, IOT_DATA_UINT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_equal (a1, a2))
+  CU_ASSERT (iot_data_compare (a1, a2) == 0)
+  iot_data_free (a1);
+  iot_data_free (a2);
+
+  uint8_t bytes[] = { 1u, 2u, 255u };
+  a1 = iot_data_alloc_array (bytes, 3u, IOT_DATA_UINT8, IOT_DATA_REF);
+  a2 = iot_data_array_transform (a1, IOT_DATA_UINT32);
+  CU_ASSERT (iot_data_array_length (a2) == 3u)
+  CU_ASSERT (*(const uint32_t*) iot_data_array_get (a2, 2u) == 255u)
+  iot_data_free (a1);
+  iot_data_free (a2);
+
+  iot_data_t * val = iot_data_from_json ("-9223372036854775808");
+  CU_ASSERT (iot_data_type (val) == IOT_DATA_INT64)
+  CU_ASSERT (iot_data_i64 (val) == INT64_MIN)
+  iot_data_free (val);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -6954,6 +7040,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_cast_limits", test_data_cast_limits);
   CU_add_test (suite, "data_bounded_equal_64", test_data_bounded_equal_64);
   CU_add_test (suite, "data_array_hash_all_bytes", test_data_array_hash_all_bytes);
+  CU_add_test (suite, "data_float_hash", test_data_float_hash);
+  CU_add_test (suite, "data_sanitizer_edges", test_data_sanitizer_edges);
 #ifdef NDEBUG
   CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
 #endif
