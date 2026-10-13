@@ -23,15 +23,15 @@ static iot_data_t * iot_data_value_from_yaml (const yaml_event_t *event)
   {
     if (strcmp (val, "true") == 0)
     {
-      ret = iot_data_alloc_bool (true);
+      ret = iot_data_true;
     }
     else if (strcmp (val, "false") == 0)
     {
-      ret = iot_data_alloc_bool (false);
+      ret = iot_data_false;
     }
     else if (strcmp (val, "null") == 0)
     {
-      ret = iot_data_alloc_null ();
+      ret = iot_data_null;
     }
     else if (*val)
     {

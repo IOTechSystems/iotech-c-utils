@@ -47,10 +47,10 @@ static iot_data_t *test_sample_map1 (void)
   val = iot_data_alloc_string ("abc\t\n123\x0b\x1fxyz", IOT_DATA_REF);
   iot_data_map_add (map, key, val);
   key = iot_data_alloc_string ("Boolean", IOT_DATA_REF);
-  val = iot_data_alloc_bool (true);
+  val = iot_data_true;
   iot_data_map_add (map, key, val);
   key = iot_data_alloc_string ("NULL", IOT_DATA_REF);
-  val = iot_data_alloc_null ();
+  val = iot_data_null;
   iot_data_map_add (map, key, val);
   return map;
 }
@@ -106,7 +106,7 @@ static void test_data_to_json (void)
   free (json);
 
   char buff[32];
-  val = iot_data_alloc_bool (true);
+  val = iot_data_true;
   json = iot_data_to_json_with_buffer (val, buff, sizeof (buff));
   CU_ASSERT (json == buff)
   CU_ASSERT (strcmp (buff, "true") == 0)
@@ -643,7 +643,7 @@ static void test_cbor_to_data (void)
   iot_data_free (from_cbor);
 
   //bool
-  iot_data_t *bool_value = iot_data_alloc_bool (true);
+  iot_data_t *bool_value = iot_data_true;
   cbor = iot_data_to_cbor (bool_value);
   CU_ASSERT_PTR_NOT_NULL_FATAL (cbor);
   from_cbor = iot_data_from_iot_cbor (cbor);

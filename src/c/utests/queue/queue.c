@@ -52,7 +52,7 @@ static void test_run_single (void)
   }
   size = iot_queue_size (q);
   CU_ASSERT (size == SINGLE_SIZE)
-  ok = iot_queue_try_enqueue (q, iot_data_alloc_null ());
+  ok = iot_queue_try_enqueue (q, iot_data_null);
   CU_ASSERT (ok == false)
   e = iot_queue_dequeue (q);
   CU_ASSERT (e != NULL)

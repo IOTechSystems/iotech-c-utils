@@ -114,6 +114,15 @@ typedef struct iot_data_consts_t
 extern iot_data_consts_t iot_data_consts;
 
 /**
+ * Shared constant boolean true, boolean false and null values, as returned by iot_data_alloc_bool and
+ * iot_data_alloc_null. These are held in read only memory and must not be modified (by setting tags or metadata).
+ * They are not reference counted, so need not be freed, but may be passed to iot_data_free and iot_data_add_ref.
+ */
+extern iot_data_t * const iot_data_true;  /**< Shared constant boolean true value */
+extern iot_data_t * const iot_data_false; /**< Shared constant boolean false value */
+extern iot_data_t * const iot_data_null;  /**< Shared constant null value */
+
+/**
  * Type for data map iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_map_iter_t
@@ -354,8 +363,8 @@ extern const char * iot_data_type_string (iot_data_type_t type);
  * @brief Set metadata for data
  *
  * Set metadata on a data item. Meta data is freed when the containing data is freed, or immediately
- * if data or key is NULL. Metadata cannot be set on constant data (including null and boolean values,
- * which are shared constant instances), in which case the metadata is also freed immediately.
+ * if data or key is NULL. Metadata cannot be set on constant data, in which case the metadata is also freed immediately.
+ * Must not be used with null or boolean values, as these are shared constant instances (asserted in debug builds).
  *
  * @param  data      Pointer to data
  * @param  metadata  Pointer to metadata
@@ -610,7 +619,7 @@ extern iot_data_t * iot_data_alloc_f64 (double val);
  * The function to allocate memory for data_type bool
  *
  * @param val  Datavalue
- * @return     Pointer to the allocated memory
+ * @return     The shared constant iot_data_true or iot_data_false value
  */
 extern iot_data_t * iot_data_alloc_bool (bool val);
 
@@ -619,7 +628,7 @@ extern iot_data_t * iot_data_alloc_bool (bool val);
  *
  * The function to allocate memory for data_type null
  *
- * @return     Pointer to the allocated memory
+ * @return     The shared constant iot_data_null value
  */
 extern iot_data_t * iot_data_alloc_null (void);
 
@@ -2673,7 +2682,8 @@ extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_
 extern bool iot_data_get_tag (const iot_data_t * data, iot_data_tag_t tag);
 
 /**
- * @brief Sets the value of a boolean user tag
+ * @brief Sets the value of a boolean user tag. Must not be used with null or boolean values, as these are shared
+ *        constant instances (asserted in debug builds).
  *
  * @param data   The data instance
  * @param tag    The tag identifier (three supported)

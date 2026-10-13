@@ -191,9 +191,23 @@ _Static_assert (sizeof (unsigned) == sizeof (uint32_t) || sizeof (unsigned) == s
 
 /* Static values for boolean and null types */
 
-static iot_data_value_base_t iot_data_bool_true = { .value.bl = true, .base.hash = 1u, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
-static iot_data_value_base_t iot_data_bool_false = { .value.bl = false, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
-static iot_data_value_base_t iot_data_null = { .base.type = IOT_DATA_NULL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+// Shared instances are const, so held in read only memory and cannot be modified (any write faults)
+
+static const iot_data_value_base_t iot_data_true_value = { .value.bl = true, .base.hash = 1u, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+static const iot_data_value_base_t iot_data_false_value = { .value.bl = false, .base.type = IOT_DATA_BOOL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+static const iot_data_value_base_t iot_data_null_value = { .base.type = IOT_DATA_NULL, .base.element_type = IOT_DATA_INVALID, .base.key_type = IOT_DATA_INVALID, .base.constant = true };
+
+iot_data_t * const iot_data_true = (iot_data_t*) &iot_data_true_value.base;
+iot_data_t * const iot_data_false = (iot_data_t*) &iot_data_false_value.base;
+iot_data_t * const iot_data_null = (iot_data_t*) &iot_data_null_value.base;
+
+#ifndef NDEBUG
+// Whether data is one of the shared true, false and null instances, which must never be modified
+static inline bool iot_data_is_shared (const iot_data_t * data)
+{
+  return (data == iot_data_true) || (data == iot_data_false) || (data == iot_data_null);
+}
+#endif
 
 extern void iot_data_map_dump (iot_data_t * map);
 extern bool iot_data_map_check (const iot_data_t * map);
@@ -301,6 +315,7 @@ bool iot_data_set_tag (iot_data_t * data, iot_data_tag_t tag, bool value)
 {
   bool old;
   assert (data && (tag == IOT_DATA_TAG_USER1 || tag == IOT_DATA_TAG_USER2 || tag == IOT_DATA_TAG_USER3));
+  assert (! iot_data_is_shared (data)); // Shared true, false and null instances cannot be modified
   if (tag == IOT_DATA_TAG_USER1)
   {
     old = data->tag1;
@@ -702,6 +717,7 @@ const char * iot_data_type_name (const iot_data_t * data)
 
 extern void iot_data_set_metadata (iot_data_t * data, iot_data_t * metadata, const iot_data_t * key)
 {
+  assert (! (data && iot_data_is_shared (data))); // Shared true, false and null instances cannot be modified
   if (data && metadata && key && !data->constant) // Constant data may be shared and is never freed
   {
     if (data->base.meta == NULL) data->base.meta = iot_data_alloc_map (IOT_DATA_MULTI);
@@ -1867,11 +1883,11 @@ iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * valu
   {
     if (strcasecmp (value, "t") == 0 || strcasecmp (value, "true") == 0 || strcmp (value, "1") == 0)
     {
-      return iot_data_alloc_bool (true);
+      return iot_data_true;
     }
     else if (strcasecmp (value, "f") == 0 || strcasecmp (value, "false") == 0 || strcmp (value, "0") == 0)
     {
-      return iot_data_alloc_bool (false);
+      return iot_data_false;
     }
     else
     {
@@ -2089,12 +2105,12 @@ iot_data_t * iot_data_alloc_f64 (double val)
 
 iot_data_t * iot_data_alloc_bool (bool val)
 {
-  return val ? &iot_data_bool_true.base : &iot_data_bool_false.base;
+  return val ? iot_data_true : iot_data_false; // Shared read only instances
 }
 
 iot_data_t * iot_data_alloc_null (void)
 {
-  return &iot_data_null.base;
+  return iot_data_null; // Shared read only instance
 }
 
 iot_data_t * iot_data_alloc_uuid_string (void)

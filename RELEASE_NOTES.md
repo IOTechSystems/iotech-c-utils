@@ -103,3 +103,5 @@
 - Debug build JSON output no longer becomes quadratic in output size for escaped strings
 - `iot_data_map_base64_to_array` now supports maps with `IOT_DATA_MULTI` keys, and returns false rather than breaking the element type of maps whose element type is not `IOT_DATA_MULTI`
 - Documented vector compaction by `iot_data_remove_at` and that NaN map keys cannot be found
+- Added exported constants `iot_data_true`, `iot_data_false` and `iot_data_null` for the shared boolean and null values, which can be used directly instead of `iot_data_alloc_bool` and `iot_data_alloc_null`
+- The shared boolean and null values are now held in read only memory, and setting tags or metadata on them asserts in debug builds

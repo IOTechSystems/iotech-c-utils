@@ -312,7 +312,7 @@ static iot_data_t *cbor_negint_to_iot_data (const cbor_item_t *item)
     case CBOR_INT_64:
     {
       uint64_t raw = cbor_get_uint64 (item);
-      return (raw <= INT64_MAX) ? iot_data_alloc_i64 (-1 - (int64_t) raw) : iot_data_alloc_null ();
+      return (raw <= INT64_MAX) ? iot_data_alloc_i64 (-1 - (int64_t) raw) : iot_data_null;
     }
   }
   assert (false);
@@ -471,7 +471,7 @@ static iot_data_t *cbor_float_ctrl_to_iot_data (const cbor_item_t *item)
   if (cbor_float_ctrl_is_ctrl (item))
   {
     if (cbor_is_bool (item)) return iot_data_alloc_bool (cbor_get_bool (item));
-    if (cbor_is_null (item) || cbor_is_undef (item)) return iot_data_alloc_null ();
+    if (cbor_is_null (item) || cbor_is_undef (item)) return iot_data_null;
     return NULL; // Other simple values not supported
   }
 

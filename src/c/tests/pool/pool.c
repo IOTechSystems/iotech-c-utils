@@ -74,7 +74,7 @@ int main (int argc, char ** argv)
     {
       node_t * node = &nodes[j];
       pthread_mutex_lock (&node->mutex);
-      iot_data_list_tail_push (node->request_list, iot_data_alloc_null ());
+      iot_data_list_tail_push (node->request_list, iot_data_null);
       if (iot_data_list_length (node->request_list) == 1) //first item
       {
         iot_threadpool_add_work (pool, node_process_request, node, -1);

@@ -61,7 +61,7 @@ int main (void)
   value = iot_data_alloc_f64 (666666.6);
   iot_data_map_add (map2, key, value);
   key = iot_data_alloc_string ("Bool", IOT_DATA_REF);
-  value = iot_data_alloc_bool (true);
+  value = iot_data_true;
   iot_data_map_add (map2, key, value);
   key = iot_data_alloc_string ("String", IOT_DATA_REF);
   value = iot_data_alloc_string ("Hi", IOT_DATA_REF);
