@@ -21,8 +21,11 @@
 #ifndef NDEBUG
 extern bool iot_data_map_check (const iot_data_t * map);
 #define CHECK_MAP(m) CU_ASSERT (iot_data_map_check (m))
+extern bool iot_data_hash_check (const iot_data_t * data);
+#define CHECK_HASH(d) CU_ASSERT (iot_data_hash_check (d))
 #else
 #define CHECK_MAP(m)
+#define CHECK_HASH(d)
 #endif
 
 
@@ -4390,8 +4393,9 @@ static void test_data_const_types (void)
 static void test_data_hash (void)
 {
   iot_data_t * data = iot_data_alloc_bool (true);
-  CU_ASSERT (iot_data_hash (data) == 0u)
+  CU_ASSERT (iot_data_hash (data) == 1u)
   iot_data_free (data);
+  CU_ASSERT (iot_data_hash (iot_data_alloc_bool (false)) == 0u)
   CU_ASSERT (iot_data_hash (NULL) == 0u)
   data = iot_data_alloc_string ("Dummy", IOT_DATA_REF);
   CU_ASSERT (iot_data_hash (data) == 3802084562u)
@@ -6497,6 +6501,127 @@ static void test_data_vector_to_vector_multi (void)
   iot_data_free (vector);
 }
 
+static void test_data_hash_duplicates (void)
+{
+  // Equal elements must not cancel in container hashes, and boolean values must hash differently
+  iot_data_t * empty = iot_data_alloc_list ();
+  iot_data_t * twice = iot_data_alloc_list ();
+  iot_data_list_tail_push (twice, iot_data_alloc_ui32 (7u));
+  iot_data_list_tail_push (twice, iot_data_alloc_ui32 (7u));
+  CU_ASSERT (iot_data_hash (twice) != iot_data_hash (empty))
+  iot_data_t * three = iot_data_from_json ("[1,1,2]");
+  iot_data_t * one = iot_data_from_json ("[2]");
+  CU_ASSERT (iot_data_hash (three) != iot_data_hash (one))
+  iot_data_t * nulls = iot_data_from_json ("[null,false]");
+  iot_data_t * none = iot_data_from_json ("[]");
+  CU_ASSERT (iot_data_hash (nulls) != iot_data_hash (none))
+  CU_ASSERT (iot_data_hash (iot_data_alloc_bool (true)) != iot_data_hash (iot_data_alloc_bool (false)))
+  iot_data_free (empty);
+  iot_data_free (twice);
+  iot_data_free (three);
+  iot_data_free (one);
+  iot_data_free (nulls);
+  iot_data_free (none);
+}
+
+static bool test_hash_odd (const iot_data_t * data, const void * arg)
+{
+  (void) arg;
+  return (iot_data_type (data) == IOT_DATA_UINT32) && ((iot_data_ui32 (data) % 2u) == 1u);
+}
+
+static void test_data_hash_incremental (void)
+{
+  // Incrementally maintained container hashes must match a full calculation after every update
+  iot_data_t * list = iot_data_alloc_list ();
+  for (uint32_t i = 0; i < 10u; i++)
+  {
+    (i % 2u) ? iot_data_list_tail_push (list, iot_data_alloc_ui32 (i)) : iot_data_list_head_push (list, iot_data_alloc_ui32 (i));
+    CHECK_HASH (list)
+  }
+  iot_data_free (iot_data_list_tail_pop (list));
+  CHECK_HASH (list)
+  iot_data_free (iot_data_list_head_pop (list));
+  CHECK_HASH (list)
+  iot_data_list_iter_t liter;
+  iot_data_list_iter (list, &liter);
+  iot_data_list_iter_next (&liter);
+  iot_data_list_iter_next (&liter);
+  iot_data_free (iot_data_list_iter_replace (&liter, iot_data_alloc_string ("new", IOT_DATA_REF)));
+  CHECK_HASH (list)
+  iot_data_list_iter_push_after (&liter, iot_data_alloc_ui32 (100u));
+  iot_data_list_iter_push_before (&liter, iot_data_alloc_ui32 (101u));
+  CHECK_HASH (list)
+  iot_data_list_iter_remove (&liter); // Middle element
+  CHECK_HASH (list)
+  iot_data_t * other = iot_data_from_json ("[5,5,6]");
+  iot_data_t * other_list = iot_data_vector_to_list (other, IOT_DATA_MULTI);
+  iot_data_list_tail_push_list (list, other_list, IOT_DATA_TAKE);
+  CHECK_HASH (list)
+  CHECK_HASH (other_list)
+  iot_data_list_head_push_list (list, list, IOT_DATA_REF);
+  CHECK_HASH (list)
+  iot_data_list_remove (list, test_hash_odd, NULL);
+  CHECK_HASH (list)
+  iot_data_list_empty (list);
+  CHECK_HASH (list)
+  CU_ASSERT (iot_data_hash (list) == 0u)
+  iot_data_free (other_list);
+  iot_data_free (other);
+  iot_data_free (list);
+
+  iot_data_t * vector = iot_data_alloc_vector (6u);
+  for (uint32_t i = 0; i < 6u; i += 2u) iot_data_vector_add (vector, i, iot_data_alloc_ui32 (1u)); // Duplicate values
+  CHECK_HASH (vector)
+  iot_data_vector_add (vector, 2u, iot_data_alloc_ui32 (9u)); // Replace
+  iot_data_vector_add (vector, 4u, NULL); // Clear
+  CHECK_HASH (vector)
+  iot_data_vector_iter_t viter;
+  iot_data_vector_iter (vector, &viter);
+  iot_data_vector_iter_next (&viter);
+  iot_data_free (iot_data_vector_iter_replace_value (&viter, iot_data_alloc_string ("x", IOT_DATA_REF)));
+  iot_data_vector_iter_next (&viter);
+  iot_data_free (iot_data_vector_iter_replace_value (&viter, iot_data_alloc_ui32 (3u))); // Empty slot
+  CHECK_HASH (vector)
+  iot_data_vector_resize (vector, 10u);
+  CHECK_HASH (vector)
+  iot_data_vector_compact (vector);
+  CHECK_HASH (vector)
+  iot_data_vector_resize (vector, 2u);
+  CHECK_HASH (vector)
+  iot_data_free (vector);
+
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_MULTI);
+  for (uint32_t i = 0; i < 20u; i++)
+  {
+    iot_data_map_add (map, iot_data_alloc_ui32 (i % 15u), iot_data_alloc_ui32 (i)); // Some replacements
+    CU_ASSERT (!iot_data_map_add_unused (map, iot_data_alloc_ui32 (i % 15u), iot_data_alloc_ui32 (0u)))
+  }
+  iot_data_map_add (map, iot_data_alloc_string ("key", IOT_DATA_REF), iot_data_alloc_null ());
+  CHECK_HASH (map)
+  iot_data_static_t key;
+  for (uint32_t i = 0; i < 15u; i += 3u)
+  {
+    iot_data_free (iot_data_map_take (map, iot_data_alloc_const_ui32 (&key, i)));
+    CHECK_HASH (map)
+  }
+  CU_ASSERT (iot_data_string_map_remove (map, "key"))
+  CHECK_HASH (map)
+  iot_data_map_empty (map);
+  CHECK_HASH (map)
+  iot_data_free (map);
+
+  uint8_t bytes[] = { 1u, 2u, 3u };
+  iot_data_t * bin = iot_data_alloc_binary (bytes, 3u, IOT_DATA_COPY);
+  uint32_t len;
+  free (iot_data_binary_take (bin, &len));
+  CHECK_HASH (bin)
+  iot_data_t * empty = iot_data_alloc_binary (NULL, 0u, IOT_DATA_REF);
+  CU_ASSERT (iot_data_equal (bin, empty))
+  iot_data_free (empty);
+  iot_data_free (bin);
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -7273,6 +7398,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_vector_dimensions_shapes", test_data_vector_dimensions_shapes);
   CU_add_test (suite, "list_push_list_self", test_list_push_list_self);
   CU_add_test (suite, "data_vector_to_vector_multi", test_data_vector_to_vector_multi);
+  CU_add_test (suite, "data_hash_duplicates", test_data_hash_duplicates);
+  CU_add_test (suite, "data_hash_incremental", test_data_hash_incremental);
 #ifndef NDEBUG
   CU_add_test (suite, "list_push_list_take_type", test_list_push_list_take_type);
 #endif

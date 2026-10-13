@@ -95,3 +95,6 @@
 - Fixed `iot_data_vector_to_vector` always returning an empty vector for type `IOT_DATA_MULTI`; all elements are now referenced
 - Added third user data tag `IOT_DATA_TAG_USER3`
 - Fixed 32 bit build static assertion failures caused by the size of the data header; the data rehash flag is now held in the reference count
+- List, vector and map hashes now combine element hashes by summing mixed hashes rather than xor, so duplicate elements no longer cancel (e.g. [7,7] and [] previously had the same hash). Container hash values change as a result
+- Container hashes are now updated incrementally when elements are removed or replaced (list pops and removal, vector and iterator replacement, vector resize, map take and remove), rather than requiring full recalculation
+- Boolean true now has hash 1, distinguishing it from false
