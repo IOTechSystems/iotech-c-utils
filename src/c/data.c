@@ -2666,25 +2666,20 @@ uint32_t iot_data_vector_compact (iot_data_t * vector)
 {
   iot_data_vector_t * vec = (iot_data_vector_t*) vector;
   assert (vector && (vector->type == IOT_DATA_VECTOR));
-  uint32_t new_size = vec->size;
-  for (uint32_t i = 0; i < vec->size; i++)
+  uint32_t new_size = 0u;
+  for (uint32_t i = 0; i < vec->size; i++) // Single pass, moving each element down over preceding empty slots
   {
-    if (vec->values[i] == NULL)
+    if (vec->values[i])
     {
-      new_size--;
-      for (uint32_t j = i + 1; j < vec->size; j++)
+      if (i != new_size)
       {
-        if (vec->values[j])
-        {
-          vec->values[i] = vec->values[j];
-          vec->values[j] = NULL;
-          new_size++;
-          break;
-        }
+        vec->values[new_size] = vec->values[i];
+        vec->values[i] = NULL;
       }
+      new_size++;
     }
   }
-  vec->size = new_size;
+  vec->size = new_size; // Empty slots do not contribute to hash, so unchanged
   return new_size;
 }
 
@@ -2694,53 +2689,36 @@ uint32_t iot_data_vector_size (const iot_data_t * vector)
   return ((const iot_data_vector_t*) vector)->size;
 }
 
-static inline uint32_t iot_data_vector_dimension (const iot_data_t * vector)
-{
-  // Only regard as mult-dimensional vector if all elements also vectors
-  uint32_t size = iot_data_vector_size (vector);
-  return (size == iot_data_vector_element_count (vector, IOT_DATA_VECTOR, false)) ? size : 0u;
-}
+// Depth of vector nesting. A vector is only regarded as multi-dimensional if all its elements are vectors of the
+// same depth. Stops at the first element that is not a vector, so does not walk vectors of values.
 
-static uint32_t iot_data_vector_depth (const iot_data_t * vector)
+static uint32_t iot_data_vector_depth (const iot_data_vector_t * vector)
 {
   uint32_t depth = 0u;
-  if (iot_data_vector_dimension (vector))
+  for (uint32_t i = 0; i < vector->size; i++)
   {
-    iot_data_vector_iter_t iter;
-    iot_data_vector_iter (vector, &iter);
-    while (iot_data_vector_iter_next (&iter))
+    const iot_data_t * element = vector->values[i];
+    uint32_t dp = (element && (element->type == IOT_DATA_VECTOR)) ? iot_data_vector_depth ((const iot_data_vector_t*) element) : 0u;
+    if (i == 0u) depth = dp;
+    if ((dp == 0u) || (dp != depth))
     {
-      uint32_t dp = iot_data_vector_depth (iot_data_vector_iter_value (&iter));
-      if (depth == 0) depth = dp;
-      if (dp != depth) // All vector sub-dimensions must be the same depth
-      {
-        depth = 0;
-        break;
-      }
+      depth = 0u;
+      break;
     }
   }
   return depth + 1u;
 }
 
-static bool iot_data_vector_dims (const iot_data_t * vector, uint32_t * dims, uint32_t depth, uint32_t * total)
+// Check vector sizes at each level are the same, recording them in dims (UINT32_MAX if not yet set). Within depth,
+// all elements are known to be vectors.
+
+static bool iot_data_vector_dims (const iot_data_vector_t * vector, uint32_t * dims, uint32_t depth)
 {
-  uint32_t size = iot_data_vector_size (vector);
-  uint32_t vecs = iot_data_vector_element_count (vector, IOT_DATA_VECTOR, false);
-  if (*dims == 0)
+  if (*dims == UINT32_MAX) *dims = vector->size;
+  bool ok = (*dims == vector->size);
+  for (uint32_t i = 0; ok && (depth > 1u) && (i < vector->size); i++)
   {
-    *dims = size;
-    *total = *total ? *total * size : size;
-  }
-  bool ok = (*dims == size);
-  if (ok && (depth > 1u) && (size == vecs)) // Only regard as multidimensional vector if all elements also vectors, bounded by depth
-  {
-    dims++;
-    iot_data_vector_iter_t iter;
-    iot_data_vector_iter (vector, &iter);
-    while (ok && iot_data_vector_iter_next (&iter))
-    {
-      ok = iot_data_vector_dims (iot_data_vector_iter_value (&iter), dims, depth - 1u, total);
-    }
+    ok = iot_data_vector_dims ((const iot_data_vector_t*) vector->values[i], dims + 1, depth - 1u);
   }
   return ok;
 }
@@ -2749,17 +2727,19 @@ iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * t
 {
   assert (total && vector && (vector->type == IOT_DATA_VECTOR));
   iot_data_t * dimarray = NULL;
-  uint32_t depth = iot_data_vector_depth (vector);
-  uint32_t * dims = calloc (depth, sizeof (uint32_t));
+  uint32_t depth = iot_data_vector_depth ((const iot_data_vector_t*) vector);
+  uint32_t * dims = malloc (depth * sizeof (uint32_t));
+  memset (dims, 0xff, depth * sizeof (uint32_t)); // All UINT32_MAX (not yet set)
   *total = 0u;
-  if (iot_data_vector_dims (vector, dims, depth, total))
+  if (iot_data_vector_dims ((const iot_data_vector_t*) vector, dims, depth))
   {
+    *total = 1u;
+    for (uint32_t i = 0; i < depth; i++) *total *= dims[i];
     dimarray = iot_data_alloc_array (dims, depth, IOT_DATA_UINT32, IOT_DATA_TAKE);
   }
   else
   {
     free (dims);
-    *total = 0u;
   }
   return dimarray;
 }

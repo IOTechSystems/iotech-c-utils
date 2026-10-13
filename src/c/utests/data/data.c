@@ -6350,6 +6350,59 @@ static void test_data_map_empty_reuse (void)
   iot_data_free (empty);
 }
 
+static void test_data_vector_compact_order (void)
+{
+  // Compact must keep element order, and give the same data and hash as an equivalent new vector
+  iot_data_t * vector = iot_data_alloc_vector (10u);
+  iot_data_t * expected = iot_data_alloc_vector (4u);
+  const uint32_t slots[] = { 1u, 2u, 5u, 9u };
+  for (uint32_t i = 0; i < 4u; i++)
+  {
+    iot_data_vector_add (vector, slots[i], iot_data_alloc_ui32 (slots[i]));
+    iot_data_vector_add (expected, i, iot_data_alloc_ui32 (slots[i]));
+  }
+  CU_ASSERT (iot_data_vector_compact (vector) == 4u)
+  CU_ASSERT (iot_data_vector_size (vector) == 4u)
+  CU_ASSERT (iot_data_hash (vector) == iot_data_hash (expected))
+  CU_ASSERT (iot_data_equal (vector, expected))
+  CU_ASSERT (iot_data_vector_compact (vector) == 4u) // No empty slots
+  CU_ASSERT (iot_data_equal (vector, expected))
+  iot_data_vector_resize (vector, 6u); // Slots freed by compact must be empty when reused
+  CU_ASSERT (iot_data_vector_get (vector, 4u) == NULL && iot_data_vector_get (vector, 5u) == NULL)
+  iot_data_free (vector);
+  iot_data_free (expected);
+
+  vector = iot_data_alloc_vector (3u);
+  CU_ASSERT (iot_data_vector_compact (vector) == 0u) // All empty
+  CU_ASSERT (iot_data_vector_size (vector) == 0u)
+  iot_data_free (vector);
+}
+
+static void test_data_vector_dimensions_shapes (void)
+{
+  // Dimensions for regular and irregular vector shapes
+  static const struct { const char * json; const char * dims; uint32_t total; } cases[] =
+  {
+    { "[[1,2],[3,4],[5,6]]", "[3,2]", 6u }, { "[[[1,2],[3,4]],[[5,6],[7,8]]]", "[2,2,2]", 8u }, { "[]", "[0]", 0u },
+    { "[[],[]]", "[2,0]", 0u }, { "[[1],[[2]]]", "[2]", 2u }, { "[1,[2]]", "[2]", 2u }, { "[[1],2]", "[2]", 2u },
+    { "[[1,2],[3]]", NULL, 0u }, { "[[1,2],[]]", NULL, 0u }, { "[[],[1,2]]", NULL, 0u },
+    { "[[[1,2],[3,4]],[[5,6]]]", NULL, 0u }, { "[[[1,2],[3,4]],[[],[]]]", NULL, 0u }
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * vector = iot_data_from_json (cases[i].json);
+    uint32_t total = 99u;
+    iot_data_t * dims = iot_data_vector_dimensions (vector, &total);
+    char * json = dims ? iot_data_to_json (dims) : NULL;
+    CU_ASSERT ((json == NULL) == (cases[i].dims == NULL))
+    if (json && cases[i].dims) CU_ASSERT (strcmp (json, cases[i].dims) == 0)
+    CU_ASSERT (total == cases[i].total)
+    free (json);
+    iot_data_free (dims);
+    iot_data_free (vector);
+  }
+}
+
 static void test_data_map_number (void)
 {
   bool ok;
@@ -7109,6 +7162,8 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_sanitizer_edges", test_data_sanitizer_edges);
   CU_add_test (suite, "data_map_add_replace", test_data_map_add_replace);
   CU_add_test (suite, "data_map_empty_reuse", test_data_map_empty_reuse);
+  CU_add_test (suite, "data_vector_compact_order", test_data_vector_compact_order);
+  CU_add_test (suite, "data_vector_dimensions_shapes", test_data_vector_dimensions_shapes);
 #ifdef NDEBUG
   CU_add_test (suite, "data_thread_cache_release", test_data_thread_cache_release);
 #endif

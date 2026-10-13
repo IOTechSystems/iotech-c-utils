@@ -86,3 +86,5 @@
 - Fixed CBOR encoding of float values whose bit pattern is small (including 0.0), which were encoded as CBOR simple values or half precision floats
 - Fixed undefined behaviour found by sanitizer in empty array comparison, `iot_data_array_transform`, CBOR integer encoding and JSON parsing of INT64_MIN
 - Map add and `iot_data_map_add_unused` now use a single tree walk, and `iot_data_map_empty` frees the tree in one pass, making map inserts about 30% faster
+- `iot_data_vector_compact` now runs in a single pass (previously quadratic), and `iot_data_vector_dimensions` no longer walks vectors of values
+- Fixed `iot_data_vector_dimensions` accepting irregular vectors where an empty vector precedes a non empty one, e.g. [[],[1,2]]
