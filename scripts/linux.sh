@@ -170,7 +170,7 @@ fi
 if [ "${VALG}" = "true" ]
 then
   cd ${BROOT}/debug
-  VG_FLAGS="--xml=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
+  VG_FLAGS="--xml=yes --fair-sched=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
   VG_SUPP="--suppressions=${ROOT}/scripts/valgrind.supp"
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${BROOT}/debug/c/examples/dynamic
   valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler/scheduler
