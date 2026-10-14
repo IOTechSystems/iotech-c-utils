@@ -215,7 +215,7 @@ static iot_data_t * iot_threadpool_get_stats (iot_component_t * comp)
 
 iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, int default_prio, int affinity, iot_logger_t * logger)
 {
-  static _Atomic uint16_t pool_id = ATOMIC_VAR_INIT (0);
+  static _Atomic uint16_t pool_id = 0;
 
   assert (threads > 0u); // Pool without threads cannot run jobs
   uint16_t created;

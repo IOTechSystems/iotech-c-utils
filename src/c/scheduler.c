@@ -13,6 +13,14 @@
 #define IOT_NS_REMAINING(s) ((s) % IOT_BILLION)
 #define IOT_SCHEDULER_DEFAULT_WAKE (IOT_HOUR_TO_NS (24))
 
+// Schedule times use a monotonic clock, so are unaffected by system clock changes
+#if defined (__ZEPHYR__) || defined (__APPLE__)
+#define IOT_SCHEDULER_CLOCK CLOCK_REALTIME // Condition variable clock selection not supported
+#else
+#define IOT_SCHEDULER_MONOTONIC
+#define IOT_SCHEDULER_CLOCK CLOCK_MONOTONIC
+#endif
+
 #ifdef IOT_BUILD_COMPONENTS
 #define IOT_SCHEDULER_FACTORY iot_scheduler_factory ()
 #else
@@ -147,6 +155,13 @@ static bool iot_schedule_queue_update (iot_scheduler_t * scheduler, iot_schedule
   return iot_schedule_queue_add (scheduler, schedule);
 }
 
+static inline uint64_t iot_scheduler_time (void)
+{
+  struct timespec ts;
+  clock_gettime (IOT_SCHEDULER_CLOCK, &ts);
+  return ((uint64_t) ts.tv_sec * IOT_BILLION) + (uint64_t) ts.tv_nsec;
+}
+
 static inline void nsToTimespec (uint64_t ns, struct timespec * ts)
 {
   ts->tv_sec = (time_t) IOT_NS_TO_SEC (ns);
@@ -189,7 +204,7 @@ static void * iot_scheduler_thread (void * arg)
   {
     state = iot_component_wait_and_lock (&scheduler->component, (uint32_t) IOT_COMPONENT_DELETED | (uint32_t) IOT_COMPONENT_RUNNING); // State wait
     if (state == IOT_COMPONENT_DELETED) break; // Exit thread on deletion
-    uint64_t const now = iot_time_nsecs();
+    uint64_t const now = iot_scheduler_time ();
     iot_schedule_t * front = iot_schedule_queue_next (queue);
     uint64_t const sched_time = front ? front->start : (now + IOT_SCHEDULER_DEFAULT_WAKE); // Calculate next execution time with lock held, so schedules added while unlocked are not missed
     nsToTimespec (sched_time, &schd_time);
@@ -206,7 +221,7 @@ static void * iot_scheduler_thread (void * arg)
 
     /* Get the schedule at the front of the queue */
     iot_schedule_t * current = iot_schedule_queue_next (queue);
-    if (current && current->start < iot_time_nsecs ()) // If a schedule and ready to run
+    if (current && current->start < iot_scheduler_time ()) // If a schedule and ready to run
     {
       bool valid_current = current->scheduled;
       if (atomic_load (&current->concurrent) || (atomic_load (&current->refs) == 1u)) // Check for concurrent execution
@@ -270,7 +285,7 @@ static void * iot_scheduler_thread (void * arg)
       if (valid_current)
       {
         /* Recalculate the next start time for the schedule */
-        next = current->period + iot_time_nsecs ();
+        next = current->period + iot_scheduler_time ();
 
         if ((current->repeat > 0u) && (--(current->repeat) == 0u)) // Last repetition
         {
@@ -321,6 +336,15 @@ iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t 
   scheduler->idle = iot_data_alloc_map (IOT_DATA_UINT64);
   scheduler->queue = iot_data_alloc_map (IOT_DATA_UINT64);
   pthread_cond_init (&scheduler->exit_cond, NULL);
+#ifdef IOT_SCHEDULER_MONOTONIC
+  // Schedule waits use the component condition, so reinitialise it to use the scheduler clock
+  pthread_condattr_t attr;
+  pthread_condattr_init (&attr);
+  pthread_condattr_setclock (&attr, IOT_SCHEDULER_CLOCK);
+  pthread_cond_destroy (&scheduler->component.cond);
+  pthread_cond_init (&scheduler->component.cond, &attr);
+  pthread_condattr_destroy (&attr);
+#endif
   iot_logger_add_ref (logger);
   iot_log_info (logger, "iot_scheduler_alloc (priority: %d affinity: %d)", priority, affinity);
   if (! iot_thread_create (&scheduler->tid, iot_scheduler_thread, scheduler, priority, affinity, logger))
@@ -353,7 +377,7 @@ void iot_scheduler_stop (iot_scheduler_t * scheduler)
 /* Create a schedule and insert it into the idle queue */
 iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_fn_t func, iot_schedule_free_fn_t free_func, void * arg, uint64_t period, uint64_t delay, uint64_t repeat, iot_threadpool_t * pool, int priority)
 {
-  static _Atomic uint64_t schedule_id_counter = ATOMIC_VAR_INIT (0u);
+  static _Atomic uint64_t schedule_id_counter = 0u;
 
   assert (scheduler && func);
   iot_schedule_t * schedule = (iot_schedule_t*) calloc (1, sizeof (*schedule));
@@ -361,7 +385,7 @@ iot_schedule_t * iot_schedule_create (iot_scheduler_t * scheduler, iot_schedule_
   schedule->free_cb = free_func;
   schedule->arg = arg;
   schedule->period = period;
-  schedule->start = iot_time_nsecs () + delay;
+  schedule->start = iot_scheduler_time () + delay;
   schedule->repeat = repeat;
   schedule->threadpool = pool;
   schedule->priority = priority;
@@ -383,7 +407,7 @@ static bool iot_schedule_add_locked (iot_scheduler_t * scheduler, iot_schedule_t
   bool ret;
   if ((ret = !schedule->scheduled))
   {
-    if (randomise) iot_schedule_update_start (schedule, start_delay + iot_time_nsecs ()); // Only update start (queue key) when not queued
+    if (randomise) iot_schedule_update_start (schedule, start_delay + iot_scheduler_time ()); // Only update start (queue key) when not queued
 
     /* Remove from idle map, add to scheduled queue */
     iot_schedule_idle_remove (scheduler, schedule);
@@ -443,7 +467,7 @@ void iot_schedule_reset (iot_scheduler_t * scheduler, iot_schedule_t * schedule,
   iot_component_lock (&scheduler->component);
 
   /* Recalculate the next start time for the schedule */
-  uint64_t next = schedule->period + iot_time_nsecs () + delay;
+  uint64_t next = schedule->period + iot_scheduler_time () + delay;
   if (schedule->scheduled)
   {
     bool front = iot_schedule_queue_update (scheduler, schedule, next);

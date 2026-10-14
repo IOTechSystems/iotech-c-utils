@@ -42,6 +42,10 @@ extern uint64_t iot_time_usecs (void);
 /**
  * @brief Get Unix time in nanoseconds
  *
+ * Successive calls return strictly increasing values, unless the system clock
+ * is stepped back by more than one second, in which case the clock is followed.
+ * Use a monotonic clock to measure intervals.
+ *
  * @return Unix time in nanoseconds
  */
 extern uint64_t iot_time_nsecs (void);

@@ -43,7 +43,7 @@ iot_data_static_t iot_data_order = { 0 };
 static const char * iot_data_const_strings [] = { "category","config","name","meta","state","stats","type",NULL };
 static _Thread_local bool iot_data_alloc_from_heap = false; /* Thread specific memory allocation policy */
 #ifdef IOT_DATA_CACHE
-static _Atomic iot_cache_head_t iot_data_cache_head = ATOMIC_VAR_INIT (((iot_cache_head_t){0}));
+static _Atomic iot_cache_head_t iot_data_cache_head; // Zero initialised
 static _Thread_local iot_block_t * iot_local_cache_head = NULL;
 static _Thread_local uint32_t iot_local_cache_count = 0;
 #endif
