@@ -351,7 +351,7 @@ static void test_data_from_xml (void)
   "    <logging enable=\"true\" filename=\"/dev/null\" />\n"
   "  </container>\n"
   "</busmaster>";
-  const char * expected = "{\"attributes\":{\"busId\":\"main_bus\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\"},\"children\":[{\"attributes\":{\"factory\":\"xrt_virtual_device_service_factory\",\"library\":\"libxrt-virtual-device-service.so\",\"name\":\"virtual_device_service\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"},\"name\":\"resource\"},{\"attributes\":{\"name\":\"Other\"},\"children\":[{\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"},\"name\":\"protocolAttribute\"}],\"content\":\"Any old rubbish\\n      \",\"name\":\"protocol\"}],\"content\":\"\\n    \",\"name\":\"device\"}],\"content\":\"\\n  \",\"name\":\"deviceService\"},{\"attributes\":{},\"content\":\"Some text!\",\"name\":\"fubar\"},{\"attributes\":{\"threads\":\"4\"},\"children\":[{\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"},\"name\":\"logging\"}],\"content\":\"\\n  \",\"name\":\"container\"}],\"content\":\"\\n\",\"name\":\"busmaster\"}";
+  const char * expected = "{\"attributes\":{\"busId\":\"main_bus\",\"xmlns:xsd\":\"http://www.w3.org/2001/XMLSchema\",\"xmlns:xsi\":\"http://www.w3.org/2001/XMLSchema-instance\"},\"children\":[{\"attributes\":{\"factory\":\"xrt_virtual_device_service_factory\",\"library\":\"libxrt-virtual-device-service.so\",\"name\":\"virtual_device_service\",\"topic\":\"virtual_device_service/data\"},\"children\":[{\"attributes\":{\"name\":\"Random-Integer-Device\",\"profile\":\"Random-Integer-Device\"},\"children\":[{\"attributes\":{\"name\":\"RandomValue_Int8\",\"schedule\":\"500000000\"},\"name\":\"resource\"},{\"attributes\":{\"name\":\"Other\"},\"children\":[{\"attributes\":{\"name\":\"Address\",\"value\":\"device-virtual-int-01\"},\"name\":\"protocolAttribute\"}],\"content\":\"\\n        Any old rubbish\\n      \",\"name\":\"protocol\"}],\"content\":\"\\n      \\n      \\n    \",\"name\":\"device\"}],\"content\":\"\\n    \\n  \",\"name\":\"deviceService\"},{\"attributes\":{},\"content\":\"Some text!\",\"name\":\"fubar\"},{\"attributes\":{\"threads\":\"4\"},\"children\":[{\"attributes\":{\"enable\":\"true\",\"filename\":\"/dev/null\"},\"name\":\"logging\"}],\"content\":\"\\n    \\n  \",\"name\":\"container\"}],\"content\":\"\\n  \\n  \\n  \\n\",\"name\":\"busmaster\"}";
 
   xml = iot_data_from_xml (test_xml);
   CU_ASSERT (xml != NULL)
@@ -362,6 +362,44 @@ static void test_data_from_xml (void)
   if (json) CU_ASSERT (strcmp (json, expected) == 0)
   free (json);
   iot_data_free (xml);
+}
+
+static void test_data_from_xml_invalid (void)
+{
+  // Empty, truncated, mismatched and trailing content is rejected
+  static const char * invalid[] =
+  {
+    "", "  ", "<?xml version=\"1.0\"?>", "<a>", "<a", "<a b=\"1\">text", "<a><b></b>", "<a><b/>", "<a></b>", "<a/>junk", "<a/><b/>", "<a>&bad;</a>"
+  };
+  for (uint32_t i = 0; i < sizeof (invalid) / sizeof (invalid[0]); i++)
+  {
+    iot_data_t * data = iot_data_from_xml (invalid[i]);
+    CU_ASSERT (data == NULL)
+    iot_data_free (data);
+  }
+  // Trailing whitespace and comments are allowed
+  iot_data_t * data = iot_data_from_xml ("<a/>\n<!-- comment -->\n");
+  CU_ASSERT (data != NULL)
+  iot_data_free (data);
+}
+
+static void test_data_from_xml_content (void)
+{
+  // Content either side of child elements is kept
+  static const struct { const char * in; const char * out; } cases[] =
+  {
+    { "<a>x<b>y</b>z</a>", "{\"attributes\":{},\"children\":[{\"attributes\":{},\"content\":\"y\",\"name\":\"b\"}],\"content\":\"xz\",\"name\":\"a\"}" },
+    { "<a k=\"v\">x<b/><c/>z</a>", "{\"attributes\":{\"k\":\"v\"},\"children\":[{\"attributes\":{},\"name\":\"b\"},{\"attributes\":{},\"name\":\"c\"}],\"content\":\"xz\",\"name\":\"a\"}" },
+    { "<a>&lt;&#65;</a>", "{\"attributes\":{},\"content\":\"<A\",\"name\":\"a\"}" }
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * data = iot_data_from_xml (cases[i].in);
+    char * json = iot_data_to_json (data);
+    CU_ASSERT (strcmp (json, cases[i].out) == 0)
+    free (json);
+    iot_data_free (data);
+  }
 }
 #endif
 
@@ -869,6 +907,90 @@ static void test_data_from_yaml (void)
   free (json);
   iot_data_free (yaml);
 }
+
+static void test_data_from_yaml_values (void)
+{
+  // Scalars are typed using the YAML 1.2 core schema, tags force or check the type
+  static const struct { const char * in; const char * out; } cases[] =
+  {
+    { "[true, True, TRUE, false, null, Null, ~, yes, no, on]", "[true,true,true,false,null,null,null,\"yes\",\"no\",\"on\"]" },
+    { "[010, 0o10, 0x1F, 0xff, +5, -0, 007]", "[10,8,31,255,5,0,7]" },
+    { "[9223372036854775807, 9223372036854775808, 18446744073709551615, -9223372036854775808]", "[9223372036854775807,9223372036854775808,18446744073709551615,-9223372036854775808]" },
+    { "[18446744073709551616, -9223372036854775809]", "[1.8446744073709552e+19,-9.2233720368547758e+18]" },
+    { "[1.5, .5, 1., 2e3, -1.5E-1]", "[1.5000000000000000e+00,5.0000000000000000e-01,1.0000000000000000e+00,2.0000000000000000e+03,-1.4999999999999999e-01]" },
+    { "[0x, 0o8, 0x10000000000000000, 1_000, 1e, inf, infinity, 0x1p3, \"12\", '12', 1.2.3, -, 12abc]", "[\"0x\",\"0o8\",\"0x10000000000000000\",\"1_000\",\"1e\",\"inf\",\"infinity\",\"0x1p3\",\"12\",\"12\",\"1.2.3\",\"-\",\"12abc\"]" },
+    { "[!!str 12, !!str true, !!int 12, !!float 12, !!bool false, !!null null, !custom 12, ! 12]", "[\"12\",\"true\",12,1.2000000000000000e+01,false,null,\"12\",\"12\"]" },
+    { "{200: ok, \"a\": [], b: {}}", "{\"200\":\"ok\",\"a\":[],\"b\":{}}" },
+    { "---\n42\n...\n", "42" }
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * ex = NULL;
+    iot_data_t * data = iot_data_from_yaml (cases[i].in, &ex);
+    CU_ASSERT (ex == NULL)
+    char * json = iot_data_to_json (data);
+    if (strcmp (json, cases[i].out) != 0) printf ("\nYAML: %s\nGOT: %s\nEXP: %s\n", cases[i].in, json, cases[i].out);
+    CU_ASSERT (strcmp (json, cases[i].out) == 0)
+    free (json);
+    iot_data_free (data);
+    iot_data_free (ex);
+  }
+  iot_data_t * ex = NULL;
+  iot_data_t * data = iot_data_from_yaml ("[.inf, -.Inf, +.INF, .nan, .NaN, nan, -nan]", &ex);
+  CU_ASSERT_FATAL (data != NULL)
+  CU_ASSERT (isinf (iot_data_f64 (iot_data_vector_get (data, 0u))) && iot_data_f64 (iot_data_vector_get (data, 0u)) > 0.0)
+  CU_ASSERT (isinf (iot_data_f64 (iot_data_vector_get (data, 1u))) && iot_data_f64 (iot_data_vector_get (data, 1u)) < 0.0)
+  CU_ASSERT (isinf (iot_data_f64 (iot_data_vector_get (data, 2u))) && iot_data_f64 (iot_data_vector_get (data, 2u)) > 0.0)
+  for (uint32_t i = 3u; i < 7u; i++) CU_ASSERT (isnan (iot_data_f64 (iot_data_vector_get (data, i))))
+  iot_data_free (data);
+}
+
+static void test_data_from_yaml_alias (void)
+{
+  // Aliases share the anchored node, merge keys add entries not already present
+  static const struct { const char * in; const char * out; } cases[] =
+  {
+    { "a: &x 1\nb: *x\nc: 2", "{\"a\":1,\"b\":1,\"c\":2}" },
+    { "base: &b {x: 1, y: 2}\ncopy: *b\nlist: [*b, *b]", "{\"base\":{\"x\":1,\"y\":2},\"copy\":{\"x\":1,\"y\":2},\"list\":[{\"x\":1,\"y\":2},{\"x\":1,\"y\":2}]}" },
+    { "base: &b {x: 1, y: 2}\nderived:\n  y: 3\n  <<: *b\n  z: 4", "{\"base\":{\"x\":1,\"y\":2},\"derived\":{\"x\":1,\"y\":3,\"z\":4}}" },
+    { "a: &a {x: 1}\nb: &b {x: 2, y: 2}\nc:\n  <<: [*a, *b]", "{\"a\":{\"x\":1},\"b\":{\"x\":2,\"y\":2},\"c\":{\"x\":1,\"y\":2}}" },
+    { "\"<<\": 1", "{\"<<\":1}" },
+    { "&k key: v\n*k : w", "{\"key\":\"w\"}" },
+    { "s: &s [1, 2]\nt: *s", "{\"s\":[1,2],\"t\":[1,2]}" }
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * ex = NULL;
+    iot_data_t * data = iot_data_from_yaml (cases[i].in, &ex);
+    CU_ASSERT (ex == NULL)
+    char * json = iot_data_to_json (data);
+    if (strcmp (json, cases[i].out) != 0) printf ("\nYAML: %s\nGOT: %s\nEXP: %s\n", cases[i].in, json, cases[i].out);
+    CU_ASSERT (strcmp (json, cases[i].out) == 0)
+    free (json);
+    iot_data_free (data);
+    iot_data_free (ex);
+  }
+}
+
+static void test_data_from_yaml_invalid (void)
+{
+  // Undefined aliases, invalid tagged values, unsupported keys, multiple documents and trailing content are rejected
+  static const char * invalid[] =
+  {
+    "a: *x", "[*x]", "a: &x [*x]", "!!int abc", "[!!bool 1]", "!!null 0", "!!float abc", "{[1]: 2}", "{{a: 1}: 2}",
+    "a: &x 1\n*x : 2", "a: 1\n<<: 2", "a: 1\n<<: [1]", "a: 1\n---\nb: 2", "[1, 2]]", "{a: 1}}", "a: [1, 2", "a: b: c"
+  };
+  for (uint32_t i = 0; i < sizeof (invalid) / sizeof (invalid[0]); i++)
+  {
+    iot_data_t * ex = NULL;
+    iot_data_t * data = iot_data_from_yaml (invalid[i], &ex);
+    if (data || ex == NULL) printf ("\nAccepted YAML: %s\n", invalid[i]);
+    CU_ASSERT (data == NULL)
+    CU_ASSERT (iot_data_type (ex) == IOT_DATA_STRING)
+    iot_data_free (data);
+    iot_data_free (ex);
+  }
+}
 #endif
 
 void cunit_data_io_test_init (void)
@@ -881,6 +1003,8 @@ void cunit_data_io_test_init (void)
   CU_add_test (suite, "data_from_json3", test_data_from_json3);
 #ifdef IOT_HAS_XML
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
+  CU_add_test (suite, "data_from_xml_invalid", test_data_from_xml_invalid);
+  CU_add_test (suite, "data_from_xml_content", test_data_from_xml_content);
 #endif
 #ifdef IOT_HAS_CBOR
   CU_add_test (suite, "data_to_cbor", test_data_to_cbor);
@@ -895,5 +1019,8 @@ void cunit_data_io_test_init (void)
 #ifdef IOT_HAS_YAML
   CU_add_test (suite, "data_from_yaml", test_data_from_yaml);
   CU_add_test (suite, "data_from_yaml_depth", test_data_from_yaml_depth);
+  CU_add_test (suite, "data_from_yaml_values", test_data_from_yaml_values);
+  CU_add_test (suite, "data_from_yaml_alias", test_data_from_yaml_alias);
+  CU_add_test (suite, "data_from_yaml_invalid", test_data_from_yaml_invalid);
 #endif
 }

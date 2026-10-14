@@ -2414,10 +2414,11 @@ extern iot_data_t * iot_data_from_iot_cbor (const iot_data_t *data);
  * in a map containing "name", "attributes", "children" and "content" entries.
  * The "children" and "content" entries will only be present if required.
  * The "children" entry will contain a recursive array of map entries
- * containing any XML child elements.
+ * containing any XML child elements. The "content" entry holds all of the
+ * element's text, including text either side of child elements.
  *
  * @param  xml   Input XML string
- * @return       A iot_data map if input string is a XML string, NULL otherwise.
+ * @return       A iot_data map if input string is a complete, well formed XML document, NULL otherwise.
  */
 extern iot_data_t * iot_data_from_xml (const char * xml);
 #endif
@@ -2427,7 +2428,14 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
  * @brief Convert YAML to iot_data_t type
  *
  * The function to convert input YAML string to iot_data. The conversion results
- * in a map, vector or simple type depending on the YAML content.
+ * in a map, vector or simple type depending on the YAML content. Plain scalars
+ * are typed using the YAML 1.2 core schema: null (null, ~), boolean (true, false),
+ * integer (decimal, 0x hexadecimal and 0o octal, as int64 or uint64 if above
+ * INT64_MAX), float (including .inf and .nan) or otherwise string. Decimal
+ * integers outside the 64 bit range are converted to float. Quoted scalars are
+ * strings, and the !!str, !!int, !!float, !!bool and !!null tags set or check
+ * the type. Map keys are always strings. Anchored nodes are shared by their
+ * aliases, and "<<" merge keys are supported. Only a single document is allowed.
  *
  * @param  yaml       Input YAML string
  * @param  exception  If a parse error occurs, on exit this will hold a string describing the problem
