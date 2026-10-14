@@ -5155,7 +5155,7 @@ static void test_shallow_copy_map (void)
 
 static void test_shallow_copy_vector (void)
 {
-  static const char * test_vector = "[1, \"a string\", {\"a\" : \"b\", [ 1.2, 3.5 ]} ]";
+  static const char * test_vector = "[1, \"a string\", {\"a\" : \"b\", \"c\" : [ 1.2, 3.5 ]} ]";
   iot_data_t * vec = iot_data_from_json (test_vector);
   iot_data_t * copy = iot_data_shallow_copy (vec);
   CU_ASSERT (copy != NULL)

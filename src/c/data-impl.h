@@ -31,6 +31,8 @@ typedef struct iot_cache_head_t
 // Rehash flag carried in top bit of refs, atomic as hash calculated lazily by iot_data_hash on (possibly shared) data.
 // Held in refs rather than a separate field so that iot_data_t fits in 16 bytes on 32 bit systems.
 
+#define IOT_DATA_MAX_DEPTH 256u // Maximum nesting depth for data parsed from JSON, YAML or XML
+
 #define IOT_DATA_REHASH 0x80000000u
 #define IOT_DATA_REFS_MASK (~IOT_DATA_REHASH)
 

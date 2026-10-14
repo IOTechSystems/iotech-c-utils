@@ -11,6 +11,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#ifndef __ZEPHYR__
+#include <netdb.h>
+#endif
 
 #ifdef IOT_HAS_PRCTL
 #include <sys/prctl.h>
@@ -204,7 +207,14 @@ static inline size_t iot_logger_format_log (iot_logger_impl_t * logger, iot_logl
 #ifdef IOT_HAS_PRCTL
   prctl (PR_GET_NAME, tname);
 #endif
-  return (size_t) snprintf (logger->buff, sizeof (logger->buff), "[%s:%" PRIu64 ":%s:%s] %s\n", tname, timestamp, logger->name, iot_log_levels[level], message);
+  int len = snprintf (logger->buff, sizeof (logger->buff), "[%s:%" PRIu64 ":%s:%s] %s\n", tname, timestamp, logger->name, iot_log_levels[level], message);
+  if (len < 0) return 0u;
+  if ((size_t) len >= sizeof (logger->buff)) // Truncated, so length is that of buffer contents, still ending with newline
+  {
+    len = (int) sizeof (logger->buff) - 1;
+    logger->buff[len - 1] = '\n';
+  }
+  return (size_t) len;
 }
 
 static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, iot_loglevel_t level, uint64_t timestamp, const char *message)
@@ -258,7 +268,25 @@ iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bo
   iot_logger_udp_ctx_t *ctx = calloc (1, sizeof (iot_logger_udp_ctx_t));
   if (host)
   {
-    inet_aton (host, &ctx->addr.sin_addr);
+    if (inet_aton (host, &ctx->addr.sin_addr) == 0) // Not an IPv4 address, so resolve host name
+    {
+      bool resolved = false;
+#ifndef __ZEPHYR__
+      struct addrinfo * info = NULL;
+      const struct addrinfo hints = { .ai_family = AF_INET, .ai_socktype = SOCK_DGRAM };
+      if (getaddrinfo (host, NULL, &hints, &info) == 0 && info)
+      {
+        ctx->addr.sin_addr = ((const struct sockaddr_in*) info->ai_addr)->sin_addr;
+        resolved = true;
+      }
+      if (info) freeaddrinfo (info);
+#endif
+      if (! resolved)
+      {
+        free (ctx);
+        return NULL;
+      }
+    }
   }
   else
   {
@@ -361,19 +389,18 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
   {
     if (to && strncmp (to, "udp:", 4) == 0 && strlen (to) > 4)
     {
-      char target[17] = { 0 };
       uint16_t port;
-      const char *host = NULL;
+      char * host = NULL;
       to += 4;
       const char * sep = strchr (to, ':');
       if (sep)
       {
-        strncpy (target, to, (size_t) (sep - to));
-        host = target;
+        host = strndup (to, (size_t) (sep - to));
         to = sep + 1;
       }
       port = (uint16_t) atoi (to);
       result = iot_logger_alloc_udp (name, level, start, next, host, port);
+      free (host);
     }
     else
     {

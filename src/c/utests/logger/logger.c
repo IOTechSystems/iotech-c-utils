@@ -8,6 +8,9 @@
 #include "logger.h"
 #include "iot/container.h"
 #include "CUnit.h"
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #define IOT_TEST_LOGGER_TYPE "IOT::UTEST::Logger"
 
@@ -136,6 +139,45 @@ static void cunit_logger_udp (void)
   iot_logger_start (logger);
   cunit_test_logs (logger);
   iot_logger_free (logger);
+}
+
+static void cunit_logger_udp_long (void)
+{
+  // Long messages are truncated to the log buffer (ending with newline), not sent beyond it (checked by valgrind)
+  int sock = socket (AF_INET, SOCK_DGRAM, 0);
+  struct sockaddr_in addr = { .sin_family = AF_INET, .sin_addr.s_addr = htonl (INADDR_LOOPBACK) };
+  socklen_t alen = sizeof (addr);
+  CU_ASSERT (bind (sock, (struct sockaddr*) &addr, sizeof (addr)) == 0)
+  getsockname (sock, (struct sockaddr*) &addr, &alen);
+  iot_logger_t * logger = iot_logger_alloc_udp ("udp", IOT_LOG_WARN, true, NULL, "127.0.0.1", ntohs (addr.sin_port));
+  char msg[3000];
+  memset (msg, 'x', sizeof (msg) - 1u);
+  msg[sizeof (msg) - 1u] = '\0';
+  iot_log_error (logger, "%s", msg);
+  char buff[4096];
+  ssize_t len = recv (sock, buff, sizeof (buff), 0);
+  CU_ASSERT (len > 0 && len < 2000 && buff[len - 1] == '\n')
+  iot_logger_free (logger);
+  close (sock);
+}
+
+static void cunit_logger_udp_host (void)
+{
+  // Host names are resolved, long host names do not overflow, and unresolvable hosts fail
+  iot_logger_t * logger = iot_logger_alloc_udp ("udp", IOT_LOG_WARN, false, NULL, "localhost", 22222);
+  CU_ASSERT (logger != NULL)
+  iot_logger_free (logger);
+  CU_ASSERT (iot_logger_alloc_udp ("udp", IOT_LOG_WARN, false, NULL, "no-such-host.invalid", 22222) == NULL)
+  iot_container_t * cont = iot_container_alloc ("udp_host");
+  iot_data_t * config = iot_data_from_json ("{\"Name\":\"udp\",\"To\":\"udp:a-very-long-host-name-that-does-not-exist.invalid:5000\"}");
+  CU_ASSERT (iot_logger_factory ()->config_fn (cont, config) == NULL)
+  iot_data_free (config);
+  config = iot_data_from_json ("{\"Name\":\"udp\",\"To\":\"udp:localhost:5000\"}");
+  iot_component_t * comp = iot_logger_factory ()->config_fn (cont, config);
+  CU_ASSERT (comp != NULL)
+  iot_logger_free ((iot_logger_t*) comp);
+  iot_data_free (config);
+  iot_container_free (cont);
 }
 
 static void cunit_logger_udp_broadcast (void)
@@ -281,4 +323,6 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_set_next", cunit_logger_set_next);
   CU_add_test (suite, "logger_level_name", cunit_logger_level_name);
   CU_add_test (suite, "logger_chained", cunit_logger_chained);
+  CU_add_test (suite, "logger_udp_long", cunit_logger_udp_long);
+  CU_add_test (suite, "logger_udp_host", cunit_logger_udp_host);
 }

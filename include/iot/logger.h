@@ -97,9 +97,9 @@ extern iot_logger_t * iot_logger_alloc_file (const char * name, iot_loglevel_t l
  * @param level       Log level
  * @param self_start  'true' will start the logger after initialization
  * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
- * @param host        Address to send data - NULL means broadcast
+ * @param host        IPv4 address or host name to send data - NULL means broadcast
  * @param port        Port on which to send data
- * @return            Pointer to the logger component created
+ * @return            Pointer to the logger component created, or NULL if host could not be resolved
  */
 extern iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *host, uint16_t port);
 

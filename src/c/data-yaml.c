@@ -8,7 +8,7 @@
 #include <math.h>
 #include <yaml.h>
 
-static iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **exception);
+static iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **exception, uint32_t depth);
 
 static iot_data_t * iot_data_string_from_yaml (const yaml_event_t *event)
 {
@@ -69,7 +69,7 @@ static iot_data_t * iot_data_value_from_yaml (const yaml_event_t *event)
   return ret;
 }
 
-static iot_data_t * iot_data_vector_from_yaml (yaml_parser_t *parser, iot_data_t **exception)
+static iot_data_t * iot_data_vector_from_yaml (yaml_parser_t *parser, iot_data_t **exception, uint32_t depth)
 {
   yaml_event_t event;
   bool done = false;
@@ -90,10 +90,15 @@ static iot_data_t * iot_data_vector_from_yaml (yaml_parser_t *parser, iot_data_t
         elem = iot_data_value_from_yaml (&event);
         break;
       case YAML_MAPPING_START_EVENT:
-        elem = iot_data_map_from_yaml (parser, exception);
-        break;
       case YAML_SEQUENCE_START_EVENT:
-        elem = iot_data_vector_from_yaml (parser, exception);
+        if (depth >= IOT_DATA_MAX_DEPTH) // Limit nesting so that recursion depth is bounded
+        {
+          *exception = iot_data_alloc_string_fmt ("Maximum nesting depth exceeded at line %zu", parser->mark.line);
+        }
+        else
+        {
+          elem = (event.type == YAML_MAPPING_START_EVENT) ? iot_data_map_from_yaml (parser, exception, depth + 1u) : iot_data_vector_from_yaml (parser, exception, depth + 1u);
+        }
         break;
       case YAML_SEQUENCE_END_EVENT:
         done = true;
@@ -119,7 +124,7 @@ static iot_data_t * iot_data_vector_from_yaml (yaml_parser_t *parser, iot_data_t
   }
 }
 
-static iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **exception)
+static iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **exception, uint32_t depth)
 {
   yaml_event_t event;
   bool done = false;
@@ -146,10 +151,15 @@ static iot_data_t * iot_data_map_from_yaml (yaml_parser_t *parser, iot_data_t **
         }
         break;
       case YAML_MAPPING_START_EVENT:
-        elem = iot_data_map_from_yaml (parser, exception);
-        break;
       case YAML_SEQUENCE_START_EVENT:
-        elem = iot_data_vector_from_yaml (parser, exception);
+        if (depth >= IOT_DATA_MAX_DEPTH) // Limit nesting so that recursion depth is bounded
+        {
+          *exception = iot_data_alloc_string_fmt ("Maximum nesting depth exceeded at line %zu", parser->mark.line);
+        }
+        else
+        {
+          elem = (event.type == YAML_MAPPING_START_EVENT) ? iot_data_map_from_yaml (parser, exception, depth + 1u) : iot_data_vector_from_yaml (parser, exception, depth + 1u);
+        }
         break;
       case YAML_MAPPING_END_EVENT:
         done = true;
@@ -209,11 +219,11 @@ iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t **exception)
         done = true;
         break;
       case YAML_MAPPING_START_EVENT:
-        result = iot_data_map_from_yaml (&parser, exception);
+        result = iot_data_map_from_yaml (&parser, exception, 1u);
         done = true;
         break;
       case YAML_SEQUENCE_START_EVENT:
-        result = iot_data_vector_from_yaml (&parser, exception);
+        result = iot_data_vector_from_yaml (&parser, exception, 1u);
         done = true;
         break;
       case YAML_STREAM_END_EVENT:

@@ -365,6 +365,80 @@ static void test_data_from_xml (void)
 }
 #endif
 
+static void test_json_invalid (void)
+{
+  // Malformed and invalid JSON is rejected (returning null), without reading outside the input (checked by valgrind)
+  static const char * invalid[] =
+  {
+    "{\"a\"}", "{\"a\",\"b\",\"c\",\"d\"}", "{\"a\":{}:1}", "{\"a\":}", "{\"a\" \"b\"}", "{\"a\":1 \"b\":2}", "{a:1}", "{1:2}",
+    "[\"a\":1]", "[}", "{]", "[1,2", "{\"a\":1}x", "1 2", "{\"enabled\":tomato}", "[nothing]", "[010]", "[1.]", "[-]",
+    "[.5]", "[1e]", "[\"a\x01" "b\"]", "[\"a\\u0000b\"]", "[\"\\x\"]", "[\"\\u12\"]", "\"abc"
+  };
+  for (uint32_t i = 0; i < sizeof (invalid) / sizeof (invalid[0]); i++)
+  {
+    iot_data_t * data = iot_data_from_json (invalid[i]);
+    CU_ASSERT (iot_data_type (data) == IOT_DATA_NULL)
+    iot_data_free (data);
+  }
+}
+
+static void test_json_values (void)
+{
+  // Valid JSON values, including numbers outside 64 bit range, NaN as written by iot_data_to_json and escapes
+  static const struct { const char * in; const char * out; } cases[] =
+  {
+    { "[true,false,null]", "[true,false,null]" },
+    { "[1,-2,0,-0,9223372036854775807,-9223372036854775808,18446744073709551615]", "[1,-2,0,0,9223372036854775807,-9223372036854775808,18446744073709551615]" },
+    { "[99999999999999999999]", "[1.0000000000000000e+20]" },
+    { "[2.5e2]", "[2.5000000000000000e+02]" },
+    { "{\"a\":[1,{\"b\":null}],\"c\":\"d\\n\\t\\\"\\\\\\/\"}", "{\"a\":[1,{\"b\":null}],\"c\":\"d\\n\\t\\\"\\\\/\"}" },
+    { "[\"\\u00e9\\u20ac\"]", "[\"\xc3\xa9\xe2\x82\xac\"]" },
+    { "[\"\\ud83d\\ude00\"]", "[\"\xf0\x9f\x98\x80\"]" },
+    { "[\"\\ud800x\",\"\\udc00\"]", "[\"\xef\xbf\xbdx\",\"\xef\xbf\xbd\"]" }, // Unpaired surrogates replaced
+    { "[1,]", "[1]" } // Trailing comma tolerated
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * data = iot_data_from_json (cases[i].in);
+    char * json = iot_data_to_json (data);
+    CU_ASSERT (strcmp (json, cases[i].out) == 0)
+    free (json);
+    iot_data_free (data);
+  }
+  iot_data_t * data = iot_data_from_json ("[nan,-nan]");
+  CU_ASSERT (isnan (iot_data_f64 (iot_data_vector_get (data, 0u))) && isnan (iot_data_f64 (iot_data_vector_get (data, 1u))))
+  iot_data_free (data);
+}
+
+static char * test_json_nested (uint32_t depth)
+{
+  char * json = malloc (2u * depth + 1u);
+  memset (json, '[', depth);
+  memset (json + depth, ']', depth);
+  json[2u * depth] = '\0';
+  return json;
+}
+
+static void test_json_depth (void)
+{
+  // Nesting depth is limited, so deeply nested input cannot exhaust the stack (or take quadratic time)
+  char * json = test_json_nested (256u);
+  iot_data_t * data = iot_data_from_json (json);
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_VECTOR)
+  iot_data_free (data);
+  free (json);
+  json = test_json_nested (257u);
+  data = iot_data_from_json (json);
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_NULL)
+  iot_data_free (data);
+  free (json);
+  json = test_json_nested (500000u);
+  data = iot_data_from_json (json);
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_NULL)
+  iot_data_free (data);
+  free (json);
+}
+
 static void test_data_to_json_large (void)
 {
   // Output well beyond initial buffer size must be complete, and parse back to the same data
@@ -736,6 +810,24 @@ static void test_cbor_to_data (void)
 #endif
 
 #ifdef IOT_HAS_YAML
+static void test_data_from_yaml_depth (void)
+{
+  // Nesting depth is limited, so deeply nested input cannot exhaust the stack
+  char * yaml = malloc (100001u);
+  memset (yaml, '[', 100000u);
+  yaml[100000u] = '\0';
+  iot_data_t * exception = NULL;
+  iot_data_t * data = iot_data_from_yaml (yaml, &exception);
+  CU_ASSERT (data == NULL)
+  CU_ASSERT (exception != NULL && strstr (iot_data_string (exception), "depth") != NULL)
+  iot_data_free (exception);
+  free (yaml);
+  exception = NULL;
+  data = iot_data_from_yaml ("[[[1]]]", &exception);
+  CU_ASSERT (data != NULL && exception == NULL)
+  iot_data_free (data);
+}
+
 static void test_data_from_yaml (void)
 {
   iot_data_t * yaml;
@@ -797,7 +889,11 @@ void cunit_data_io_test_init (void)
   CU_add_test (suite, "cbor_decode_robust", test_cbor_decode_robust);
 #endif
   CU_add_test (suite, "data_to_json_large", test_data_to_json_large);
+  CU_add_test (suite, "json_invalid", test_json_invalid);
+  CU_add_test (suite, "json_values", test_json_values);
+  CU_add_test (suite, "json_depth", test_json_depth);
 #ifdef IOT_HAS_YAML
   CU_add_test (suite, "data_from_yaml", test_data_from_yaml);
+  CU_add_test (suite, "data_from_yaml_depth", test_data_from_yaml_depth);
 #endif
 }
