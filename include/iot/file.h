@@ -30,13 +30,18 @@ extern const uint32_t iot_file_modify_flag;      /** File or directory contents 
 /**
  * @brief Load string from file path, returns file contents as a NULL terminated string
  *
+ * The file is read until end of file, so special files (such as /proc and /sys files) are supported.
+ *
  * @param path  File path
- * @return      String loaded from the file or NULL if file not found (client needs to free)
+ * @return      String loaded from the file or NULL if file not found or could not be read (client needs to free)
  */
 extern char * iot_file_read (const char * path);
 
 /**
  * @brief Writes a NULL terminated string to a file, overwriting any existing contents
+ *
+ * An existing file is replaced atomically (via a temporary file, flushed to disk, then renamed), keeping its
+ * permissions and (if privileged) ownership, so is never left partially written. The string may be empty.
  *
  * @param path  File path
  * @param str   String to write
@@ -66,18 +71,21 @@ extern bool iot_file_delete (const char * path);
 /**
  * @brief Load binary data from a file
  *
- * Function to return a binary array of file contents
+ * Function to return a binary array of file contents. The file is read until end of file, so special files
+ * (such as /proc and /sys files) are supported. The returned array has an extra NULL terminating byte (not
+ * included in len), so may also be used as a string.
  *
  * @param path  File path
- * @param len   Length of returned binary array
- * @return      Binary contents of file (client needs to free)
+ * @param len   Length of returned binary array (set to zero if file not found or could not be read)
+ * @return      Binary contents of file, or NULL if file not found or could not be read (client needs to free)
  */
 extern uint8_t * iot_file_read_binary (const char * path, size_t * len);
 
 /**
  * @brief Write binary data to a file
  *
- * Function to write a binary of given size to a file, overwriting any existing contents
+ * Function to write a binary of given size to a file, overwriting any existing contents. An existing file is
+ * replaced atomically, keeping its permissions (see iot_file_write). The length may be zero.
  *
  * @param path   File path
  * @param binary The binary array to be written

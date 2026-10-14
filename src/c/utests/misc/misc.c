@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #endif
 
 #define MAX_COUNTER 1000
@@ -148,6 +149,113 @@ static void test_read_file (void)
     CU_ASSERT (strlen (ret) == strlen ("Hello"))
     free (ret);
   }
+}
+
+#define TEST_REPLACE_DIR "/tmp/_iot_replace"
+#define TEST_REPLACE_FILE TEST_REPLACE_DIR "/config.json"
+
+static uint32_t test_dir_count (const char * dir)
+{
+  iot_data_t * list = iot_file_list (dir, NULL);
+  uint32_t count = list ? iot_data_list_length (list) : 0u;
+  iot_data_free (list);
+  return count;
+}
+
+static void test_file_replace_mode (void)
+{
+  // Rewriting an existing file keeps its permissions, and leaves no temporary file
+  mkdir (TEST_REPLACE_DIR, 0700);
+  CU_ASSERT (iot_file_write (TEST_REPLACE_FILE, "first"))
+  CU_ASSERT (chmod (TEST_REPLACE_FILE, 0600) == 0)
+  CU_ASSERT (iot_file_write (TEST_REPLACE_FILE, "second"))
+  struct stat st;
+  CU_ASSERT (stat (TEST_REPLACE_FILE, &st) == 0 && (st.st_mode & 0777) == 0600)
+  char * str = iot_file_read (TEST_REPLACE_FILE);
+  CU_ASSERT (str && strcmp (str, "second") == 0)
+  free (str);
+  CU_ASSERT (test_dir_count (TEST_REPLACE_DIR) == 1u)
+  iot_file_delete (TEST_REPLACE_FILE);
+  rmdir (TEST_REPLACE_DIR);
+}
+
+static void test_file_write_empty (void)
+{
+  // Empty content can be written, replacing existing content
+  size_t len = 99u;
+  CU_ASSERT (iot_file_write (TEST_FILE_NAME, "data"))
+  CU_ASSERT (iot_file_write (TEST_FILE_NAME, ""))
+  uint8_t * bin = iot_file_read_binary (TEST_FILE_NAME, &len);
+  CU_ASSERT (bin && len == 0u && bin[0] == 0)
+  free (bin);
+  CU_ASSERT (iot_file_write_binary (TEST_FILE_NAME, NULL, 0u))
+  CU_ASSERT (iot_file_append_binary (TEST_FILE_NAME, NULL, 0u))
+  bin = iot_file_read_binary (TEST_FILE_NAME, &len);
+  CU_ASSERT (bin && len == 0u)
+  free (bin);
+  iot_file_delete (TEST_FILE_NAME);
+}
+
+static void test_file_large (void)
+{
+  // Binary content larger than read buffer is read back intact
+  size_t size = 100000u;
+  size_t len = 0u;
+  uint8_t * data = malloc (size);
+  for (size_t i = 0; i < size; i++) data[i] = (uint8_t) (i * 7u);
+  CU_ASSERT (iot_file_write_binary (TEST_FILE_NAME, data, size))
+  uint8_t * bin = iot_file_read_binary (TEST_FILE_NAME, &len);
+  CU_ASSERT (bin && len == size && memcmp (bin, data, size) == 0)
+  free (bin);
+  free (data);
+  iot_file_delete (TEST_FILE_NAME);
+}
+
+#ifdef __linux__
+static void test_file_read_special (void)
+{
+  // Special files report an incorrect size, so must be read until end of file
+  size_t len = 0u;
+  uint8_t * bin = iot_file_read_binary ("/proc/self/status", &len);
+  CU_ASSERT (bin && len > 0u && strlen ((const char*) bin) == len && strncmp ((const char*) bin, "Name:", 5u) == 0)
+  free (bin);
+  CU_ASSERT (! iot_file_append ("/dev/full", "x")) // Write error reported (only detected on flush)
+  CU_ASSERT (! iot_file_write ("/dev/full", "x")) // Cannot replace device file
+}
+
+static uint32_t test_fd_count (void)
+{
+  uint32_t count = 0u;
+  DIR * dir = opendir ("/proc/self/fd"); // Entries are symbolic links, so not listed by iot_file_list
+  while (dir && readdir (dir)) count++;
+  if (dir) closedir (dir);
+  return count;
+}
+
+static void test_list_file_bad_regex (void)
+{
+  // Invalid regex returns NULL without leaking the directory
+  uint32_t before = test_fd_count ();
+  for (uint32_t i = 0; i < 10u; i++) CU_ASSERT (iot_file_list ("/tmp", "[unclosed") == NULL)
+  CU_ASSERT (test_fd_count () == before)
+}
+#endif
+
+static void test_file_long_path (void)
+{
+  // Existing file path too long for temporary file path (path + ".XXXXXX") fails cleanly, leaving file unchanged
+  char path[PATH_MAX];
+  const char * name = "/iot_test.json";
+  CU_ASSERT (iot_file_write (TEST_FILE_NAME, "original"))
+  strcpy (path, "/tmp");
+  while (strlen (path) + strlen (name) < PATH_MAX - 6u) strcat (path, "/."); // Same file, via padded path
+  strcat (path, name);
+  CU_ASSERT (iot_file_exists (path))
+  CU_ASSERT (! iot_file_write (path, "x"))
+  char * str = iot_file_read (TEST_FILE_NAME);
+  CU_ASSERT (str && strcmp (str, "original") == 0)
+  free (str);
+  iot_file_delete (TEST_FILE_NAME);
 }
 
 static void test_list_file (void)
@@ -318,5 +426,13 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "file_append_binary", test_file_append_binary);
   CU_add_test (suite, "list_file", test_list_file);
   CU_add_test (suite, "list_config_file", test_list_config_file);
+  CU_add_test (suite, "file_replace_mode", test_file_replace_mode);
+  CU_add_test (suite, "file_write_empty", test_file_write_empty);
+  CU_add_test (suite, "file_large", test_file_large);
+  CU_add_test (suite, "file_long_path", test_file_long_path);
+#ifdef __linux__
+  CU_add_test (suite, "file_read_special", test_file_read_special);
+  CU_add_test (suite, "list_file_bad_regex", test_list_file_bad_regex);
+#endif
 #endif
 }

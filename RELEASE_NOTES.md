@@ -105,3 +105,7 @@
 - Documented vector compaction by `iot_data_remove_at` and that NaN map keys cannot be found
 - Added exported constants `iot_data_true`, `iot_data_false` and `iot_data_null` for the shared boolean and null values, which can be used directly instead of `iot_data_alloc_bool` and `iot_data_alloc_null`
 - The shared boolean and null values are now held in read only memory, and setting tags or metadata on them asserts in debug builds
+- `iot_file_read` and `iot_file_read_binary` now read until end of file, so /proc, /sys and other special files are read correctly (previously empty, or padded with uninitialised data)
+- `iot_file_write` and `iot_file_write_binary` now keep the permissions (and ownership if privileged) of a replaced file, flush data to disk before replacing it, use a unique temporary file, report write, close and rename errors, and support empty content. A failed write leaves the original file unchanged and no temporary file
+- Fixed `iot_file_list` leaking the directory handle on an invalid regex, and skipping files on file systems that do not report file types
+- Fixed `iot_file_watch` spinning on read errors
