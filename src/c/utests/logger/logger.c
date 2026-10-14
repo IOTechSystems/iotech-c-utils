@@ -147,6 +147,8 @@ static void cunit_logger_udp_long (void)
   int sock = socket (AF_INET, SOCK_DGRAM, 0);
   struct sockaddr_in addr = { .sin_family = AF_INET, .sin_addr.s_addr = htonl (INADDR_LOOPBACK) };
   socklen_t alen = sizeof (addr);
+  const struct timeval timeout = { .tv_sec = 5 };
+  CU_ASSERT (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof (timeout)) == 0) // Fail rather than hang if message not received
   CU_ASSERT (bind (sock, (struct sockaddr*) &addr, sizeof (addr)) == 0)
   getsockname (sock, (struct sockaddr*) &addr, &alen);
   iot_logger_t * logger = iot_logger_alloc_udp ("udp", IOT_LOG_WARN, true, NULL, "127.0.0.1", ntohs (addr.sin_port));
@@ -163,13 +165,14 @@ static void cunit_logger_udp_long (void)
 
 static void cunit_logger_udp_host (void)
 {
-  // Host names are resolved, long host names do not overflow, and unresolvable hosts fail
+  // Host names are resolved, long host names do not overflow, and unresolvable hosts fail.
+  // Invalid names have a label longer than 63 characters, so fail without a DNS query (which can take many seconds without network)
   iot_logger_t * logger = iot_logger_alloc_udp ("udp", IOT_LOG_WARN, false, NULL, "localhost", 22222);
   CU_ASSERT (logger != NULL)
   iot_logger_free (logger);
-  CU_ASSERT (iot_logger_alloc_udp ("udp", IOT_LOG_WARN, false, NULL, "no-such-host.invalid", 22222) == NULL)
+  CU_ASSERT (iot_logger_alloc_udp ("udp", IOT_LOG_WARN, false, NULL, "no-such-host-with-a-label-that-is-longer-than-the-dns-maximum-length.invalid", 22222) == NULL)
   iot_container_t * cont = iot_container_alloc ("udp_host");
-  iot_data_t * config = iot_data_from_json ("{\"Name\":\"udp\",\"To\":\"udp:a-very-long-host-name-that-does-not-exist.invalid:5000\"}");
+  iot_data_t * config = iot_data_from_json ("{\"Name\":\"udp\",\"To\":\"udp:a-very-long-host-name-with-a-label-that-is-longer-than-the-dns-maximum.invalid:5000\"}");
   CU_ASSERT (iot_logger_factory ()->config_fn (cont, config) == NULL)
   iot_data_free (config);
   config = iot_data_from_json ("{\"Name\":\"udp\",\"To\":\"udp:localhost:5000\"}");

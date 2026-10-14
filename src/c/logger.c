@@ -292,6 +292,7 @@ iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bo
   {
     ctx->addr.sin_addr.s_addr = htonl (INADDR_BROADCAST);
   }
+  ctx->addr.sin_family = AF_INET;
   ctx->addr.sin_port = htons (port);
   ctx->sock = socket (AF_INET, SOCK_DGRAM, 0);
   if (host == NULL) setsockopt (ctx->sock, SOL_SOCKET, SO_BROADCAST, (const void*) &yes, sizeof (yes));

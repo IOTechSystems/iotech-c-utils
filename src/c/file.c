@@ -83,7 +83,7 @@ static bool iot_file_update_binary (const char * path, const uint8_t * binary, s
   assert (path && (binary || len == 0u));
   bool ok = false;
   struct stat st;
-  bool replace = !append && (stat (path, &st) == 0); // Existing file replaced via temporary file, so never partially written
+  bool replace = !append && (lstat (path, &st) == 0) && S_ISREG (st.st_mode); // Existing regular file replaced via temporary file, so never partially written (symbolic links and special files written directly)
   char tmp_path[PATH_MAX];
   int fd;
   if (replace)

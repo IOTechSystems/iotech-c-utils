@@ -220,7 +220,24 @@ static void test_file_read_special (void)
   CU_ASSERT (bin && len > 0u && strlen ((const char*) bin) == len && strncmp ((const char*) bin, "Name:", 5u) == 0)
   free (bin);
   CU_ASSERT (! iot_file_append ("/dev/full", "x")) // Write error reported (only detected on flush)
-  CU_ASSERT (! iot_file_write ("/dev/full", "x")) // Cannot replace device file
+  CU_ASSERT (! iot_file_write ("/dev/full", "x")) // Device file written directly, not replaced (even if privileged)
+}
+
+static void test_file_write_symlink (void)
+{
+  // Writing via a symbolic link updates the target file, keeping the link
+  const char * link = TEST_FILE_NAME ".link";
+  struct stat st;
+  CU_ASSERT (iot_file_write (TEST_FILE_NAME, "first"))
+  unlink (link);
+  CU_ASSERT (symlink (TEST_FILE_NAME, link) == 0)
+  CU_ASSERT (iot_file_write (link, "second"))
+  CU_ASSERT (lstat (link, &st) == 0 && S_ISLNK (st.st_mode))
+  char * str = iot_file_read (TEST_FILE_NAME);
+  CU_ASSERT (str && strcmp (str, "second") == 0)
+  free (str);
+  unlink (link);
+  iot_file_delete (TEST_FILE_NAME);
 }
 
 static uint32_t test_fd_count (void)
@@ -432,6 +449,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "file_long_path", test_file_long_path);
 #ifdef __linux__
   CU_add_test (suite, "file_read_special", test_file_read_special);
+  CU_add_test (suite, "file_write_symlink", test_file_write_symlink);
   CU_add_test (suite, "list_file_bad_regex", test_list_file_bad_regex);
 #endif
 #endif
