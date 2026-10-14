@@ -29,16 +29,20 @@ static void * zephyr_func_wrapper (void * data)
 
 #endif
 
+static int iot_thread_max_priority;
+static int iot_thread_min_priority;
+static pthread_once_t iot_thread_priority_once = PTHREAD_ONCE_INIT;
+
+static void iot_thread_priority_init (void)
+{
+  iot_thread_max_priority = sched_get_priority_max (SCHED_FIFO);
+  iot_thread_min_priority = sched_get_priority_min (SCHED_FIFO);
+}
+
 bool iot_thread_priority_valid (int priority)
 {
-  static int max_priority = -2;
-  static int min_priority = -2;
-  if (max_priority == -2)
-  {
-    max_priority = sched_get_priority_max (SCHED_FIFO);
-    min_priority = sched_get_priority_min (SCHED_FIFO);
-  }
-  return (priority >= min_priority && priority <= max_priority);
+  pthread_once (&iot_thread_priority_once, iot_thread_priority_init); // Range set once, safely if called concurrently
+  return (priority >= iot_thread_min_priority && priority <= iot_thread_max_priority);
 }
 
 bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger)
@@ -106,11 +110,31 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
     if (ret != 0) iot_log_warn (logger, "pthread_attr_setschedparam failed ret: %d", ret);
   }
   ret = pthread_create (tid, &attr, func, arg);
+#ifdef __ZEPHYR__
   if (ret != 0)
   {
-    ret = pthread_create (tid, NULL, func, arg);
-    if (ret != 0) iot_log_error (logger, "pthread_create failed ret: %d", ret);
+    k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
+    wrapper->func = NULL; // Release stack for reuse
+    k_mutex_unlock (&zephyr_stack_mutex);
   }
+#else
+  if (ret != 0) // Retry without setting priority (e.g. if not permitted), keeping thread detached and affinity
+  {
+    iot_log_warn (logger, "pthread_create failed ret: %d, retrying without priority", ret);
+    pthread_attr_setinheritsched (&attr, PTHREAD_INHERIT_SCHED);
+    ret = pthread_create (tid, &attr, func, arg);
+  }
+  if (ret != 0) // Retry with default attributes (e.g. affinity not permitted), keeping thread detached
+  {
+    pthread_attr_t dflt;
+    iot_log_warn (logger, "pthread_create failed ret: %d, retrying without affinity", ret);
+    pthread_attr_init (&dflt);
+    pthread_attr_setdetachstate (&dflt, PTHREAD_CREATE_DETACHED);
+    ret = pthread_create (tid, &dflt, func, arg);
+    pthread_attr_destroy (&dflt);
+  }
+#endif
+  if (ret != 0) iot_log_error (logger, "pthread_create failed ret: %d", ret);
   pthread_attr_destroy (&attr);
 
 #ifdef _ALPINE_
@@ -133,10 +157,9 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
 
 int iot_thread_get_priority (pthread_t thread)
 {
-  struct sched_param param;
+  struct sched_param param = { 0 };
   int policy;
-  pthread_getschedparam (thread, &policy, &param);
-  return param.sched_priority;
+  return (pthread_getschedparam (thread, &policy, &param) == 0) ? param.sched_priority : IOT_THREAD_NO_PRIORITY;
 }
 
 int iot_thread_current_get_priority (void)

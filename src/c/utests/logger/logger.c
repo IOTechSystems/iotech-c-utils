@@ -7,10 +7,13 @@
 
 #include "logger.h"
 #include "iot/container.h"
+#include "iot/time.h"
 #include "CUnit.h"
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <sched.h>
 
 #define IOT_TEST_LOGGER_TYPE "IOT::UTEST::Logger"
 
@@ -275,17 +278,82 @@ static iot_component_t * cunit_logger_chained_config (iot_container_t * cont, co
   return (iot_component_t*) result;
 }
 
+static atomic_uint cunit_count_a;
+static atomic_uint cunit_count_b;
+
+static void cunit_count_log_a (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void * ctx)
+{
+  (void) logger; (void) level; (void) timestamp; (void) message; (void) ctx;
+  atomic_fetch_add (&cunit_count_a, 1u);
+}
+
+static void cunit_count_log_b (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void * ctx)
+{
+  (void) logger; (void) level; (void) timestamp; (void) message; (void) ctx;
+  atomic_fetch_add (&cunit_count_b, 1u);
+}
+
+static void cunit_logger_chain_no_container (void)
+{
+  // Loggers chained without a container: level changes propagate, next can be changed or removed
+  iot_logger_t * b = iot_logger_alloc_custom ("b", IOT_LOG_ERROR, true, NULL, cunit_count_log_b, NULL, NULL);
+  iot_logger_t * a = iot_logger_alloc_custom ("a", IOT_LOG_ERROR, true, b, cunit_count_log_a, NULL, NULL);
+  iot_logger_set_level (b, IOT_LOG_WARN); // Previously crashed (parent looked up in container)
+  CU_ASSERT (a->level == IOT_LOG_WARN)
+  atomic_store (&cunit_count_a, 0u);
+  atomic_store (&cunit_count_b, 0u);
+  iot_log_warn (a, "warn");
+  CU_ASSERT (atomic_load (&cunit_count_a) == 0u && atomic_load (&cunit_count_b) == 1u)
+  iot_logger_set_next (a, NULL); // Detach
+  CU_ASSERT (a->level == IOT_LOG_ERROR)
+  iot_log_warn (a, "warn");
+  CU_ASSERT (atomic_load (&cunit_count_b) == 1u)
+  iot_logger_set_next (a, b); // Reattach updates effective level
+  CU_ASSERT (a->level == IOT_LOG_WARN)
+  iot_logger_free (a);
+  iot_logger_free (b);
+}
+
+#define CUNIT_LOG_THREADS 4
+#define CUNIT_LOG_MESSAGES 2000
+
+static atomic_uint cunit_log_done;
+
+static void * cunit_log_thread (void * arg)
+{
+  iot_logger_t * logger = arg;
+  for (int i = 0; i < CUNIT_LOG_MESSAGES; i++) iot_log_error (logger, "message");
+  atomic_fetch_add (&cunit_log_done, 1u);
+  return NULL;
+}
+
+static void cunit_logger_set_next_concurrent (void)
+{
+  // Next logger replaced while other threads log through the chain (use after free checked by valgrind)
+  iot_logger_t * a = iot_logger_alloc_custom ("a", IOT_LOG_ERROR, true, NULL, cunit_count_log_a, NULL, NULL);
+  pthread_t threads[CUNIT_LOG_THREADS];
+  atomic_store (&cunit_count_a, 0u);
+  atomic_store (&cunit_count_b, 0u);
+  atomic_store (&cunit_log_done, 0u);
+  for (int i = 0; i < CUNIT_LOG_THREADS; i++) pthread_create (&threads[i], NULL, cunit_log_thread, a);
+  while (atomic_load (&cunit_log_done) < CUNIT_LOG_THREADS) // Replace next logger until all logging done
+  {
+    iot_logger_t * next = iot_logger_alloc_custom ("next", IOT_LOG_ERROR, true, NULL, cunit_count_log_b, NULL, NULL);
+    iot_logger_set_next (a, next);
+    iot_logger_free (next); // Reference now held by a only
+    sched_yield ();
+  }
+  for (int i = 0; i < CUNIT_LOG_THREADS; i++) pthread_join (threads[i], NULL);
+  iot_logger_set_next (a, NULL);
+  CU_ASSERT (atomic_load (&cunit_count_a) == CUNIT_LOG_THREADS * CUNIT_LOG_MESSAGES)
+  iot_logger_free (a);
+}
+
 static void cunit_logger_chained (void)
 {
-  iot_component_factory_t f =
-  {
-    IOT_TEST_LOGGER_TYPE,
-    IOT_CATEGORY_CORE,
-    cunit_logger_chained_config,
-    iot_logger_factory ()->free_fn,
-    iot_logger_factory ()->reconfig_fn,
-    NULL
-  };
+  static iot_component_factory_t f = { IOT_TEST_LOGGER_TYPE, IOT_CATEGORY_CORE, cunit_logger_chained_config, NULL, NULL, NULL }; // Static, as factories remain registered after test
+  f.free_fn = iot_logger_factory ()->free_fn;
+  f.reconfig_fn = iot_logger_factory ()->reconfig_fn;
   iot_component_factory_add (&f);
   iot_container_t *cont = iot_container_alloc ("logger_chained");
   iot_container_add_component (cont, IOT_TEST_LOGGER_TYPE, "logger1", logger1_config);
@@ -328,4 +396,6 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_chained", cunit_logger_chained);
   CU_add_test (suite, "logger_udp_long", cunit_logger_udp_long);
   CU_add_test (suite, "logger_udp_host", cunit_logger_udp_host);
+  CU_add_test (suite, "logger_chain_no_container", cunit_logger_chain_no_container);
+  CU_add_test (suite, "logger_set_next_concurrent", cunit_logger_set_next_concurrent);
 }

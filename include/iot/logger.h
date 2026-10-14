@@ -213,7 +213,7 @@ extern const char * iot_logger_level_to_string (iot_loglevel_t level);
 /**
  * @brief Add next logger to a logger (for chained logging)
  * @param logger Logger
- * @param next Next logger
+ * @param next Next logger, or NULL to remove next logger. May be changed while logging, the effective log level is updated
  */
 extern void iot_logger_set_next (iot_logger_t * logger, iot_logger_t * next);
 
