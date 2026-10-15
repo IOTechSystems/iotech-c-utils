@@ -563,10 +563,12 @@ void iot_scheduler_free (iot_scheduler_t * scheduler)
 
 static iot_component_t * iot_scheduler_config (iot_container_t * cont, const iot_data_t * map)
 {
-  iot_logger_t * logger = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Logger"));
+  iot_logger_t * logger = (iot_logger_t*) iot_container_get_component (cont, iot_data_string_map_get_string (map, "Logger"));
   int affinity = (int) iot_data_string_map_get_i64 (map, "Affinity", IOT_THREAD_NO_AFFINITY);
   int prio = (int) iot_data_string_map_get_i64 (map, "Priority", IOT_THREAD_NO_PRIORITY);
-  return (iot_component_t*) iot_scheduler_alloc (prio, affinity, logger);
+  iot_scheduler_t * scheduler = iot_scheduler_alloc (prio, affinity, logger);
+  iot_container_release_component ((iot_component_t*) logger); // Scheduler holds its own logger reference
+  return &scheduler->component;
 }
 
 const iot_component_factory_t * iot_scheduler_factory (void)

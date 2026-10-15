@@ -400,7 +400,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
 {
   iot_logger_t *result;
   iot_loglevel_t level = iot_logger_config_level (map);
-  iot_logger_t * next = (iot_logger_t*) iot_container_find_component (cont, iot_data_string_map_get_string (map, "Next"));
+  iot_logger_t * next = (iot_logger_t*) iot_container_get_component (cont, iot_data_string_map_get_string (map, "Next"));
   bool start = iot_data_string_map_get_bool (map, "Start", true);
   const char * name = iot_data_string_map_get_string (map, "Name");
   const char * to = iot_data_string_map_get_string (map, "To");
@@ -434,6 +434,7 @@ static iot_component_t * iot_logger_config (iot_container_t * cont, const iot_da
       ((iot_logger_impl_t *)result)->no_stderr = iot_data_string_map_get_bool (map, "NoStderr", false);
     }
   }
+  iot_container_release_component ((iot_component_t*) next); // Logger holds its own next logger reference
   return (iot_component_t*) result;
 }
 

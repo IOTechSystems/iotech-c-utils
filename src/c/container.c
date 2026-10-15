@@ -42,14 +42,28 @@ static const iot_container_config_t * iot_config = NULL;
   static pthread_mutex_t iot_container_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-static void iot_component_free (void * ptr)
+// Release component reference, stopping and freeing the component once there are no references
+
+static void iot_component_release (iot_component_t * component)
+{
+  if (iot_component_dec_ref (component))
+  {
+    if (component->state != IOT_COMPONENT_STOPPED)
+    {
+      component->stop_fn (component);
+    }
+    (component->factory->free_fn) (component);
+  }
+}
+
+static void iot_component_free (void * ptr) // Called when component removed from container, stopping it
 {
   iot_component_t * component = ptr;
   if (component->state != IOT_COMPONENT_STOPPED)
   {
     component->stop_fn (component);
   }
-  (component->factory->free_fn) (component);
+  iot_component_release (component);
 }
 
 /* Replace ${VALUE} in configuration string with corresponding environment variable */
@@ -170,10 +184,11 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
 }
 #endif
 
-static const iot_component_t * iot_container_find (iot_container_t * cont, const char * name)
+static const iot_component_t * iot_container_find (iot_container_t * cont, const char * name, bool ref)
 {
   pthread_rwlock_rdlock (&cont->lock);
   const iot_component_t * comp = iot_container_find_component_locked (cont, name);
+  if (comp && ref) iot_component_add_ref ((iot_component_t*) comp); // Reference taken under lock, so component cannot be freed
   pthread_rwlock_unlock (&cont->lock);
   return comp;
 }
@@ -183,7 +198,7 @@ static const iot_component_t * iot_container_find (iot_container_t * cont, const
 
 static bool iot_container_typed_load (iot_container_t * cont, const char * cname, const char * ctype)
 {
-  bool result = iot_container_find (cont, cname) != NULL;
+  bool result = iot_container_find (cont, cname, false) != NULL;
   if (!result)
   {
     const iot_component_factory_t *factory = iot_component_factory_find (ctype);
@@ -209,7 +224,7 @@ static bool iot_container_typed_load (iot_container_t * cont, const char * cname
 
 static bool iot_container_load (iot_container_t * cont, const char * cname)
 {
-  bool result = iot_container_find (cont, cname) != NULL;
+  bool result = iot_container_find (cont, cname, false) != NULL;
 
   if (! result)
   {
@@ -464,22 +479,37 @@ void iot_container_add_component (iot_container_t * cont, const char * ctype, co
   }
 }
 
-iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name)
+static iot_component_t * iot_container_find_or_load (iot_container_t * cont, const char * name, bool ref)
 {
   assert (cont);
   const iot_component_t * comp = NULL;
   if (name)
   {
-    comp = iot_container_find (cont, name);
+    comp = iot_container_find (cont, name, ref);
     if (iot_config && !comp) // Not found, so try to load. Loads serialised, and done without holding lock.
     {
       pthread_mutex_lock (&cont->load_mutex);
       iot_container_load (cont, name);
       pthread_mutex_unlock (&cont->load_mutex);
-      comp = iot_container_find (cont, name);
+      comp = iot_container_find (cont, name, ref);
     }
   }
   return (iot_component_t*) comp;
+}
+
+iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name)
+{
+  return iot_container_find_or_load (cont, name, false);
+}
+
+iot_component_t * iot_container_get_component (iot_container_t * cont, const char * name)
+{
+  return iot_container_find_or_load (cont, name, true);
+}
+
+void iot_container_release_component (iot_component_t * comp)
+{
+  if (comp) iot_component_release (comp);
 }
 
 void iot_container_delete_component (iot_container_t * cont, const char * name)

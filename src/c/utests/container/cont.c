@@ -295,6 +295,48 @@ static void test_stats_modify (void)
   iot_container_free (cont);
 }
 
+// Component whose free is counted
+
+static unsigned test_held_frees = 0u;
+
+static void test_held_free (iot_component_t * comp)
+{
+  test_held_frees++;
+  test_worker_free (comp);
+}
+
+static iot_component_factory_t test_held_factory = { "test::held", IOT_CATEGORY_USER, NULL, NULL, NULL, NULL };
+
+static void test_get_component (void)
+{
+  // A component reference keeps a deleted component valid until released
+  test_held_factory.config_fn = test_adder_config;
+  test_held_factory.free_fn = test_held_free;
+  iot_component_factory_add (&test_held_factory);
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_t * cont = iot_container_alloc ("held_cont");
+  iot_container_add_component (cont, "test::held", "held", "{}");
+  CU_ASSERT (iot_container_get_component (cont, "missing") == NULL)
+  iot_container_release_component (NULL);
+  iot_container_start (cont);
+  iot_component_t * comp = iot_container_get_component (cont, "held");
+  CU_ASSERT_FATAL (comp != NULL)
+  CU_ASSERT (comp == iot_container_find_component (cont, "held"))
+  iot_container_release_component (comp); // Releasing while in container neither stops nor frees
+  CU_ASSERT (comp->state == IOT_COMPONENT_RUNNING)
+  CU_ASSERT (test_held_frees == 0u)
+  comp = iot_container_get_component (cont, "held");
+  iot_container_delete_component (cont, "held"); // Deleting stops, but does not free while referenced
+  CU_ASSERT (iot_container_find_component (cont, "held") == NULL)
+  CU_ASSERT (test_held_frees == 0u)
+  CU_ASSERT (comp->state == IOT_COMPONENT_STOPPED)
+  CU_ASSERT_STRING_EQUAL (comp->name, "held")
+  iot_container_release_component (comp);
+  CU_ASSERT (test_held_frees == 1u)
+  iot_container_free (cont);
+  CU_ASSERT (test_held_frees == 1u)
+}
+
 static const char * lazy_logger_config = "{\"Name\":\"lazy\",\"Level\":\"Info\"}";
 
 static char * test_lazy_load (const char * name, const char * uri)
@@ -398,6 +440,7 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "delete_running_component", test_delete_running_component);
   CU_add_test (suite, "start_stop_modify", test_start_stop_modify);
   CU_add_test (suite, "stats_modify", test_stats_modify);
+  CU_add_test (suite, "get_component", test_get_component);
   CU_add_test (suite, "lazy_load_concurrent", test_lazy_load_concurrent); // Last, as sets container configuration
 
 }
