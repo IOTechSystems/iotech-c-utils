@@ -2185,7 +2185,7 @@ iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_t owner
 iot_data_t * iot_data_alloc_string_fmt (const char *format, ...)
 {
   char buff[128];
-  va_list args = { 0 };
+  va_list args;
 
   // Format into local buffer, only formatting again if result too long for buffer
   va_start (args, format);

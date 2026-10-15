@@ -99,7 +99,7 @@ int main (int argc, char* argv[])
   else
   {
     CU_basic_set_mode (mode);
-    printf ("\nTests completed with return value %u.\n", CU_basic_run_tests ());
+    printf ("\nTests completed with return value %d.\n", (int) CU_basic_run_tests ());
   }
 
   CU_cleanup_registry ();

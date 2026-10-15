@@ -224,13 +224,13 @@ static bool iot_container_typed_load (iot_container_t * cont, const char * cname
 
 static bool iot_container_load (iot_container_t * cont, const char * cname)
 {
+  assert (iot_config && cont);
   bool result = iot_container_find (cont, cname, false) != NULL;
 
   if (! result)
   {
     iot_load_in_progress_t this = {cname, cont->loading};
     iot_load_in_progress_t *loading = cont->loading;
-    assert (iot_config && cont);
 
     // Check for cycles
     while (loading)
