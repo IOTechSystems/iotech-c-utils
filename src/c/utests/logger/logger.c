@@ -376,6 +376,47 @@ static void cunit_logger_chained (void)
   iot_container_free (cont);
 }
 
+static pthread_barrier_t cunit_default_barrier;
+
+static void * cunit_default_thread (void * arg)
+{
+  pthread_barrier_wait (&cunit_default_barrier);
+  *(iot_logger_t **) arg = iot_logger_default ();
+  return NULL;
+}
+
+static void cunit_logger_default_concurrent (void)
+{
+  // Concurrent first use returns the same initialised logger, which logs with name "default"
+  enum { THREADS = 4 };
+  pthread_t tids[THREADS];
+  iot_logger_t * loggers[THREADS];
+  pthread_barrier_init (&cunit_default_barrier, NULL, THREADS);
+  for (int i = 0; i < THREADS; i++) pthread_create (&tids[i], NULL, cunit_default_thread, &loggers[i]);
+  for (int i = 0; i < THREADS; i++)
+  {
+    pthread_join (tids[i], NULL);
+    CU_ASSERT (loggers[i] == iot_logger_default ())
+  }
+  pthread_barrier_destroy (&cunit_default_barrier);
+
+  char path[] = "/tmp/iot_logger_XXXXXX";
+  int fd = mkstemp (path);
+  CU_ASSERT_FATAL (fd >= 0)
+  fflush (stderr);
+  int saved = dup (STDERR_FILENO);
+  dup2 (fd, STDERR_FILENO);
+  iot_log_warn (iot_logger_default (), "default logger message");
+  fflush (stderr);
+  dup2 (saved, STDERR_FILENO);
+  close (saved);
+  char buff[256] = { 0 };
+  ssize_t len = pread (fd, buff, sizeof (buff) - 1u, 0);
+  CU_ASSERT (len > 0 && strstr (buff, ":default:WARN] default logger message") != NULL)
+  close (fd);
+  unlink (path);
+}
+
 void cunit_logger_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("logger", suite_init, suite_clean);
@@ -398,4 +439,5 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_udp_host", cunit_logger_udp_host);
   CU_add_test (suite, "logger_chain_no_container", cunit_logger_chain_no_container);
   CU_add_test (suite, "logger_set_next_concurrent", cunit_logger_set_next_concurrent);
+  CU_add_test (suite, "logger_default_concurrent", cunit_logger_default_concurrent);
 }

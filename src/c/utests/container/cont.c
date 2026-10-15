@@ -9,6 +9,7 @@
 #include "CUnit.h"
 #include "iot/config.h"
 #include <pthread.h>
+#include <sched.h>
 
 static const char * main_config =
 "{"
@@ -144,6 +145,78 @@ static void test_delete_component (void)
   iot_container_free (cont);
 }
 
+// Component whose stop waits for a thread that uses the container
+
+typedef struct test_worker_t
+{
+  iot_component_t component;
+  iot_container_t * cont;
+  pthread_t tid;
+  atomic_bool stop;
+  atomic_uint lookups;
+} test_worker_t;
+
+static void * test_worker_thread (void * arg)
+{
+  test_worker_t * worker = arg;
+  while (! atomic_load (&worker->stop))
+  {
+    if (iot_container_find_component (worker->cont, "worker")) atomic_fetch_add (&worker->lookups, 1u);
+    sched_yield ();
+  }
+  return NULL;
+}
+
+static void test_worker_start (iot_component_t * comp)
+{
+  test_worker_t * worker = (test_worker_t*) comp;
+  atomic_store (&worker->stop, false);
+  pthread_create (&worker->tid, NULL, test_worker_thread, worker);
+  iot_component_set_running (comp);
+}
+
+static void test_worker_stop (iot_component_t * comp)
+{
+  test_worker_t * worker = (test_worker_t*) comp;
+  atomic_store (&worker->stop, true);
+  pthread_join (worker->tid, NULL);
+  iot_component_set_stopped (comp);
+}
+
+static iot_component_t * test_worker_config (iot_container_t * cont, const iot_data_t * map)
+{
+  (void) map;
+  test_worker_t * worker = calloc (1, sizeof (*worker));
+  worker->cont = cont;
+  iot_component_init (&worker->component, NULL, test_worker_start, test_worker_stop);
+  return &worker->component;
+}
+
+static void test_worker_free (iot_component_t * comp)
+{
+  iot_component_fini (comp);
+  free (comp);
+}
+
+static iot_component_factory_t test_worker_factory = { "test::worker", IOT_CATEGORY_USER, NULL, NULL, NULL, NULL };
+
+static void test_delete_running_component (void)
+{
+  // Deleting a running component whose stop waits on a thread using the container does not deadlock
+  test_worker_factory.config_fn = test_worker_config;
+  test_worker_factory.free_fn = test_worker_free;
+  iot_component_factory_add (&test_worker_factory);
+  iot_container_t * cont = iot_container_alloc ("worker_cont");
+  iot_container_add_component (cont, "test::worker", "worker", "{}");
+  test_worker_t * worker = (test_worker_t*) iot_container_find_component (cont, "worker");
+  CU_ASSERT_FATAL (worker != NULL)
+  iot_container_start (cont);
+  while (atomic_load (&worker->lookups) < 100u) sched_yield (); // Worker thread is using the container
+  iot_container_delete_component (cont, "worker");
+  CU_ASSERT (iot_container_find_component (cont, "worker") == NULL)
+  iot_container_free (cont);
+}
+
 static const char * lazy_logger_config = "{\"Name\":\"lazy\",\"Level\":\"Info\"}";
 
 static char * test_lazy_load (const char * name, const char * uri)
@@ -244,6 +317,7 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "bad_enviroment_variables_in_config", test_bad_env_vars_in_config);
   CU_add_test (suite, "duplicate_component", test_duplicate_component);
   CU_add_test (suite, "component_read_reconfig", test_component_read_reconfig);
+  CU_add_test (suite, "delete_running_component", test_delete_running_component);
   CU_add_test (suite, "lazy_load_concurrent", test_lazy_load_concurrent); // Last, as sets container configuration
 
 }

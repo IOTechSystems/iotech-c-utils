@@ -465,8 +465,11 @@ void iot_container_delete_component (iot_container_t * cont, const char * name)
 {
   assert (cont && name);
   pthread_rwlock_wrlock (&cont->lock);
-  iot_data_list_remove (cont->components, iot_component_cmp, name);
+  const iot_data_t * value = iot_data_list_find (cont->components, iot_component_cmp, name);
+  iot_data_t * comp = value ? iot_data_add_ref (value) : NULL; // Hold reference, so component is not stopped and freed when removed
+  if (comp) iot_data_list_remove (cont->components, iot_component_cmp, name);
   pthread_rwlock_unlock (&cont->lock);
+  iot_data_free (comp); // Stop and free component without lock held, as it may wait on threads using the container
 }
 
 iot_data_t * iot_container_list_components (iot_container_t * cont, const char * category)

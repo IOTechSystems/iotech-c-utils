@@ -58,20 +58,23 @@ static iot_data_list_static_t iot_logger_dfl_pars;
 
 static void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx);
 
+static pthread_once_t iot_logger_dfl_once = PTHREAD_ONCE_INIT;
+
+static void iot_logger_dfl_init (void)
+{
+  iot_logger_t * logger = &iot_logger_dfl.base;
+  iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
+  iot_logger_dfl.base.level = iot_logger_dfl.save = iot_logger_dfl.mylevel = IOT_LOGLEVEL_DEFAULT;
+  iot_logger_dfl.name = (char*) "default"; // Never freed, as default logger is static
+  iot_logger_dfl.impl = iot_log_console;
+  iot_logger_dfl.parents = iot_data_alloc_const_list (&iot_logger_dfl_pars);
+  pthread_mutex_init (&iot_logger_dfl.mtx, NULL);
+}
+
 iot_logger_t * iot_logger_default (void)
 {
-  static iot_logger_t * logger = NULL;
-  if (logger == NULL)
-  {
-    logger = &iot_logger_dfl.base;
-    memset (&iot_logger_dfl, 0, sizeof (iot_logger_dfl));
-    iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
-    iot_logger_dfl.base.level = iot_logger_dfl.save = iot_logger_dfl.mylevel = IOT_LOGLEVEL_DEFAULT;
-    iot_logger_dfl.impl = iot_log_console;
-    iot_logger_dfl.parents = iot_data_alloc_const_list (&iot_logger_dfl_pars);
-    pthread_mutex_init (&iot_logger_dfl.mtx, NULL);
-  }
-  return logger;
+  pthread_once (&iot_logger_dfl_once, iot_logger_dfl_init); // Initialised once, safely if called concurrently
+  return &iot_logger_dfl.base;
 }
 
 // Returns next logger in chain, with a reference held, as next may be changed concurrently by iot_logger_set_next
