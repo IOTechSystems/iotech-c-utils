@@ -330,7 +330,24 @@ void iot_container_free (iot_container_t * cont)
   }
 }
 
-static void iot_container_running (const iot_container_t * cont)
+// Returns a copy of the component list, holding a reference to each component, so components can be
+// started and stopped without the container lock held (component functions may use the container)
+
+static iot_data_t * iot_container_components (iot_container_t * cont)
+{
+  iot_data_t * list = iot_data_alloc_typed_list (IOT_DATA_POINTER);
+  iot_data_list_iter_t iter;
+  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_list_iter (cont->components, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    iot_data_list_tail_push (list, iot_data_add_ref (iot_data_list_iter_value (&iter)));
+  }
+  pthread_rwlock_unlock (&cont->lock);
+  return list;
+}
+
+static void iot_container_running (const iot_data_t * components)
 {
   static const uint64_t sleep_msecs = IOT_CONTAINER_RUN_WAIT_MS;
   iot_data_list_iter_t iter;
@@ -340,7 +357,7 @@ static void iot_container_running (const iot_container_t * cont)
   // Timeout wait for all components to start
   while (true)
   {
-    iot_data_list_iter (cont->components, &iter);
+    iot_data_list_iter (components, &iter);
     while (iot_data_list_iter_next (&iter))
     {
       comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
@@ -353,7 +370,7 @@ AGAIN:
   }
 
   // Invoke running callbacks
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
     comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
@@ -363,43 +380,47 @@ AGAIN:
 
 void iot_container_start (iot_container_t * cont)
 {
+  assert (cont);
   uint64_t start_time = iot_time_usecs ();
-  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_t * components = iot_container_components (cont);
   iot_data_list_iter_t iter;
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     if (comp->starting_fn) (comp->starting_fn) (comp);
   }
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     (comp->start_fn) (comp);
   }
-  iot_container_running (cont);
+  iot_container_running (components);
+  iot_data_free (components);
+  pthread_rwlock_wrlock (&cont->lock);
   cont->startup_time = iot_time_usecs () - start_time;
   pthread_rwlock_unlock (&cont->lock);
 }
 
 void iot_container_stop (iot_container_t * cont)
 {
+  assert (cont);
+  iot_data_t * components = iot_container_components (cont);
   iot_data_list_iter_t iter;
-  pthread_rwlock_rdlock (&cont->lock);
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_prev (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     if (comp->stopping_fn) (comp->stopping_fn) (comp);
   }
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_prev (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     (comp->stop_fn) (comp);
   }
-  pthread_rwlock_unlock (&cont->lock);
+  iot_data_free (components); // Frees any components deleted while stopping
 }
 
 void iot_component_factory_add (const iot_component_factory_t * factory)

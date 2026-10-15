@@ -217,6 +217,48 @@ static void test_delete_running_component (void)
   iot_container_free (cont);
 }
 
+// Component that adds a component when started and deletes it when stopped
+
+static void test_adder_start (iot_component_t * comp)
+{
+  iot_container_add_component (comp->container, IOT_LOGGER_TYPE, "added", logger_config);
+  iot_component_set_running (comp);
+}
+
+static void test_adder_stop (iot_component_t * comp)
+{
+  iot_container_delete_component (comp->container, "added");
+  iot_component_set_stopped (comp);
+}
+
+static iot_component_t * test_adder_config (iot_container_t * cont, const iot_data_t * map)
+{
+  (void) cont;
+  (void) map;
+  iot_component_t * comp = calloc (1, sizeof (*comp));
+  iot_component_init (comp, NULL, test_adder_start, test_adder_stop);
+  return comp;
+}
+
+static iot_component_factory_t test_adder_factory = { "test::adder", IOT_CATEGORY_USER, NULL, NULL, NULL, NULL };
+
+static void test_start_stop_modify (void)
+{
+  // Components may add and delete components when started and stopped, without deadlock
+  test_adder_factory.config_fn = test_adder_config;
+  test_adder_factory.free_fn = test_worker_free;
+  iot_component_factory_add (&test_adder_factory);
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_t * cont = iot_container_alloc ("adder_cont");
+  iot_container_add_component (cont, "test::adder", "adder", "{}");
+  iot_container_start (cont);
+  CU_ASSERT (iot_container_find_component (cont, "added") != NULL)
+  iot_container_stop (cont);
+  CU_ASSERT (iot_container_find_component (cont, "added") == NULL)
+  CU_ASSERT (iot_container_find_component (cont, "adder") != NULL)
+  iot_container_free (cont);
+}
+
 static const char * lazy_logger_config = "{\"Name\":\"lazy\",\"Level\":\"Info\"}";
 
 static char * test_lazy_load (const char * name, const char * uri)
@@ -318,6 +360,7 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "duplicate_component", test_duplicate_component);
   CU_add_test (suite, "component_read_reconfig", test_component_read_reconfig);
   CU_add_test (suite, "delete_running_component", test_delete_running_component);
+  CU_add_test (suite, "start_stop_modify", test_start_stop_modify);
   CU_add_test (suite, "lazy_load_concurrent", test_lazy_load_concurrent); // Last, as sets container configuration
 
 }
