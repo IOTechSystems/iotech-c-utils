@@ -288,6 +288,66 @@ static void cunit_threadpool_free_delay (void)
   CU_ASSERT (elapsed < 100u) // Free should not be delayed by polling
 }
 
+#define JOIN_THREADS 4u
+#define JOIN_EXIT_DELAY_US 50000u
+
+static pthread_key_t join_key;
+static pthread_barrier_t join_barrier;
+static atomic_uint join_exited;
+
+static void cunit_join_key_destructor (void * arg)
+{
+  (void) arg;
+  iot_wait_usecs (JOIN_EXIT_DELAY_US); // Delays thread termination until after thread exit signalled to pool
+  atomic_fetch_add (&join_exited, 1u);
+}
+
+static void * cunit_join_job (void * arg)
+{
+  (void) arg;
+  pthread_barrier_wait (&join_barrier); // So each job runs on a different pool thread
+  pthread_setspecific (join_key, &join_key); // Destructor called on thread termination
+  return NULL;
+}
+
+static void cunit_threadpool_free_join (void)
+{
+  // When free returns, all pool threads have terminated
+  pthread_key_create (&join_key, cunit_join_key_destructor);
+  pthread_barrier_init (&join_barrier, NULL, JOIN_THREADS);
+  atomic_store (&join_exited, 0u);
+  iot_threadpool_t * pool = iot_threadpool_alloc (JOIN_THREADS, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_start (pool);
+  for (unsigned i = 0; i < JOIN_THREADS; i++) iot_threadpool_add_work (pool, cunit_join_job, NULL, IOT_THREAD_NO_PRIORITY);
+  iot_threadpool_wait (pool);
+  iot_threadpool_free (pool);
+  CU_ASSERT (atomic_load (&join_exited) == JOIN_THREADS)
+  for (unsigned i = 0; i < 100u && atomic_load (&join_exited) != JOIN_THREADS; i++) iot_wait_usecs (JOIN_EXIT_DELAY_US); // Before deleting key
+  pthread_barrier_destroy (&join_barrier);
+  pthread_key_delete (join_key);
+}
+
+static atomic_bool self_free_done;
+
+static void * cunit_self_free_job (void * arg)
+{
+  iot_threadpool_free ((iot_threadpool_t*) arg);
+  atomic_store (&self_free_done, true);
+  return NULL;
+}
+
+static void cunit_threadpool_free_self (void)
+{
+  // Pool freed by one of its own jobs (thread cannot join itself, so detaches, and pool freed when it exits)
+  atomic_store (&self_free_done, false);
+  iot_threadpool_t * pool = iot_threadpool_alloc (JOIN_THREADS, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_start (pool);
+  iot_threadpool_add_work (pool, cunit_self_free_job, pool, IOT_THREAD_NO_PRIORITY);
+  for (unsigned i = 0; i < 500u && ! atomic_load (&self_free_done); i++) iot_wait_usecs (10000u);
+  CU_ASSERT (atomic_load (&self_free_done))
+  iot_wait_usecs (100000u); // Allow detached thread to exit and free pool (checked by valgrind)
+}
+
 void cunit_threadpool_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("threadpool", suite_init, suite_clean);
@@ -301,4 +361,6 @@ void cunit_threadpool_test_init (void)
   CU_add_test (suite, "threadpool_multi_wait", cunit_threadpool_multi_wait);
   CU_add_test (suite, "threadpool_jobs_max", cunit_threadpool_jobs_max);
   CU_add_test (suite, "threadpool_free_delay", cunit_threadpool_free_delay);
+  CU_add_test (suite, "threadpool_free_join", cunit_threadpool_free_join);
+  CU_add_test (suite, "threadpool_free_self", cunit_threadpool_free_self);
 }

@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-#include "iot/thread.h"
+#include "thread-impl.h"
 
 #ifdef __ZEPHYR__
 
@@ -79,16 +79,17 @@ bool iot_thread_priority_valid (int priority)
   return (priority >= iot_thread_min_priority && priority <= iot_thread_max_priority);
 }
 
-bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger)
+static bool iot_thread_create_impl (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger, bool joinable)
 {
   int ret;
   pthread_attr_t attr;
   pthread_t id;
+  const int detach = joinable ? PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED;
 
   if (tid == NULL) tid = &id;
 
   pthread_attr_init (&attr);
-  pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
+  pthread_attr_setdetachstate (&attr, detach);
 #ifndef __ZEPHYR__
   pthread_attr_setinheritsched (&attr, PTHREAD_EXPLICIT_SCHED);
 #endif
@@ -155,18 +156,18 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
     k_mutex_unlock (&zephyr_stack_mutex);
   }
 #else
-  if (ret != 0) // Retry without setting priority (e.g. if not permitted), keeping thread detached and affinity
+  if (ret != 0) // Retry without setting priority (e.g. if not permitted), keeping detach state and affinity
   {
     iot_log_warn (logger, "pthread_create failed ret: %d, retrying without priority", ret);
     pthread_attr_setinheritsched (&attr, PTHREAD_INHERIT_SCHED);
     ret = pthread_create (tid, &attr, func, arg);
   }
-  if (ret != 0) // Retry with default attributes (e.g. affinity not permitted), keeping thread detached
+  if (ret != 0) // Retry with default attributes (e.g. affinity not permitted), keeping detach state
   {
     pthread_attr_t dflt;
     iot_log_warn (logger, "pthread_create failed ret: %d, retrying without affinity", ret);
     pthread_attr_init (&dflt);
-    pthread_attr_setdetachstate (&dflt, PTHREAD_CREATE_DETACHED);
+    pthread_attr_setdetachstate (&dflt, detach);
     ret = pthread_create (tid, &dflt, func, arg);
     pthread_attr_destroy (&dflt);
   }
@@ -190,6 +191,16 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
 #endif
 
   return ret == 0;
+}
+
+bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger)
+{
+  return iot_thread_create_impl (tid, func, arg, priority, affinity, logger, false);
+}
+
+bool iot_thread_create_joinable (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger)
+{
+  return iot_thread_create_impl (tid, func, arg, priority, affinity, logger, true);
 }
 
 int iot_thread_get_priority (pthread_t thread)

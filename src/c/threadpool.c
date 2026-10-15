@@ -5,7 +5,7 @@
 //
 #include "iot/container.h"
 #include "iot/threadpool.h"
-#include "iot/thread.h"
+#include "thread-impl.h"
 #include "iot/data.h"
 #include "iot/time.h"
 
@@ -240,7 +240,7 @@ iot_threadpool_t * iot_threadpool_alloc (uint16_t threads, uint32_t max_jobs, in
     iot_thread_t * th = &pool->thread_array[created];
     th->pool = pool;
     th->id = created;
-    if (! iot_thread_create (&th->tid, iot_threadpool_thread, th, default_prio, affinity, logger))
+    if (! iot_thread_create_joinable (&th->tid, iot_threadpool_thread, th, default_prio, affinity, logger))
     {
       break;
     }
@@ -412,6 +412,17 @@ void iot_threadpool_free (iot_threadpool_t * pool)
       pthread_cond_wait (&pool->exit_cond, &pool->component.mutex); // Wait until all other threads exited
     }
     iot_component_unlock (&pool->component);
+    for (uint16_t i = 0; i < pool->threads; i++) // Join threads, so all have terminated when pool freed
+    {
+      if (pthread_equal (pool->thread_array[i].tid, self))
+      {
+        pthread_detach (self); // Pool freed from one of its own threads, which cannot join itself
+      }
+      else
+      {
+        pthread_join (pool->thread_array[i].tid, NULL);
+      }
+    }
     while ((job = pool->cache))
     {
       pool->cache = job->prev;
