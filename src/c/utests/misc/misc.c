@@ -313,6 +313,37 @@ static void test_list_config_file (void)
   CU_ASSERT_TRUE (file_found)
 }
 
+static void test_list_config_filter (void)
+{
+  // Only non empty names with a .json extension are listed, and a missing directory returns NULL
+  static const char * files[] = { "a.json", "b.json", "cxjson", ".json", "d.json.bak", "e.JSON", "fjson" };
+  char dir[] = "/tmp/iot_store_XXXXXX";
+  char path[64];
+  CU_ASSERT_FATAL (mkdtemp (dir) != NULL)
+  for (uint32_t i = 0; i < sizeof (files) / sizeof (files[0]); i++)
+  {
+    snprintf (path, sizeof (path), "%s/%s", dir, files[i]);
+    CU_ASSERT (iot_file_write (path, "{}"))
+  }
+  iot_data_t * list = iot_store_config_list (dir);
+  CU_ASSERT (iot_data_list_length (list) == 2)
+  iot_data_list_iter_t iter;
+  iot_data_list_iter (list, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    const char * name = iot_data_list_iter_string_value (&iter);
+    CU_ASSERT (strcmp (name, "a") == 0 || strcmp (name, "b") == 0)
+  }
+  iot_data_free (list);
+  for (uint32_t i = 0; i < sizeof (files) / sizeof (files[0]); i++)
+  {
+    snprintf (path, sizeof (path), "%s/%s", dir, files[i]);
+    iot_file_delete (path);
+  }
+  rmdir (dir);
+  CU_ASSERT (iot_store_config_list (dir) == NULL)
+}
+
 static void test_delete_file (void)
 {
   CU_ASSERT (iot_store_delete (TEST_FILE_NAME))
@@ -443,6 +474,7 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "file_append_binary", test_file_append_binary);
   CU_add_test (suite, "list_file", test_list_file);
   CU_add_test (suite, "list_config_file", test_list_config_file);
+  CU_add_test (suite, "list_config_filter", test_list_config_filter);
   CU_add_test (suite, "file_replace_mode", test_file_replace_mode);
   CU_add_test (suite, "file_write_empty", test_file_write_empty);
   CU_add_test (suite, "file_large", test_file_large);

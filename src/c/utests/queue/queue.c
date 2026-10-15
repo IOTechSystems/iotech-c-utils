@@ -8,6 +8,8 @@
 #include "queue.h"
 #include "CUnit.h"
 #include "iot/queue.h"
+#include "iot/time.h"
+#include <pthread.h>
 
 #define SINGLE_SIZE 5
 #define MULTI_SIZE 1000
@@ -135,10 +137,39 @@ static void test_run_multi (void)
   iot_queue_free (q);
 }
 
+static void * blocked_enqueue (void *arg)
+{
+  static bool result;
+  result = iot_queue_enqueue ((iot_queue_t *) arg, iot_data_alloc_ui32 (2));
+  return &result;
+}
+
+static void test_enqueue_stopped_full (void)
+{
+  // Enqueue to a full stopped queue fails, freeing the element (checked by valgrind)
+  void * ret;
+  pthread_t tid;
+  iot_queue_t *q = iot_queue_alloc (1);
+  CU_ASSERT (iot_queue_enqueue (q, iot_data_alloc_ui32 (1)))
+  pthread_create (&tid, NULL, blocked_enqueue, q);
+  iot_wait_msecs (100); // Allow thread to block on full queue
+  iot_queue_stop (q);
+  pthread_join (tid, &ret);
+  CU_ASSERT (*(bool *) ret == false)
+  CU_ASSERT (iot_queue_enqueue (q, iot_data_alloc_ui32 (3)) == false)
+  CU_ASSERT (iot_queue_size (q) == 1)
+  iot_data_t *e = iot_queue_dequeue (q); // Queued elements can be dequeued after stop
+  CU_ASSERT (iot_data_ui32 (e) == 1)
+  iot_data_free (e);
+  CU_ASSERT (iot_queue_dequeue (q) == NULL)
+  iot_queue_free (q);
+}
+
 void cunit_queue_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("queue", suite_init, suite_clean);
   CU_add_test (suite, "queue_alloc", test_alloc);
   CU_add_test (suite, "queue_run_single", test_run_single);
   CU_add_test (suite, "queue_run_multi", test_run_multi);
+  CU_add_test (suite, "queue_enqueue_stopped_full", test_enqueue_stopped_full);
 }

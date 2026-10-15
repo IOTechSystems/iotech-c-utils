@@ -12,7 +12,7 @@
  * @brief IOTech abstract data store
  */
 
-#include "iot/os.h"
+#include "iot/data.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -109,7 +109,7 @@ extern bool iot_store_config_delete (const char * name, const char * uri);
 /**
  * @brief List json files in given directory
  * @param directory Directory in which to list json files
- * @return List of file names with '.json' removed
+ * @return List of file names with '.json' removed, or NULL if the directory cannot be read
  */
 extern iot_data_t * iot_store_config_list (const char * directory);
 
