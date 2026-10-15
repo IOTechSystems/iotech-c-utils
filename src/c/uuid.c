@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021-2022 IOTech
+// Copyright (c) 2021-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
