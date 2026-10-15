@@ -4,51 +4,45 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+#ifndef __APPLE__
 #include <sys/random.h>
+#endif
 #include "iot/iot.h"
 #include "iot/uuid.h"
 
 #define RAND_READ_DELAY 1000u
 static const char  * hexdigits = "0123456789abcdef";
-static uint64_t uuid_seed[2];
-static bool uuid_initialized = false;
-static pthread_mutex_t uuid_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static uint64_t xorshift128plus (uint64_t *s)
-{
-  uint64_t s1 = s[0];
-  const uint64_t s0 = s[1];
-  s[0] = s0;
-  s1 ^= s1 << 23;
-  s[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
-  return s[1] + s0;
-}
+// UUIDs are read from the operating system cryptographically secure random number generator, so cannot be
+// predicted from previously generated UUIDs, and are not repeated by processes forked from the same parent
 
-static void uuid_init (void)
+static void uuid_random (uint8_t * buf, size_t len)
 {
 #ifdef __APPLE__
-  arc4random_buf (uuid_seed, sizeof (uuid_seed));
+  arc4random_buf (buf, len);
 #else
-  while (getrandom (uuid_seed, sizeof (uuid_seed), 0) != sizeof (uuid_seed))
+  while (len)
   {
-    iot_wait_usecs (RAND_READ_DELAY);
+    ssize_t ret = getrandom (buf, len, 0);
+    if (ret > 0)
+    {
+      buf += ret;
+      len -= (size_t) ret;
+    }
+    else if (errno != EINTR)
+    {
+      iot_wait_usecs (RAND_READ_DELAY);
+    }
   }
 #endif
-  uuid_initialized = true;
 }
 
 void iot_uuid_generate (iot_uuid_t out)
 {
-  union { uint8_t b[16]; uint64_t word[2]; } s;
   assert (out);
-  pthread_mutex_lock (&uuid_mutex);
-  if (! uuid_initialized) uuid_init ();
-  s.word[0] = xorshift128plus (uuid_seed);
-  s.word[1] = xorshift128plus (uuid_seed);
-  pthread_mutex_unlock (&uuid_mutex);
-  s.b[6] = (uint8_t) ((s.b[6] & 0xf) | 0x40); // Flag as randomly generated uuid
-  s.b[8] = (uint8_t) ((s.b[8] & 0x3f) | 0x80);
-  memcpy (out, s.b, sizeof (s.b));
+  uuid_random (out, sizeof (iot_uuid_t));
+  out[6] = (uint8_t) ((out[6] & 0xf) | 0x40); // Flag as randomly generated uuid
+  out[8] = (uint8_t) ((out[8] & 0x3f) | 0x80);
 }
 
 void iot_uuid_unparse (const iot_uuid_t uuid, char * out)

@@ -6,6 +6,7 @@
  */
 
 #include "iot/iot.h"
+#include "iot/uuid.h"
 #include "misc.h"
 #include "CUnit.h"
 
@@ -14,6 +15,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <sys/wait.h>
 #endif
 
 #define MAX_COUNTER 1000
@@ -124,6 +126,53 @@ static void test_uuid_string (void)
   CU_ASSERT (! iot_util_string_is_uuid ("j79ebe07-0774-4a91-a33b-6a0115390141"))
   CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a011539014-"))
   CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a011539014y"))
+}
+
+#define TEST_UUIDS 1000
+
+static void test_uuid_generate (void)
+{
+  // Generated UUIDs are version 4 (random), unique and unparse to valid strings
+  static iot_uuid_t uuids[TEST_UUIDS];
+  char str[UUID_STR_LEN];
+  for (unsigned i = 0; i < TEST_UUIDS; i++)
+  {
+    iot_uuid_generate (uuids[i]);
+    CU_ASSERT ((uuids[i][6] & 0xf0) == 0x40)
+    CU_ASSERT ((uuids[i][8] & 0xc0) == 0x80)
+    for (unsigned j = 0; j < i; j++)
+    {
+      CU_ASSERT (memcmp (uuids[i], uuids[j], sizeof (iot_uuid_t)) != 0)
+    }
+  }
+  iot_uuid_unparse (uuids[0], str);
+  CU_ASSERT (strlen (str) == UUID_STR_LEN - 1)
+  CU_ASSERT (iot_util_string_is_uuid (str))
+  CU_ASSERT (str[14] == '4')
+}
+
+static void test_uuid_fork (void)
+{
+  // A forked child process does not generate the same UUIDs as its parent
+  iot_uuid_t parent, child;
+  int fds[2];
+  iot_uuid_generate (parent);
+  CU_ASSERT_FATAL (pipe (fds) == 0)
+  pid_t pid = fork ();
+  CU_ASSERT_FATAL (pid >= 0)
+  if (pid == 0)
+  {
+    iot_uuid_generate (child);
+    _exit (write (fds[1], child, sizeof (child)) == sizeof (child) ? 0 : 1);
+  }
+  close (fds[1]);
+  iot_uuid_generate (parent);
+  CU_ASSERT (read (fds[0], child, sizeof (child)) == sizeof (child))
+  close (fds[0]);
+  int status;
+  waitpid (pid, &status, 0);
+  CU_ASSERT (WIFEXITED (status) && WEXITSTATUS (status) == 0)
+  CU_ASSERT (memcmp (parent, child, sizeof (iot_uuid_t)) != 0)
 }
 
 #ifdef IOT_HAS_FILE
@@ -464,6 +513,8 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "wait", test_wait);
   CU_add_test (suite, "hash", test_hash);
   CU_add_test (suite, "uuid_string", test_uuid_string);
+  CU_add_test (suite, "uuid_generate", test_uuid_generate);
+  CU_add_test (suite, "uuid_fork", test_uuid_fork);
 #ifdef IOT_HAS_FILE
   CU_add_test (suite, "write_file", test_write_file);
   CU_add_test (suite, "read_file", test_read_file);
