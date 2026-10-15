@@ -165,18 +165,38 @@ then
   cppcheck -DNDEBUG -D_GNU_SOURCE --std=c11 --xml --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
 fi
 
-# Valgrind
+# Valgrind. Each run writes an XML report (*_vg.xml). Runs with memory errors or leaks (or that fail) are listed in
+# valgrind.failed, which Jenkins checks after archiving the reports. Failures are detected by valgrind exit status,
+# as the XML is not always well formed (valgrind 3.26 omits </still_reachable> if leaks are suppressed)
+
+run_valgrind ()
+{
+  VG_NAME=$1
+  shift 1
+  VG_RET=0
+  valgrind ${VG_FLAGS} --xml-file=${VG_NAME}_vg.xml "$@" || VG_RET=$?
+  if [ ${VG_RET} -ne 0 ]
+  then
+    grep -E '<kind>|<what>|<text>' ${VG_NAME}_vg.xml | grep -v 'Leak_StillReachable' || true
+    echo "${VG_NAME}: exit status ${VG_RET}, $(grep '<kind>' ${VG_NAME}_vg.xml | grep -vc 'Leak_StillReachable') error(s) (report ${VG_NAME}_vg.xml)" >> valgrind.failed
+  fi
+}
 
 if [ "${VALG}" = "true" ]
 then
   cd ${BROOT}/debug
-  VG_FLAGS="--xml=yes --fair-sched=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes"
+  rm -f valgrind.failed *_vg.xml
+  VG_FLAGS="--xml=yes --fair-sched=yes --leak-resolution=high --num-callers=16 --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes --child-silent-after-fork=yes --error-exitcode=99"
   VG_SUPP="--suppressions=${ROOT}/scripts/valgrind.supp"
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${BROOT}/debug/c/examples/dynamic
-  valgrind $VG_FLAGS --xml-file=scheduler_vg.xml c/examples/scheduler/scheduler
-  valgrind $VG_FLAGS --xml-file=data_vg.xml c/examples/data/data
-  valgrind $VG_FLAGS --xml-file=container_vg.xml c/examples/container/container
-  valgrind $VG_FLAGS ${VG_SUPP} --xml-file=dynamic_vg.xml c/examples/dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
-  valgrind $VG_FLAGS --xml-file=utests_vg.xml c/utests/runner/runner -a -j
-  valgrind $VG_FLAGS --xml-file=map_vg.xml c/tests/map/map_test
+  run_valgrind scheduler c/examples/scheduler/scheduler
+  run_valgrind data c/examples/data/data
+  run_valgrind container c/examples/container/container
+  run_valgrind dynamic ${VG_SUPP} c/examples/dynamic/dynamic ${ROOT}/src/c/examples/dynamic/config
+  run_valgrind utests c/utests/runner/runner -a -j
+  run_valgrind map c/tests/map/map_test
+  if [ -f valgrind.failed ]
+  then
+    cat valgrind.failed
+  fi
 fi

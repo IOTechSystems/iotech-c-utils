@@ -98,6 +98,30 @@ def metricsStage (systems, arch)
   {
     publishQuality (systems, arch);
   }
+  checkValgrind (systems, arch)
+}
+
+def checkValgrind (systems, arch)
+{
+  // Archive valgrind reports, failing the build if any run had memory errors or leaks (listed in valgrind.failed)
+  def sys = getSystemParam ()
+  def failures = ''
+  for (int i = 0; i < systems.size(); ++i)
+  {
+    if ("${sys}" == "${systems[i]}" || "${sys}" == 'all')
+    {
+      def dir = "${arch}/${systems[i]}/debug"
+      archiveArtifacts (artifacts: "${dir}/*_vg.xml", allowEmptyArchive: true)
+      if (fileExists ("${dir}/valgrind.failed"))
+      {
+        failures += "${systems[i]}:\n" + readFile ("${dir}/valgrind.failed")
+      }
+    }
+  }
+  if (failures)
+  {
+    error ("Valgrind errors:\n${failures}")
+  }
 }
 
 def archiveStage (arch)
