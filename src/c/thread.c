@@ -7,10 +7,15 @@
 
 #ifdef __ZEPHYR__
 
+#define IOT_ZEPHYR_STACK_WAIT_MS 1
+#define IOT_ZEPHYR_STACK_RETRIES 100
+
 typedef struct zephyr_thread_wrap
 {
   void * arg;
   void *(*func) (void *);
+  k_tid_t thread;           /* Set when function has returned, the thread may still be using the stack until terminated */
+  bool used;                /* Whether stack in use */
 } zephyr_thread_wrap;
 
 static K_THREAD_STACK_ARRAY_DEFINE (zephyr_thread_stacks, IOT_ZEPHYR_MAX_THREADS, IOT_ZEPHYR_STACK_SIZE);
@@ -22,9 +27,38 @@ static void * zephyr_func_wrapper (void * data)
   zephyr_thread_wrap * wrap = (zephyr_thread_wrap*) data;
   void * result = wrap->func (wrap->arg);
   k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
-  wrap->func = NULL;
+  wrap->thread = k_current_get (); // Stack released once thread has terminated, as still in use while exiting
   k_mutex_unlock (&zephyr_stack_mutex);
   return result;
+}
+
+// Allocate a stack, returning wrapper for the stack or NULL if none available. Called with stack mutex held.
+
+static zephyr_thread_wrap * zephyr_stack_alloc (bool * exiting)
+{
+  *exiting = false;
+  for (uint32_t i = 0; i < IOT_ZEPHYR_MAX_THREADS; i++)
+  {
+    zephyr_thread_wrap * wrap = &zephyr_thread_wraps[i];
+    if (wrap->used && wrap->thread)
+    {
+      if (k_thread_join (wrap->thread, K_NO_WAIT) == 0) // Thread terminated, so stack free
+      {
+        wrap->used = false;
+      }
+      else
+      {
+        *exiting = true;
+      }
+    }
+    if (! wrap->used)
+    {
+      wrap->used = true;
+      wrap->thread = NULL;
+      return wrap;
+    }
+  }
+  return NULL;
 }
 
 #endif
@@ -72,24 +106,27 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
 
 #ifdef __ZEPHYR__
 
-  zephyr_thread_wrap * wrapper = NULL;
-  void * stack = NULL;
-  k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
-  for (uint32_t i = 0; i < IOT_ZEPHYR_MAX_THREADS; i++)
+  zephyr_thread_wrap * wrapper;
+  bool exiting;
+  for (uint32_t tries = 0; ; tries++)
   {
-    if (zephyr_thread_wraps[i].func == NULL)
-    {
-      wrapper = &zephyr_thread_wraps[i];
-      wrapper->arg = arg;
-      wrapper->func = func;
-      arg = wrapper;
-      func = zephyr_func_wrapper;
-      stack = zephyr_thread_stacks[i];
-      break;
-    }
+    k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
+    wrapper = zephyr_stack_alloc (&exiting);
+    k_mutex_unlock (&zephyr_stack_mutex);
+    if (wrapper || ! exiting || tries == IOT_ZEPHYR_STACK_RETRIES) break;
+    k_sleep (K_MSEC (IOT_ZEPHYR_STACK_WAIT_MS)); // Wait for exiting thread to terminate and release its stack
   }
-  k_mutex_unlock (&zephyr_stack_mutex);
-  assert (wrapper);
+  if (wrapper == NULL)
+  {
+    iot_log_error (logger, "iot_thread_create: no free thread stack (maximum %d threads)", IOT_ZEPHYR_MAX_THREADS);
+    pthread_attr_destroy (&attr);
+    return false;
+  }
+  wrapper->arg = arg;
+  wrapper->func = func;
+  arg = wrapper;
+  func = zephyr_func_wrapper;
+  void * stack = zephyr_thread_stacks[wrapper - zephyr_thread_wraps];
 
 #else
   if (iot_thread_priority_valid (priority) && (geteuid () == 0)) // No guarantee that can set RT policies in container
@@ -114,7 +151,7 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   if (ret != 0)
   {
     k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
-    wrapper->func = NULL; // Release stack for reuse
+    wrapper->used = false; // Release stack for reuse, as no thread created
     k_mutex_unlock (&zephyr_stack_mutex);
   }
 #else

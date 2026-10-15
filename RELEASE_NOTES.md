@@ -126,3 +126,4 @@
 - `iot_logger_default` initialisation is now thread safe, and the default logger is named "default" (previously logged with a null name)
 - `iot_container_delete_component` now stops and frees the component without the container lock held (previously deadlocked if stopping waited on a thread using the container)
 - `iot_container_start` and `iot_container_stop` no longer hold the container lock while starting or stopping components (previously deadlocked if a component added, deleted or lazily loaded components when started or stopped)
+- On Zephyr, a thread's stack is no longer reused until the thread using it has terminated (previously reused once the thread function returned, while the thread was still exiting on it), and `iot_thread_create` now returns false if no stack is free (previously asserted)
