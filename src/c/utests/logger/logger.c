@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021
+ * Copyright (c) 2020-2026
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -13,6 +13,8 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 #include <pthread.h>
 #include <sched.h>
 
@@ -176,6 +178,45 @@ static void cunit_logger_no_name (void)
   CU_ASSERT (cunit_log_file_contains ("./test_no_name.log", ":default:ERROR] Configured without name\n"))
   iot_container_free (cont);
   iot_file_delete ("./test_no_name.log");
+}
+
+static void cunit_logger_file_open_fail (void)
+{
+  // File logger not created if file cannot be opened, with error logged to next logger
+  iot_logger_t * next = iot_logger_alloc_custom ("Next", IOT_LOG_ERROR, true, NULL, cunit_custom_log_fn, NULL, NULL);
+  cunit_custom_log_count = 0u;
+  CU_ASSERT (iot_logger_alloc_file ("File", IOT_LOG_WARN, true, next, "./no_such_dir/test.log") == NULL)
+  CU_ASSERT (cunit_custom_log_count == 1u)
+  iot_logger_free (next);
+
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_t * cont = iot_container_alloc ("logger_file_open_fail");
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "file", "{\"Name\":\"file\",\"To\":\"file:./no_such_dir/test.log\"}");
+  CU_ASSERT (iot_container_find_component (cont, "file") == NULL)
+  iot_container_free (cont);
+}
+
+static void cunit_logger_console_flush (void)
+{
+  // Console logs written as logged, even if stdout is fully buffered (as when not a terminal). Checked in a child
+  // process, as CUnit makes stdout unbuffered
+  fflush (stdout);
+  pid_t pid = fork ();
+  CU_ASSERT_FATAL (pid >= 0)
+  if (pid == 0)
+  {
+    int fd = open ("./test_console.log", O_CREAT | O_TRUNC | O_WRONLY, 0600);
+    if (fd < 0 || dup2 (fd, STDOUT_FILENO) < 0) _exit (2);
+    static char buff[BUFSIZ];
+    setvbuf (stdout, buff, _IOFBF, sizeof (buff)); // Own buffer, as with NULL glibc keeps the unbuffered single byte buffer
+    iot_logger_t * logger = iot_logger_alloc ("Console", IOT_LOG_INFO, true);
+    iot_log_info (logger, "Flushed info");
+    _exit (cunit_log_file_contains ("./test_console.log", ":Console:Info] Flushed info\n") ? 0 : 1); // Exit without flushing stdout
+  }
+  int status = 0;
+  waitpid (pid, &status, 0);
+  CU_ASSERT (WIFEXITED (status) && WEXITSTATUS (status) == 0)
+  iot_file_delete ("./test_console.log");
 }
 
 static void cunit_logger_udp (void)
@@ -475,6 +516,8 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_file", cunit_logger_file);
   CU_add_test (suite, "logger_file_flush", cunit_logger_file_flush);
   CU_add_test (suite, "logger_no_name", cunit_logger_no_name);
+  CU_add_test (suite, "logger_file_open_fail", cunit_logger_file_open_fail);
+  CU_add_test (suite, "logger_console_flush", cunit_logger_console_flush);
   CU_add_test (suite, "logger_udp", cunit_logger_udp);
   CU_add_test (suite, "logger_udp_broadcast", cunit_logger_udp_broadcast);
   CU_add_test (suite, "logger_null", cunit_logger_null);

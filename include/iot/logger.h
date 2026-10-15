@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2022 IOTech Ltd
+// Copyright (c) 2018-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -64,6 +64,7 @@ typedef void (*iot_log_free_fn_t) (void *ctx);
  * @brief Allocate memory and initialize logger component
  *
  * The function to allocate memory and initialize logger component. The logger component logs messages to console
+ * (errors and warnings to stderr, other messages to stdout), flushed after each message
  *
  * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level
@@ -84,7 +85,7 @@ extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level,
  * @param self_start  'true' will start the logger after initialization
  * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
  * @param pathname    File and location of the logfile
- * @return            Pointer to the logger component created
+ * @return            Pointer to the logger component created, or NULL if the file could not be opened
  */
 extern iot_logger_t * iot_logger_alloc_file (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *pathname);
 #endif

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2022 IOTech
+// Copyright (c) 2018-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -252,7 +252,8 @@ static void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64
 {
   (void) ctx;
   iot_logger_impl_t *impl = (iot_logger_impl_t*) logger;
-  iot_logger_log_to_fd (impl, (impl->no_stderr || level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message, false);
+  // Flushed, as stdout buffered when not a terminal (e.g. if redirected to a file or pipe)
+  iot_logger_log_to_fd (impl, (impl->no_stderr || level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message, true);
 }
 
 /********* Standard Logger Implementations: UDP *********/
@@ -327,20 +328,22 @@ iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bo
 static void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
   // Flushed, so file contains all logs if process exits abnormally
-  if (ctx) iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (FILE *)ctx, level, timestamp, message, true);
+  iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (FILE *)ctx, level, timestamp, message, true);
 }
 
 static void iot_logger_file_ctx_free (void *ctx)
 {
-  if (ctx)
-  {
-    fclose (ctx);
-  }
+  fclose (ctx);
 }
 
 iot_logger_t * iot_logger_alloc_file (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *pathname)
 {
   FILE *fd = fopen (pathname, "a");
+  if (fd == NULL)
+  {
+    iot_log_error (next ? next : iot_logger_default (), "iot_logger_alloc_file: failed to open %s (%s)", pathname, strerror (errno));
+    return NULL;
+  }
   return iot_logger_alloc_custom (name, level, self_start, next, iot_log_file, fd, iot_logger_file_ctx_free);
 }
 
