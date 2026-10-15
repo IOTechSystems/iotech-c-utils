@@ -8,6 +8,7 @@
 #include "logger.h"
 #include "iot/container.h"
 #include "iot/time.h"
+#include "iot/file.h"
 #include "CUnit.h"
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -134,6 +135,47 @@ static void cunit_logger_file (void)
   iot_logger_start (logger);
   cunit_test_logs (logger);
   iot_logger_free (logger);
+}
+
+static bool cunit_log_file_contains (const char * path, const char * str)
+{
+  char * contents = iot_file_read (path);
+  bool found = contents && strstr (contents, str);
+  free (contents);
+  return found;
+}
+
+static void cunit_logger_file_flush (void)
+{
+  // Logs are written to the file as logged, not only when the logger is freed
+  iot_file_delete ("./test_flush.log");
+  iot_logger_t * logger = iot_logger_alloc_file ("File", IOT_LOG_WARN, true, NULL, "./test_flush.log");
+  iot_log_error (logger, "Flushed error");
+  CU_ASSERT (cunit_log_file_contains ("./test_flush.log", ":File:ERROR] Flushed error\n"))
+  iot_log_warn (logger, "Flushed warning");
+  CU_ASSERT (cunit_log_file_contains ("./test_flush.log", ":File:WARN] Flushed warning\n"))
+  iot_logger_free (logger);
+  iot_file_delete ("./test_flush.log");
+}
+
+static void cunit_logger_no_name (void)
+{
+  // Loggers allocated or configured without a name use name "default"
+  iot_file_delete ("./test_no_name.log");
+  iot_logger_t * logger = iot_logger_alloc_file (NULL, IOT_LOG_WARN, true, NULL, "./test_no_name.log");
+  iot_log_error (logger, "Allocated without name");
+  CU_ASSERT (cunit_log_file_contains ("./test_no_name.log", ":default:ERROR] Allocated without name\n"))
+  iot_logger_free (logger);
+
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_t * cont = iot_container_alloc ("logger_no_name");
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "nameless", "{\"Level\":\"Warning\",\"To\":\"file:./test_no_name.log\"}");
+  logger = (iot_logger_t*) iot_container_find_component (cont, "nameless");
+  CU_ASSERT_FATAL (logger != NULL)
+  iot_log_error (logger, "Configured without name");
+  CU_ASSERT (cunit_log_file_contains ("./test_no_name.log", ":default:ERROR] Configured without name\n"))
+  iot_container_free (cont);
+  iot_file_delete ("./test_no_name.log");
 }
 
 static void cunit_logger_udp (void)
@@ -431,6 +473,8 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_impl", cunit_logger_impl);
   CU_add_test (suite, "logger_sub", cunit_logger_sub);
   CU_add_test (suite, "logger_file", cunit_logger_file);
+  CU_add_test (suite, "logger_file_flush", cunit_logger_file_flush);
+  CU_add_test (suite, "logger_no_name", cunit_logger_no_name);
   CU_add_test (suite, "logger_udp", cunit_logger_udp);
   CU_add_test (suite, "logger_udp_broadcast", cunit_logger_udp_broadcast);
   CU_add_test (suite, "logger_null", cunit_logger_null);

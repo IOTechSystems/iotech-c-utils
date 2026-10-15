@@ -65,7 +65,7 @@ typedef void (*iot_log_free_fn_t) (void *ctx);
  *
  * The function to allocate memory and initialize logger component. The logger component logs messages to console
  *
- * @param name        Identifier to use for logging
+ * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level
  * @param self_start  'true' will start the logger after initialization
  * @return            Pointer to the logger component created
@@ -76,9 +76,10 @@ extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level,
 /**
  * @brief Allocate memory and initialize file logger component
  *
- * The function to allocate memory and initialize file logger component. The logger component logs messages to a file
+ * The function to allocate memory and initialize file logger component. The logger component logs messages to a file,
+ * which is appended to, and flushed after each message
  *
- * @param name        Identifier to use for logging
+ * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level
  * @param self_start  'true' will start the logger after initialization
  * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
@@ -93,7 +94,7 @@ extern iot_logger_t * iot_logger_alloc_file (const char * name, iot_loglevel_t l
  *
  * The function to allocate memory and initialize UDP logger component. The logger component logs messages to a UDP port
  *
- * @param name        Identifier to use for logging
+ * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level
  * @param self_start  'true' will start the logger after initialization
  * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
@@ -108,7 +109,7 @@ extern iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t le
  *
  * The function to allocate memory and initialize logger component to use custom defined log function.
  *
- * @param name        Identifier to use for logging
+ * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level, Messages are filtered for logging based on the log level set
  * @param self_start  'true' will start the logger after initialization
  * @param next        Another logger component, this logger component must be pre-initialized. May be NULL

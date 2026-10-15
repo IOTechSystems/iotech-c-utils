@@ -52,6 +52,8 @@ typedef struct iot_logger_impl_t
 }
 iot_logger_impl_t;
 
+#define IOT_LOGGER_DEFAULT_NAME "default"
+
 static const char * iot_log_levels[IOT_LOG_LEVELS] = {"", "ERROR", "WARN", "Info", "Debug", "Trace"};
 static iot_logger_impl_t iot_logger_dfl;
 static iot_data_list_static_t iot_logger_dfl_pars;
@@ -65,7 +67,7 @@ static void iot_logger_dfl_init (void)
   iot_logger_t * logger = &iot_logger_dfl.base;
   iot_component_init (&logger->component, IOT_LOGGER_FACTORY, (iot_component_start_fn_t) iot_logger_start, (iot_component_stop_fn_t) iot_logger_stop);
   iot_logger_dfl.base.level = iot_logger_dfl.save = iot_logger_dfl.mylevel = IOT_LOGLEVEL_DEFAULT;
-  iot_logger_dfl.name = (char*) "default"; // Never freed, as default logger is static
+  iot_logger_dfl.name = (char*) IOT_LOGGER_DEFAULT_NAME; // Never freed, as default logger is static
   iot_logger_dfl.impl = iot_log_console;
   iot_logger_dfl.parents = iot_data_alloc_const_list (&iot_logger_dfl_pars);
   pthread_mutex_init (&iot_logger_dfl.mtx, NULL);
@@ -162,10 +164,10 @@ void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
 
 iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, bool start, iot_logger_t * next, iot_log_function_t impl, void * ctx, iot_log_free_fn_t freectx)
 {
-  assert (name && impl);
+  assert (impl);
   iot_logger_impl_t * logger = calloc (1, sizeof (*logger));
   logger->impl = impl;
-  logger->name = strdup (name);
+  logger->name = strdup (name ? name : IOT_LOGGER_DEFAULT_NAME);
   logger->save = level;
   logger->ctx = ctx;
   logger->freectx = freectx;
@@ -235,12 +237,13 @@ static inline size_t iot_logger_format_log (iot_logger_impl_t * logger, iot_logl
   return (size_t) len;
 }
 
-static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, iot_loglevel_t level, uint64_t timestamp, const char *message)
+static inline void iot_logger_log_to_fd (iot_logger_impl_t * logger, FILE * fd, iot_loglevel_t level, uint64_t timestamp, const char *message, bool flush)
 {
   iot_component_lock (&logger->base.component);
   if (iot_logger_format_log (logger, level, timestamp, message))
   {
     fprintf (fd, "%s", logger->buff);
+    if (flush) fflush (fd);
   }
   iot_component_unlock (&logger->base.component);
 }
@@ -249,7 +252,7 @@ static void iot_log_console (iot_logger_t * logger, iot_loglevel_t level, uint64
 {
   (void) ctx;
   iot_logger_impl_t *impl = (iot_logger_impl_t*) logger;
-  iot_logger_log_to_fd (impl, (impl->no_stderr || level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message);
+  iot_logger_log_to_fd (impl, (impl->no_stderr || level > IOT_LOG_WARN) ? stdout : stderr, level, timestamp, message, false);
 }
 
 /********* Standard Logger Implementations: UDP *********/
@@ -323,7 +326,8 @@ iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bo
 
 static void iot_log_file (iot_logger_t * logger, iot_loglevel_t level, uint64_t timestamp, const char * message, const void *ctx)
 {
-  if (ctx) iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (FILE *)ctx, level, timestamp, message);
+  // Flushed, so file contains all logs if process exits abnormally
+  if (ctx) iot_logger_log_to_fd ((iot_logger_impl_t*) logger, (FILE *)ctx, level, timestamp, message, true);
 }
 
 static void iot_logger_file_ctx_free (void *ctx)
