@@ -347,7 +347,7 @@ iot_loglevel_t iot_logger_level_from_string (const char *name)
   iot_loglevel_t level = IOT_LOGLEVEL_DEFAULT;
   if (name)
   {
-    int c = toupper (name[0]);
+    int c = toupper ((unsigned char) name[0]);
     for (int lvl = 0; lvl < IOT_LOG_LEVELS; lvl++)
     {
       if (iot_log_levels[lvl][0] == c)

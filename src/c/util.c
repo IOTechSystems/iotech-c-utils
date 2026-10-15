@@ -18,7 +18,7 @@ bool iot_util_string_is_uuid (const char * str)
   {
     for (unsigned i = 0u; i < (UUID_STR_LEN - 1); i++)
     {
-      char c = str[i];
+      unsigned char c = (unsigned char) str[i];
       if (i == 8u || i == 13u || i == 18u || i == 23u)
       {
         if (c != '-') goto FAIL;

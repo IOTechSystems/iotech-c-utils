@@ -126,6 +126,8 @@ static void test_uuid_string (void)
   CU_ASSERT (! iot_util_string_is_uuid ("j79ebe07-0774-4a91-a33b-6a0115390141"))
   CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a011539014-"))
   CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a011539014y"))
+  CU_ASSERT (! iot_util_string_is_uuid ("e79ebe07-0774-4a91-a33b-6a011539014\xff")) // Non ASCII characters
+  CU_ASSERT (! iot_util_string_is_uuid ("\xe9""79ebe07-0774-4a91-a33b-6a0115390141"))
 }
 
 #define TEST_UUIDS 1000

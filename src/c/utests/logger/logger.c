@@ -265,6 +265,12 @@ static void cunit_logger_level_name (void)
   CU_ASSERT (strcmp ("Info", iot_logger_level_to_string (IOT_LOG_INFO)) == 0)
   CU_ASSERT (strcmp ("Debug", iot_logger_level_to_string (IOT_LOG_DEBUG)) == 0)
   CU_ASSERT (strcmp ("Trace", iot_logger_level_to_string (IOT_LOG_TRACE)) == 0)
+  CU_ASSERT (iot_logger_level_from_string ("Error") == IOT_LOG_ERROR)
+  CU_ASSERT (iot_logger_level_from_string ("warn") == IOT_LOG_WARN)
+  CU_ASSERT (iot_logger_level_from_string ("trace") == IOT_LOG_TRACE)
+  CU_ASSERT (iot_logger_level_from_string (NULL) == IOT_LOGLEVEL_DEFAULT)
+  CU_ASSERT (iot_logger_level_from_string ("\xc9rror") == IOT_LOGLEVEL_DEFAULT) // Non ASCII character
+  CU_ASSERT (iot_logger_level_from_string ("\xff") == IOT_LOGLEVEL_DEFAULT)
 }
 
 static iot_component_t * cunit_logger_chained_config (iot_container_t * cont, const iot_data_t * map)
