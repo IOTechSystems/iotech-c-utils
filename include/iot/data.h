@@ -477,7 +477,9 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
  * @brief Allocate constant uint64 data
  *
  * The function to allocate data for a constant uint64, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        uint64 value.
@@ -489,7 +491,9 @@ extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_
  * @brief Allocate constant int64 data
  *
  * The function to allocate data for a constant int64, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        int64 value.
@@ -501,7 +505,9 @@ extern iot_data_t * iot_data_alloc_const_i64 (iot_data_static_t * data, int64_t 
  * @brief Allocate constant uint32 data
  *
  * The function to allocate data for a constant uint32, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        uint32 value.
@@ -513,7 +519,9 @@ extern iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_
  * @brief Allocate constant int32 data
  *
  * The function to allocate data for a constant int32, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        int32 value.
@@ -525,7 +533,9 @@ extern iot_data_t * iot_data_alloc_const_i32 (iot_data_static_t * data, int32_t 
  * @brief Allocate constant uint16 data
  *
  * The function to allocate data for a constant uint16, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        uint16 value.
@@ -537,7 +547,9 @@ extern iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_
  * @brief Allocate constant int16 data
  *
  * The function to allocate data for a constant int16, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        int16 value.
@@ -549,7 +561,9 @@ extern iot_data_t * iot_data_alloc_const_i16 (iot_data_static_t * data, int16_t 
  * @brief Allocate constant uint8 data
  *
  * The function to allocate data for a constant uint8, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        uint8 value.
@@ -561,7 +575,9 @@ extern iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t 
  * @brief Allocate constant int8 data
  *
  * The function to allocate data for a constant uint8, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        int8 value.
@@ -573,7 +589,9 @@ extern iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t va
  * @brief Allocate constant float data
  *
  * The function to allocate data for a constant float, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        float value.
@@ -585,7 +603,9 @@ extern iot_data_t * iot_data_alloc_const_f32 (iot_data_static_t * data, float va
  * @brief Allocate constant double data
  *
  * The function to allocate data for a constant double, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        double value.
@@ -662,10 +682,12 @@ extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_
  * @brief Allocate constant string data
  *
  * The function to allocate data for a constant string, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
- * @param str        Constant string value.
+ * @param str        Constant string value. Not copied, so must remain valid while the data is in use.
  * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str);
@@ -698,7 +720,9 @@ extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn
  * @brief Allocate constant pointer data
  *
  * The function to allocate data for a constant pointer, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param ptr        Constant pointer value.
@@ -719,7 +743,10 @@ extern iot_data_t * iot_data_alloc_list (void);
  * @brief Allocate constant list data
  *
  * The function to allocate data for a constant list, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key. Values may still be added to
+ * and removed from a constant list, and are seen by all references to it.
  *
  * @param data       Address of static storage for data
  * @return           Pointer to the allocated data (same address as the static storage)
@@ -2505,7 +2532,9 @@ extern int iot_data_compare_value (const iot_data_t * data1, const iot_data_t * 
  *
  * This function copies data from src and returns the pointer of the copied data.
  * Note that to maintain ownership semantics for the POINTER data type, for this type
- * the src argument is returned with it's reference count incremented.
+ * the src argument is returned with it's reference count incremented. Constant data
+ * (see iot_data_is_static) is not copied, to minimise memory use, but src is returned
+ * by reference, so a copy of a map, vector or list references any constant data it contains.
  *
  * @param src Data to copy
  * @return    Pointer to the copied data. The caller should free memory after use
