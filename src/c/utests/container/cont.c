@@ -259,6 +259,42 @@ static void test_start_stop_modify (void)
   iot_container_free (cont);
 }
 
+// Component whose stats function adds a component
+
+static iot_data_t * test_stats_fn (iot_component_t * comp)
+{
+  iot_container_add_component (comp->container, IOT_LOGGER_TYPE, "stats_added", logger_config);
+  return iot_data_alloc_string ("stats", IOT_DATA_REF);
+}
+
+static iot_component_t * test_stats_config (iot_container_t * cont, const iot_data_t * map)
+{
+  iot_component_t * comp = test_adder_config (cont, map);
+  iot_component_set_stats_callback (comp, test_stats_fn);
+  return comp;
+}
+
+static iot_component_factory_t test_stats_factory = { "test::stats", IOT_CATEGORY_USER, NULL, NULL, NULL, NULL };
+
+static void test_stats_modify (void)
+{
+  // Component stats functions may modify the container, without deadlock
+  test_stats_factory.config_fn = test_stats_config;
+  test_stats_factory.free_fn = test_worker_free;
+  iot_component_factory_add (&test_stats_factory);
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_t * cont = iot_container_alloc ("stats_cont");
+  iot_container_add_component (cont, "test::stats", "stats", "{}");
+  iot_data_t * map = iot_container_stats (cont);
+  CU_ASSERT (iot_container_find_component (cont, "stats_added") != NULL)
+  const iot_data_t * comp_stats = iot_data_string_map_get (map, "stats");
+  CU_ASSERT_FATAL (comp_stats != NULL)
+  CU_ASSERT_STRING_EQUAL (iot_data_string (iot_data_string_map_get (comp_stats, "stats")), "stats")
+  CU_ASSERT (iot_data_string_map_get (map, "startup_time") != NULL)
+  iot_data_free (map);
+  iot_container_free (cont);
+}
+
 static const char * lazy_logger_config = "{\"Name\":\"lazy\",\"Level\":\"Info\"}";
 
 static char * test_lazy_load (const char * name, const char * uri)
@@ -361,6 +397,7 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "component_read_reconfig", test_component_read_reconfig);
   CU_add_test (suite, "delete_running_component", test_delete_running_component);
   CU_add_test (suite, "start_stop_modify", test_start_stop_modify);
+  CU_add_test (suite, "stats_modify", test_stats_modify);
   CU_add_test (suite, "lazy_load_concurrent", test_lazy_load_concurrent); // Last, as sets container configuration
 
 }

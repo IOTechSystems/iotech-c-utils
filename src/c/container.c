@@ -330,8 +330,8 @@ void iot_container_free (iot_container_t * cont)
   }
 }
 
-// Returns a copy of the component list, holding a reference to each component, so components can be
-// started and stopped without the container lock held (component functions may use the container)
+// Returns a copy of the component list, holding a reference to each component, so components can be started,
+// stopped and have stats read without the container lock held (component functions may use the container)
 
 static iot_data_t * iot_container_components (iot_container_t * cont)
 {
@@ -530,16 +530,18 @@ iot_data_t * iot_container_stats (iot_container_t * cont)
 {
   assert (cont);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * components = iot_container_components (cont); // Stats functions called without container lock held
   iot_data_list_iter_t iter;
-  pthread_rwlock_rdlock (&cont->lock);
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
-    iot_component_t * comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter); // double check cast
+    iot_component_t * comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter);
     iot_data_t * stats = iot_component_stats (comp);
     if (stats) iot_data_map_add (map, iot_data_alloc_string (comp->name, IOT_DATA_COPY), stats);
   }
-  iot_data_string_map_add (map, "startup_time", iot_data_alloc_ui64(cont->startup_time));
+  iot_data_free (components);
+  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_string_map_add (map, "startup_time", iot_data_alloc_ui64 (cont->startup_time));
   pthread_rwlock_unlock (&cont->lock);
   return map;
 }

@@ -127,3 +127,4 @@
 - `iot_container_delete_component` now stops and frees the component without the container lock held (previously deadlocked if stopping waited on a thread using the container)
 - `iot_container_start` and `iot_container_stop` no longer hold the container lock while starting or stopping components (previously deadlocked if a component added, deleted or lazily loaded components when started or stopped)
 - On Zephyr, a thread's stack is no longer reused until the thread using it has terminated (previously reused once the thread function returned, while the thread was still exiting on it), and `iot_thread_create` now returns false if no stack is free (previously asserted)
+- `iot_container_stats` no longer holds the container lock while calling component stats functions (previously deadlocked if a stats function added, deleted or lazily loaded components)
