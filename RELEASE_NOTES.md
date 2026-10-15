@@ -137,3 +137,4 @@
 - File loggers now flush each message to the file (previously buffered, so the latest messages were missing from the file until flushed, and lost if the process exited abnormally)
 - `iot_data_to_json` now writes negative infinity as `-1e400` (float) or `-1e800` (double) (previously written without the sign, so read back as positive infinity)
 - `iot_threadpool_free` now joins the pool threads, so all have terminated when it returns (previously threads could still be exiting, reported by valgrind as possibly lost memory if the process then exited)
+- `iot_data_to_json` now writes NaN as `null` (previously written as `nan` or `-nan`, which is not valid JSON). `iot_data_from_json` still reads `nan` and `-nan` as NaN

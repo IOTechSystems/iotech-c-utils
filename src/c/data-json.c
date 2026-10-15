@@ -76,9 +76,12 @@ static void iot_data_dump_json_ptr (iot_string_holder_t * holder, const void * p
     case IOT_DATA_INT64: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRId64, *(const int64_t *) ptr); break;
     case IOT_DATA_UINT64: snprintf (buff, IOT_VAL_BUFF_SIZE, "%" PRIu64, *(const uint64_t *) ptr); break;
     case IOT_DATA_FLOAT32:
-      // Infinity (not representable in JSON) written as a number which overflows to infinity of the same sign when read
+      // Infinity (not representable in JSON) written as a number which overflows to infinity of the same sign when read.
+      // NaN (not representable in JSON) written as null
+      if (isnan (*(const float*) ptr)) { strncpy (buff, "null", IOT_VAL_BUFF_SIZE); break; }
       (fpclassify (*(const float*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "%s", signbit (*(const float*) ptr) ? "-1e400" : "1e400") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.8e", *(const float*) ptr); break;
     case IOT_DATA_FLOAT64:
+      if (isnan (*(const double*) ptr)) { strncpy (buff, "null", IOT_VAL_BUFF_SIZE); break; }
       (fpclassify (*(const double*) ptr) == FP_INFINITE) ? snprintf (buff, IOT_VAL_BUFF_SIZE, "%s", signbit (*(const double*) ptr) ? "-1e800" : "1e800") : snprintf (buff, IOT_VAL_BUFF_SIZE, "%.16e", *(const double*) ptr); break;
     case IOT_DATA_NULL: strncpy (buff, "null", IOT_VAL_BUFF_SIZE); break;
     default: strncpy (buff, (*(const bool*) ptr) ? "true" : "false", IOT_VAL_BUFF_SIZE); break;
@@ -380,7 +383,7 @@ static iot_data_t * iot_data_primitive_from_json (iot_json_ctx_t * ctx, const io
   if (strcmp (str, "true") == 0) ret = iot_data_true;
   else if (strcmp (str, "false") == 0) ret = iot_data_false;
   else if (strcmp (str, "null") == 0) ret = iot_data_null;
-  else if (strcmp (str, "nan") == 0 || strcmp (str, "-nan") == 0) ret = iot_data_alloc_f64 (NAN); // As written for NaN by iot_data_to_json
+  else if (strcmp (str, "nan") == 0 || strcmp (str, "-nan") == 0) ret = iot_data_alloc_f64 (NAN); // As written for NaN by iot_data_to_json in earlier versions
   else if (iot_json_number_valid (str))
   {
     // Integers held as int64_t, or uint64_t if too big. Floating point numbers, and integers too big for 64 bits, as double

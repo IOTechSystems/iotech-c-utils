@@ -719,6 +719,48 @@ static void test_data_infinite (void)
   iot_data_free (map);
 }
 
+static void test_data_nan_json (void)
+{
+  // NaN (not representable in JSON) written as null
+  iot_data_t * f = iot_data_alloc_f32 (NAN);
+  iot_data_t * d = iot_data_alloc_f64 (-NAN);
+  char * json = iot_data_to_json (f);
+  CU_ASSERT (strcmp (json, "null") == 0)
+  free (json);
+  json = iot_data_to_json (d);
+  CU_ASSERT (strcmp (json, "null") == 0)
+  free (json);
+  iot_data_free (f);
+  iot_data_free (d);
+
+  // Output with NaN in values and arrays is valid JSON, with NaN read back as null
+  float fvals[] = { 1.0f, NAN };
+  double dvals[] = { NAN, -NAN };
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (map, "nan", iot_data_alloc_f64 (NAN));
+  iot_data_string_map_add (map, "farray", iot_data_alloc_array (fvals, 2, IOT_DATA_FLOAT32, IOT_DATA_REF));
+  iot_data_string_map_add (map, "darray", iot_data_alloc_array (dvals, 2, IOT_DATA_FLOAT64, IOT_DATA_REF));
+  json = iot_data_to_json (map);
+  CU_ASSERT (strstr (json, "\"nan\":null") != NULL)
+  CU_ASSERT (strstr (json, "[1.00000000e+00,null]") != NULL)
+  CU_ASSERT (strstr (json, "[null,null]") != NULL)
+  CU_ASSERT (strstr (json, "nan") == strstr (json, "\"nan\"") + 1) // Only as key
+  CU_ASSERT (strstr (strstr (json, "nan") + 1, "nan") == NULL)
+  iot_data_t * read = iot_data_from_json (json);
+  CU_ASSERT_FATAL (read != NULL)
+  const iot_data_t * val = iot_data_string_map_get (read, "nan");
+  CU_ASSERT (val && iot_data_type (val) == IOT_DATA_NULL)
+  val = iot_data_string_map_get (read, "farray");
+  CU_ASSERT (val && iot_data_vector_size (val) == 2u)
+  if (val && iot_data_vector_size (val) == 2u)
+  {
+    CU_ASSERT (iot_data_type (iot_data_vector_get (val, 1)) == IOT_DATA_NULL)
+  }
+  free (json);
+  iot_data_free (read);
+  iot_data_free (map);
+}
+
 static void test_data_address (void)
 {
   uint32_t * ui32ptr;
@@ -7485,6 +7527,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_string_vector", test_data_string_vector);
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_infinite", test_data_infinite);
+  CU_add_test (suite, "data_nan_json", test_data_nan_json);
   CU_add_test (suite, "data_from_string", test_data_from_string);
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
   CU_add_test (suite, "data_from_base64", test_data_from_base64);

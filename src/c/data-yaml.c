@@ -118,7 +118,7 @@ static iot_data_t * iot_data_typed_from_yaml (const char * val)
   if (iot_yaml_is_float (val)) return iot_data_alloc_f64 (strtod (val, NULL)); // Includes out of range decimal integers
   str = (*val == '-' || *val == '+') ? val + 1 : val;
   if (iot_yaml_match (str, ".inf", ".Inf", ".INF")) return iot_data_alloc_f64 ((*val == '-') ? -INFINITY : INFINITY);
-  if (iot_yaml_match (val, ".nan", ".NaN", ".NAN") || strcmp (val, "nan") == 0 || strcmp (val, "-nan") == 0) return iot_data_alloc_f64 (NAN); // nan and -nan as written by iot_data_to_json
+  if (iot_yaml_match (val, ".nan", ".NaN", ".NAN") || strcmp (val, "nan") == 0 || strcmp (val, "-nan") == 0) return iot_data_alloc_f64 (NAN); // nan and -nan as written by iot_data_to_json in earlier versions
   return NULL;
 }
 
