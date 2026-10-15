@@ -332,25 +332,23 @@ static iot_data_t *cbor_indefinite_bytestring_to_iot_data (const cbor_item_t *it
 {
   assert (cbor_bytestring_is_indefinite (item));
   size_t chunk_count = cbor_bytestring_chunk_count (item);
-  char * data = NULL;
-  size_t data_size = 0;
-  size_t write_offset = 0;
   cbor_item_t **chunks = cbor_bytestring_chunks_handle (item);
-  for (size_t i=0; i<chunk_count;i++)
+  size_t data_size = 0;
+  for (size_t i = 0; i < chunk_count; i++) // Validate chunks and total size, so data allocated once
   {
-    const cbor_item_t *chunk = chunks[i];
-    if (!cbor_isa_bytestring (chunk)) goto error;
-    size_t chunk_size = cbor_bytestring_length (chunk);
-    const cbor_mutable_data chunk_data = cbor_bytestring_handle (chunk);
-    data_size += chunk_size;
-    data = realloc (data, data_size);
-    memcpy (data + write_offset, chunk_data, chunk_size);
+    if (!cbor_isa_bytestring (chunks[i])) return NULL;
+    data_size += cbor_bytestring_length (chunks[i]);
+  }
+  if (data_size == 0) return iot_data_alloc_binary (NULL, 0u, IOT_DATA_REF);
+  uint8_t * data = malloc (data_size);
+  size_t write_offset = 0;
+  for (size_t i = 0; i < chunk_count; i++)
+  {
+    size_t chunk_size = cbor_bytestring_length (chunks[i]);
+    if (chunk_size) memcpy (data + write_offset, cbor_bytestring_handle (chunks[i]), chunk_size);
     write_offset += chunk_size;
   }
   return iot_data_alloc_binary (data, (uint32_t) data_size, IOT_DATA_TAKE);
-error:
-  free (data);
-  return NULL;
 }
 
 static iot_data_t *cbor_bytestring_to_iot_data (const cbor_item_t *item)
@@ -375,27 +373,24 @@ static iot_data_t *cbor_indefinite_string_to_iot_data (const cbor_item_t *item)
 {
   assert (cbor_string_is_indefinite (item));
   size_t chunk_count = cbor_string_chunk_count (item);
-  if (chunk_count == 0) return iot_data_alloc_string ("", IOT_DATA_REF);
-  char * data = NULL;
-  size_t data_size = 1; // For null terminator
-  size_t write_offset = 0;
   cbor_item_t **chunks = cbor_string_chunks_handle (item);
-  for (size_t i=0; i<chunk_count;i++)
+  size_t data_size = 0;
+  for (size_t i = 0; i < chunk_count; i++) // Validate chunks and total size, so string allocated once
   {
-    const cbor_item_t *chunk = chunks[i];
-    if (!cbor_isa_string (chunk)) goto error;
-    size_t chunk_size = cbor_string_length (chunk);
-    const cbor_mutable_data chunk_data = cbor_string_handle (chunk);
-    data_size += chunk_size;
-    data = realloc (data, data_size);
-    memcpy (data + write_offset, chunk_data, chunk_size);
+    if (!cbor_isa_string (chunks[i])) return NULL;
+    data_size += cbor_string_length (chunks[i]);
+  }
+  if (data_size == 0) return iot_data_alloc_string ("", IOT_DATA_REF);
+  char * data = malloc (data_size + 1); // Plus null terminator
+  size_t write_offset = 0;
+  for (size_t i = 0; i < chunk_count; i++)
+  {
+    size_t chunk_size = cbor_string_length (chunks[i]);
+    if (chunk_size) memcpy (data + write_offset, cbor_string_handle (chunks[i]), chunk_size);
     write_offset += chunk_size;
   }
-  data[data_size-1] = '\0';
+  data[data_size] = '\0';
   return iot_data_alloc_string (data, IOT_DATA_TAKE);
-error:
-  free (data);
-  return NULL;
 }
 
 static iot_data_t *cbor_string_to_iot_data (const cbor_item_t *item)

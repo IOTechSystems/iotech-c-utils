@@ -761,6 +761,26 @@ static void test_data_nan_json (void)
   iot_data_free (map);
 }
 
+static void test_data_array_empty (void)
+{
+  // Empty arrays hold no data, whatever the ownership (data taken is freed, checked by valgrind)
+  uint8_t buff[2] = { 1, 2 };
+  iot_data_t * array = iot_data_alloc_array (malloc (4), 0u, IOT_DATA_UINT8, IOT_DATA_TAKE);
+  CU_ASSERT (iot_data_array_length (array) == 0u)
+  CU_ASSERT (iot_data_address (array) == NULL)
+  iot_data_free (array);
+  array = iot_data_alloc_array (buff, 0u, IOT_DATA_UINT8, IOT_DATA_COPY);
+  CU_ASSERT (iot_data_array_length (array) == 0u)
+  CU_ASSERT (iot_data_address (array) == NULL)
+  iot_data_free (array);
+  array = iot_data_alloc_array (buff, 0u, IOT_DATA_UINT8, IOT_DATA_REF);
+  CU_ASSERT (iot_data_address (array) == NULL)
+  iot_data_free (array);
+  array = iot_data_alloc_array (buff, 2u, IOT_DATA_UINT8, IOT_DATA_COPY);
+  CU_ASSERT (iot_data_address (array) != buff && memcmp (iot_data_address (array), buff, 2u) == 0)
+  iot_data_free (array);
+}
+
 static void test_data_address (void)
 {
   uint32_t * ui32ptr;
@@ -4652,7 +4672,8 @@ static void test_data_compare (void)
   data_compare_check (iot_data_alloc_f32 (1.0), iot_data_alloc_f32 (1.0), iot_data_alloc_f32 (2.0));
   data_compare_check (iot_data_alloc_f64 (1.0), iot_data_alloc_f64 (1.0), iot_data_alloc_f64 (2.0));
   data_compare_check (iot_data_false, iot_data_false, iot_data_true);
-  data_compare_check (iot_data_alloc_pointer ((void *) 0, NULL), iot_data_alloc_pointer ((void *) 0, NULL), iot_data_alloc_pointer ((void *) 2, NULL));
+  static int ptrs[2]; // Pointers compared by address
+  data_compare_check (iot_data_alloc_pointer (&ptrs[0], NULL), iot_data_alloc_pointer (&ptrs[0], NULL), iot_data_alloc_pointer (&ptrs[1], NULL));
   data_compare_check (iot_data_alloc_string ("a", IOT_DATA_COPY), iot_data_alloc_string ("a", IOT_DATA_COPY), iot_data_alloc_string ("b", IOT_DATA_COPY));
   CU_ASSERT (iot_data_compare (NULL, NULL) == 0)
   CU_ASSERT (iot_data_compare (iot_data_null, iot_data_null) == 0)
@@ -7528,6 +7549,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_address", test_data_address);
   CU_add_test (suite, "data_infinite", test_data_infinite);
   CU_add_test (suite, "data_nan_json", test_data_nan_json);
+  CU_add_test (suite, "data_array_empty", test_data_array_empty);
   CU_add_test (suite, "data_from_string", test_data_from_string);
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
   CU_add_test (suite, "data_from_base64", test_data_from_base64);

@@ -398,6 +398,7 @@ static void cunit_logger_chain_no_container (void)
   iot_log_warn (a, "warn");
   CU_ASSERT (atomic_load (&cunit_count_b) == 1u)
   iot_logger_set_next (a, b); // Reattach updates effective level
+  // cppcheck-suppress nullPointerRedundantCheck ; Not NULL, but iot_log_warn above checks logger is not NULL
   CU_ASSERT (a->level == IOT_LOG_WARN)
   iot_logger_free (a);
   iot_logger_free (b);

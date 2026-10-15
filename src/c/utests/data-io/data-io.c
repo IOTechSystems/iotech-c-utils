@@ -805,6 +805,29 @@ static void test_cbor_to_data (void)
   iot_data_free (from_cbor);
   iot_data_free (bytestring_value);
 
+  //indefinite strings and bytestrings, empty and with empty chunks
+  unsigned char indef_empty_string[] = {0x7F, 0xFF};
+  unsigned char indef_empty_chunk_string[] = {0x7F, 0x60, 0x62, 'a', 'b', 0x60, 0xFF};
+  unsigned char indef_empty_binary[] = {0x5F, 0xFF};
+  unsigned char indef_empty_chunk_binary[] = {0x5F, 0x40, 0x42, 0xaa, 0xbb, 0x40, 0xFF};
+  from_cbor = iot_data_from_cbor (indef_empty_string, ARRAY_SIZE (indef_empty_string));
+  CU_ASSERT_FATAL (from_cbor && iot_data_type (from_cbor) == IOT_DATA_STRING)
+  CU_ASSERT (strcmp (iot_data_string (from_cbor), "") == 0)
+  iot_data_free (from_cbor);
+  from_cbor = iot_data_from_cbor (indef_empty_chunk_string, ARRAY_SIZE (indef_empty_chunk_string));
+  CU_ASSERT_FATAL (from_cbor && iot_data_type (from_cbor) == IOT_DATA_STRING)
+  CU_ASSERT (strcmp (iot_data_string (from_cbor), "ab") == 0)
+  iot_data_free (from_cbor);
+  from_cbor = iot_data_from_cbor (indef_empty_binary, ARRAY_SIZE (indef_empty_binary));
+  CU_ASSERT_FATAL (from_cbor && iot_data_type (from_cbor) == IOT_DATA_BINARY)
+  CU_ASSERT (iot_data_array_length (from_cbor) == 0u)
+  iot_data_free (from_cbor);
+  from_cbor = iot_data_from_cbor (indef_empty_chunk_binary, ARRAY_SIZE (indef_empty_chunk_binary));
+  CU_ASSERT_FATAL (from_cbor && iot_data_type (from_cbor) == IOT_DATA_BINARY)
+  CU_ASSERT (iot_data_array_length (from_cbor) == 2u)
+  CU_ASSERT (memcmp (iot_data_address (from_cbor), binary_data, 2u) == 0)
+  iot_data_free (from_cbor);
+
   //array
   iot_data_t *iot_array = iot_data_alloc_vector (4);
   iot_data_vector_add (iot_array, 0, iot_data_alloc_string ("string_value", IOT_DATA_REF));

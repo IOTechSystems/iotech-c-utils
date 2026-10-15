@@ -1025,7 +1025,7 @@ bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void * val)
 iot_data_t * iot_data_transform (const iot_data_t * data, iot_data_type_t type)
 {
   assert (data);
-  iot_data_union_t out = { 0 };
+  iot_data_union_t out = { .ui64 = 0 }; // Largest member, so all zeroed
   if (data->type == type) return iot_data_add_ref (data);
   if (iot_data_cast_val (((const iot_data_value_t*) data)->value, &out, data->type, type))
   {
@@ -1860,7 +1860,7 @@ iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * valu
 
   if (type < IOT_DATA_BOOL)
   {
-    iot_data_union_t un = { 0 };
+    iot_data_union_t un = { .ui64 = 0 }; // Largest member, so all zeroed
     if (iot_data_parse_number (type, value, &un))
     {
       switch (type)
@@ -2265,17 +2265,21 @@ extern iot_data_t * iot_data_alloc_array (void * data, uint32_t length, iot_data
   assert ((type <= IOT_DATA_BOOL) && ((length > 0 && data != NULL) || length == 0));
   iot_data_array_t * array = iot_data_block_alloc_data (IOT_DATA_ARRAY);
   size_t size = iot_data_type_sizes[type] * length;
+  if (length == 0) // Empty array has no data
+  {
+    if (data && (ownership == IOT_DATA_TAKE)) free (data);
+    data = NULL;
+  }
   array->base.element_type = type;
-  array->data = length ? data : NULL;
+  array->data = data;
   array->length = length;
-  if (!length && data && (ownership == IOT_DATA_TAKE)) free (data);
 
   //defer hashing
   array->base.hash = 0;
   iot_data_set_rehash (&array->base, true);
 
   array->base.release = array->data ? (ownership != IOT_DATA_REF) : false;
-  if (length && data && (ownership == IOT_DATA_COPY))
+  if (data && (ownership == IOT_DATA_COPY))
   {
     array->data = malloc (size);
     memcpy (array->data, data, size);

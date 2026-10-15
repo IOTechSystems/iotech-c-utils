@@ -162,7 +162,11 @@ fi
 if [ "${CPPCHK}" = "true" ]
 then
   cd ${ROOT}
-  cppcheck -DNDEBUG -D_GNU_SOURCE --std=c11 --xml --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths --output-file=${BROOT}/release/cppcheck.xml -I ./include ./src/c
+  # Allocation failures are not checked (by design), so out of memory checks are suppressed. Bundled CUnit sources
+  # are not checked, but its header is included so that unit test assertion macros are recognised.
+  cppcheck -DNDEBUG -D_GNU_SOURCE --std=c11 --xml --xml-version=2 --enable=performance --enable=portability --enable=warning --relative-paths \
+    --inline-suppr --suppress=nullPointerOutOfMemory --suppress=nullPointerArithmeticOutOfMemory --suppress=ctunullpointerOutOfMemory --suppress=memleakOnRealloc \
+    --output-file=${BROOT}/release/cppcheck.xml -I ./include -I ./src/c/cunit -i ./src/c/cunit ./src/c
 fi
 
 # Valgrind. Each run writes an XML report (*_vg.xml). Runs with memory errors or leaks (or that fail) are listed in
