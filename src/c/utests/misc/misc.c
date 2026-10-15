@@ -505,6 +505,86 @@ static void test_file_notify (void)
 
 #endif
 
+static void test_file_read_cases (void)
+{
+  // Special file larger than the initial read buffer read completely. Reading a directory fails
+  char * str = iot_file_read ("/proc/self/smaps");
+  CU_ASSERT (str && strlen (str) > 4096u)
+  free (str);
+  CU_ASSERT (iot_file_read ("/tmp") == NULL)
+}
+
+static void test_store_config_files (void)
+{
+  // Configuration saved, loaded and deleted as name.json in the URI directory, or in the current directory if no URI
+  CU_ASSERT (iot_store_config_save ("iot_store_cfg", "/tmp", "{\"a\":1}"))
+  CU_ASSERT (iot_file_exists ("/tmp/iot_store_cfg.json"))
+  char * str = iot_store_config_load ("iot_store_cfg", "/tmp");
+  CU_ASSERT (str && strcmp (str, "{\"a\":1}") == 0)
+  free (str);
+  CU_ASSERT (iot_store_config_delete ("iot_store_cfg", "/tmp"))
+  CU_ASSERT (! iot_file_exists ("/tmp/iot_store_cfg.json"))
+  CU_ASSERT (iot_store_config_load ("iot_store_cfg", "/tmp") == NULL)
+
+  CU_ASSERT (iot_store_config_save ("iot_store_cfg", NULL, "{}"))
+  CU_ASSERT (iot_file_exists ("./iot_store_cfg.json"))
+  str = iot_store_config_load ("iot_store_cfg", NULL);
+  CU_ASSERT (str && strcmp (str, "{}") == 0)
+  free (str);
+  CU_ASSERT (iot_store_config_delete ("iot_store_cfg", NULL))
+  CU_ASSERT (! iot_file_exists ("./iot_store_cfg.json"))
+}
+
+static unsigned test_store_reads = 0u;
+static unsigned test_store_writes = 0u;
+static unsigned test_store_deletes = 0u;
+
+static uint8_t * test_store_read (const char * path, size_t * len)
+{
+  (void) path;
+  test_store_reads++;
+  if (len) *len = 2u;
+  return (uint8_t*) strdup ("{}");
+}
+
+static bool test_store_write (const char * path, const uint8_t * binary, size_t len)
+{
+  (void) path;
+  (void) binary;
+  (void) len;
+  test_store_writes++;
+  return true;
+}
+
+static bool test_store_delete (const char * path)
+{
+  (void) path;
+  test_store_deletes++;
+  return true;
+}
+
+static void test_store_config_functions (void)
+{
+  // Store uses configured functions. Without functions, reads return NULL and writes and deletes fail
+  iot_store_config (test_store_read, test_store_write, test_store_delete);
+  char * str = iot_store_read ("any");
+  CU_ASSERT (str && strcmp (str, "{}") == 0)
+  free (str);
+  CU_ASSERT (iot_store_write ("any", "x"))
+  CU_ASSERT (iot_store_delete ("any"))
+  CU_ASSERT (test_store_reads == 1u && test_store_writes == 1u && test_store_deletes == 1u)
+  iot_store_config (NULL, NULL, NULL);
+  CU_ASSERT (iot_store_read ("any") == NULL)
+  CU_ASSERT (! iot_store_write ("any", "x"))
+  CU_ASSERT (! iot_store_delete ("any"))
+  iot_store_config (iot_file_read_binary, iot_file_write_binary, iot_file_delete); // Restore default file store
+  CU_ASSERT (iot_store_write (TEST_FILE_NAME, "restored"))
+  str = iot_store_read (TEST_FILE_NAME);
+  CU_ASSERT (str && strcmp (str, "restored") == 0)
+  free (str);
+  CU_ASSERT (iot_store_delete (TEST_FILE_NAME))
+}
+
 void cunit_misc_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("misc", suite_init, suite_clean);
@@ -536,6 +616,9 @@ void cunit_misc_test_init (void)
   CU_add_test (suite, "file_read_special", test_file_read_special);
   CU_add_test (suite, "file_write_symlink", test_file_write_symlink);
   CU_add_test (suite, "list_file_bad_regex", test_list_file_bad_regex);
+  CU_add_test (suite, "file_read_cases", test_file_read_cases);
+  CU_add_test (suite, "store_config_files", test_store_config_files);
+  CU_add_test (suite, "store_config_functions", test_store_config_functions);
 #endif
 #endif
 }

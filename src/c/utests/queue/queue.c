@@ -165,6 +165,29 @@ static void test_enqueue_stopped_full (void)
   iot_queue_free (q);
 }
 
+static void test_setmaxsize (void)
+{
+  // Increasing maximum size unblocks enqueue to a full queue. Zero maximum size is unlimited
+  void * ret;
+  pthread_t tid;
+  iot_queue_t *q = iot_queue_alloc (1);
+  CU_ASSERT (iot_queue_enqueue (q, iot_data_alloc_ui32 (1)))
+  pthread_create (&tid, NULL, blocked_enqueue, q);
+  iot_wait_msecs (100); // Allow thread to block on full queue
+  iot_queue_setmaxsize (q, 2);
+  pthread_join (tid, &ret);
+  CU_ASSERT (*(bool *) ret == true)
+  CU_ASSERT (iot_queue_maxsize (q) == 2)
+  CU_ASSERT (iot_queue_size (q) == 2)
+  iot_queue_setmaxsize (q, 0);
+  CU_ASSERT (iot_queue_maxsize (q) == 0)
+  for (uint32_t i = 0; i < 10; i++) CU_ASSERT (iot_queue_enqueue (q, iot_data_alloc_ui32 (i)))
+  CU_ASSERT (iot_queue_size (q) == 12)
+  iot_queue_setmaxsize (q, 5); // Reducing maximum size keeps queued elements
+  CU_ASSERT (iot_queue_size (q) == 12)
+  iot_queue_free (q);
+}
+
 void cunit_queue_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("queue", suite_init, suite_clean);
@@ -172,4 +195,5 @@ void cunit_queue_test_init (void)
   CU_add_test (suite, "queue_run_single", test_run_single);
   CU_add_test (suite, "queue_run_multi", test_run_multi);
   CU_add_test (suite, "queue_enqueue_stopped_full", test_enqueue_stopped_full);
+  CU_add_test (suite, "queue_setmaxsize", test_setmaxsize);
 }

@@ -8,6 +8,7 @@
 #include "cont.h"
 #include "CUnit.h"
 #include "iot/config.h"
+#include "iot/time.h"
 #include <pthread.h>
 #include <sched.h>
 
@@ -417,6 +418,168 @@ static void test_component_read_reconfig (void)
   iot_container_free (cont);
 }
 
+// Container initialisation from configuration. Container configuration remains set (as cannot be unset), so tests
+// run last, with names unlikely to be used elsewhere, and an empty configuration returned for other names
+
+static char * test_init_load (const char * name, const char * uri)
+{
+  (void) uri;
+  static const char * configs[][2] =
+  {
+    { "init", "{\"init_logger\":\"" IOT_LOGGER_TYPE "\",\"init_nolib\":\"test::nolib\",\"init_nofactory\":\"test::nofactory\",\"init_notype\":\"test::notype\"}" },
+    { "init_logger", "{\"Name\":\"init_logger\",\"Level\":\"Info\"}" },
+    { "init_nolib", "{\"Library\":\"libiot_no_such_library.so\",\"Factory\":\"no_factory\"}" }, // Library cannot be loaded
+    { "init_nofactory", "{\"Library\":\"libc.so.6\",\"Factory\":\"iot_no_such_factory\"}" }, // Factory not in library
+    { "init_notype", "{}" }, // No library to load factory from
+    { "init_cycle", "{\"init_a\":\"" IOT_LOGGER_TYPE "\",\"init_b\":\"" IOT_LOGGER_TYPE "\"}" },
+    { "init_a", "{\"Name\":\"a\",\"Next\":\"init_b\"}" }, // Loggers referencing each other
+    { "init_b", "{\"Name\":\"b\",\"Next\":\"init_a\"}" }
+  };
+  for (unsigned i = 0; i < sizeof (configs) / sizeof (configs[0]); i++)
+  {
+    if (strcmp (name, configs[i][0]) == 0) return strdup (configs[i][1]);
+  }
+  return (strcmp (name, "init_missing") == 0) ? NULL : strdup ("{}");
+}
+
+static unsigned test_init_saves = 0u;
+
+static bool test_init_save (const char * name, const char * uri, const char * config)
+{
+  (void) uri;
+  if (strcmp (name, "init_logger") == 0 && strstr (config, "\"Debug\"")) test_init_saves++;
+  return true;
+}
+
+static const iot_container_config_t test_init_config = { test_init_load, NULL, test_init_save };
+
+static void test_container_init (void)
+{
+  // Components created from container configuration. Components whose factory cannot be found or loaded are not created
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_config (&test_init_config);
+  iot_container_t * cont = iot_container_alloc ("init");
+  CU_ASSERT (iot_container_init (cont))
+  CU_ASSERT (iot_container_find_component (cont, "init_logger") != NULL)
+  CU_ASSERT (iot_container_find_component (cont, "init_nolib") == NULL)
+  CU_ASSERT (iot_container_find_component (cont, "init_nofactory") == NULL)
+  CU_ASSERT (iot_container_find_component (cont, "init_notype") == NULL)
+  iot_container_add_component (cont, "test::notype", "init_notype", "{}"); // Factory not found and cannot be loaded
+  CU_ASSERT (iot_container_find_component (cont, "init_notype") == NULL)
+
+  // Reconfiguration saved with configuration save function
+  iot_data_t * update = iot_data_from_json ("{\"Level\":\"Debug\"}");
+  CU_ASSERT (iot_component_reconfig (iot_container_find_component (cont, "init_logger"), cont, update))
+  iot_data_free (update);
+  CU_ASSERT (test_init_saves == 1u)
+
+  // Component read by name
+  iot_data_t * data = iot_container_component_read (cont, "init_logger");
+  CU_ASSERT (data && strcmp (iot_data_string_map_get_string (data, "name"), "init_logger") == 0)
+  iot_data_free (data);
+  CU_ASSERT (iot_container_component_read (cont, "init_none") == NULL)
+  CU_ASSERT (iot_container_component_read (cont, NULL) == NULL)
+  iot_container_free (cont);
+
+  // Container without configuration not initialised
+  cont = iot_container_alloc ("init_missing");
+  CU_ASSERT (! iot_container_init (cont))
+  iot_container_free (cont);
+}
+
+static void test_container_init_cycle (void)
+{
+  // Components referencing each other in configuration are loaded without endless recursion
+  iot_component_factory_add (iot_logger_factory ());
+  iot_container_config (&test_init_config);
+  iot_container_t * cont = iot_container_alloc ("init_cycle");
+  CU_ASSERT (iot_container_init (cont))
+  CU_ASSERT (iot_container_find_component (cont, "init_a") != NULL)
+  CU_ASSERT (iot_container_find_component (cont, "init_b") != NULL)
+  iot_container_free (cont);
+}
+
+static void test_config_component_missing (void)
+{
+  // Component named in configuration, but not in container (or loadable), not resolved
+  iot_container_config (&test_init_config);
+  iot_container_t * cont = iot_container_alloc ("init_ref");
+  iot_data_t * map = iot_data_from_json ("{\"ref\":\"init_none\"}");
+  CU_ASSERT (iot_config_component (map, "ref", cont, NULL) == NULL)
+  iot_data_free (map);
+  iot_container_free (cont);
+}
+
+// Component which takes time to start, so container waits for it to be running
+
+typedef struct test_slow_t
+{
+  iot_component_t component;
+  pthread_t tid;
+  bool starting_called;
+  bool running_called;
+  bool running_timeout;
+} test_slow_t;
+
+static void * test_slow_thread (void * arg)
+{
+  iot_wait_msecs (300u);
+  iot_component_set_running ((iot_component_t*) arg);
+  return NULL;
+}
+
+static void test_slow_start (iot_component_t * comp)
+{
+  iot_component_set_starting (comp);
+  pthread_create (&((test_slow_t*) comp)->tid, NULL, test_slow_thread, comp);
+}
+
+static void test_slow_stop (iot_component_t * comp)
+{
+  pthread_join (((test_slow_t*) comp)->tid, NULL);
+  iot_component_set_stopped (comp);
+}
+
+static void test_slow_starting (iot_component_t * comp)
+{
+  ((test_slow_t*) comp)->starting_called = true;
+}
+
+static void test_slow_running (iot_component_t * comp, bool timeout)
+{
+  ((test_slow_t*) comp)->running_called = true;
+  ((test_slow_t*) comp)->running_timeout = timeout;
+}
+
+static iot_component_t * test_slow_config (iot_container_t * cont, const iot_data_t * map)
+{
+  (void) cont;
+  (void) map;
+  test_slow_t * slow = calloc (1, sizeof (*slow));
+  iot_component_init (&slow->component, NULL, test_slow_start, test_slow_stop);
+  iot_component_set_starting_callback (&slow->component, test_slow_starting);
+  iot_component_set_running_callback (&slow->component, test_slow_running);
+  return &slow->component;
+}
+
+static iot_component_factory_t test_slow_factory = { "test::slow", IOT_CATEGORY_USER, test_slow_config, test_worker_free, NULL, NULL };
+
+static void test_slow_start_wait (void)
+{
+  // Container start waits for components to be running before calling running callbacks
+  iot_component_factory_add (&test_slow_factory);
+  iot_container_t * cont = iot_container_alloc ("slow");
+  iot_container_add_component (cont, "test::slow", "slow", "{}");
+  test_slow_t * slow = (test_slow_t*) iot_container_find_component (cont, "slow");
+  CU_ASSERT_FATAL (slow != NULL)
+  CU_ASSERT (iot_component_get_container (&slow->component) == cont)
+  iot_container_start (cont);
+  CU_ASSERT (slow->starting_called)
+  CU_ASSERT (slow->component.state == IOT_COMPONENT_RUNNING)
+  CU_ASSERT (slow->running_called && ! slow->running_timeout)
+  iot_container_free (cont);
+}
+
 static void test_state_name (void)
 {
   CU_ASSERT (strcmp (iot_component_state_name (IOT_COMPONENT_INITIAL), "Initial") == 0)
@@ -441,6 +604,10 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "start_stop_modify", test_start_stop_modify);
   CU_add_test (suite, "stats_modify", test_stats_modify);
   CU_add_test (suite, "get_component", test_get_component);
-  CU_add_test (suite, "lazy_load_concurrent", test_lazy_load_concurrent); // Last, as sets container configuration
+  CU_add_test (suite, "slow_start_wait", test_slow_start_wait);
+  CU_add_test (suite, "lazy_load_concurrent", test_lazy_load_concurrent); // These last, as set container configuration
+  CU_add_test (suite, "container_init", test_container_init);
+  CU_add_test (suite, "container_init_cycle", test_container_init_cycle);
+  CU_add_test (suite, "config_component_missing", test_config_component_missing);
 
 }

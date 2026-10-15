@@ -781,6 +781,178 @@ static void test_data_array_empty (void)
   iot_data_free (array);
 }
 
+#ifndef NDEBUG
+extern void iot_data_map_dump (iot_data_t * map); // Debug build function, not in public header
+#endif
+
+static void test_data_misc_functions (void)
+{
+  // Heap allocation setting returns previous setting
+  bool heap = iot_data_alloc_heap (true);
+  CU_ASSERT (iot_data_alloc_heap (true) == true)
+  iot_data_t * data = iot_data_alloc_ui32 (1u);
+  iot_data_free (data);
+  iot_data_alloc_heap (heap);
+
+  // Typed string map and map iterator accessors
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (map, "list", iot_data_alloc_list ());
+  iot_data_string_map_add (map, "bool", iot_data_alloc_bool (true));
+  CU_ASSERT (iot_data_type (iot_data_string_map_get_list (map, "list")) == IOT_DATA_LIST)
+  CU_ASSERT (iot_data_string_map_get_list (map, "bool") == NULL)
+  CU_ASSERT (iot_data_string_map_get_list (map, "missing") == NULL)
+  iot_data_map_iter_t iter;
+  iot_data_map_iter (map, &iter);
+  CU_ASSERT (iot_data_map_iter_bool_value (&iter) == false) // Not yet on an element
+  bool found = false;
+  while (iot_data_map_iter_next (&iter))
+  {
+    if (strcmp (iot_data_map_iter_string_key (&iter), "bool") == 0) found = iot_data_map_iter_bool_value (&iter);
+  }
+  CU_ASSERT (found)
+  iot_data_restrict_element (map);
+  data = iot_data_alloc_ui8 (1u);
+  iot_data_restrict_element (data); // No effect for non container types
+  iot_data_free (data);
+#ifndef NDEBUG
+  iot_data_map_dump (map);
+#endif
+  iot_data_free (map);
+
+  // Base64 array decode failure
+  CU_ASSERT (iot_data_alloc_array_from_base64 ("QQ==QQ==") == NULL)
+}
+
+static void test_data_transform_cases (void)
+{
+  // Integer widening, float narrowing out of range, and array transform with no convertible elements
+  iot_data_t * i32 = iot_data_alloc_i32 (-5);
+  iot_data_t * i64 = iot_data_transform (i32, IOT_DATA_INT64);
+  CU_ASSERT (i64 && iot_data_type (i64) == IOT_DATA_INT64 && iot_data_i64 (i64) == -5)
+  iot_data_free (i64);
+  iot_data_free (i32);
+  iot_data_t * f64 = iot_data_alloc_f64 (1e300);
+  CU_ASSERT (iot_data_transform (f64, IOT_DATA_FLOAT32) == NULL)
+  iot_data_free (f64);
+  int8_t negs[] = { -1, -2 };
+  iot_data_t * array = iot_data_alloc_array (negs, 2u, IOT_DATA_INT8, IOT_DATA_REF);
+  iot_data_t * result = iot_data_array_transform (array, IOT_DATA_UINT8);
+  CU_ASSERT (result && iot_data_array_length (result) == 0u)
+  iot_data_free (result);
+  iot_data_free (array);
+
+  // Comparison of values of different unsigned integer types
+  iot_data_t * u8 = iot_data_alloc_ui8 (5u);
+  iot_data_t * u32 = iot_data_alloc_ui32 (7u);
+  CU_ASSERT (iot_data_compare_value (u8, u32) < 0)
+  CU_ASSERT (iot_data_compare_value (u32, u8) > 0)
+  iot_data_free (u8);
+  iot_data_free (u32);
+}
+
+static void test_data_remove_at_vector (void)
+{
+  // Element removed from a vector by path index, later elements moved down
+  iot_data_t * map = iot_data_from_json ("{\"v\":[1,2,3]}");
+  iot_data_t * path = iot_data_alloc_list ();
+  iot_data_list_tail_push (path, iot_data_alloc_string ("v", IOT_DATA_REF));
+  iot_data_list_tail_push (path, iot_data_alloc_ui32 (1));
+  iot_data_t * modified = iot_data_remove_at (map, path);
+  char * json = iot_data_to_json (modified);
+  CU_ASSERT (strcmp (json, "{\"v\":[1,3]}") == 0)
+  free (json);
+  iot_data_free (modified);
+  iot_data_free (path);
+  iot_data_free (map);
+}
+
+static void test_data_map_random_delete (void)
+{
+  // Map remains ordered and complete through random insertion and deletion (exercises all tree rebalancing cases)
+  enum { KEYS = 2000 };
+  static uint32_t keys[KEYS];
+  uint32_t seed = 12345u;
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_UINT32);
+  for (uint32_t i = 0; i < KEYS; i++)
+  {
+    seed = seed * 1103515245u + 12345u;
+    keys[i] = seed;
+    iot_data_map_add (map, iot_data_alloc_ui32 (keys[i]), iot_data_alloc_ui32 (i));
+  }
+  uint32_t size = iot_data_map_size (map);
+  for (uint32_t i = KEYS - 1u; i > 0; i--) // Shuffle deletion order
+  {
+    seed = seed * 1103515245u + 12345u;
+    uint32_t j = seed % (i + 1u);
+    uint32_t tmp = keys[i];
+    keys[i] = keys[j];
+    keys[j] = tmp;
+  }
+  bool ok = true;
+  for (uint32_t i = 0; i < KEYS; i++)
+  {
+    iot_data_t * key = iot_data_alloc_ui32 (keys[i]);
+    if (iot_data_map_remove (map, key)) size--;
+    iot_data_free (key);
+    if ((i % 100u) == 0u)
+    {
+      uint32_t count = 0u;
+      uint32_t prev = 0u;
+      iot_data_map_iter_t iter;
+      iot_data_map_iter (map, &iter);
+      while (iot_data_map_iter_next (&iter))
+      {
+        uint32_t k = iot_data_ui32 (iot_data_map_iter_key (&iter));
+        if (count && k <= prev) ok = false;
+        prev = k;
+        count++;
+      }
+      if (count != size || count != iot_data_map_size (map)) ok = false;
+    }
+  }
+  CU_ASSERT (ok)
+  CU_ASSERT (iot_data_map_size (map) == 0u)
+  iot_data_free (map);
+}
+
+static void test_data_json_output_cases (void)
+{
+  // Control characters escaped, and read back
+  iot_data_t * str = iot_data_alloc_string ("a\b\f\r\n\t\"\\z", IOT_DATA_REF);
+  char * json = iot_data_to_json (str);
+  CU_ASSERT (strcmp (json, "\"a\\b\\f\\r\\n\\t\\\"\\\\z\"") == 0)
+  iot_data_t * read = iot_data_from_json (json);
+  CU_ASSERT (read && iot_data_equal (read, str))
+  iot_data_free (read);
+  free (json);
+  iot_data_free (str);
+
+  // Small integer arrays
+  int8_t i8[] = { -1, 2 };
+  int16_t i16[] = { -300, 4 };
+  uint16_t u16[] = { 60000, 5 };
+  int32_t i32[] = { -70000, 6 };
+  const struct { iot_data_type_t type; void * data; const char * expected; } arrays[] =
+  {
+    { IOT_DATA_INT8, i8, "[-1,2]" }, { IOT_DATA_INT16, i16, "[-300,4]" }, { IOT_DATA_UINT16, u16, "[60000,5]" }, { IOT_DATA_INT32, i32, "[-70000,6]" }
+  };
+  for (unsigned i = 0; i < sizeof (arrays) / sizeof (arrays[0]); i++)
+  {
+    iot_data_t * array = iot_data_alloc_array (arrays[i].data, 2u, arrays[i].type, IOT_DATA_REF);
+    json = iot_data_to_json (array);
+    CU_ASSERT (strcmp (json, arrays[i].expected) == 0)
+    free (json);
+    iot_data_free (array);
+  }
+
+  // Ordered map written in original key order. Small initial output size grows as required
+  iot_data_t * map = iot_data_from_json_with_ordering ("{\"z\":1,\"a\":\"a long string value which exceeds the initial size\",\"m\":3}", true);
+  json = iot_data_to_json_with_size (map, 2u);
+  CU_ASSERT (strcmp (json, "{\"z\":1,\"a\":\"a long string value which exceeds the initial size\",\"m\":3}") == 0)
+  free (json);
+  iot_data_free (map);
+}
+
 static void test_data_address (void)
 {
   uint32_t * ui32ptr;
@@ -7550,6 +7722,11 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_infinite", test_data_infinite);
   CU_add_test (suite, "data_nan_json", test_data_nan_json);
   CU_add_test (suite, "data_array_empty", test_data_array_empty);
+  CU_add_test (suite, "data_misc_functions", test_data_misc_functions);
+  CU_add_test (suite, "data_transform_cases", test_data_transform_cases);
+  CU_add_test (suite, "data_remove_at_vector", test_data_remove_at_vector);
+  CU_add_test (suite, "data_map_random_delete", test_data_map_random_delete);
+  CU_add_test (suite, "data_json_output_cases", test_data_json_output_cases);
   CU_add_test (suite, "data_from_string", test_data_from_string);
   CU_add_test (suite, "data_from_strings", test_data_from_strings);
   CU_add_test (suite, "data_from_base64", test_data_from_base64);

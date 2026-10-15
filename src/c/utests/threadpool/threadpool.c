@@ -348,6 +348,28 @@ static void cunit_threadpool_free_self (void)
   iot_wait_usecs (100000u); // Allow detached thread to exit and free pool (checked by valgrind)
 }
 
+static void cunit_threadpool_free_queued (void)
+{
+  // Jobs still queued when a stopped pool is freed are discarded, not run (checked by valgrind)
+  counter = 0u;
+  iot_threadpool_t * pool = iot_threadpool_alloc (1u, 0u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  for (unsigned i = 0; i < 5u; i++) iot_threadpool_add_work (pool, cunit_pool_counter, NULL, IOT_THREAD_NO_PRIORITY);
+  iot_threadpool_free (pool);
+  CU_ASSERT (counter == 0u)
+}
+
+static void cunit_threadpool_affinity (void)
+{
+  // Pool threads restricted to a processor run jobs
+  counter = 0u;
+  iot_threadpool_t * pool = iot_threadpool_alloc (2u, 0u, IOT_THREAD_NO_PRIORITY, 0, logger);
+  iot_threadpool_start (pool);
+  for (unsigned i = 0; i < 4u; i++) iot_threadpool_add_work (pool, cunit_pool_counter, NULL, IOT_THREAD_NO_PRIORITY);
+  iot_threadpool_wait (pool);
+  CU_ASSERT (counter == 4u)
+  iot_threadpool_free (pool);
+}
+
 void cunit_threadpool_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("threadpool", suite_init, suite_clean);
@@ -363,4 +385,6 @@ void cunit_threadpool_test_init (void)
   CU_add_test (suite, "threadpool_free_delay", cunit_threadpool_free_delay);
   CU_add_test (suite, "threadpool_free_join", cunit_threadpool_free_join);
   CU_add_test (suite, "threadpool_free_self", cunit_threadpool_free_self);
+  CU_add_test (suite, "threadpool_free_queued", cunit_threadpool_free_queued);
+  CU_add_test (suite, "threadpool_affinity", cunit_threadpool_affinity);
 }

@@ -12,6 +12,7 @@
 #include "CUnit.h"
 #include <float.h>
 #include "limits.h"
+#include "iot/json.h"
 
 #define ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 
@@ -1016,6 +1017,150 @@ static void test_data_from_yaml_invalid (void)
 }
 #endif
 
+static void test_cbor_round_trip_types (void)
+{
+  // Arrays of each integer type and booleans, and lists, written to CBOR and read back
+  int8_t i8[] = { -1, 2 };
+  uint8_t u8[] = { 200, 3 };
+  int16_t i16[] = { -300, 4 };
+  uint16_t u16[] = { 60000, 5 };
+  int32_t i32[] = { -70000, 6 };
+  uint32_t u32[] = { 4000000000u, 7 };
+  int64_t i64[] = { -5000000000, 8 };
+  uint64_t u64[] = { 10000000000u, 9 };
+  bool bl[] = { true, false };
+  const struct { iot_data_type_t type; void * data; } arrays[] =
+  {
+    { IOT_DATA_INT8, i8 }, { IOT_DATA_UINT8, u8 }, { IOT_DATA_INT16, i16 }, { IOT_DATA_UINT16, u16 }, { IOT_DATA_INT32, i32 },
+    { IOT_DATA_UINT32, u32 }, { IOT_DATA_INT64, i64 }, { IOT_DATA_UINT64, u64 }, { IOT_DATA_BOOL, bl }
+  };
+  for (unsigned i = 0; i < ARRAY_SIZE (arrays); i++)
+  {
+    iot_data_t * array = iot_data_alloc_array (arrays[i].data, 2u, arrays[i].type, IOT_DATA_REF);
+    iot_data_t * cbor = iot_data_to_cbor (array);
+    iot_data_t * read = iot_data_from_iot_cbor (cbor);
+    CU_ASSERT (read && iot_data_type (read) == IOT_DATA_VECTOR && iot_data_vector_size (read) == 2u) // CBOR arrays read as vectors
+    char * json1 = iot_data_to_json (array);
+    char * json2 = iot_data_to_json (read);
+    CU_ASSERT (strcmp (json1, json2) == 0) // Same values
+    free (json1);
+    free (json2);
+    iot_data_free (read);
+    iot_data_free (cbor);
+    iot_data_free (array);
+  }
+
+  iot_data_t * list = iot_data_alloc_list ();
+  iot_data_list_tail_push (list, iot_data_alloc_string ("one", IOT_DATA_REF));
+  iot_data_list_tail_push (list, iot_data_alloc_i32 (2));
+  iot_data_list_tail_push (list, iot_data_alloc_null ());
+  iot_data_t * cbor = iot_data_to_cbor (list);
+  iot_data_t * read = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT (read && iot_data_type (read) == IOT_DATA_VECTOR && iot_data_vector_size (read) == 3u) // Lists read as vectors
+  char * json1 = iot_data_to_json (list);
+  char * json2 = iot_data_to_json (read);
+  CU_ASSERT (strcmp (json1, json2) == 0) // Same values, in list iteration order
+  free (json1);
+  free (json2);
+  iot_data_free (read);
+  iot_data_free (cbor);
+  iot_data_free (list);
+
+  // Output larger than initial size
+  char long_str[1000];
+  memset (long_str, 'x', sizeof (long_str) - 1u);
+  long_str[sizeof (long_str) - 1u] = '\0';
+  iot_data_t * str = iot_data_alloc_string (long_str, IOT_DATA_REF);
+  cbor = iot_data_to_cbor_with_size (str, 4u);
+  read = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT (read && iot_data_equal (read, str))
+  iot_data_free (read);
+  iot_data_free (cbor);
+  iot_data_free (str);
+}
+
+static void test_cbor_decode_cases (void)
+{
+  // Half precision float read as float32
+  uint8_t half[] = { 0xF9, 0x3C, 0x00 }; // 1.0
+  iot_data_t * data = iot_data_from_cbor (half, sizeof (half));
+  CU_ASSERT (data && iot_data_type (data) == IOT_DATA_FLOAT32 && iot_data_f32 (data) == 1.0f)
+  iot_data_free (data);
+
+  // Undefined read as null
+  uint8_t undefined[] = { 0xF7 };
+  data = iot_data_from_cbor (undefined, sizeof (undefined));
+  CU_ASSERT (data && iot_data_type (data) == IOT_DATA_NULL)
+  iot_data_free (data);
+
+  // Unsupported simple values, alone and in arrays or maps, are not read
+  uint8_t simple[] = { 0xF0 }; // Simple value 16
+  uint8_t array_simple[] = { 0x82, 0x01, 0xF0 };
+  uint8_t map_simple[] = { 0xA1, 0x61, 'a', 0xF0 };
+  uint8_t map_key_simple[] = { 0xA1, 0xF0, 0x01 };
+  CU_ASSERT (iot_data_from_cbor (simple, sizeof (simple)) == NULL)
+  CU_ASSERT (iot_data_from_cbor (array_simple, sizeof (array_simple)) == NULL)
+  CU_ASSERT (iot_data_from_cbor (map_simple, sizeof (map_simple)) == NULL)
+  CU_ASSERT (iot_data_from_cbor (map_key_simple, sizeof (map_key_simple)) == NULL)
+}
+
+static void test_json_parse_cases (void)
+{
+  // String escapes, including upper case unicode hex digits
+  iot_data_t * data = iot_data_from_json ("\"\\b\\f\\r\\u00E9\"");
+  CU_ASSERT (data && strcmp (iot_data_string (data), "\b\f\r\xc3\xa9") == 0)
+  iot_data_free (data);
+  CU_ASSERT (iot_data_type (iot_data_from_json ("\"\\u00G9\"")) == IOT_DATA_NULL) // Invalid hex digit, so not valid JSON
+
+  // Tokeniser without token storage counts tokens. Invalid input rejected
+  iot_json_parser parser;
+  iot_json_init (&parser);
+  const char * json = "{\"a\":[1,\"b\"]}";
+  CU_ASSERT (iot_json_parse (&parser, json, strlen (json), NULL, 0) == 5)
+  iot_json_tok_t tokens[8];
+  const char * invalid[] = { "[tr\x01ue]", "]", "{\"a\"]", "\"a\"]" };
+  for (unsigned i = 0; i < ARRAY_SIZE (invalid); i++)
+  {
+    iot_json_init (&parser);
+    CU_ASSERT (iot_json_parse (&parser, invalid[i], strlen (invalid[i]), tokens, 8) == IOT_JSON_ERROR_INVAL)
+  }
+}
+
+static void test_xml_many_children (void)
+{
+  // Elements with more children than initially allocated
+  char xml[2048] = "<root>";
+  for (int i = 0; i < 20; i++) snprintf (xml + strlen (xml), sizeof (xml) - strlen (xml), "<child n=\"%d\"/>", i);
+  strcat (xml, "</root>");
+  iot_data_t * data = iot_data_from_xml (xml);
+  CU_ASSERT_FATAL (data != NULL)
+  const iot_data_t * children = iot_data_string_map_get (data, "children");
+  CU_ASSERT (children && iot_data_vector_size (children) == 20u)
+  iot_data_free (data);
+}
+
+static void test_yaml_other_cases (void)
+{
+  // Value with an unrecognised tag kept as string. Map key followed by invalid YAML rejected
+  iot_data_t * exception = NULL;
+  iot_data_t * data = iot_data_from_yaml ("a: !custom value", &exception);
+  CU_ASSERT (data && exception == NULL)
+  CU_ASSERT (data && strcmp (iot_data_string_map_get_string (data, "a"), "value") == 0)
+  iot_data_free (data);
+  data = iot_data_from_yaml ("a: !!timestamp 2001-12-14", &exception); // Standard tag for unsupported type
+  CU_ASSERT (data && exception == NULL)
+  CU_ASSERT (data && strcmp (iot_data_string_map_get_string (data, "a"), "2001-12-14") == 0)
+  iot_data_free (data);
+  const char * invalid[] = { "a: [1, 2", "a:\n\t- x", "{a: ]" };
+  for (unsigned i = 0; i < ARRAY_SIZE (invalid); i++)
+  {
+    exception = NULL;
+    data = iot_data_from_yaml (invalid[i], &exception);
+    CU_ASSERT (data == NULL && exception != NULL)
+    iot_data_free (exception);
+  }
+}
+
 void cunit_data_io_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("data-io", suite_init, suite_clean);
@@ -1045,5 +1190,10 @@ void cunit_data_io_test_init (void)
   CU_add_test (suite, "data_from_yaml_values", test_data_from_yaml_values);
   CU_add_test (suite, "data_from_yaml_alias", test_data_from_yaml_alias);
   CU_add_test (suite, "data_from_yaml_invalid", test_data_from_yaml_invalid);
+  CU_add_test (suite, "cbor_round_trip_types", test_cbor_round_trip_types);
+  CU_add_test (suite, "cbor_decode_cases", test_cbor_decode_cases);
+  CU_add_test (suite, "json_parse_cases", test_json_parse_cases);
+  CU_add_test (suite, "xml_many_children", test_xml_many_children);
+  CU_add_test (suite, "yaml_other_cases", test_yaml_other_cases);
 #endif
 }

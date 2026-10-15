@@ -645,6 +645,112 @@ static void cunit_scheduler_shared_wait (void)
   iot_scheduler_free (scheduler);
 }
 
+static _Atomic uint32_t abort_count;
+
+static void * abort_cb (void * arg)
+{
+  (void) arg;
+  atomic_fetch_add (&abort_count, 1u);
+  return NULL;
+}
+
+static void cunit_scheduler_abort_callback (void)
+{
+  // Abort callback called for each dropped run
+  pthread_mutex_t mutex;
+  pthread_mutex_init (&mutex, NULL);
+  pthread_mutex_lock (&mutex);
+  atomic_store (&abort_count, 0u);
+  iot_threadpool_t *pool = iot_threadpool_alloc (1u, 1u, IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_threadpool_start (pool);
+  iot_threadpool_add_work (pool, do_block, &mutex, IOT_THREAD_NO_PRIORITY); // Occupy pool thread
+  iot_wait_msecs (50u);
+  iot_schedule_t *sched = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_MS_TO_NS (20u), 0, 0, pool, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_set_concurrent (sched, true);
+  iot_schedule_add_abort_callback (scheduler, sched, abort_cb);
+  CU_ASSERT (iot_schedule_add (scheduler, sched))
+  iot_scheduler_start (scheduler);
+  iot_wait_msecs (300u);
+  iot_scheduler_stop (scheduler);
+  CU_ASSERT (atomic_load (&abort_count) > 1u)
+  CU_ASSERT (atomic_load (&abort_count) == iot_schedule_dropped (sched))
+  pthread_mutex_unlock (&mutex);
+  iot_threadpool_wait (pool);
+  iot_scheduler_free (scheduler);
+  iot_threadpool_free (pool);
+  pthread_mutex_destroy (&mutex);
+}
+
+static iot_scheduler_t * self_delete_scheduler;
+static iot_schedule_t * self_delete_schedule;
+
+static void * self_delete_run_cb (void * arg)
+{
+  (void) arg;
+  iot_schedule_delete (self_delete_scheduler, self_delete_schedule);
+  return NULL;
+}
+
+static void cunit_scheduler_delete_in_run_callback (void)
+{
+  // Schedule deleted by its run callback runs once, and is not requeued
+  reset_counters ();
+  self_delete_scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  self_delete_schedule = iot_schedule_create (self_delete_scheduler, do_work4, NULL, NULL, IOT_MS_TO_NS (20u), 0, 0, NULL, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_set_sync (self_delete_schedule, true);
+  iot_schedule_add_run_callback (self_delete_scheduler, self_delete_schedule, self_delete_run_cb);
+  CU_ASSERT (iot_schedule_add (self_delete_scheduler, self_delete_schedule))
+  iot_scheduler_start (self_delete_scheduler);
+  iot_wait_msecs (200u);
+  iot_scheduler_stop (self_delete_scheduler);
+  CU_ASSERT (atomic_load (&sum_test) == 1u)
+  CU_ASSERT (scheduler_stat (self_delete_scheduler, "active_queue_size") == 0u)
+  CU_ASSERT (scheduler_stat (self_delete_scheduler, "idle_queue_size") == 0u)
+  iot_scheduler_free (self_delete_scheduler);
+}
+
+static void cunit_scheduler_reset_unscheduled (void)
+{
+  // Reset of a schedule not in the run queue updates its start time, so it runs after the reset delay when added
+  reset_counters ();
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_schedule_t *sched = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_MS_TO_NS (10u), 0, 1u, NULL, IOT_THREAD_NO_PRIORITY);
+  iot_schedule_reset (scheduler, sched, IOT_HOUR_TO_NS (1u));
+  CU_ASSERT (iot_schedule_add (scheduler, sched))
+  iot_scheduler_start (scheduler);
+  iot_wait_msecs (200u);
+  CU_ASSERT (atomic_load (&sum_test) == 0u)
+  iot_scheduler_stop (scheduler);
+  iot_scheduler_free (scheduler);
+}
+
+static void cunit_scheduler_config (void)
+{
+  // Scheduler and thread pool created from configuration, using configured logger
+  iot_component_factory_add (iot_logger_factory ());
+  iot_component_factory_add (iot_scheduler_factory ());
+  iot_component_factory_add (iot_threadpool_factory ());
+  iot_container_t * cont = iot_container_alloc ("sched_config");
+  iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", "{\"Name\":\"logger\",\"Level\":\"Warn\"}");
+  iot_container_add_component (cont, IOT_THREADPOOL_TYPE, "pool", "{\"Threads\":2,\"MaxJobs\":4,\"Logger\":\"logger\"}");
+  iot_container_add_component (cont, IOT_SCHEDULER_TYPE, "scheduler", "{\"Logger\":\"logger\"}");
+  iot_threadpool_t * pool = (iot_threadpool_t*) iot_container_find_component (cont, "pool");
+  iot_scheduler_t * scheduler = (iot_scheduler_t*) iot_container_find_component (cont, "scheduler");
+  CU_ASSERT_FATAL (pool && scheduler)
+  iot_container_start (cont);
+  reset_counters ();
+  iot_schedule_t *sched = iot_schedule_create (scheduler, do_work4, NULL, NULL, IOT_MS_TO_NS (10u), 0, 3u, pool, IOT_THREAD_NO_PRIORITY);
+  CU_ASSERT (iot_schedule_add (scheduler, sched))
+  for (int i = 0; i < 100 && atomic_load (&sum_test) < 3u; i++) iot_wait_msecs (10u);
+  CU_ASSERT (atomic_load (&sum_test) == 3u)
+  iot_data_t * stats = iot_component_stats ((iot_component_t*) pool);
+  const iot_data_t * max_jobs = iot_data_string_map_get (iot_data_string_map_get (stats, "stats"), "max_jobs");
+  CU_ASSERT (max_jobs && iot_data_ui32 (max_jobs) == 4u)
+  iot_data_free (stats);
+  iot_container_free (cont);
+}
+
 extern void cunit_scheduler_test_init (void)
 {
   CU_pSuite suite = CU_add_suite ("scheduler", suite_init, suite_clean);
@@ -669,4 +775,8 @@ extern void cunit_scheduler_test_init (void)
   CU_add_test (suite, "scheduler_dropped_count", cunit_scheduler_dropped_count);
   CU_add_test (suite, "scheduler_thread_runs", cunit_scheduler_thread_runs);
   CU_add_test (suite, "scheduler_shared_wait", cunit_scheduler_shared_wait);
+  CU_add_test (suite, "scheduler_abort_callback", cunit_scheduler_abort_callback);
+  CU_add_test (suite, "scheduler_delete_in_run_callback", cunit_scheduler_delete_in_run_callback);
+  CU_add_test (suite, "scheduler_reset_unscheduled", cunit_scheduler_reset_unscheduled);
+  CU_add_test (suite, "scheduler_config", cunit_scheduler_config);
 }

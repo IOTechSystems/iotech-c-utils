@@ -2354,7 +2354,7 @@ extern char * iot_data_to_json_with_buffer (const iot_data_t * data, char * buff
  * The function to convert input json string to iot_data
  *
  * @param  json  Input json string
- * @return       Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ * @return       Data read from the json string, or null data (type IOT_DATA_NULL) if the string is NULL, empty or not valid json
  */
 extern iot_data_t * iot_data_from_json (const char * json);
 
@@ -2370,7 +2370,7 @@ extern iot_data_t * iot_data_from_json (const char * json);
  *
  * @param json    Input json string
  * @param ordered Whether returned map is ordered by position in json
- * @return        Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ * @return        Data read from the json string, or null data (type IOT_DATA_NULL) if the string is NULL, empty or not valid json
  */
 extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered);
 
@@ -2387,7 +2387,7 @@ extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool or
  * @param json    Input json string
  * @param ordered Whether returned map is ordered by position in json
  * @param cache   Optional string map used as a cache for string values, may be NULL
- * @return        Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ * @return        Data read from the json string, or null data (type IOT_DATA_NULL) if the string is NULL, empty or not valid json
  */
 extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool ordered, iot_data_t * cache);
 
