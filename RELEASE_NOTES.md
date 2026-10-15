@@ -135,3 +135,4 @@
 - `iot/os.h` no longer brings namespace `std` into scope in C++, which could make names in including code ambiguous. Only the C11 `stdatomic.h` names are now declared in the global namespace (C++ code that used other `std` names unqualified, relying on the iot headers, must now qualify them)
 - Loggers allocated or configured without a name now use name "default" (previously asserted, or crashed in release builds)
 - File loggers now flush each message to the file (previously buffered, so the latest messages were missing from the file until flushed, and lost if the process exited abnormally)
+- `iot_data_to_json` now writes negative infinity as `-1e400` (float) or `-1e800` (double) (previously written without the sign, so read back as positive infinity)

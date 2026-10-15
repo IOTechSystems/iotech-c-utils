@@ -675,6 +675,48 @@ static void test_data_infinite (void)
   free (json);
   iot_data_free (f);
   iot_data_free (d);
+
+  // Negative infinity keeps its sign
+  f = iot_data_alloc_f32 (-INFINITY);
+  d = iot_data_alloc_f64 (-INFINITY);
+  json = iot_data_to_json (f);
+  CU_ASSERT (strcmp (json, "-1e400") == 0)
+  free (json);
+  json = iot_data_to_json (d);
+  CU_ASSERT (strcmp (json, "-1e800") == 0)
+  free (json);
+  iot_data_free (f);
+  iot_data_free (d);
+
+  // Infinities in arrays and maps written with sign, and read back as infinity of the same sign
+  double vals[] = { INFINITY, -INFINITY, 1.5 };
+  float fvals[] = { -INFINITY, INFINITY };
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (map, "pos", iot_data_alloc_f64 (INFINITY));
+  iot_data_string_map_add (map, "neg", iot_data_alloc_f64 (-INFINITY));
+  iot_data_string_map_add (map, "farray", iot_data_alloc_array (fvals, 2, IOT_DATA_FLOAT32, IOT_DATA_REF));
+  iot_data_string_map_add (map, "darray", iot_data_alloc_array (vals, 3, IOT_DATA_FLOAT64, IOT_DATA_REF));
+  json = iot_data_to_json (map);
+  CU_ASSERT (strstr (json, "\"neg\":-1e800") != NULL)
+  CU_ASSERT (strstr (json, "\"pos\":1e800") != NULL)
+  CU_ASSERT (strstr (json, "[-1e400,1e400]") != NULL)
+  CU_ASSERT (strstr (json, "[1e800,-1e800,") != NULL)
+  iot_data_t * read = iot_data_from_json (json);
+  CU_ASSERT_FATAL (read != NULL)
+  const iot_data_t * val = iot_data_string_map_get (read, "pos");
+  CU_ASSERT (val && iot_data_f64 (val) == INFINITY)
+  val = iot_data_string_map_get (read, "neg");
+  CU_ASSERT (val && iot_data_f64 (val) == -INFINITY)
+  val = iot_data_string_map_get (read, "farray");
+  CU_ASSERT (val && iot_data_vector_size (val) == 2u)
+  if (val && iot_data_vector_size (val) == 2u)
+  {
+    CU_ASSERT (iot_data_f64 (iot_data_vector_get (val, 0)) == -INFINITY)
+    CU_ASSERT (iot_data_f64 (iot_data_vector_get (val, 1)) == INFINITY)
+  }
+  free (json);
+  iot_data_free (read);
+  iot_data_free (map);
 }
 
 static void test_data_address (void)
