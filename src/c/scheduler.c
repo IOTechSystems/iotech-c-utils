@@ -6,7 +6,7 @@
 #include "iot/data.h"
 #include "iot/container.h"
 #include "iot/scheduler.h"
-#include "iot/thread.h"
+#include "thread-impl.h"
 #include "iot/time.h"
 
 #define IOT_NS_TO_SEC(s) ((s) / IOT_BILLION)
@@ -59,6 +59,7 @@ struct iot_scheduler_t
   pthread_cond_t exit_cond;            /* Scheduler thread exit condition */
   pthread_t tid;                       /* Scheduler thread id */
   _Atomic bool exited;                 /* Whether scheduler thread has exited */
+  bool joinable;                       /* Whether scheduler thread created, so must be joined */
   iot_scheduler_counters_t counters;   /* Stats counters */
 };
 
@@ -347,7 +348,8 @@ iot_scheduler_t * iot_scheduler_alloc (int priority, int affinity, iot_logger_t 
 #endif
   iot_logger_add_ref (logger);
   iot_log_info (logger, "iot_scheduler_alloc (priority: %d affinity: %d)", priority, affinity);
-  if (! iot_thread_create (&scheduler->tid, iot_scheduler_thread, scheduler, priority, affinity, logger))
+  scheduler->joinable = iot_thread_create_joinable (&scheduler->tid, iot_scheduler_thread, scheduler, priority, affinity, logger);
+  if (! scheduler->joinable)
   {
     iot_log_error (logger, "iot_scheduler_alloc failed to create scheduler thread");
     atomic_store (&scheduler->exited, true);
@@ -550,6 +552,7 @@ void iot_scheduler_free (iot_scheduler_t * scheduler)
       pthread_cond_wait (&scheduler->exit_cond, &scheduler->component.mutex); // Wait until schedule thread exited
     }
     iot_component_unlock (&scheduler->component);
+    if (scheduler->joinable) pthread_join (scheduler->tid, NULL); // Join thread, so has terminated when scheduler freed
     pthread_cond_destroy (&scheduler->exit_cond);
     iot_scheduler_free_schedules (scheduler->queue);
     iot_scheduler_free_schedules (scheduler->idle);

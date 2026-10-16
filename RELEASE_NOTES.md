@@ -141,3 +141,4 @@
 - `iot_logger_alloc_file` now returns NULL, logging an error, if the file cannot be opened, so configuring a file logger fails (previously created a logger which discarded all messages)
 - Console loggers now flush each message (previously messages to stdout were buffered, so delayed or lost when stdout was not a terminal)
 - `iot_data_to_json` and `iot_data_to_cbor` now write pointer values as null (previously nothing was written, so the output was invalid JSON or CBOR)
+- `iot_scheduler_free` now joins the scheduler thread, so it has terminated when free returns (previously the thread could still be exiting, reported by valgrind as possibly lost memory if the process then exited)

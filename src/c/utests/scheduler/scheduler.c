@@ -725,6 +725,46 @@ static void cunit_scheduler_reset_unscheduled (void)
   iot_scheduler_free (scheduler);
 }
 
+#define JOIN_EXIT_DELAY_US 50000u
+
+static pthread_key_t join_key;
+static _Atomic uint32_t join_ran;
+static _Atomic uint32_t join_exited;
+
+static void join_key_destructor (void * arg)
+{
+  (void) arg;
+  iot_wait_usecs (JOIN_EXIT_DELAY_US); // Delays thread termination until after thread exit signalled to scheduler
+  atomic_fetch_add (&join_exited, 1u);
+}
+
+static void * join_sync_work (void * arg)
+{
+  (void) arg;
+  pthread_setspecific (join_key, &join_key); // Sync schedule runs on scheduler thread, so destructor called on its termination
+  atomic_fetch_add (&join_ran, 1u);
+  return NULL;
+}
+
+static void cunit_scheduler_free_join (void)
+{
+  // When free returns, the scheduler thread has terminated
+  pthread_key_create (&join_key, join_key_destructor);
+  atomic_store (&join_ran, 0u);
+  atomic_store (&join_exited, 0u);
+  iot_scheduler_t *scheduler = iot_scheduler_alloc (IOT_THREAD_NO_PRIORITY, IOT_THREAD_NO_AFFINITY, logger);
+  iot_schedule_t *sched = iot_schedule_create (scheduler, join_sync_work, NULL, NULL, IOT_MS_TO_NS (10u), 0, 1u, NULL, IOT_THREAD_NO_PRIORITY);
+  CU_ASSERT (iot_schedule_set_sync (sched, true))
+  CU_ASSERT (iot_schedule_add (scheduler, sched))
+  iot_scheduler_start (scheduler);
+  for (unsigned i = 0; i < 100u && atomic_load (&join_ran) == 0u; i++) iot_wait_msecs (10u);
+  CU_ASSERT (atomic_load (&join_ran) == 1u)
+  iot_scheduler_stop (scheduler);
+  iot_scheduler_free (scheduler);
+  CU_ASSERT (atomic_load (&join_exited) == 1u)
+  pthread_key_delete (join_key);
+}
+
 static void cunit_scheduler_config (void)
 {
   // Scheduler and thread pool created from configuration, using configured logger
@@ -778,5 +818,6 @@ extern void cunit_scheduler_test_init (void)
   CU_add_test (suite, "scheduler_abort_callback", cunit_scheduler_abort_callback);
   CU_add_test (suite, "scheduler_delete_in_run_callback", cunit_scheduler_delete_in_run_callback);
   CU_add_test (suite, "scheduler_reset_unscheduled", cunit_scheduler_reset_unscheduled);
+  CU_add_test (suite, "scheduler_free_join", cunit_scheduler_free_join);
   CU_add_test (suite, "scheduler_config", cunit_scheduler_config);
 }
