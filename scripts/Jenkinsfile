@@ -136,6 +136,20 @@ def archiveStage (arch)
   }
 }
 
+// Retry upload, as connection to Artifactory can be dropped (RequestAbortedException)
+def upload (spec)
+{
+  def attempt = 0
+  retry (3)
+  {
+    if (attempt++ > 0)
+    {
+      sleep (time: 30, unit: 'SECONDS')
+    }
+    rtUpload (serverId: 'artifactory', spec: spec)
+  }
+}
+
 def publishToArtifactory (system, arch, ver, pat)
 {
   def uploadSpec = """{"files":[
@@ -144,7 +158,7 @@ def publishToArtifactory (system, arch, ver, pat)
     "target": "quality/iot/${ver}/${system}/",
     "props": "distribution=${system};architecture=${arch}"
   }]}"""
-  rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+  upload ("${uploadSpec}")
 }
 
 def publishQuality (systems, arch)
@@ -226,7 +240,7 @@ def publishDebs (arch)
         "props": "deb.distribution=${name};deb.component=main;deb.architecture=${deb_archs[arch]}"
       }
       ]}"""
-      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+      upload ("${uploadSpec}")
     }
   }
 }
@@ -260,7 +274,7 @@ def publishApks (arch)
         "props": "distribution=${apks[i]};architecture=${apk_arch}"
       }
       ]}"""
-      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+      upload ("${uploadSpec}")
     }
   }
 }
@@ -294,7 +308,7 @@ def publishRpms (arch)
         "props": "rpm.metadata.release=${env.BUILD_ID}"
       }
       ]}"""
-      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+      upload ("${uploadSpec}")
     }
   }
 }
@@ -328,7 +342,7 @@ def publishTars (arch)
         "props": "distribution=${tars[i]};architecture=${tar_archs[arch]}"
       }
       ]}"""
-      rtUpload (serverId: 'artifactory', spec: "${uploadSpec}")
+      upload ("${uploadSpec}")
     }
   }
 }
