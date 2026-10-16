@@ -343,12 +343,16 @@ def buildStages (target, systems)
   }
   def host = "${sys}-${target}"
 
-  node (host)
+  // Rerun on another agent if the agent is lost (disconnect or controller restart)
+  retry (count: 2, conditions: [agent (), nonresumable ()])
   {
-    stage ("Checkout ${target}") { checkoutStage (target)}
-    stage ("Build ${target}") { buildStage (systems, target) }
-    stage ("Metrics ${target}") { metricsStage (systems, target) }
-    stage ("Archive ${target}") { archiveStage (target) }
+    node (host)
+    {
+      stage ("Checkout ${target}") { checkoutStage (target)}
+      stage ("Build ${target}") { buildStage (systems, target) }
+      stage ("Metrics ${target}") { metricsStage (systems, target) }
+      stage ("Archive ${target}") { archiveStage (target) }
+    }
   }
 }
 
