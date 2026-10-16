@@ -260,6 +260,62 @@ static void test_start_stop_modify (void)
   iot_container_free (cont);
 }
 
+// Component that records the order in which components are started and stopped
+
+static char test_order[16];
+
+static void test_order_record (const iot_component_t * comp)
+{
+  size_t len = strlen (test_order);
+  if (len < sizeof (test_order) - 1u)
+  {
+    test_order[len] = comp->name[0];
+    test_order[len + 1u] = '\0';
+  }
+}
+
+static void test_order_start (iot_component_t * comp)
+{
+  test_order_record (comp);
+  iot_component_set_running (comp);
+}
+
+static void test_order_stop (iot_component_t * comp)
+{
+  test_order_record (comp);
+  iot_component_set_stopped (comp);
+}
+
+static iot_component_t * test_order_config (iot_container_t * cont, const iot_data_t * map)
+{
+  (void) cont;
+  (void) map;
+  iot_component_t * comp = calloc (1, sizeof (*comp));
+  iot_component_init (comp, NULL, test_order_start, test_order_stop);
+  return comp;
+}
+
+static iot_component_factory_t test_order_factory = { "test::order", IOT_CATEGORY_USER, NULL, NULL, NULL, NULL };
+
+static void test_start_stop_order (void)
+{
+  // Components are started in the order added (so dependencies before dependents) and stopped in reverse order
+  test_order_factory.config_fn = test_order_config;
+  test_order_factory.free_fn = test_worker_free;
+  iot_component_factory_add (&test_order_factory);
+  iot_container_t * cont = iot_container_alloc ("order_cont");
+  iot_container_add_component (cont, "test::order", "a", "{}");
+  iot_container_add_component (cont, "test::order", "b", "{}");
+  iot_container_add_component (cont, "test::order", "c", "{}");
+  test_order[0] = '\0';
+  iot_container_start (cont);
+  CU_ASSERT_STRING_EQUAL (test_order, "abc")
+  test_order[0] = '\0';
+  iot_container_stop (cont);
+  CU_ASSERT_STRING_EQUAL (test_order, "cba")
+  iot_container_free (cont);
+}
+
 // Component whose stats function adds a component
 
 static iot_data_t * test_stats_fn (iot_component_t * comp)
@@ -602,6 +658,7 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "component_read_reconfig", test_component_read_reconfig);
   CU_add_test (suite, "delete_running_component", test_delete_running_component);
   CU_add_test (suite, "start_stop_modify", test_start_stop_modify);
+  CU_add_test (suite, "start_stop_order", test_start_stop_order);
   CU_add_test (suite, "stats_modify", test_stats_modify);
   CU_add_test (suite, "get_component", test_get_component);
   CU_add_test (suite, "slow_start_wait", test_slow_start_wait);

@@ -356,7 +356,7 @@ static iot_data_t * iot_container_components (iot_container_t * cont)
   iot_data_list_iter (cont->components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
-    iot_data_list_tail_push (list, iot_data_add_ref (iot_data_list_iter_value (&iter)));
+    iot_data_list_head_push (list, iot_data_add_ref (iot_data_list_iter_value (&iter))); // Head push, as list iterated from tail, so copy has same order
   }
   pthread_rwlock_unlock (&cont->lock);
   return list;
