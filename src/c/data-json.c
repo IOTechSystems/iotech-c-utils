@@ -181,7 +181,7 @@ static void iot_data_dump_json (iot_string_holder_t * holder, const iot_data_t *
       iot_data_strcat (holder, "]");
       break;
     }
-    case IOT_DATA_POINTER: break;
+    case IOT_DATA_POINTER: iot_data_strcat (holder, "null"); break; // Pointer values cannot be represented, so written as null
     default: iot_data_dump_json_ptr (holder, iot_data_address (data), data->type); break;
   }
 }

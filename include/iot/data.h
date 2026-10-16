@@ -2314,7 +2314,7 @@ extern const iot_data_t * iot_data_iter_value (const iot_data_iter_t * iter);
  * then the metadata string vectors will be used to determine which map entries
  * appear in the JSON and the order in which they appear. Floating point values
  * not representable in JSON are written as: NaN as null, infinity as 1e400 (float)
- * or 1e800 (double), and negative infinity as -1e400 or -1e800.
+ * or 1e800 (double), and negative infinity as -1e400 or -1e800. Pointer values are written as null.
  *
  * @param  data  Input data
  * @return       json string
@@ -2395,7 +2395,7 @@ extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool order
 /**
  * @brief  Convert data to CBOR block
  *
- * The function to convert data to cbor.
+ * The function to convert data to cbor. Pointer values are written as null.
  *
  * @param  data  Input data
  * @return       CBOR in an IOT_DATA_BINARY

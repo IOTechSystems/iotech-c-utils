@@ -1017,6 +1017,7 @@ static void test_data_from_yaml_invalid (void)
 }
 #endif
 
+#ifdef IOT_HAS_CBOR
 static void test_cbor_round_trip_types (void)
 {
   // Arrays of each integer type and booleans, and lists, written to CBOR and read back
@@ -1103,6 +1104,38 @@ static void test_cbor_decode_cases (void)
   CU_ASSERT (iot_data_from_cbor (map_simple, sizeof (map_simple)) == NULL)
   CU_ASSERT (iot_data_from_cbor (map_key_simple, sizeof (map_key_simple)) == NULL)
 }
+#endif
+
+static void test_pointer_output (void)
+{
+  // Pointer values written as null, so JSON and CBOR output is valid and read back
+  static int x;
+  iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (map, "p", iot_data_alloc_pointer (&x, NULL));
+  iot_data_string_map_add (map, "q", iot_data_alloc_ui32 (1u));
+  iot_data_t * vector = iot_data_alloc_vector (2u);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_pointer (&x, NULL));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_ui32 (2u));
+  iot_data_string_map_add (map, "v", vector);
+  char * json = iot_data_to_json (map);
+  CU_ASSERT (strcmp (json, "{\"p\":null,\"q\":1,\"v\":[null,2]}") == 0)
+  iot_data_t * read = iot_data_from_json (json);
+  CU_ASSERT (iot_data_type (read) == IOT_DATA_MAP && iot_data_type (iot_data_string_map_get (read, "p")) == IOT_DATA_NULL)
+  iot_data_free (read);
+  free (json);
+
+#ifdef IOT_HAS_CBOR
+  iot_data_t * cbor = iot_data_to_cbor (map);
+  read = iot_data_from_iot_cbor (cbor);
+  CU_ASSERT_FATAL (read != NULL)
+  json = iot_data_to_json (read);
+  CU_ASSERT (strcmp (json, "{\"p\":null,\"q\":1,\"v\":[null,2]}") == 0)
+  free (json);
+  iot_data_free (read);
+  iot_data_free (cbor);
+#endif
+  iot_data_free (map);
+}
 
 static void test_json_parse_cases (void)
 {
@@ -1126,6 +1159,7 @@ static void test_json_parse_cases (void)
   }
 }
 
+#ifdef IOT_HAS_XML
 static void test_xml_many_children (void)
 {
   // Elements with more children than initially allocated
@@ -1138,7 +1172,9 @@ static void test_xml_many_children (void)
   CU_ASSERT (children && iot_data_vector_size (children) == 20u)
   iot_data_free (data);
 }
+#endif
 
+#ifdef IOT_HAS_YAML
 static void test_yaml_other_cases (void)
 {
   // Value with an unrecognised tag kept as string. Map key followed by invalid YAML rejected
@@ -1160,6 +1196,7 @@ static void test_yaml_other_cases (void)
     iot_data_free (exception);
   }
 }
+#endif
 
 void cunit_data_io_test_init (void)
 {
@@ -1173,27 +1210,28 @@ void cunit_data_io_test_init (void)
   CU_add_test (suite, "data_from_xml", test_data_from_xml);
   CU_add_test (suite, "data_from_xml_invalid", test_data_from_xml_invalid);
   CU_add_test (suite, "data_from_xml_content", test_data_from_xml_content);
+  CU_add_test (suite, "xml_many_children", test_xml_many_children);
 #endif
 #ifdef IOT_HAS_CBOR
   CU_add_test (suite, "data_to_cbor", test_data_to_cbor);
   CU_add_test (suite, "cbor_to_data", test_cbor_to_data);
   CU_add_test (suite, "cbor_float_round_trip", test_cbor_float_round_trip);
   CU_add_test (suite, "cbor_decode_robust", test_cbor_decode_robust);
+  CU_add_test (suite, "cbor_round_trip_types", test_cbor_round_trip_types);
+  CU_add_test (suite, "cbor_decode_cases", test_cbor_decode_cases);
 #endif
   CU_add_test (suite, "data_to_json_large", test_data_to_json_large);
   CU_add_test (suite, "json_invalid", test_json_invalid);
   CU_add_test (suite, "json_values", test_json_values);
   CU_add_test (suite, "json_depth", test_json_depth);
+  CU_add_test (suite, "json_parse_cases", test_json_parse_cases);
+  CU_add_test (suite, "pointer_output", test_pointer_output);
 #ifdef IOT_HAS_YAML
   CU_add_test (suite, "data_from_yaml", test_data_from_yaml);
   CU_add_test (suite, "data_from_yaml_depth", test_data_from_yaml_depth);
   CU_add_test (suite, "data_from_yaml_values", test_data_from_yaml_values);
   CU_add_test (suite, "data_from_yaml_alias", test_data_from_yaml_alias);
   CU_add_test (suite, "data_from_yaml_invalid", test_data_from_yaml_invalid);
-  CU_add_test (suite, "cbor_round_trip_types", test_cbor_round_trip_types);
-  CU_add_test (suite, "cbor_decode_cases", test_cbor_decode_cases);
-  CU_add_test (suite, "json_parse_cases", test_json_parse_cases);
-  CU_add_test (suite, "xml_many_children", test_xml_many_children);
   CU_add_test (suite, "yaml_other_cases", test_yaml_other_cases);
 #endif
 }

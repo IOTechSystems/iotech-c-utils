@@ -140,3 +140,4 @@
 - `iot_data_to_json` now writes NaN as `null` (previously written as `nan` or `-nan`, which is not valid JSON). `iot_data_from_json` still reads `nan` and `-nan` as NaN
 - `iot_logger_alloc_file` now returns NULL, logging an error, if the file cannot be opened, so configuring a file logger fails (previously created a logger which discarded all messages)
 - Console loggers now flush each message (previously messages to stdout were buffered, so delayed or lost when stdout was not a terminal)
+- `iot_data_to_json` and `iot_data_to_cbor` now write pointer values as null (previously nothing was written, so the output was invalid JSON or CBOR)
