@@ -13,6 +13,7 @@
 #ifdef IOT_HAS_FILE
 #include <pthread.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <sys/wait.h>
