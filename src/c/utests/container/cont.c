@@ -489,7 +489,12 @@ static char * test_init_load (const char * name, const char * uri)
     { "init_notype", "{}" }, // No library to load factory from
     { "init_cycle", "{\"init_a\":\"" IOT_LOGGER_TYPE "\",\"init_b\":\"" IOT_LOGGER_TYPE "\"}" },
     { "init_a", "{\"Name\":\"a\",\"Next\":\"init_b\"}" }, // Loggers referencing each other
-    { "init_b", "{\"Name\":\"b\",\"Next\":\"init_a\"}" }
+    { "init_b", "{\"Name\":\"b\",\"Next\":\"init_a\"}" },
+    { "init_thread", "{\"init_waiter\":\"test::waiter\",\"init_wother\":\"" IOT_LOGGER_TYPE "\"}" },
+    { "init_wother", "{\"Name\":\"wother\",\"Level\":\"Info\"}" },
+    { "init_cross", "{\"init_x\":\"test::cross\",\"init_y\":\"test::cross\"}" },
+    { "init_x", "{\"Other\":\"init_y\"}" }, // Components loaded concurrently, referencing each other
+    { "init_y", "{\"Other\":\"init_x\"}" }
   };
   for (unsigned i = 0; i < sizeof (configs) / sizeof (configs[0]); i++)
   {
@@ -552,6 +557,103 @@ static void test_container_init_cycle (void)
   CU_ASSERT (iot_container_init (cont))
   CU_ASSERT (iot_container_find_component (cont, "init_a") != NULL)
   CU_ASSERT (iot_container_find_component (cont, "init_b") != NULL)
+  iot_container_free (cont);
+}
+
+// Component which, when created, waits for a thread that loads another component
+
+typedef struct test_ref_t
+{
+  iot_component_t component;
+  iot_container_t * cont;
+  iot_component_t * other;
+} test_ref_t;
+
+static void test_ref_start (iot_component_t * comp)
+{
+  iot_component_set_running (comp);
+}
+
+static void test_ref_stop (iot_component_t * comp)
+{
+  iot_component_set_stopped (comp);
+}
+
+static void * test_waiter_thread (void * arg)
+{
+  test_ref_t * ref = arg;
+  ref->other = iot_container_find_component (ref->cont, "init_wother");
+  return NULL;
+}
+
+static iot_component_t * test_waiter_config (iot_container_t * cont, const iot_data_t * map)
+{
+  (void) map;
+  pthread_t tid;
+  test_ref_t * ref = calloc (1, sizeof (*ref));
+  ref->cont = cont;
+  iot_component_init (&ref->component, NULL, test_ref_start, test_ref_stop);
+  pthread_create (&tid, NULL, test_waiter_thread, ref);
+  pthread_join (tid, NULL);
+  return &ref->component;
+}
+
+static iot_component_factory_t test_waiter_factory = { "test::waiter", IOT_CATEGORY_USER, test_waiter_config, test_worker_free, NULL, NULL };
+
+static void test_container_init_thread (void)
+{
+  // Component created during initialisation may wait for another thread loading a different component
+  iot_component_factory_add (iot_logger_factory ());
+  iot_component_factory_add (&test_waiter_factory);
+  iot_container_config (&test_init_config);
+  iot_container_t * cont = iot_container_alloc ("init_thread");
+  CU_ASSERT (iot_container_init (cont))
+  test_ref_t * waiter = (test_ref_t*) iot_container_find_component (cont, "init_waiter");
+  CU_ASSERT_FATAL (waiter != NULL)
+  CU_ASSERT (waiter->other != NULL && waiter->other == iot_container_find_component (cont, "init_wother"))
+  iot_container_free (cont);
+}
+
+// Components loaded concurrently by two threads, each referencing the other when created
+
+static pthread_barrier_t test_cross_barrier;
+
+static iot_component_t * test_cross_config (iot_container_t * cont, const iot_data_t * map)
+{
+  test_ref_t * ref = calloc (1, sizeof (*ref));
+  iot_component_init (&ref->component, NULL, test_ref_start, test_ref_stop);
+  pthread_barrier_wait (&test_cross_barrier); // Both components being loaded before either references the other
+  ref->other = iot_container_find_component (cont, iot_data_string_map_get_string (map, "Other"));
+  return &ref->component;
+}
+
+static iot_component_factory_t test_cross_factory = { "test::cross", IOT_CATEGORY_USER, test_cross_config, test_worker_free, NULL, NULL };
+
+static void * test_cross_thread (void * arg)
+{
+  void ** args = arg;
+  iot_container_find_component (args[0], args[1]);
+  return NULL;
+}
+
+static void test_container_cross_cycle (void)
+{
+  // Cyclic reference between components loaded by different threads is detected, rather than deadlocking
+  pthread_t tids[2];
+  iot_component_factory_add (&test_cross_factory);
+  iot_container_config (&test_init_config);
+  iot_container_t * cont = iot_container_alloc ("init_cross");
+  void * args[2][2] = { { cont, "init_x" }, { cont, "init_y" } };
+  pthread_barrier_init (&test_cross_barrier, NULL, 2);
+  for (int i = 0; i < 2; i++) pthread_create (&tids[i], NULL, test_cross_thread, args[i]);
+  for (int i = 0; i < 2; i++) pthread_join (tids[i], NULL);
+  pthread_barrier_destroy (&test_cross_barrier);
+  test_ref_t * x = (test_ref_t*) iot_container_find_component (cont, "init_x");
+  test_ref_t * y = (test_ref_t*) iot_container_find_component (cont, "init_y");
+  CU_ASSERT_FATAL (x != NULL && y != NULL)
+  CU_ASSERT ((x->other == NULL) != (y->other == NULL)) // One reference found, the other detected as cyclic
+  CU_ASSERT (x->other == NULL || x->other == &y->component)
+  CU_ASSERT (y->other == NULL || y->other == &x->component)
   iot_container_free (cont);
 }
 
@@ -665,6 +767,8 @@ void cunit_cont_test_init (void)
   CU_add_test (suite, "lazy_load_concurrent", test_lazy_load_concurrent); // These last, as set container configuration
   CU_add_test (suite, "container_init", test_container_init);
   CU_add_test (suite, "container_init_cycle", test_container_init_cycle);
+  CU_add_test (suite, "container_init_thread", test_container_init_thread);
+  CU_add_test (suite, "container_cross_cycle", test_container_cross_cycle);
   CU_add_test (suite, "config_component_missing", test_config_component_missing);
 
 }
