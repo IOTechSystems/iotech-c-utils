@@ -971,7 +971,7 @@ static void test_data_from_yaml_values (void)
 
 static void test_data_from_yaml_alias (void)
 {
-  // Aliases share the anchored node, merge keys add entries not already present
+  // Aliases copy the anchored node, merge keys add entries not already present
   static const struct { const char * in; const char * out; } cases[] =
   {
     { "a: &x 1\nb: *x\nc: 2", "{\"a\":1,\"b\":1,\"c\":2}" },
@@ -994,6 +994,32 @@ static void test_data_from_yaml_alias (void)
     iot_data_free (data);
     iot_data_free (ex);
   }
+}
+
+static void test_data_from_yaml_alias_copy (void)
+{
+  // Modifying an aliased node does not change the anchored node or other aliases
+  iot_data_t * ex = NULL;
+  iot_data_t * data = iot_data_from_yaml ("base: &b {x: 1}\na: *b\nc: *b", &ex);
+  CU_ASSERT (ex == NULL)
+  iot_data_string_map_add ((iot_data_t*) iot_data_string_map_get (data, "a"), "y", iot_data_alloc_i64 (2));
+  char * json = iot_data_to_json (data);
+  CU_ASSERT (strcmp (json, "{\"a\":{\"x\":1,\"y\":2},\"base\":{\"x\":1},\"c\":{\"x\":1}}") == 0)
+  free (json);
+  iot_data_free (data);
+
+  // Exponential alias expansion ("billion laughs") is rejected
+  data = iot_data_from_yaml (
+    "a: &a [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]\n"
+    "b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]\n"
+    "c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]\n"
+    "d: &d [*c, *c, *c, *c, *c, *c, *c, *c, *c, *c]\n"
+    "e: &e [*d, *d, *d, *d, *d, *d, *d, *d, *d, *d]\n"
+    "f: &f [*e, *e, *e, *e, *e, *e, *e, *e, *e, *e]", &ex);
+  CU_ASSERT (data == NULL)
+  CU_ASSERT (iot_data_type (ex) == IOT_DATA_STRING)
+  iot_data_free (data);
+  iot_data_free (ex);
 }
 
 static void test_data_from_yaml_invalid (void)
@@ -1231,6 +1257,7 @@ void cunit_data_io_test_init (void)
   CU_add_test (suite, "data_from_yaml_depth", test_data_from_yaml_depth);
   CU_add_test (suite, "data_from_yaml_values", test_data_from_yaml_values);
   CU_add_test (suite, "data_from_yaml_alias", test_data_from_yaml_alias);
+  CU_add_test (suite, "data_from_yaml_alias_copy", test_data_from_yaml_alias_copy);
   CU_add_test (suite, "data_from_yaml_invalid", test_data_from_yaml_invalid);
   CU_add_test (suite, "yaml_other_cases", test_yaml_other_cases);
 #endif

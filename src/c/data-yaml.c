@@ -10,15 +10,44 @@
 #include <yaml.h>
 
 #define IOT_YAML_TAG_PREFIX "tag:yaml.org,2002:"
+#define IOT_YAML_MAX_ALIAS_NODES 100000u // Limit on total nodes copied by aliases, to bound expansion ("billion laughs")
 
 typedef struct iot_yaml_ctx_t
 {
   yaml_parser_t parser;
   iot_data_t * anchors;      // Map of anchor name to anchored node
+  uint32_t alias_nodes;      // Remaining number of nodes that aliases may copy
   iot_data_t ** exception;
 } iot_yaml_ctx_t;
 
 static iot_data_t * iot_data_node_from_yaml (iot_yaml_ctx_t * ctx, const yaml_event_t * event, uint32_t depth);
+
+// Counts the nodes in data, stopping once the count exceeds limit
+
+static uint32_t iot_yaml_node_count (const iot_data_t * data, uint32_t limit)
+{
+  uint32_t count = 1u;
+  if (iot_data_type (data) == IOT_DATA_MAP)
+  {
+    iot_data_map_iter_t iter;
+    iot_data_map_iter (data, &iter);
+    while (count <= limit && iot_data_map_iter_next (&iter))
+    {
+      count += iot_yaml_node_count (iot_data_map_iter_key (&iter), limit - count);
+      if (count <= limit) count += iot_yaml_node_count (iot_data_map_iter_value (&iter), limit - count);
+    }
+  }
+  else if (iot_data_type (data) == IOT_DATA_VECTOR)
+  {
+    iot_data_vector_iter_t iter;
+    iot_data_vector_iter (data, &iter);
+    while (count <= limit && iot_data_vector_iter_next (&iter))
+    {
+      count += iot_yaml_node_count (iot_data_vector_iter_value (&iter), limit - count);
+    }
+  }
+  return count;
+}
 
 static bool iot_yaml_parse (iot_yaml_ctx_t * ctx, yaml_event_t * event)
 {
@@ -320,11 +349,20 @@ static iot_data_t * iot_data_node_from_yaml (iot_yaml_ctx_t * ctx, const yaml_ev
       break;
     case YAML_ALIAS_EVENT:
     {
-      // Aliased nodes are shared, so repeated aliases do not expand memory use
+      // Aliased nodes are copied, so modifying one alias site does not change others. Total copies are limited.
       const iot_data_t * node = iot_data_string_map_get (ctx->anchors, (const char *) event->data.alias.anchor);
       if (node)
       {
-        ret = iot_data_add_ref (node);
+        uint32_t count = iot_yaml_node_count (node, ctx->alias_nodes);
+        if (count <= ctx->alias_nodes)
+        {
+          ctx->alias_nodes -= count;
+          ret = iot_data_copy (node);
+        }
+        else
+        {
+          *ctx->exception = iot_data_alloc_string_fmt ("Alias expansion limit exceeded at line %zu", event->start_mark.line + 1u);
+        }
       }
       else
       {
@@ -372,6 +410,7 @@ iot_data_t * iot_data_from_yaml (const char * yaml, iot_data_t **exception)
   *exception = NULL;
   ctx.exception = exception;
   ctx.anchors = iot_data_alloc_map (IOT_DATA_STRING);
+  ctx.alias_nodes = IOT_YAML_MAX_ALIAS_NODES;
   yaml_parser_initialize (&ctx.parser);
   yaml_parser_set_input_string (&ctx.parser, (const yaml_char_t *) yaml, strlen (yaml));
   while (! done && iot_yaml_parse (&ctx, &event))
