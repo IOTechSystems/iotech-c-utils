@@ -228,7 +228,6 @@ static bool iot_local_cache_key_created = false;
 static _Thread_local bool iot_local_cache_registered = false;
 #endif
 #endif
-static pthread_mutex_t iot_data_hash_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Float hashes use the bit pattern, as conversion to an integer is undefined for negative, NaN and out of range values.
 // Zero is normalised, as -0.0 and 0.0 compare equal so must have the same hash.
@@ -596,17 +595,13 @@ uint32_t iot_data_hash (const iot_data_t * data)
 {
   if (data == NULL) return 0u;
   iot_data_t * da = (iot_data_t*) data;
-  if (! (atomic_load_explicit (&da->refs, memory_order_acquire) & IOT_DATA_REHASH)) return da->hash;
+  // Hash accessed atomically, as threads may concurrently publish it. All publish the same value, so no lock is needed.
+  if (! (atomic_load_explicit (&da->refs, memory_order_acquire) & IOT_DATA_REHASH)) return __atomic_load_n (&da->hash, __ATOMIC_RELAXED);
 
   // Lazy hash calculation. As data may be shared between threads, calculate locally and only then publish
   uint32_t hash = iot_data_hash_calc (da);
-  pthread_mutex_lock (&iot_data_hash_mutex);
-  if (atomic_load_explicit (&da->refs, memory_order_relaxed) & IOT_DATA_REHASH) // Not already published by another thread
-  {
-    da->hash = hash;
-    atomic_fetch_and_explicit (&da->refs, IOT_DATA_REFS_MASK, memory_order_release);
-  }
-  pthread_mutex_unlock (&iot_data_hash_mutex);
+  __atomic_store_n (&da->hash, hash, __ATOMIC_RELAXED);
+  atomic_fetch_and_explicit (&da->refs, IOT_DATA_REFS_MASK, memory_order_release);
   return hash;
 }
 
@@ -2189,8 +2184,10 @@ iot_data_t * iot_data_alloc_string_fmt (const char *format, ...)
 
   // Format into local buffer, only formatting again if result too long for buffer
   va_start (args, format);
-  const size_t n = 1u + (size_t) vsnprintf (buff, sizeof (buff), format, args);
+  const int len = vsnprintf (buff, sizeof (buff), format, args);
   va_end (args);
+  if (len < 0) return iot_data_alloc_string ("", IOT_DATA_REF); // Formatting error
+  const size_t n = 1u + (size_t) len;
   if (n <= sizeof (buff)) return iot_data_alloc_string (buff, IOT_DATA_COPY); // Short strings held in data block
 
   char * str = malloc (n);

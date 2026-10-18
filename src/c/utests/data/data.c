@@ -19,6 +19,7 @@
 #include "iot/uuid.h"
 #include <float.h>
 #include <math.h>
+#include <wchar.h>
 
 #ifndef NDEBUG
 extern bool iot_data_map_check (const iot_data_t * map);
@@ -118,6 +119,10 @@ static void test_data_types (void)
   CU_ASSERT (strcmp (iot_data_type_name (data), "String") == 0)
   CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
   CU_ASSERT (strcmp (iot_data_string (data), "Legs: 11") == 0)
+  iot_data_free (data);
+  data = iot_data_alloc_string_fmt ("%ls", L"\x20AC"); // Unencodable in the C locale, so formatting may fail
+  CU_ASSERT (iot_data_type (data) == IOT_DATA_STRING)
+  CU_ASSERT (strlen (iot_data_string (data)) < 8u)
   iot_data_free (data);
   data = iot_data_alloc_array (array, 4, IOT_DATA_UINT8, IOT_DATA_REF);
   CU_ASSERT (strcmp (iot_data_type_name (data), "Array") == 0)
