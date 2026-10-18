@@ -47,6 +47,7 @@ typedef struct iot_logger_impl_t
   iot_log_free_fn_t freectx;          // Function to free log context
   void *ctx;                          // Context for custom loggers
   struct iot_logger_impl_t * next;    // Pointer to next logger (can be chained in config)
+  iot_loglevel_t next_level;          // Highest level of loggers after this in chain, so logging can stop without locking
   char buff [IOT_LOG_MSG_MAX];        // Log format buffer
   bool no_stderr;                     // If set, console logs go to stdout only
 }
@@ -79,15 +80,23 @@ iot_logger_t * iot_logger_default (void)
   return &iot_logger_dfl.base;
 }
 
-// Returns next logger in chain, with a reference held, as next may be changed concurrently by iot_logger_set_next
+// Returns next logger in chain, with a reference held, as next may be changed concurrently by iot_logger_set_next.
+// No reference is taken on the default logger, as it is static and never freed.
 
 static iot_logger_impl_t * iot_logger_next_ref (iot_logger_impl_t * logger)
 {
   pthread_mutex_lock (&logger->mtx);
   iot_logger_impl_t * next = logger->next;
-  if (next) iot_logger_add_ref (&next->base);
+  if (next && next != &iot_logger_dfl) iot_logger_add_ref (&next->base);
   pthread_mutex_unlock (&logger->mtx);
   return next;
+}
+
+// Highest level of this logger and those after it in chain, whether or not they are running
+
+static inline iot_loglevel_t iot_logger_chain_level (const iot_logger_impl_t * logger)
+{
+  return (logger->next_level > logger->mylevel) ? logger->next_level : logger->mylevel;
 }
 
 void iot_log__va_log (iot_logger_t * l, iot_loglevel_t level, const char* fmt, va_list args)
@@ -100,7 +109,7 @@ void iot_log__va_log (iot_logger_t * l, iot_loglevel_t level, const char* fmt, v
   while (logger)
   {
     if (logger->mylevel >= level) (logger->impl) (&logger->base, level, ts, str, logger->ctx);
-    iot_logger_impl_t * next = iot_logger_next_ref (logger);
+    iot_logger_impl_t * next = (logger->next_level >= level) ? iot_logger_next_ref (logger) : NULL; // Stop if no later logger logs at level
     if (ref) iot_logger_free (&logger->base);
     logger = next;
     ref = true;
@@ -121,10 +130,11 @@ static iot_loglevel_t iot_logger_effective_level (const iot_logger_impl_t *logge
   return (next && next->base.level > logger->mylevel) ? next->base.level : logger->mylevel;
 }
 
-// Update effective level of loggers that chain to this logger. Parents remove themselves from the parents list (under
-// mtx) before being freed, so are valid while mtx held. Locks are always taken from next logger to parent logger.
+// Update chain level and, if running, effective level of loggers that chain to this logger. Parents remove themselves
+// from the parents list (under mtx) before being freed, so are valid while mtx held. Locks are always taken from next
+// logger to parent logger.
 
-static void iot_logger_relevel (iot_logger_impl_t * logger)
+static void iot_logger_relevel (iot_logger_impl_t * logger, bool running)
 {
   iot_data_list_iter_t iter;
   pthread_mutex_lock (&logger->mtx);
@@ -132,8 +142,9 @@ static void iot_logger_relevel (iot_logger_impl_t * logger)
   while (iot_data_list_iter_next (&iter))
   {
     iot_logger_impl_t * parent = iot_data_list_iter_pointer_value (&iter);
-    parent->base.level = iot_logger_effective_level (parent);
-    iot_logger_relevel (parent);
+    parent->next_level = iot_logger_chain_level (logger);
+    if (running) parent->base.level = iot_logger_effective_level (parent);
+    iot_logger_relevel (parent, running);
   }
   pthread_mutex_unlock (&logger->mtx);
 }
@@ -156,10 +167,7 @@ void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
   iot_logger_impl_t *impl = (iot_logger_impl_t *)logger;
   impl->mylevel = level;
   logger->level = iot_logger_effective_level (impl);
-  if (logger->component.state == IOT_COMPONENT_RUNNING)
-  {
-    iot_logger_relevel (impl);
-  }
+  iot_logger_relevel (impl, logger->component.state == IOT_COMPONENT_RUNNING); // Chain levels updated even if not running
 }
 
 iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, bool start, iot_logger_t * next, iot_log_function_t impl, void * ctx, iot_log_free_fn_t freectx)
@@ -378,22 +386,31 @@ void iot_logger_set_next (iot_logger_t * logger, iot_logger_t * next)
   iot_logger_impl_t * impl = (iot_logger_impl_t*) logger;
   iot_logger_impl_t * next_impl = (iot_logger_impl_t*) next;
   iot_logger_add_ref (next);
+  // Next logger locked while setting next level, so a concurrent relevel of next logger is not overwritten
   if (next_impl)
   {
     pthread_mutex_lock (&next_impl->mtx);
     iot_data_list_tail_push (next_impl->parents, iot_data_alloc_pointer (impl, NULL));
-    pthread_mutex_unlock (&next_impl->mtx);
   }
   pthread_mutex_lock (&impl->mtx);
   iot_logger_impl_t * old = impl->next;
   impl->next = next_impl;
+  impl->next_level = next_impl ? iot_logger_chain_level (next_impl) : IOT_LOG_NONE;
   pthread_mutex_unlock (&impl->mtx);
+  if (next_impl) pthread_mutex_unlock (&next_impl->mtx);
   if (old)
   {
     iot_logger_remove_parent (old, impl);
     iot_logger_free (&old->base); // Loggers in use by iot_log__va_log hold a reference
   }
-  if (logger->component.state != IOT_COMPONENT_INITIAL) iot_logger_set_level (logger, impl->mylevel); // Effective level depends on next logger
+  if (logger->component.state != IOT_COMPONENT_INITIAL)
+  {
+    iot_logger_set_level (logger, impl->mylevel); // Effective level depends on next logger
+  }
+  else
+  {
+    iot_logger_relevel (impl, false); // Chain level of loggers chained to this one depends on next logger
+  }
 }
 
 #ifdef IOT_BUILD_COMPONENTS

@@ -404,6 +404,39 @@ static void cunit_logger_chain_no_container (void)
   iot_logger_free (b);
 }
 
+static void cunit_logger_chain_level (void)
+{
+  // Messages pass along chain to any later logger at level, including one not started, and stop when none is
+  iot_logger_t * c = iot_logger_alloc_custom ("c", IOT_LOG_NONE, false, NULL, cunit_count_log_b, NULL, NULL);
+  iot_logger_t * b = iot_logger_alloc_custom ("b", IOT_LOG_ERROR, true, c, cunit_count_log_a, NULL, NULL);
+  iot_logger_t * a = iot_logger_alloc_custom ("a", IOT_LOG_ERROR, true, b, cunit_count_log_a, NULL, NULL);
+  atomic_store (&cunit_count_a, 0u);
+  atomic_store (&cunit_count_b, 0u);
+  iot_log__log (a, IOT_LOG_WARN, "warn");
+  CU_ASSERT (atomic_load (&cunit_count_a) == 0u && atomic_load (&cunit_count_b) == 0u)
+  iot_logger_set_level (c, IOT_LOG_WARN); // Not started, so effective levels unchanged, but chain level updated
+  iot_log__log (a, IOT_LOG_WARN, "warn");
+  CU_ASSERT (atomic_load (&cunit_count_a) == 0u && atomic_load (&cunit_count_b) == 1u)
+  iot_logger_set_level (c, IOT_LOG_ERROR);
+  iot_log__log (a, IOT_LOG_WARN, "warn");
+  iot_log__log (a, IOT_LOG_ERROR, "error");
+  CU_ASSERT (atomic_load (&cunit_count_a) == 2u && atomic_load (&cunit_count_b) == 2u)
+  iot_logger_free (a);
+  iot_logger_free (b);
+  iot_logger_free (c);
+}
+
+static void cunit_logger_default_next_refs (void)
+{
+  // Logging through a chain to the default logger does not change the default logger reference count
+  iot_logger_t * dfl = iot_logger_default ();
+  iot_logger_t * a = iot_logger_alloc_custom ("a", IOT_LOG_ERROR, true, dfl, cunit_count_log_a, NULL, NULL);
+  int_fast32_t refs = atomic_load (&dfl->component.refs);
+  iot_log__log (a, IOT_LOG_ERROR, "error");
+  CU_ASSERT (atomic_load (&dfl->component.refs) == refs)
+  iot_logger_free (a);
+}
+
 #define CUNIT_LOG_THREADS 4
 #define CUNIT_LOG_MESSAGES 2000
 
@@ -532,6 +565,8 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_udp_long", cunit_logger_udp_long);
   CU_add_test (suite, "logger_udp_host", cunit_logger_udp_host);
   CU_add_test (suite, "logger_chain_no_container", cunit_logger_chain_no_container);
+  CU_add_test (suite, "logger_chain_level", cunit_logger_chain_level);
+  CU_add_test (suite, "logger_default_next_refs", cunit_logger_default_next_refs);
   CU_add_test (suite, "logger_set_next_concurrent", cunit_logger_set_next_concurrent);
   CU_add_test (suite, "logger_default_concurrent", cunit_logger_default_concurrent);
 }
