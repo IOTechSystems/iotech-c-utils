@@ -66,7 +66,8 @@ typedef enum iot_data_ownership_t
 typedef enum iot_data_tag_t
 {
   IOT_DATA_TAG_USER1 = 1u, /**< Identifier for user tag 1 */
-  IOT_DATA_TAG_USER2 = 2u  /**< Identifier for user tag 2 */
+  IOT_DATA_TAG_USER2 = 2u, /**< Identifier for user tag 2 */
+  IOT_DATA_TAG_USER3 = 3u  /**< Identifier for user tag 3 */
 } iot_data_tag_t;
 
 /** Opaque iot data structure */
@@ -113,13 +114,22 @@ typedef struct iot_data_consts_t
 extern iot_data_consts_t iot_data_consts;
 
 /**
+ * Shared constant boolean true, boolean false and null values, as returned by iot_data_alloc_bool and
+ * iot_data_alloc_null. These are held in read only memory and must not be modified (by setting tags or metadata).
+ * They are not reference counted, so need not be freed, but may be passed to iot_data_free and iot_data_add_ref.
+ */
+extern iot_data_t * const iot_data_true;  /**< Shared constant boolean true value */
+extern iot_data_t * const iot_data_false; /**< Shared constant boolean false value */
+extern iot_data_t * const iot_data_null;  /**< Shared constant null value */
+
+/**
  * Type for data map iterator structure. Do not use struct members directly.
  */
 typedef struct iot_data_map_iter_t
 {
   const struct iot_data_map_t * _map; /**< Pointer to data map structure */
   struct iot_node_t * _node;          /**< Pointer to map node structure */
-  uint32_t _count;                    /**< Position counter */
+  uint32_t _count;                    /**< Unused, retained for compatibility */
 } iot_data_map_iter_t;
 
 /**
@@ -184,7 +194,11 @@ extern iot_data_cmp_fn iot_data_string_cmp;
 extern bool iot_data_alloc_heap (bool set);
 
 /**
- * @brief Return the hash of a String, Array or Binary data type
+ * @brief Return the hash of a data value
+ *
+ * The hash of a list or vector combines the hashes of its elements, and the hash of a map combines the hashes
+ * of its keys. A container's hash is updated as the container is modified, but not when an element already in
+ * the container is itself modified (for example, by iot_data_increment), so modify elements before adding them.
  *
  * @param data  The data (can be NULL)
  * @return      The hash value or zero if data is NULL
@@ -348,9 +362,9 @@ extern const char * iot_data_type_string (iot_data_type_t type);
 /**
  * @brief Set metadata for data
  *
- * Set metadata on a data item. Meta data is freed when the containing data is freed.
- * This function should not be used with null or boolean data types as these are implemented as shared
- * constant instances.
+ * Set metadata on a data item. Meta data is freed when the containing data is freed, or immediately
+ * if data or key is NULL. Metadata cannot be set on constant data, in which case the metadata is also freed immediately.
+ * Must not be used with null or boolean values, as these are shared constant instances (asserted in debug builds).
  *
  * @param  data      Pointer to data
  * @param  metadata  Pointer to metadata
@@ -463,7 +477,9 @@ extern iot_data_t * iot_data_alloc_ui64 (uint64_t val);
  * @brief Allocate constant uint64 data
  *
  * The function to allocate data for a constant uint64, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        uint64 value.
@@ -475,7 +491,9 @@ extern iot_data_t * iot_data_alloc_const_ui64 (iot_data_static_t * data, uint64_
  * @brief Allocate constant int64 data
  *
  * The function to allocate data for a constant int64, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        int64 value.
@@ -487,7 +505,9 @@ extern iot_data_t * iot_data_alloc_const_i64 (iot_data_static_t * data, int64_t 
  * @brief Allocate constant uint32 data
  *
  * The function to allocate data for a constant uint32, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        uint32 value.
@@ -499,7 +519,9 @@ extern iot_data_t * iot_data_alloc_const_ui32 (iot_data_static_t * data, uint32_
  * @brief Allocate constant int32 data
  *
  * The function to allocate data for a constant int32, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        int32 value.
@@ -511,7 +533,9 @@ extern iot_data_t * iot_data_alloc_const_i32 (iot_data_static_t * data, int32_t 
  * @brief Allocate constant uint16 data
  *
  * The function to allocate data for a constant uint16, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        uint16 value.
@@ -523,7 +547,9 @@ extern iot_data_t * iot_data_alloc_const_ui16 (iot_data_static_t * data, uint16_
  * @brief Allocate constant int16 data
  *
  * The function to allocate data for a constant int16, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        int16 value.
@@ -535,7 +561,9 @@ extern iot_data_t * iot_data_alloc_const_i16 (iot_data_static_t * data, int16_t 
  * @brief Allocate constant uint8 data
  *
  * The function to allocate data for a constant uint8, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        uint8 value.
@@ -547,7 +575,9 @@ extern iot_data_t * iot_data_alloc_const_ui8 (iot_data_static_t * data, uint8_t 
  * @brief Allocate constant int8 data
  *
  * The function to allocate data for a constant uint8, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        int8 value.
@@ -559,7 +589,9 @@ extern iot_data_t * iot_data_alloc_const_i8 (iot_data_static_t * data, int8_t va
  * @brief Allocate constant float data
  *
  * The function to allocate data for a constant float, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        float value.
@@ -571,7 +603,9 @@ extern iot_data_t * iot_data_alloc_const_f32 (iot_data_static_t * data, float va
  * @brief Allocate constant double data
  *
  * The function to allocate data for a constant double, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param val        double value.
@@ -605,7 +639,7 @@ extern iot_data_t * iot_data_alloc_f64 (double val);
  * The function to allocate memory for data_type bool
  *
  * @param val  Datavalue
- * @return     Pointer to the allocated memory
+ * @return     The shared constant iot_data_true or iot_data_false value
  */
 extern iot_data_t * iot_data_alloc_bool (bool val);
 
@@ -614,7 +648,7 @@ extern iot_data_t * iot_data_alloc_bool (bool val);
  *
  * The function to allocate memory for data_type null
  *
- * @return     Pointer to the allocated memory
+ * @return     The shared constant iot_data_null value
  */
 extern iot_data_t * iot_data_alloc_null (void);
 
@@ -648,10 +682,12 @@ extern iot_data_t * iot_data_alloc_string (const char * val, iot_data_ownership_
  * @brief Allocate constant string data
  *
  * The function to allocate data for a constant string, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
- * @param str        Constant string value.
+ * @param str        Constant string value. Not copied, so must remain valid while the data is in use.
  * @return           Pointer to the allocated data (same address as the static storage)
  */
 extern iot_data_t * iot_data_alloc_const_string (iot_data_static_t * data, const char * str);
@@ -684,7 +720,9 @@ extern iot_data_t * iot_data_alloc_pointer (void * ptr, iot_data_free_fn free_fn
  * @brief Allocate constant pointer data
  *
  * The function to allocate data for a constant pointer, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key.
  *
  * @param data       Address of static storage for data
  * @param ptr        Constant pointer value.
@@ -705,7 +743,10 @@ extern iot_data_t * iot_data_alloc_list (void);
  * @brief Allocate constant list data
  *
  * The function to allocate data for a constant list, using fixed static storage, so need
- * not be deleted.
+ * not be deleted. Constant data is never copied, so copies of it (and maps, vectors and lists it is added to)
+ * reference the storage, which must remain valid while the data or any reference to it is in use. Stack storage
+ * is only suitable for temporary data that is not kept, such as a map lookup key. Values may still be added to
+ * and removed from a constant list, and are seen by all references to it.
  *
  * @param data       Address of static storage for data
  * @return           Pointer to the allocated data (same address as the static storage)
@@ -878,7 +919,7 @@ extern bool iot_data_list_iter_remove (iot_data_list_iter_t * iter);
  * The function to replace a value in a list referenced by the iterator
  *
  * @param iter  Input iterator
- * @param value New value to store in the list
+ * @param value New value to store in the list. Freed if the iterator is not valid
  * @return      Pointer to the previous value associated with the iterator if valid, NULL otherwise
  */
 extern iot_data_t * iot_data_list_iter_replace (const iot_data_list_iter_t * iter, iot_data_t * value);
@@ -903,7 +944,8 @@ extern void iot_data_list_iter_push_before (const iot_data_list_iter_t * iter, i
  * @brief Push the contents of a list onto the tail of a list. Copied elements are either taken or referenced.
  * @param dest_list  List to add values to
  * @param src_list   List of values to add to tail of dest_list
- * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list.
+ *                   If dest_list and src_list are the same list, its contents are duplicated (IOT_DATA_TAKE is treated as IOT_DATA_REF)
  */
 extern void iot_data_list_tail_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
 
@@ -925,7 +967,8 @@ extern iot_data_t * iot_data_list_tail_pop (iot_data_t * list);
  * @brief Push the contents of a list onto the head of a list. Copied elements are either taken or referenced.
  * @param dest_list  List to add values to
  * @param src_list   List of values to add to head of dest_list
- * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list
+ * @param ownership  Ownership of values added to dest_list. If set to IOT_DATA_TAKE, values are also removed from src_list.
+ *                   If dest_list and src_list are the same list, its contents are duplicated (IOT_DATA_TAKE is treated as IOT_DATA_REF)
  */
 extern void iot_data_list_head_push_list (iot_data_t * dest_list, iot_data_t * src_list, iot_data_ownership_t ownership);
 
@@ -1047,7 +1090,8 @@ extern uint32_t iot_data_array_size (const iot_data_t * array);
 /**
  * @brief  Allocate map data type
  *
- * The function to allocate a data map with a key type
+ * The function to allocate a data map with a key type. Floating point NaN keys should not be used, as NaN never
+ * compares equal so the key cannot be found.
  *
  * @param key_type  Datatype of the map keys
  * @return          Pointer to the allocated data map
@@ -1111,8 +1155,9 @@ extern iot_data_type_t iot_data_vector_type (const iot_data_t * vector);
  * The function to allocate memory of data_type type for a string value
  *
  * @param type   Datatype for memory allocation
- * @param value  String value
- * @return       Pointer to the allocated memory for valid type, NULL on error
+ * @param value  String value. For numeric types, a decimal integer or floating point number, optionally
+ *               surrounded by white space, and for integer types within the range of the type
+ * @return       Pointer to the allocated memory for valid type and value, NULL on error
  *
  */
 extern iot_data_t * iot_data_alloc_from_string (iot_data_type_t type, const char * value);
@@ -1313,7 +1358,8 @@ extern bool iot_data_cast (const iot_data_t * data, iot_data_type_t type, void *
 /**
  * @brief Add key-value pair to a map
  *
- * The function to add a key-value pair to a map
+ * The function to add a key-value pair to a map. If the key is already in use, its value is replaced.
+ * Floating point NaN keys should not be used, as NaN never compares equal so the key cannot be found or replaced.
  *
  * @param map  Map to add a new key-value pair
  * @param key  Input key
@@ -1331,7 +1377,8 @@ extern void iot_data_map_add (iot_data_t * map, iot_data_t * key, iot_data_t * v
  * @param key  Input key
  * @param val  Input value
  * @return     Whether key-value pair has been added
- * Note: The ownership of key and value passed is owned by the map and cannot be reused, unless reference counted
+ * Note: The key and value are owned by the map and cannot be reused, unless reference counted.
+ *       If not added (key already in use), the key and value are freed.
  */
 extern bool iot_data_map_add_unused (iot_data_t * map, iot_data_t * key, iot_data_t * val);
 
@@ -1784,9 +1831,10 @@ extern bool iot_data_map_key_is_of_type (const iot_data_t * map, iot_data_type_t
  *
  * The function to decode base64 value in a map store it as a byte array for an input key
  *
- * @param map  Input map
+ * @param map  Input map. The map element type must be IOT_DATA_MULTI, as the string value is replaced by an array
  * @param key  Input key
- * @return     'true' on Success, 'false' on Failure
+ * @return     'true' on Success, 'false' on Failure (key not found, value not a valid base64 string, or map element type
+ *             not IOT_DATA_MULTI)
  */
 extern bool iot_data_map_base64_to_array (const iot_data_t * map, const iot_data_t * key);
 
@@ -2025,7 +2073,7 @@ extern const iot_data_t * iot_data_map_iter_value (const iot_data_map_iter_t * i
  * The function to replace the value from the map referenced by the iterator
  *
  * @param iter  Input iterator
- * @param value New value to store in the map
+ * @param value New value to store in the map. Freed if the iterator is not valid
  * @return      Pointer to the previous value of type iot_data if iter is valid, NULL otherwise
  */
 extern iot_data_t * iot_data_map_iter_replace_value (const iot_data_map_iter_t * iter, iot_data_t * value);
@@ -2159,7 +2207,7 @@ extern void * iot_data_vector_iter_pointer_value (const iot_data_vector_iter_t *
  * @brief Replace Value from the vector at the index referenced by iterator
  *
  * The function to replace the value in the the vector at an index referenced by iterator. If iterator index exceeds
- * the size of an vector, no replacement is made and NULL is returned.
+ * the size of an vector, no replacement is made, value is freed and NULL is returned.
  *
  * @param iter  Input iterator
  * @param value New value to store in the vector
@@ -2264,7 +2312,9 @@ extern const iot_data_t * iot_data_iter_value (const iot_data_iter_t * iter);
  * The function to convert data to a json string. If metadata has been
  * added to a map in the format generated by iot_data_from_json_with_ordering
  * then the metadata string vectors will be used to determine which map entries
- * appear in the JSON and the order in which they appear.
+ * appear in the JSON and the order in which they appear. Floating point values
+ * not representable in JSON are written as: NaN as null, infinity as 1e400 (float)
+ * or 1e800 (double), and negative infinity as -1e400 or -1e800. Pointer values are written as null.
  *
  * @param  data  Input data
  * @return       json string
@@ -2304,7 +2354,7 @@ extern char * iot_data_to_json_with_buffer (const iot_data_t * data, char * buff
  * The function to convert input json string to iot_data
  *
  * @param  json  Input json string
- * @return       Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ * @return       Data read from the json string, or null data (type IOT_DATA_NULL) if the string is NULL, empty or not valid json
  */
 extern iot_data_t * iot_data_from_json (const char * json);
 
@@ -2320,7 +2370,7 @@ extern iot_data_t * iot_data_from_json (const char * json);
  *
  * @param json    Input json string
  * @param ordered Whether returned map is ordered by position in json
- * @return        Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ * @return        Data read from the json string, or null data (type IOT_DATA_NULL) if the string is NULL, empty or not valid json
  */
 extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool ordered);
 
@@ -2337,7 +2387,7 @@ extern iot_data_t * iot_data_from_json_with_ordering (const char * json, bool or
  * @param json    Input json string
  * @param ordered Whether returned map is ordered by position in json
  * @param cache   Optional string map used as a cache for string values, may be NULL
- * @return        Pointer to data of type iot_data if input string is a json object, NULL otherwise
+ * @return        Data read from the json string, or null data (type IOT_DATA_NULL) if the string is NULL, empty or not valid json
  */
 extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool ordered, iot_data_t * cache);
 
@@ -2345,7 +2395,7 @@ extern iot_data_t * iot_data_from_json_with_cache (const char * json, bool order
 /**
  * @brief  Convert data to CBOR block
  *
- * The function to convert data to cbor.
+ * The function to convert data to cbor. Pointer values are written as null.
  *
  * @param  data  Input data
  * @return       CBOR in an IOT_DATA_BINARY
@@ -2366,11 +2416,13 @@ extern iot_data_t * iot_data_to_cbor (const iot_data_t * data);
 extern iot_data_t * iot_data_to_cbor_with_size (const iot_data_t * data, uint32_t size);
 
 /**
- * @bief Convert cbor data to iot_data_t structure
+ * @brief Convert cbor data to iot_data_t structure
+ *
+ * CBOR undefined values are converted to null. Other CBOR simple values are not supported.
  *
  * @param data Input data
  * @param size size of input data
- * @return iot_data struct
+ * @return iot_data struct, or NULL if data is not valid CBOR or contains unsupported values
  */
 extern iot_data_t * iot_data_from_cbor (const uint8_t *data, uint32_t size);
 
@@ -2391,10 +2443,11 @@ extern iot_data_t * iot_data_from_iot_cbor (const iot_data_t *data);
  * in a map containing "name", "attributes", "children" and "content" entries.
  * The "children" and "content" entries will only be present if required.
  * The "children" entry will contain a recursive array of map entries
- * containing any XML child elements.
+ * containing any XML child elements. The "content" entry holds all of the
+ * element's text, including text either side of child elements.
  *
  * @param  xml   Input XML string
- * @return       A iot_data map if input string is a XML string, NULL otherwise.
+ * @return       A iot_data map if input string is a complete, well formed XML document, NULL otherwise.
  */
 extern iot_data_t * iot_data_from_xml (const char * xml);
 #endif
@@ -2404,7 +2457,14 @@ extern iot_data_t * iot_data_from_xml (const char * xml);
  * @brief Convert YAML to iot_data_t type
  *
  * The function to convert input YAML string to iot_data. The conversion results
- * in a map, vector or simple type depending on the YAML content.
+ * in a map, vector or simple type depending on the YAML content. Plain scalars
+ * are typed using the YAML 1.2 core schema: null (null, ~), boolean (true, false),
+ * integer (decimal, 0x hexadecimal and 0o octal, as int64 or uint64 if above
+ * INT64_MAX), float (including .inf and .nan) or otherwise string. Decimal
+ * integers outside the 64 bit range are converted to float. Quoted scalars are
+ * strings, and the !!str, !!int, !!float, !!bool and !!null tags set or check
+ * the type. Map keys are always strings. Anchored nodes are shared by their
+ * aliases, and "<<" merge keys are supported. Only a single document is allowed.
  *
  * @param  yaml       Input YAML string
  * @param  exception  If a parse error occurs, on exit this will hold a string describing the problem
@@ -2474,7 +2534,9 @@ extern int iot_data_compare_value (const iot_data_t * data1, const iot_data_t * 
  *
  * This function copies data from src and returns the pointer of the copied data.
  * Note that to maintain ownership semantics for the POINTER data type, for this type
- * the src argument is returned with it's reference count incremented.
+ * the src argument is returned with it's reference count incremented. Constant data
+ * (see iot_data_is_static) is not copied, to minimise memory use, but src is returned
+ * by reference, so a copy of a map, vector or list references any constant data it contains.
  *
  * @param src Data to copy
  * @return    Pointer to the copied data. The caller should free memory after use
@@ -2540,6 +2602,7 @@ extern iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const io
 /**
  * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements
  * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty vector is returned.
+ * If type is IOT_DATA_MULTI, all elements are referenced in the new vector (flattening contained vectors if recurse set).
  *
  * @param vector  The vector to transform
  * @param type    The data element type for the created vector
@@ -2593,8 +2656,9 @@ extern uint32_t iot_data_type_size (iot_data_type_t type);
  *         Each entry in path must be of the correct type for the corresponding map or an unsigned 32 bit integer
  *         for vectors.
  * @param  data The starting data structure
- * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
- * @return The data found by traversing the path or NULL if the path does not match the supplied data
+ * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty the data parameter is returned
+ * @return The data found by traversing the path or NULL if the path does not match the supplied data (missing map key,
+ *         vector index out of range or path longer than the nesting of the data)
  *
  */
 extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_data_t * path);
@@ -2605,10 +2669,12 @@ extern const iot_data_t * iot_data_get_at (const iot_data_t * data, const iot_da
  *         supplied in path. Each entry in path must be of the correct type for the corresponding map or an unsigned
  *         32 bit integer for vectors.
  * @param  data The starting data structure
- * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty val is returned
  * @param  val  The value to add
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
- *         the data parameter, as will intermediate objects along the specified path.
+ *         the data parameter, as will intermediate objects along the specified path. If the path does not match
+ *         the supplied data (missing intermediate map key, vector index out of range or path longer than the nesting
+ *         of the data) NULL is returned and val is freed.
  *
  */
 extern iot_data_t * iot_data_add_at (const iot_data_t * data, const iot_data_t * path, iot_data_t * val);
@@ -2618,9 +2684,11 @@ extern iot_data_t * iot_data_add_at (const iot_data_t * data, const iot_data_t *
  *         Each entry in path must be of the correct type for the corresponding map or an unsigned 32 bit integer
  *         for vectors.
  * @param  data The starting data structure
- * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty a shallow copy of data is returned
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
- *         the data parameter, as will intermediate objects along the specified path.
+ *         the data parameter, as will intermediate objects along the specified path. If the path does not match
+ *         the supplied data nothing is removed. Removing a vector element compacts the vector copy, so later
+ *         elements move down one index, and any empty (NULL) elements in the vector copy are also removed.
  *
  */
 extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_t * path);
@@ -2631,12 +2699,14 @@ extern iot_data_t * iot_data_remove_at (const iot_data_t * data, const iot_data_
  *         supplied in path. Each entry in path must be of the correct type for the corresponding map key
  *         or an unsigned 32 bit integer for vectors.
  * @param  data The starting data structure
- * @param  path A vector of keys and indexes. If the vector is empty the data parameter is returned
+ * @param  path A list of keys and indexes, traversed from head to tail. If the list is empty the update function is
+ *         called with the data parameter
  * @param  fn Pointer to an update function. The function will be passed the existing value specified by the path and the arg parameter.
  *         The function must return the new value.
  * @param  arg User specified pointer supplied to the update function.
  * @return A new data object of the same type as the data parameter. This data object will be a shallow copy of
- *         the data parameter, as will intermediate objects along the specified path.
+ *         the data parameter, as will intermediate objects along the specified path. If the path does not match
+ *         the supplied data nothing is updated and the update function is not called.
  *
  */
 extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_t * path, iot_data_update_fn fn, void * arg);
@@ -2645,16 +2715,17 @@ extern iot_data_t * iot_data_update_at (const iot_data_t * data, const iot_data_
  * @brief Returns the value of a boolean user tag
  *
  * @param data   The data instance
- * @param tag    The tag identifier (two supported)
+ * @param tag    The tag identifier (three supported)
  * @return       The boolean value of the tag
  */
 extern bool iot_data_get_tag (const iot_data_t * data, iot_data_tag_t tag);
 
 /**
- * @brief Sets the value of a boolean user tag
+ * @brief Sets the value of a boolean user tag. Must not be used with null or boolean values, as these are shared
+ *        constant instances (asserted in debug builds).
  *
  * @param data   The data instance
- * @param tag    The tag identifier (two supported)
+ * @param tag    The tag identifier (three supported)
  * @param value  The boolean value to set the tag
  * @return       The old boolean value of the tag
  */

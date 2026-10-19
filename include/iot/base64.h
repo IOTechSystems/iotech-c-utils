@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2020 IOTech Ltd
+// Copyright (c) 2018-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -37,9 +37,12 @@ extern size_t iot_b64_maxdecodesize (const char * in);
 /**
  * @brief Decode base64 (encoded) string
  *
+ * Newlines are ignored and trailing padding is optional. Decoding fails for invalid characters, data
+ * after padding, incorrect padding or a final group of a single symbol.
+ *
  * @param in     Pointer to base64 encoded string
  * @param out    General purpose pointer to the output of this base64 decode function
- * @param outLen Length of the decoded output
+ * @param outLen Size of the output buffer, set to the length of the decoded output if successful
  * @return       'true' if decode successful, 'false' if decode in error
  */
 extern bool iot_b64_decode (const char * in, void * out, size_t * outLen);

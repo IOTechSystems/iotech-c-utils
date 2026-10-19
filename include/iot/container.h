@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2022 IOTech Ltd
+// Copyright (c) 2019-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -114,13 +114,38 @@ extern void iot_container_add_component (iot_container_t * cont, const char * ct
 /**
  * @brief Find a named component in a container
  *
- * The function finds a named component within the container
+ * The function finds a named component within the container. No reference is held on the returned
+ * component, so it is only valid while the component is not deleted from the container. Use
+ * iot_container_get_component if the component may be deleted concurrently.
  *
  * @param cont  Pointer to the container
  * @param name  Name of the component to find
  * @return      Pointer to the component if found within the container, NULL otherwise
  */
 extern iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name);
+
+/**
+ * @brief Get a named component from a container, holding a reference to it
+ *
+ * The function finds a named component within the container and takes a reference to it, so the component
+ * is not freed if deleted from the container (it is stopped) until the reference is released with
+ * iot_container_release_component.
+ *
+ * @param cont  Pointer to the container
+ * @param name  Name of the component to get
+ * @return      Pointer to the component if found within the container, NULL otherwise
+ */
+extern iot_component_t * iot_container_get_component (iot_container_t * cont, const char * name);
+
+/**
+ * @brief Release a component reference
+ *
+ * The function releases a reference taken by iot_container_get_component, freeing the component if it has
+ * been deleted from the container and no other references are held.
+ *
+ * @param comp  Pointer to the component, may be NULL
+ */
+extern void iot_container_release_component (iot_component_t * comp);
 
 /**
  * @brief Free a component from the container

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2022 IOTech
+// Copyright (c) 2019-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -16,24 +16,28 @@
 #define IOT_CONTAINER_RUN_RETRIES 25
 #define IOT_CONTAINER_RUN_WAIT_MS 200
 
+typedef struct iot_load_in_progress_t
+{
+  const char * name;                     // Name of component being loaded
+  pthread_t owner;                       // Thread loading the component
+  const char * waiting;                  // Component owner is waiting for another thread to load (innermost load only)
+  struct iot_load_in_progress_t * next;
+} iot_load_in_progress_t;
+
 struct iot_container_t
 {
   iot_logger_t * logger;
   iot_data_t * components;
   char * name;
   uint64_t startup_time;
-  pthread_rwlock_t lock;
+  pthread_rwlock_t lock;                 // Protects components list
+  pthread_mutex_t load_mutex;            // Protects loading list, not held while components are loaded
+  pthread_cond_t load_cond;              // Signalled when a component load completes
+  iot_load_in_progress_t * loading;      // Components being loaded, innermost load of a thread first
 };
-
-typedef struct iot_load_in_progress_t
-{
-  const char * name;
-  struct iot_load_in_progress_t * next;
-} iot_load_in_progress_t;
 
 static const iot_component_factory_t * iot_component_factories = NULL;
 static const iot_container_config_t * iot_config = NULL;
-static iot_load_in_progress_t * iot_load_in_progress = NULL;
 
 #ifdef __ZEPHYR__
   static PTHREAD_MUTEX_DEFINE (iot_container_mutex);
@@ -41,17 +45,33 @@ static iot_load_in_progress_t * iot_load_in_progress = NULL;
   static pthread_mutex_t iot_container_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-static void iot_component_free (void * ptr)
+// Release component reference, stopping and freeing the component once there are no references
+
+static void iot_component_release (iot_component_t * component)
+{
+  if (iot_component_dec_ref (component))
+  {
+    if (component->state != IOT_COMPONENT_STOPPED)
+    {
+      component->stop_fn (component);
+    }
+    (component->factory->free_fn) (component);
+  }
+}
+
+static void iot_component_free (void * ptr) // Called when component removed from container, stopping it
 {
   iot_component_t * component = ptr;
   if (component->state != IOT_COMPONENT_STOPPED)
   {
     component->stop_fn (component);
   }
-  (component->factory->free_fn) (component);
+  iot_component_release (component);
 }
 
 /* Replace ${VALUE} in configuration string with corresponding environment variable */
+
+static const iot_component_t * iot_container_find_component_locked (const iot_container_t * cont, const char * name);
 
 static iot_data_t * iot_component_config_to_map (const char * config, iot_logger_t * logger)
 {
@@ -88,7 +108,16 @@ static void iot_component_create (iot_container_t * cont, const char *cname, con
   comp->name = strdup (cname);
   comp->factory = factory;
   comp->container = cont;
-  iot_data_list_head_push (cont->components, iot_data_alloc_pointer (comp, iot_component_free));
+  pthread_rwlock_wrlock (&cont->lock);
+  bool duplicate = iot_container_find_component_locked (cont, cname) != NULL;
+  if (! duplicate) iot_data_list_head_push (cont->components, iot_data_alloc_pointer (comp, iot_component_free));
+  pthread_rwlock_unlock (&cont->lock);
+  if (duplicate)
+  {
+    iot_log_error (cont->logger, "Container: %s Component: %s already exists", cont->name, cname);
+    (factory->free_fn) (comp);
+    comp = NULL;
+  }
 
 ERROR:
 
@@ -158,65 +187,137 @@ static const iot_component_factory_t * iot_container_try_load_component (iot_con
 }
 #endif
 
-static bool iot_container_typed_load (iot_container_t * cont, const char * cname, const char * ctype)
+static const iot_component_t * iot_container_find (iot_container_t * cont, const char * name, bool ref)
 {
-  bool result = iot_container_find_component_locked (cont, cname);
-  if (!result)
+  pthread_rwlock_rdlock (&cont->lock);
+  const iot_component_t * comp = iot_container_find_component_locked (cont, name);
+  if (comp && ref) iot_component_add_ref ((iot_component_t*) comp); // Reference taken under lock, so component cannot be freed
+  pthread_rwlock_unlock (&cont->lock);
+  return comp;
+}
+
+// Component being loaded, or NULL. Called with load_mutex held
+
+static iot_load_in_progress_t * iot_container_loading_find (const iot_container_t * cont, const char * name)
+{
+  iot_load_in_progress_t * entry = cont->loading;
+  while (entry && strcmp (entry->name, name) != 0) entry = entry->next;
+  return entry;
+}
+
+// Innermost component being loaded by thread, or NULL. Called with load_mutex held
+
+static iot_load_in_progress_t * iot_container_loading_owned (const iot_container_t * cont, pthread_t thread)
+{
+  iot_load_in_progress_t * entry = cont->loading;
+  while (entry && ! pthread_equal (entry->owner, thread)) entry = entry->next;
+  return entry;
+}
+
+// Whether waiting for a component being loaded would never complete, as it is being loaded by this thread, or by a
+// thread waiting (possibly via other threads) for a component this thread is loading. Called with load_mutex held
+
+static bool iot_container_loading_cyclic (const iot_container_t * cont, const iot_load_in_progress_t * entry, pthread_t self)
+{
+  uint32_t limit = 0u; // Bound walk by number of loads in progress
+  for (const iot_load_in_progress_t * iter = cont->loading; iter; iter = iter->next) limit++;
+  while (entry && limit--)
   {
-    const iot_component_factory_t *factory = iot_component_factory_find (ctype);
-    if (factory)
+    if (pthread_equal (entry->owner, self)) return true;
+    const iot_load_in_progress_t * owned = iot_container_loading_owned (cont, entry->owner);
+    entry = (owned && owned->waiting) ? iot_container_loading_find (cont, owned->waiting) : NULL;
+  }
+  return false;
+}
+
+static void iot_container_loading_remove (iot_container_t * cont, const iot_load_in_progress_t * entry)
+{
+  iot_load_in_progress_t ** prev = &cont->loading;
+  while (*prev != entry) prev = &(*prev)->next;
+  *prev = entry->next;
+}
+
+// Create component of given type from its configuration. Returns whether the factory was found
+
+static bool iot_container_create_from_config (iot_container_t * cont, const char * cname, const char * ctype)
+{
+  const iot_component_factory_t * factory = iot_component_factory_find (ctype);
+  if (factory)
+  {
+    char * config = (iot_config->load) (cname, iot_config->uri);
+    if (config)
     {
-      char * config = (iot_config->load) (cname, iot_config->uri);
-      if (config)
-      {
-        iot_component_create (cont, cname, factory, config);
-        free (config);
-      }
-      result = true;
-    }
-    else
-    {
-      iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
+      iot_component_create (cont, cname, factory, config);
+      free (config);
     }
   }
+  else
+  {
+    iot_log_warn (cont->logger, "Failed to find factory for type: %s", ctype);
+  }
+  return factory != NULL;
+}
+
+// Load component of given type, if not already loaded. Loading is done without any lock held, as components may find
+// and load other components when created. A component being loaded by another thread is waited for, unless that
+// would never complete (a cyclic component reference).
+
+static bool iot_container_typed_load (iot_container_t * cont, const char * cname, const char * ctype)
+{
+  bool result = false;
+  bool cyclic = false;
+  pthread_t self = pthread_self ();
+  pthread_mutex_lock (&cont->load_mutex);
+  while (true)
+  {
+    if (iot_container_find (cont, cname, false))
+    {
+      result = true;
+      break;
+    }
+    const iot_load_in_progress_t * entry = iot_container_loading_find (cont, cname);
+    if (entry == NULL) break; // Neither loaded nor being loaded, so load
+    cyclic = iot_container_loading_cyclic (cont, entry, self);
+    if (cyclic) break;
+    iot_load_in_progress_t * owned = iot_container_loading_owned (cont, self);
+    if (owned) owned->waiting = cname; // Record wait, so other threads can detect cycles through this thread
+    pthread_cond_wait (&cont->load_cond, &cont->load_mutex);
+    if (owned) owned->waiting = NULL;
+  }
+  if (! result && ! cyclic)
+  {
+    iot_load_in_progress_t this = { cname, self, NULL, cont->loading };
+    cont->loading = &this;
+    pthread_mutex_unlock (&cont->load_mutex);
+    result = iot_container_create_from_config (cont, cname, ctype);
+    pthread_mutex_lock (&cont->load_mutex);
+    iot_container_loading_remove (cont, &this);
+    pthread_cond_broadcast (&cont->load_cond);
+  }
+  pthread_mutex_unlock (&cont->load_mutex);
+  if (cyclic) iot_log_error (cont->logger, "Invalid configuration, cyclic component reference for component %s", cname);
   return result;
 }
 
-static bool iot_container_load_locked (iot_container_t * cont, const char * cname)
+// Load named component from container configuration
+
+static bool iot_container_load (iot_container_t * cont, const char * cname)
 {
-  bool result = iot_container_find_component_locked (cont, cname) != NULL;
+  assert (iot_config && cont);
+  bool result = iot_container_find (cont, cname, false) != NULL;
 
   if (! result)
   {
-    iot_load_in_progress_t this = {cname, iot_load_in_progress};
-    iot_load_in_progress_t *loading = iot_load_in_progress;
-    assert (iot_config && cont);
+    char * config = (iot_config->load) (cont->name, iot_config->uri);
+    iot_data_t * map = iot_component_config_to_map (config, cont->logger);
+    free (config);
 
-    // Check for cycles
-    while (loading)
+    if (map)
     {
-      if (strcmp (loading->name, cname) == 0) break;
-      loading = loading->next;
+      const char * ctype = iot_data_string_map_get_string (map, cname);
+      if (ctype) result = iot_container_typed_load (cont, cname, ctype);
     }
-    if (!loading)
-    {
-      iot_load_in_progress = &this;
-      char * config = (iot_config->load) (cont->name, iot_config->uri);
-      iot_data_t * map = iot_component_config_to_map (config, cont->logger);
-      free (config);
-
-      if (map)
-      {
-        const char * ctype = iot_data_string_map_get_string (map, cname);
-        if (ctype) result = iot_container_typed_load (cont, cname, ctype);
-      }
-      iot_data_free (map);
-      iot_load_in_progress = this.next;
-    }
-    else
-    {
-      iot_log_error (cont->logger, "Invalid configuration, cyclic component reference for component %s", cname);
-    }
+    iot_data_free (map);
   }
   return result;
 }
@@ -239,6 +340,8 @@ iot_container_t * iot_container_alloc (const char * name)
   cont->logger = iot_logger_default ();
   cont->components = iot_data_alloc_typed_list (IOT_DATA_POINTER);
   pthread_rwlock_init (&cont->lock, NULL);
+  pthread_mutex_init (&cont->load_mutex, NULL);
+  pthread_cond_init (&cont->load_cond, NULL);
   iot_logger_start (cont->logger);
   return cont;
 }
@@ -292,12 +395,31 @@ void iot_container_free (iot_container_t * cont)
   {
     iot_data_free (cont->components);
     pthread_rwlock_destroy (&cont->lock);
+    pthread_mutex_destroy (&cont->load_mutex);
+    pthread_cond_destroy (&cont->load_cond);
     free (cont->name);
     free (cont);
   }
 }
 
-static void iot_container_running (const iot_container_t * cont)
+// Returns a copy of the component list, holding a reference to each component, so components can be started,
+// stopped and have stats read without the container lock held (component functions may use the container)
+
+static iot_data_t * iot_container_components (iot_container_t * cont)
+{
+  iot_data_t * list = iot_data_alloc_typed_list (IOT_DATA_POINTER);
+  iot_data_list_iter_t iter;
+  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_list_iter (cont->components, &iter);
+  while (iot_data_list_iter_next (&iter))
+  {
+    iot_data_list_head_push (list, iot_data_add_ref (iot_data_list_iter_value (&iter))); // Head push, as list iterated from tail, so copy has same order
+  }
+  pthread_rwlock_unlock (&cont->lock);
+  return list;
+}
+
+static void iot_container_running (const iot_data_t * components)
 {
   static const uint64_t sleep_msecs = IOT_CONTAINER_RUN_WAIT_MS;
   iot_data_list_iter_t iter;
@@ -307,7 +429,7 @@ static void iot_container_running (const iot_container_t * cont)
   // Timeout wait for all components to start
   while (true)
   {
-    iot_data_list_iter (cont->components, &iter);
+    iot_data_list_iter (components, &iter);
     while (iot_data_list_iter_next (&iter))
     {
       comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
@@ -320,7 +442,7 @@ AGAIN:
   }
 
   // Invoke running callbacks
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
     comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
@@ -330,43 +452,47 @@ AGAIN:
 
 void iot_container_start (iot_container_t * cont)
 {
+  assert (cont);
   uint64_t start_time = iot_time_usecs ();
-  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_t * components = iot_container_components (cont);
   iot_data_list_iter_t iter;
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     if (comp->starting_fn) (comp->starting_fn) (comp);
   }
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     (comp->start_fn) (comp);
   }
-  iot_container_running (cont);
-  pthread_rwlock_unlock (&cont->lock);
+  iot_container_running (components);
+  iot_data_free (components);
+  pthread_rwlock_wrlock (&cont->lock);
   cont->startup_time = iot_time_usecs () - start_time;
+  pthread_rwlock_unlock (&cont->lock);
 }
 
 void iot_container_stop (iot_container_t * cont)
 {
+  assert (cont);
+  iot_data_t * components = iot_container_components (cont);
   iot_data_list_iter_t iter;
-  pthread_rwlock_rdlock (&cont->lock);
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_prev (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     if (comp->stopping_fn) (comp->stopping_fn) (comp);
   }
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_prev (&iter))
   {
     iot_component_t * comp = (iot_component_t*) iot_data_list_iter_pointer_value (&iter);
     (comp->stop_fn) (comp);
   }
-  pthread_rwlock_unlock (&cont->lock);
+  iot_data_free (components); // Frees any components deleted while stopping
 }
 
 void iot_component_factory_add (const iot_component_factory_t * factory)
@@ -410,30 +536,46 @@ void iot_container_add_component (iot_container_t * cont, const char * ctype, co
   }
 }
 
-iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name)
+static iot_component_t * iot_container_find_or_load (iot_container_t * cont, const char * name, bool ref)
 {
   assert (cont);
   const iot_component_t * comp = NULL;
   if (name)
   {
-    pthread_rwlock_rdlock (&cont->lock);
-    comp = iot_container_find_component_locked (cont, name);
-    if (iot_config && !comp)
+    comp = iot_container_find (cont, name, ref);
+    if (iot_config && !comp) // Not found, so try to load
     {
-      iot_container_load_locked (cont, name);
-      comp = iot_container_find_component_locked (cont, name);
+      iot_container_load (cont, name);
+      comp = iot_container_find (cont, name, ref);
     }
-    pthread_rwlock_unlock (&cont->lock);
   }
   return (iot_component_t*) comp;
+}
+
+iot_component_t * iot_container_find_component (iot_container_t * cont, const char * name)
+{
+  return iot_container_find_or_load (cont, name, false);
+}
+
+iot_component_t * iot_container_get_component (iot_container_t * cont, const char * name)
+{
+  return iot_container_find_or_load (cont, name, true);
+}
+
+void iot_container_release_component (iot_component_t * comp)
+{
+  if (comp) iot_component_release (comp);
 }
 
 void iot_container_delete_component (iot_container_t * cont, const char * name)
 {
   assert (cont && name);
   pthread_rwlock_wrlock (&cont->lock);
-  iot_data_list_remove (cont->components, iot_component_cmp, name);
+  const iot_data_t * value = iot_data_list_find (cont->components, iot_component_cmp, name);
+  iot_data_t * comp = value ? iot_data_add_ref (value) : NULL; // Hold reference, so component is not stopped and freed when removed
+  if (comp) iot_data_list_remove (cont->components, iot_component_cmp, name);
   pthread_rwlock_unlock (&cont->lock);
+  iot_data_free (comp); // Stop and free component without lock held, as it may wait on threads using the container
 }
 
 iot_data_t * iot_container_list_components (iot_container_t * cont, const char * category)
@@ -446,7 +588,7 @@ iot_data_t * iot_container_list_components (iot_container_t * cont, const char *
   while (iot_data_list_iter_next (&iter))
   {
     const iot_component_t * comp = iot_data_list_iter_pointer_value (&iter);
-    if ((category == NULL) || (strcmp (category, comp->factory->category) == 0)) // Filter on category if set
+    if ((category == NULL) || (comp->factory->category && strcmp (category, comp->factory->category) == 0)) // Filter on category if set
     {
       iot_data_list_tail_push (list, iot_component_read ((iot_component_t*) comp));
     }
@@ -473,16 +615,18 @@ iot_data_t * iot_container_stats (iot_container_t * cont)
 {
   assert (cont);
   iot_data_t * map = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_t * components = iot_container_components (cont); // Stats functions called without container lock held
   iot_data_list_iter_t iter;
-  pthread_rwlock_rdlock (&cont->lock);
-  iot_data_list_iter (cont->components, &iter);
+  iot_data_list_iter (components, &iter);
   while (iot_data_list_iter_next (&iter))
   {
-    iot_component_t * comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter); // double check cast
+    iot_component_t * comp = (iot_component_t *) iot_data_list_iter_pointer_value (&iter);
     iot_data_t * stats = iot_component_stats (comp);
     if (stats) iot_data_map_add (map, iot_data_alloc_string (comp->name, IOT_DATA_COPY), stats);
   }
-  iot_data_string_map_add (map, "startup_time", iot_data_alloc_ui64(cont->startup_time));
+  iot_data_free (components);
+  pthread_rwlock_rdlock (&cont->lock);
+  iot_data_string_map_add (map, "startup_time", iot_data_alloc_ui64 (cont->startup_time));
   pthread_rwlock_unlock (&cont->lock);
   return map;
 }

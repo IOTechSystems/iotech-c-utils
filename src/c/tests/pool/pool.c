@@ -74,7 +74,7 @@ int main (int argc, char ** argv)
     {
       node_t * node = &nodes[j];
       pthread_mutex_lock (&node->mutex);
-      iot_data_list_tail_push (node->request_list, iot_data_alloc_null ());
+      iot_data_list_tail_push (node->request_list, iot_data_null);
       if (iot_data_list_length (node->request_list) == 1) //first item
       {
         iot_threadpool_add_work (pool, node_process_request, node, -1);
@@ -91,10 +91,19 @@ int main (int argc, char ** argv)
   uint64_t time = iot_time_msecs () - start;
   fprintf (stderr, "DONE %zu iters in %"PRIu64" ms, add_work call count %"PRIu64"/%zu \n", ITERS, time, call_count, ITERS * NODE_COUNT);
 
+  // Wait until all requests are processed, as jobs use the nodes and queue further jobs, and stopping
+  // the pool does not wait for running jobs to complete
+  iot_threadpool_wait (pool);
   iot_threadpool_stop (pool);
 
+  int ret = 0;
   for (size_t i = 0; i < NODE_COUNT; i++)
   {
+    if (iot_data_list_length (nodes[i].request_list) != 0)
+    {
+      fprintf (stderr, "FAIL node %zu has %" PRIu32 " unprocessed requests\n", i, iot_data_list_length (nodes[i].request_list));
+      ret = 1;
+    }
     pthread_mutex_destroy (&nodes[i].mutex);
     iot_data_free (nodes[i].request_list);
     iot_threadpool_free (nodes[i].pool);
@@ -102,5 +111,5 @@ int main (int argc, char ** argv)
 
   iot_threadpool_free (pool);
 
-  return 0;
+  return ret;
 }

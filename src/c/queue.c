@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2023 IOTech
+// Copyright (c) 2023-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -100,7 +100,7 @@ bool iot_queue_try_enqueue (iot_queue_t *q, iot_data_t *element)
   return result;
 }
 
-void iot_queue_enqueue (iot_queue_t *q, iot_data_t *element)
+bool iot_queue_enqueue (iot_queue_t *q, iot_data_t *element)
 {
   assert (q && element);
   pthread_mutex_lock (&q->mtx);
@@ -109,13 +109,15 @@ void iot_queue_enqueue (iot_queue_t *q, iot_data_t *element)
     if (!q->running)
     {
       pthread_mutex_unlock (&q->mtx);
-      return;
+      iot_data_free (element); // Ownership always taken, so free element that cannot be queued
+      return false;
     }
     pthread_cond_wait (&q->removed, &q->mtx);
   }
   iot_data_list_head_push (q->queue, element);
   pthread_cond_signal (&q->added);
   pthread_mutex_unlock (&q->mtx);
+  return true;
 }
 
 uint32_t iot_queue_size (const iot_queue_t *q)

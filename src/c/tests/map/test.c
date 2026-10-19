@@ -276,8 +276,8 @@ static void cache_data (void)
     value = iot_data_alloc_string (*val_ptr++, IOT_DATA_REF);
     iot_data_string_map_cached_add (map, cache, key, value);
   }
-  printf ("Cache size: %u\n", iot_data_map_size (cache));
-  printf ("Map size: %u\n", iot_data_map_size (map));
+  printf ("Cache size: %" PRIu32 "\n", iot_data_map_size (cache));
+  printf ("Map size: %" PRIu32 "\n", iot_data_map_size (map));
   iot_data_free (map);
   iot_data_free (cache);
 }

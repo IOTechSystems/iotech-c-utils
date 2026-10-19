@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018
+ * Copyright (c) 2018-2026
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -53,6 +53,7 @@ bool iot_b64_decode (const char *in, void *outv, size_t *outLen)
 {
   uint8_t *out = (uint8_t *) outv;
   int iter = 0;
+  int pad = 0;
   uint32_t buf = 0;
   size_t len = 0;
 
@@ -62,7 +63,8 @@ bool iot_b64_decode (const char *in, void *outv, size_t *outLen)
 
     if (c == WHITESPACE) continue;   // skip whitespace
     if (c == INVALID) return false;  // invalid input, return error
-    if (c == EQUALS) break;          // pad character, end of data
+    if (c == EQUALS) { pad++; continue; } // pad character, end of data
+    if (pad) return false;           // data after padding
 
     buf = buf << 6 | c;
 
@@ -78,6 +80,8 @@ bool iot_b64_decode (const char *in, void *outv, size_t *outLen)
       iter = 0;
     }
   }
+  if (iter == 1) return false; // single trailing symbol does not encode a byte
+  if (pad && (iter + pad != 4)) return false; // padding must only complete a final group of four symbols
   if (iter == 3)
   {
     if ((len += 2) > *outLen) { return false; } // buffer overflow

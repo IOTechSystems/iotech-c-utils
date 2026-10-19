@@ -64,7 +64,7 @@ static void snippet5 (void)
 {
 // CUT
 uint32_t hash = iot_hash ("Dummy");
-printf ("Hash = %u\n", hash);
+printf ("Hash = %" PRIu32 "\n", hash);
 // CUT
 }
 
@@ -115,7 +115,7 @@ static void snippet8 (void)
 uint32_t val = 666;
 iot_logger_t * logger = iot_logger_alloc ("MyLogger", IOT_LOG_WARN, true);
 iot_log_error (logger, "Test Error from my logger");
-iot_log_warn (logger, "Devilish number %d", val);
+iot_log_warn (logger, "Devilish number %" PRIu32, val);
 iot_log_trace (logger, "Should not see trace log");
 iot_log_debug (logger, "Should not see debug log");
 iot_log_info (logger, "Should not see info log");

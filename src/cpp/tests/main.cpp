@@ -1,11 +1,17 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
 #include "iot/iot.h"
 
 #define ARRAY_SIZE 6
+
+// Ambiguous with std::kill_dependency if the iot headers bring namespace std into scope
+static int kill_dependency = 0;
+
+// C atomic types and functions can be used without std qualification
+static atomic_uint_fast64_t counter;
 
 int main (int argc, char ** argv)
 {
@@ -61,7 +67,7 @@ int main (int argc, char ** argv)
   value = iot_data_alloc_f64 (666666.6);
   iot_data_map_add (map2, key, value);
   key = iot_data_alloc_string ("BOOL", IOT_DATA_REF);
-  value = iot_data_alloc_bool (true);
+  value = iot_data_true;
   iot_data_map_add (map2, key, value);
   key = iot_data_alloc_string ("STR", IOT_DATA_REF);
   value = iot_data_alloc_string ("Hi", IOT_DATA_REF);
@@ -72,6 +78,10 @@ int main (int argc, char ** argv)
 
   key = iot_data_alloc_i16 (23);
   iot_data_map_add (map, key, map2);
+
+  atomic_store (&counter, (uint_fast64_t) kill_dependency);
+  atomic_fetch_add_explicit (&counter, (uint_fast64_t) 1, memory_order_relaxed);
+  assert (atomic_load (&counter) == 1);
 
   char * json = iot_data_to_json (map);
   printf ("%s\n", json);

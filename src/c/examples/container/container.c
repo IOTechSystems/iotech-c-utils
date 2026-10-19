@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019-2020 IOTech
+// Copyright (c) 2019-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -88,7 +88,6 @@ static const char * pool_config =
 "{"
   "\"Threads\":2,"
   "\"MaxJobs\":10,"
-  "\"ShutdownDelay\":500,"
   "\"Logger\":\"logger\""
 "}";
 

@@ -11,6 +11,7 @@
 */
 
 #include <sys/inotify.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +22,7 @@ displayInotifyEvent(struct inotify_event *i)
 {
     printf("    wd =%2d; ", i->wd);
     if (i->cookie > 0)
-        printf("cookie =%4d; ", i->cookie);
+        printf("cookie =%4" PRIu32 "; ", i->cookie);
 
     printf("mask = ");
     if (i->mask & IN_ACCESS)        printf("IN_ACCESS ");

@@ -8,6 +8,6 @@ int main (int argc, char ** argv)
     return 1;
   }
   uint32_t hash = iot_hash (argv[1]);
-  printf ("%u\n", hash);
+  printf ("%" PRIu32 "\n", hash);
   return 0;
 }

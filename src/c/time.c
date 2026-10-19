@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -9,6 +9,7 @@
 #define IOT_TIME_NANOS_PER_MIC 1000U
 #define IOT_TIME_NANOS_PER_MIL 1000000U
 #define IOT_TIME_NANOS_PER_SEC 1000000000U
+#define IOT_TIME_MAX_STEP_BACK IOT_TIME_NANOS_PER_SEC
 
 static inline uint64_t iot_time_nanosecs (void)
 {
@@ -36,12 +37,15 @@ extern uint64_t iot_time_secs (void)
 
 uint64_t iot_time_nsecs (void)
 {
-  static _Atomic uint64_t lasttime = ATOMIC_VAR_INIT (0u);
-  uint64_t result = iot_time_nanosecs ();
+  static _Atomic uint64_t lasttime = 0u;
+  uint64_t now = iot_time_nanosecs ();
   uint64_t prev = atomic_load (&lasttime);
+  uint64_t result;
   do
   {
-    if (result <= prev) result = prev + 1;
+    // Strictly increasing, unless the clock has been stepped back by more than IOT_TIME_MAX_STEP_BACK,
+    // when the clock is followed (otherwise time would almost stop until the clock caught up)
+    result = (now > prev || (prev - now) > IOT_TIME_MAX_STEP_BACK) ? now : prev + 1u;
   }
   while (!atomic_compare_exchange_weak (&lasttime, &prev, result));
   return result;

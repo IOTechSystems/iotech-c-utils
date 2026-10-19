@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023
+ * Copyright (c) 2020-2026
  * IoTech Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -13,6 +13,13 @@
 #define IOT_RET_CHECK(n) n
 #else
 #define IOT_RET_CHECK(n) assert ((n) == 0)
+#endif
+
+// Serialises component reconfiguration, so configuration updates and saves are ordered
+#ifdef __ZEPHYR__
+  static PTHREAD_MUTEX_DEFINE (iot_component_reconfig_mutex);
+#else
+  static pthread_mutex_t iot_component_reconfig_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 void iot_component_init (iot_component_t * component, const iot_component_factory_t * factory, iot_component_start_fn_t start, iot_component_stop_fn_t stop)
@@ -48,18 +55,28 @@ bool iot_component_reconfig (iot_component_t * component, iot_container_t * cont
 {
   bool ok = true;
   assert (component && cont && map);
+  pthread_mutex_lock (&iot_component_reconfig_mutex);
   if (component->factory->reconfig_fn) ok = (component->factory->reconfig_fn) (component, cont, map);
   if (ok)
   {
+    // Copy on write, so configuration previously returned by iot_component_read is never modified
     const iot_container_config_t * config = iot_container_get_config ();
-    iot_data_map_merge (component->config, map);
-    if (config->save)
+    char * json = NULL;
+    IOT_RET_CHECK (pthread_mutex_lock (&component->mutex));
+    iot_data_t * old = component->config;
+    iot_data_t * updated = old ? iot_data_shallow_copy (old) : iot_data_alloc_map (IOT_DATA_STRING); // No configuration if not created from configuration
+    iot_data_map_merge (updated, map);
+    component->config = updated;
+    if (config && config->save) json = iot_data_to_json (updated);
+    IOT_RET_CHECK (pthread_mutex_unlock (&component->mutex));
+    iot_data_free (old);
+    if (json)
     {
-      char * json = iot_data_to_json (component->config);
       (config->save) (component->name, config->uri, json);
       free (json);
     }
   }
+  pthread_mutex_unlock (&iot_component_reconfig_mutex);
   return ok;
 }
 
@@ -166,7 +183,7 @@ extern iot_data_t * iot_component_read (iot_component_t * component)
   assert (component);
   iot_data_t * data = iot_data_alloc_map (IOT_DATA_STRING);
   pthread_mutex_lock (&component->mutex);
-  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.name), iot_data_alloc_string (component->name, IOT_DATA_REF));
+  iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.name), iot_data_alloc_string (component->name, IOT_DATA_COPY)); // Copied, as component may be deleted
   iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.type), iot_data_alloc_string (component->factory->type, IOT_DATA_REF));
   iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.state), iot_data_alloc_string (iot_component_state_name (component->state), IOT_DATA_REF));
   iot_data_map_add (data, IOT_DATA_STATIC (&iot_data_consts.config), iot_data_add_ref (component->config));

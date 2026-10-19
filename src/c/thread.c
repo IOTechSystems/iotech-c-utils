@@ -1,16 +1,21 @@
 //
-// Copyright (c) 2019-2020 IOTech
+// Copyright (c) 2019-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-#include "iot/thread.h"
+#include "thread-impl.h"
 
 #ifdef __ZEPHYR__
+
+#define IOT_ZEPHYR_STACK_WAIT_MS 1
+#define IOT_ZEPHYR_STACK_RETRIES 100
 
 typedef struct zephyr_thread_wrap
 {
   void * arg;
   void *(*func) (void *);
+  k_tid_t thread;           /* Set when function has returned, the thread may still be using the stack until terminated */
+  bool used;                /* Whether stack in use */
 } zephyr_thread_wrap;
 
 static K_THREAD_STACK_ARRAY_DEFINE (zephyr_thread_stacks, IOT_ZEPHYR_MAX_THREADS, IOT_ZEPHYR_STACK_SIZE);
@@ -22,35 +27,69 @@ static void * zephyr_func_wrapper (void * data)
   zephyr_thread_wrap * wrap = (zephyr_thread_wrap*) data;
   void * result = wrap->func (wrap->arg);
   k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
-  wrap->func = NULL;
+  wrap->thread = k_current_get (); // Stack released once thread has terminated, as still in use while exiting
   k_mutex_unlock (&zephyr_stack_mutex);
   return result;
 }
 
+// Allocate a stack, returning wrapper for the stack or NULL if none available. Called with stack mutex held.
+
+static zephyr_thread_wrap * zephyr_stack_alloc (bool * exiting)
+{
+  *exiting = false;
+  for (uint32_t i = 0; i < IOT_ZEPHYR_MAX_THREADS; i++)
+  {
+    zephyr_thread_wrap * wrap = &zephyr_thread_wraps[i];
+    if (wrap->used && wrap->thread)
+    {
+      if (k_thread_join (wrap->thread, K_NO_WAIT) == 0) // Thread terminated, so stack free
+      {
+        wrap->used = false;
+      }
+      else
+      {
+        *exiting = true;
+      }
+    }
+    if (! wrap->used)
+    {
+      wrap->used = true;
+      wrap->thread = NULL;
+      return wrap;
+    }
+  }
+  return NULL;
+}
+
 #endif
+
+static int iot_thread_max_priority;
+static int iot_thread_min_priority;
+static pthread_once_t iot_thread_priority_once = PTHREAD_ONCE_INIT;
+
+static void iot_thread_priority_init (void)
+{
+  iot_thread_max_priority = sched_get_priority_max (SCHED_FIFO);
+  iot_thread_min_priority = sched_get_priority_min (SCHED_FIFO);
+}
 
 bool iot_thread_priority_valid (int priority)
 {
-  static int max_priority = -2;
-  static int min_priority = -2;
-  if (max_priority == -2)
-  {
-    max_priority = sched_get_priority_max (SCHED_FIFO);
-    min_priority = sched_get_priority_min (SCHED_FIFO);
-  }
-  return (priority >= min_priority && priority <= max_priority);
+  pthread_once (&iot_thread_priority_once, iot_thread_priority_init); // Range set once, safely if called concurrently
+  return (priority >= iot_thread_min_priority && priority <= iot_thread_max_priority);
 }
 
-bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger)
+static bool iot_thread_create_impl (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger, bool joinable)
 {
   int ret;
   pthread_attr_t attr;
   pthread_t id;
+  const int detach = joinable ? PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED;
 
   if (tid == NULL) tid = &id;
 
   pthread_attr_init (&attr);
-  pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
+  pthread_attr_setdetachstate (&attr, detach);
 #ifndef __ZEPHYR__
   pthread_attr_setinheritsched (&attr, PTHREAD_EXPLICIT_SCHED);
 #endif
@@ -68,24 +107,27 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
 
 #ifdef __ZEPHYR__
 
-  zephyr_thread_wrap * wrapper = NULL;
-  void * stack = NULL;
-  k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
-  for (uint32_t i = 0; i < IOT_ZEPHYR_MAX_THREADS; i++)
+  zephyr_thread_wrap * wrapper;
+  bool exiting;
+  for (uint32_t tries = 0; ; tries++)
   {
-    if (zephyr_thread_wraps[i].func == NULL)
-    {
-      wrapper = &zephyr_thread_wraps[i];
-      wrapper->arg = arg;
-      wrapper->func = func;
-      arg = wrapper;
-      func = zephyr_func_wrapper;
-      stack = zephyr_thread_stacks[i];
-      break;
-    }
+    k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
+    wrapper = zephyr_stack_alloc (&exiting);
+    k_mutex_unlock (&zephyr_stack_mutex);
+    if (wrapper || ! exiting || tries == IOT_ZEPHYR_STACK_RETRIES) break;
+    k_sleep (K_MSEC (IOT_ZEPHYR_STACK_WAIT_MS)); // Wait for exiting thread to terminate and release its stack
   }
-  k_mutex_unlock (&zephyr_stack_mutex);
-  assert (wrapper);
+  if (wrapper == NULL)
+  {
+    iot_log_error (logger, "iot_thread_create: no free thread stack (maximum %d threads)", IOT_ZEPHYR_MAX_THREADS);
+    pthread_attr_destroy (&attr);
+    return false;
+  }
+  wrapper->arg = arg;
+  wrapper->func = func;
+  arg = wrapper;
+  func = zephyr_func_wrapper;
+  void * stack = zephyr_thread_stacks[wrapper - zephyr_thread_wraps];
 
 #else
   if (iot_thread_priority_valid (priority) && (geteuid () == 0)) // No guarantee that can set RT policies in container
@@ -106,11 +148,31 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
     if (ret != 0) iot_log_warn (logger, "pthread_attr_setschedparam failed ret: %d", ret);
   }
   ret = pthread_create (tid, &attr, func, arg);
+#ifdef __ZEPHYR__
   if (ret != 0)
   {
-    ret = pthread_create (tid, NULL, func, arg);
-    if (ret != 0) iot_log_error (logger, "pthread_create failed ret: %d", ret);
+    k_mutex_lock (&zephyr_stack_mutex, K_FOREVER);
+    wrapper->used = false; // Release stack for reuse, as no thread created
+    k_mutex_unlock (&zephyr_stack_mutex);
   }
+#else
+  if (ret != 0) // Retry without setting priority (e.g. if not permitted), keeping detach state and affinity
+  {
+    iot_log_warn (logger, "pthread_create failed ret: %d, retrying without priority", ret);
+    pthread_attr_setinheritsched (&attr, PTHREAD_INHERIT_SCHED);
+    ret = pthread_create (tid, &attr, func, arg);
+  }
+  if (ret != 0) // Retry with default attributes (e.g. affinity not permitted), keeping detach state
+  {
+    pthread_attr_t dflt;
+    iot_log_warn (logger, "pthread_create failed ret: %d, retrying without affinity", ret);
+    pthread_attr_init (&dflt);
+    pthread_attr_setdetachstate (&dflt, detach);
+    ret = pthread_create (tid, &dflt, func, arg);
+    pthread_attr_destroy (&dflt);
+  }
+#endif
+  if (ret != 0) iot_log_error (logger, "pthread_create failed ret: %d", ret);
   pthread_attr_destroy (&attr);
 
 #ifdef _ALPINE_
@@ -131,12 +193,21 @@ bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int p
   return ret == 0;
 }
 
+bool iot_thread_create (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger)
+{
+  return iot_thread_create_impl (tid, func, arg, priority, affinity, logger, false);
+}
+
+bool iot_thread_create_joinable (pthread_t * tid, iot_thread_fn_t func, void * arg, int priority, int affinity, iot_logger_t * logger)
+{
+  return iot_thread_create_impl (tid, func, arg, priority, affinity, logger, true);
+}
+
 int iot_thread_get_priority (pthread_t thread)
 {
-  struct sched_param param;
+  struct sched_param param = { 0 };
   int policy;
-  pthread_getschedparam (thread, &policy, &param);
-  return param.sched_priority;
+  return (pthread_getschedparam (thread, &policy, &param) == 0) ? param.sched_priority : IOT_THREAD_NO_PRIORITY;
 }
 
 int iot_thread_current_get_priority (void)
@@ -144,7 +215,8 @@ int iot_thread_current_get_priority (void)
   return iot_thread_get_priority (pthread_self ());
 }
 
-// Skip trying to re-set the priority if it hasn't changed
+// Skip trying to re-set the priority if it hasn't changed. Only valid if thread scheduling is only changed by these functions
+#define IOT_THREAD_DEFAULT_SCHEDULING -2 // Set to non real time scheduling by iot_thread_current_set_scheduling
 static __thread int iot_thread_self_priority = IOT_THREAD_NO_PRIORITY;
 
 bool iot_thread_set_priority (pthread_t thread, int priority)
@@ -160,6 +232,15 @@ bool iot_thread_set_priority (pthread_t thread, int priority)
 bool iot_thread_current_set_priority (int priority)
 {
   return iot_thread_set_priority (pthread_self (), priority);
+}
+
+bool iot_thread_current_set_scheduling (int policy, const struct sched_param * param)
+{
+  if (policy == SCHED_FIFO) return iot_thread_current_set_priority (param->sched_priority);
+  if (iot_thread_self_priority == IOT_THREAD_DEFAULT_SCHEDULING) return true;
+  bool ok = (pthread_setschedparam (pthread_self (), policy, param) == 0);
+  if (ok) iot_thread_self_priority = IOT_THREAD_DEFAULT_SCHEDULING;
+  return ok;
 }
 
 void iot_mutex_init (pthread_mutex_t * mutex)

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 IOTech
+// Copyright (c) 2019-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -106,6 +106,13 @@ static int iot_json_parse_string (iot_json_parser *parser, const char *js, size_
   {
     char c = js[parser->pos];
 
+    /* Control characters must be escaped */
+    if ((unsigned char) c < 0x20)
+    {
+      parser->pos = start;
+      return IOT_JSON_ERROR_INVAL;
+    }
+
     /* Quote: end of string */
     if (c == '\"')
     {
@@ -178,6 +185,8 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
   iot_json_tok_t *token;
   int32_t count = parser->toknext;
 
+  if (len > INT32_MAX) return IOT_JSON_ERROR_INVAL; // Token positions are 32 bit
+
   for (; parser->pos < len && json[parser->pos] != '\0'; parser->pos++)
   {
     char c;
@@ -211,33 +220,26 @@ int iot_json_parse (iot_json_parser *parser, const char * json, size_t len, iot_
         }
         type = (c == '}' ? IOT_JSON_OBJECT : IOT_JSON_ARRAY);
 
-        if (parser->toknext < 1)
+        // Innermost open container is the superior token, or the parent of the superior token if it is an object key
+        if (parser->toksuper == -1)
         {
           return IOT_JSON_ERROR_INVAL;
         }
-        token = &tokens[parser->toknext - 1];
-        for (;;)
+        token = &tokens[parser->toksuper];
+        if (token->type != IOT_JSON_OBJECT && token->type != IOT_JSON_ARRAY)
         {
-          if (token->start != -1 && token->end == -1)
-          {
-            if (token->type != type)
-            {
-              return IOT_JSON_ERROR_INVAL;
-            }
-            token->end = (int32_t) parser->pos + 1;
-            parser->toksuper = token->parent;
-            break;
-          }
           if (token->parent == -1)
           {
-            if (token->type != type || parser->toksuper == -1)
-            {
-              return IOT_JSON_ERROR_INVAL;
-            }
-            break;
+            return IOT_JSON_ERROR_INVAL;
           }
           token = &tokens[token->parent];
         }
+        if (token->type != type || token->end != -1)
+        {
+          return IOT_JSON_ERROR_INVAL;
+        }
+        token->end = (int32_t) parser->pos + 1;
+        parser->toksuper = token->parent;
         break;
       case '\"':
         r = iot_json_parse_string (parser, json, len, tokens, num_tokens);

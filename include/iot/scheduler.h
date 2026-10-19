@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2020 IOTech Ltd
+// Copyright (c) 2018-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -269,6 +269,9 @@ extern void iot_scheduler_stop (iot_scheduler_t * scheduler);
 
 /**
  * @brief  Free resources used by the scheduler, only if it is the last reference i.e reference count <= 1
+ *
+ * Waits for the scheduler thread to exit. It is illegal to free the scheduler from the scheduler thread, i.e.
+ * from a synchronous schedule function or from a schedule run or abort callback.
  *
  * @code
  *

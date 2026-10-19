@@ -41,5 +41,110 @@
 
 - Added `iot_data_contains_infinity` and `iot_data_contains_nan` functions to determine if iot data contains floating point values which are Infinity or NaN
 - iot_data_alloc_from_string (IOT_DATA_BOOL, str) now recognizes "t"/"f", "true"/"false" and "1"/"0" and rejects (returns null) other strings
+
+## Version 1.7.0
+- Fixed scheduler race where a schedule added while the scheduler thread was preparing to wait could be missed
+- `iot_scheduler_free` now waits for the scheduler thread to exit, rather than using fixed delays
+- Freeing a scheduler from its own thread (schedule function or run/abort callback) is now illegal and asserted
+- `iot_schedule_add_randomised` no longer updates the start time of an already queued schedule
+- Scheduler dropped event stats now count every dropped event, not only the first per schedule
+- Scheduler now logs an error if its thread cannot be created
+- `iot_threadpool_free` now waits for pool threads to exit, rather than polling
+- Removed threadpool `ShutdownDelay` configuration, as no longer used
+- Threadpool threads now restore their default priority when running jobs with no priority set
+- Threadpool now wakes all threads waiting in `iot_threadpool_wait`, not just one
+- Fixed threadpool `jobs_max` stat overflowing above 65535 queued jobs
+- `iot_threadpool_free` now logs a warning if queued jobs are discarded
+- `iot_threadpool_alloc` now asserts that the number of threads is greater than zero
+- `iot_threadpool_alloc` now logs an error and records the actual thread count if not all threads could be created
+- Corrected printf format specifiers for fixed width integer types
+- Fixed map red/black tree not rebalancing after some deletions, which could degrade map performance to linear
+- Fixed buffer overflow in `iot_data_vector_dimensions` for vectors with sub vectors of differing depths
+- Fixed buffer overflow in `iot_data_binary_take` when copying non byte arrays
+- Fixed list length in `iot_data_list_head_push_list` when taking ownership of the source list
+- `iot_data_increment` and `iot_data_decrement` now update the data hash, so modified values compare equal and map lookups work
+- Fixed `iot_data_compare_value` and `iot_data_equal_value` for negative signed values compared with unsigned values
+- `iot_data_get_at`, `iot_data_add_at`, `iot_data_remove_at` and `iot_data_update_at` now handle paths that do not match the data (missing keys, out of range vector indexes, paths longer than nesting) rather than asserting or crashing. `iot_data_add_at` returns NULL in this case
+- Data memory blocks cached by a thread are now returned to the shared cache when the thread exits, preventing memory growth when threads are repeatedly created
+- Data memory pool no longer freed at process exit, so data can be safely used by threads still running during exit
+- Lazy data hash calculation is now thread safe, so shared data can be compared and hashed concurrently
+- Fixed memory leak of metadata when copying pointer data
+- Fixed memory leak of buffer when allocating a zero length array or binary with `IOT_DATA_TAKE`, or an array from an empty base64 string
+- Data functions that take ownership of arguments now free them on failure: `iot_data_map_add_unused` (key in use), `iot_data_set_metadata` (NULL data or key), `iot_data_list_iter_replace` and `iot_data_map_iter_replace_value` (invalid iterator), and `iot_data_vector_iter_replace_value` (index out of range). Callers must no longer free these arguments on failure
+- Fixed crashes when converting vectors with unset elements to a list or JSON, compressing them, or iterating them with `iot_data_vector_iter_string`
+- Fixed `iot_data_restrict_element` setting an invalid element type for vectors with unset elements
+- Fixed `iot_data_vector_resize` discarding a pending vector hash recalculation
+- Fixed list hashes after `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` with `IOT_DATA_TAKE` when the source list hash was out of date
+- Documented that a container hash is not updated when an element already in the container is modified
+- `iot_data_set_metadata` no longer sets metadata on constant data (including shared null and boolean values); the metadata is freed
+- Fixed list, array, vector and map iterator `has_next` functions returning true for empty containers, and map `has_next` after `prev`
+- `iot_data_alloc_from_string` now rejects numbers with trailing characters or out of range for the type (e.g. "12abc", "300" for UINT8, "-1" for UINT32)
+- Fixed `iot_data_cast` range checks at 64 bit integer limits and casting NaN to integer types
+- Fixed `iot_data_bounded_equal` comparing 64 bit integers via double, which treated nearby large values as equal
+- Array and binary hashes now include all data bytes rather than only the first `length` bytes
+- Float data hashes now use the value bit pattern, avoiding undefined behaviour for negative, NaN and out of range values, and collisions between values with the same integer part
+- Fixed CBOR encoding of float values whose bit pattern is small (including 0.0), which were encoded as CBOR simple values or half precision floats
+- Fixed undefined behaviour found by sanitizer in empty array comparison, `iot_data_array_transform`, CBOR integer encoding and JSON parsing of INT64_MIN
+- Map add and `iot_data_map_add_unused` now use a single tree walk, and `iot_data_map_empty` frees the tree in one pass, making map inserts about 30% faster
+- `iot_data_vector_compact` now runs in a single pass (previously quadratic), and `iot_data_vector_dimensions` no longer walks vectors of values
+- Fixed `iot_data_vector_dimensions` accepting irregular vectors where an empty vector precedes a non empty one, e.g. [[],[1,2]]
+- `iot_data_from_cbor` now converts CBOR undefined values to null, and returns NULL for unsupported values rather than asserting, substituting null array elements or dropping map entries
+- `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` now duplicate the contents when a list is pushed onto itself, rather than never completing
+- `iot_data_list_head_push_list` and `iot_data_list_tail_push_list` with `IOT_DATA_TAKE` now check element types match a typed destination list in debug builds
+- JSON, XML and CBOR output buffers now grow geometrically, reducing reallocation for large outputs
+- Fixed `iot_data_vector_to_vector` always returning an empty vector for type `IOT_DATA_MULTI`; all elements are now referenced
+- Added third user data tag `IOT_DATA_TAG_USER3`
+- Fixed 32 bit build static assertion failures caused by the size of the data header; the data rehash flag is now held in the reference count
+- List, vector and map hashes now combine element hashes by summing mixed hashes rather than xor, so duplicate elements no longer cancel (e.g. [7,7] and [] previously had the same hash). Container hash values change as a result
+- Container hashes are now updated incrementally when elements are removed or replaced (list pops and removal, vector and iterator replacement, vector resize, map take and remove), rather than requiring full recalculation
+- Boolean true now has hash 1, distinguishing it from false
+- The shared data block cache now moves blocks between threads in batches with a single atomic operation, greatly reducing contention when data is allocated and freed in different threads (up to 25x throughput with 8 thread pairs)
+- `iot_data_alloc_string_fmt` now formats once for strings under 128 bytes, and stores short results in the data block without allocation
+- Debug build JSON output no longer becomes quadratic in output size for escaped strings
+- `iot_data_map_base64_to_array` now supports maps with `IOT_DATA_MULTI` keys, and returns false rather than breaking the element type of maps whose element type is not `IOT_DATA_MULTI`
+- Documented vector compaction by `iot_data_remove_at` and that NaN map keys cannot be found
+- Added exported constants `iot_data_true`, `iot_data_false` and `iot_data_null` for the shared boolean and null values, which can be used directly instead of `iot_data_alloc_bool` and `iot_data_alloc_null`
+- The shared boolean and null values are now held in read only memory, and setting tags or metadata on them asserts in debug builds
+- `iot_file_read` and `iot_file_read_binary` now read until end of file, so /proc, /sys and other special files are read correctly (previously empty, or padded with uninitialised data)
+- `iot_file_write` and `iot_file_write_binary` now keep the permissions (and ownership if privileged) of a replaced file, flush data to disk before replacing it, use a unique temporary file, report write, close and rename errors, and support empty content. Symbolic links and special files are written directly, not replaced. A failed write leaves the original file unchanged and no temporary file
+- Fixed `iot_file_list` leaking the directory handle on an invalid regex, and skipping files on file systems that do not report file types
+- Fixed `iot_file_watch` spinning on read errors
+- JSON parsing hardened against malformed and hostile input: fixed out of bounds reads on invalid object structure (e.g. keys without values) and out of bounds writes on `\u` surrogate escapes; invalid structure, unknown primitives (e.g. `tomato`), invalid numbers, raw control characters and trailing content are now rejected (returning null); nesting depth is limited to 256; closing brackets are matched in constant time (previously quadratic in nesting depth). `\u` escapes are converted to UTF-8 independently of locale, combining surrogate pairs. Integers outside 64 bit range are converted to doubles, and `nan` (as written for NaN) is read as NaN
+- YAML nesting depth is limited to 256, preventing stack exhaustion on deeply nested input
+- Fixed UDP logger sending data beyond its buffer for long messages, and a stack buffer overflow on long host names in UDP logger configuration. UDP logger host names are now resolved (previously sent to 0.0.0.0), and `iot_logger_alloc_udp` returns NULL if the host cannot be resolved
+- Component reconfiguration is now copy on write and serialised, so configuration returned by `iot_component_read` is never modified concurrently, and no longer crashes if no container configuration is set. `iot_component_read` now copies the component name
+- Lazy loading of components by `iot_container_find_component` is now thread safe (previously the component list was modified under a read lock, and load cycle detection used a shared global). Components with duplicate names are rejected
+- Logger chaining is now thread safe: `iot_logger_set_next` may be called while logging, accepts NULL to remove the next logger and updates the effective log level. Fixed a crash when changing the level of chained loggers not created in a container
+- `iot_thread_create` now keeps threads detached and their CPU affinity when retrying creation without priority (previously retried threads were joinable, leaking their resources). Fixed a data race in `iot_thread_priority_valid`
+- `iot_data_from_yaml` now types plain scalars using the YAML 1.2 core schema: leading zeros no longer denote octal (use `0o`), out of range integers convert to float rather than being clamped, `.inf` and `.nan` are floats while `inf` and `infinity` are strings, and INT64_MAX is int64. `!!str`, `!!int`, `!!float`, `!!bool` and `!!null` tags are supported
+- `iot_data_from_yaml` now supports aliases (previously dropped, misaligning map keys and values) and `<<` merge keys. Each alias is a copy of the anchored node, so modifying one does not change others, and aliases may copy at most 100000 nodes in total, so documents expanding exponentially ("billion laughs") are rejected. Undefined aliases, non string map keys, multiple documents and trailing content are rejected. Error line numbers are now one based
+- `iot_data_from_xml` now rejects empty, truncated and trailing content (previously returning a partial result), and element content now includes text preceding child elements
+- The scheduler now uses a monotonic clock (except on Zephyr and macOS), so schedules no longer stall when the system clock is stepped back (or run early when stepped forward). `iot_time_nsecs` now follows the system clock if stepped back by more than one second, rather than advancing by one nanosecond per call until the clock caught up
+- Removed use of `ATOMIC_VAR_INIT`, which is removed in C23
+- `iot_store_config_list` now returns NULL if the directory cannot be read (previously crashed), and only lists files with a `.json` extension (previously matched any character before `json`, such as `abcxjson`). `iot/store.h` now includes `iot/data.h`
+- `iot_queue_enqueue` now returns whether the element was added, freeing the element if the queue is stopped while full (previously leaked). Note that `iot_queue_try_enqueue` does not free the element when it returns false, so the caller still owns it; both are now documented
+- `iot_logger_default` initialisation is now thread safe, and the default logger is named "default" (previously logged with a null name)
+- `iot_container_delete_component` now stops and frees the component without the container lock held (previously deadlocked if stopping waited on a thread using the container)
+- `iot_container_start` and `iot_container_stop` no longer hold the container lock while starting or stopping components (previously deadlocked if a component added, deleted or lazily loaded components when started or stopped)
+- On Zephyr, a thread's stack is no longer reused until the thread using it has terminated (previously reused once the thread function returned, while the thread was still exiting on it), and `iot_thread_create` now returns false if no stack is free (previously asserted)
+- `iot_container_stats` no longer holds the container lock while calling component stats functions (previously deadlocked if a stats function added, deleted or lazily loaded components)
+- Added `iot_container_get_component` and `iot_container_release_component`, which hold a reference to a component, so a component deleted while referenced is stopped but not freed until released (`iot_container_find_component` holds no reference, so its result could be freed by a concurrent delete). Deleting a component now only frees it once no component references are held. Logger, thread pool and scheduler configuration now use referenced lookups
+- `iot_b64_decode` (and so `iot_data_alloc_array_from_base64`) now fails for data after padding, incorrect padding or a final single symbol (previously ignored content after the first `=` and dropped a single trailing symbol)
+- `iot_uuid_generate` now reads each UUID from the operating system cryptographically secure random number generator (previously generated by a seeded xorshift128+ generator, so later UUIDs could be predicted from earlier ones, and a forked process generated the same UUIDs as its parent)
+- `iot_util_string_is_uuid` and `iot_logger_level_from_string` no longer pass negative values to `isxdigit` and `toupper` for non-ASCII characters (undefined behaviour where `char` is signed)
+- `iot/os.h` no longer brings namespace `std` into scope in C++, which could make names in including code ambiguous. Only the C11 `stdatomic.h` names are now declared in the global namespace (C++ code that used other `std` names unqualified, relying on the iot headers, must now qualify them)
+- Loggers allocated or configured without a name now use name "default" (previously asserted, or crashed in release builds)
+- File loggers now flush each message to the file (previously buffered, so the latest messages were missing from the file until flushed, and lost if the process exited abnormally)
+- `iot_data_to_json` now writes negative infinity as `-1e400` (float) or `-1e800` (double) (previously written without the sign, so read back as positive infinity)
+- `iot_threadpool_free` now joins the pool threads, so all have terminated when it returns (previously threads could still be exiting, reported by valgrind as possibly lost memory if the process then exited)
+- `iot_data_to_json` now writes NaN as `null` (previously written as `nan` or `-nan`, which is not valid JSON). `iot_data_from_json` still reads `nan` and `-nan` as NaN
+- `iot_logger_alloc_file` now returns NULL, logging an error, if the file cannot be opened, so configuring a file logger fails (previously created a logger which discarded all messages)
+- Console loggers now flush each message (previously messages to stdout were buffered, so delayed or lost when stdout was not a terminal)
+- `iot_data_to_json` and `iot_data_to_cbor` now write pointer values as null (previously nothing was written, so the output was invalid JSON or CBOR)
+- `iot_scheduler_free` now joins the scheduler thread, so it has terminated when free returns (previously the thread could still be exiting, reported by valgrind as possibly lost memory if the process then exited)
+- Fixed `iot_data_alloc_string_fmt` reading beyond its stack buffer if formatting fails; an empty string is now returned
+- Lazy data hash calculation no longer takes a process wide lock, so threads hashing different data do not contend
+- Logging along a logger chain now stops at the first logger after which no logger logs at the message level, without locking or taking references, and no longer increments the default logger reference count on every message
+- Components are now loaded without a container lock held, so threads can find and load components while another component is being created (previously a component that waited on a thread looking up a component not yet loaded deadlocked). A component being loaded by another thread is waited for, and cyclic references between components loaded by different threads are detected and logged rather than deadlocking. Cyclic references are now also detected when loading components with `iot_container_init`
 - `iot_thread_set_priority` skips the system call when a thread sets its own priority to its current value
-- Fix `iot_threadpool_t` jobs running at the wrong priority if a previous job changed its thread's priority
+- Fixed threadpool jobs running at the wrong priority if a previous job changed its thread's priority, for jobs with and without a priority set

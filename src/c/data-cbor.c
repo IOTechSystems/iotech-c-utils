@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2023 IOTech
+// Copyright (c) 2023-2026 IOTech
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -9,8 +9,6 @@
 #include <cbor.h>
 
 #define IOT_CBOR_BUFF_SIZE 512u
-#define IOT_CBOR_BUFF_DOUBLING_LIMIT 4096u
-#define IOT_CBOR_BUFF_INCREMENT 1024u
 
 typedef struct iot_cbor_holder_t
 {
@@ -24,7 +22,7 @@ static void iot_cbor_holder_check_size (iot_cbor_holder_t * holder, size_t requi
   size_t total = holder->index + required;
   if (holder->size < total)
   {
-    size_t inc = holder->size > IOT_CBOR_BUFF_DOUBLING_LIMIT ? IOT_CBOR_BUFF_INCREMENT : holder->size;
+    size_t inc = holder->size; // Double size, so number of reallocations is logarithmic in output size
     if (holder->size + inc < total) inc = required;
     holder->size += inc;
     holder->data = realloc (holder->data, holder->size);
@@ -36,6 +34,30 @@ static void iot_data_cbor_write_bytes (iot_cbor_holder_t * holder, const void *d
   iot_cbor_holder_check_size (holder, length);
   memcpy (holder->data + holder->index, data, length);
   holder->index += length;
+}
+
+// Floats always written at full width, as the shortest integer encoding of the bits is not a valid float encoding
+
+static void iot_data_cbor_write_f32 (iot_cbor_holder_t * holder, float value)
+{
+  uint32_t bits;
+  memcpy (&bits, &value, sizeof (bits));
+  bits = htobe32 (bits);
+  iot_cbor_holder_check_size (holder, 5);
+  holder->data[holder->index++] = 0xfa;
+  memcpy (holder->data + holder->index, &bits, sizeof (bits));
+  holder->index += 4;
+}
+
+static void iot_data_cbor_write_f64 (iot_cbor_holder_t * holder, double value)
+{
+  uint64_t bits;
+  memcpy (&bits, &value, sizeof (bits));
+  bits = htobe64 (bits);
+  iot_cbor_holder_check_size (holder, 9);
+  holder->data[holder->index++] = 0xfb;
+  memcpy (holder->data + holder->index, &bits, sizeof (bits));
+  holder->index += 8;
 }
 
 static void iot_data_cbor_write_uint (iot_cbor_holder_t * holder, uint64_t value, uint8_t tag)
@@ -55,21 +77,24 @@ static void iot_data_cbor_write_uint (iot_cbor_holder_t * holder, uint64_t value
   {
     iot_cbor_holder_check_size (holder, 3);
     holder->data[holder->index++] = 0x19 + tag;
-    *(uint16_t *)(holder->data + holder->index) = htobe16 (value);
+    uint16_t be = htobe16 (value);
+    memcpy (holder->data + holder->index, &be, sizeof (be)); // Buffer position may be unaligned
     holder->index += 2;
   }
   else if (value <= UINT32_MAX)
   {
     iot_cbor_holder_check_size (holder, 5);
     holder->data[holder->index++] = 0x1a + tag;
-    *(uint32_t *)(holder->data + holder->index) = htobe32 (value);
+    uint32_t be = htobe32 (value);
+    memcpy (holder->data + holder->index, &be, sizeof (be));
     holder->index += 4;
   }
   else
   {
     iot_cbor_holder_check_size (holder, 9);
     holder->data[holder->index++] = 0x1b + tag;
-    *(uint64_t *)(holder->data + holder->index) = htobe64 (value);
+    uint64_t be = htobe64 (value);
+    memcpy (holder->data + holder->index, &be, sizeof (be));
     holder->index += 8;
   }
 }
@@ -91,8 +116,8 @@ static void iot_data_dump_cbor_ptr (iot_cbor_holder_t * holder, const void * ptr
     case IOT_DATA_UINT32: iot_data_cbor_write_uint (holder, *(const uint32_t *) ptr, 0); break;
     case IOT_DATA_INT64: iot_data_cbor_write_int (holder, *(const int64_t *) ptr); break;
     case IOT_DATA_UINT64: iot_data_cbor_write_uint (holder, *(const uint64_t *) ptr, 0); break;
-    case IOT_DATA_FLOAT32: iot_data_cbor_write_uint (holder, *(const uint32_t *) ptr, 0xe0); break;
-    case IOT_DATA_FLOAT64: iot_data_cbor_write_uint (holder, *(const uint64_t *) ptr, 0xe0); break;
+    case IOT_DATA_FLOAT32: iot_data_cbor_write_f32 (holder, *(const float *) ptr); break;
+    case IOT_DATA_FLOAT64: iot_data_cbor_write_f64 (holder, *(const double *) ptr); break;
     case IOT_DATA_NULL:
       iot_cbor_holder_check_size (holder, 1); holder->data[holder->index++] = 0xf6; break;
     default:
@@ -129,26 +154,14 @@ static void iot_data_dump_cbor (iot_cbor_holder_t * holder, const iot_data_t * d
       iot_data_cbor_write_int (holder, iot_data_i64 (data));
       break;
     case IOT_DATA_FLOAT32:
-    {
-      uint32_t v;
-      float f = iot_data_f32 (data);
-      memcpy (&v, &f, sizeof (v));
-      iot_data_cbor_write_uint (holder, v, 0xe0);
+      iot_data_cbor_write_f32 (holder, iot_data_f32 (data));
       break;
-    }
     case IOT_DATA_FLOAT64:
-    {
-      uint64_t v;
-      double d = iot_data_f64 (data);
-      memcpy (&v, &d, sizeof (v));
-      iot_data_cbor_write_uint (holder, v, 0xe0);
+      iot_data_cbor_write_f64 (holder, iot_data_f64 (data));
       break;
-    }
     case IOT_DATA_BOOL:
       iot_cbor_holder_check_size (holder, 1);
       holder->data[holder->index++] = iot_data_bool (data) ? 0xf5 : 0xf4;
-      break;
-    case IOT_DATA_POINTER:
       break;
     case IOT_DATA_STRING:
     {
@@ -158,6 +171,7 @@ static void iot_data_dump_cbor (iot_cbor_holder_t * holder, const iot_data_t * d
       iot_data_cbor_write_bytes (holder, str, len);
       break;
     }
+    case IOT_DATA_POINTER: // Pointer values cannot be represented, so written as null
     case IOT_DATA_NULL:
       iot_cbor_holder_check_size (holder, 1);
       holder->data[holder->index++] = 0xf6;
@@ -297,7 +311,7 @@ static iot_data_t *cbor_negint_to_iot_data (const cbor_item_t *item)
     case CBOR_INT_64:
     {
       uint64_t raw = cbor_get_uint64 (item);
-      return (raw <= INT64_MAX) ? iot_data_alloc_i64 (-1 - (int64_t) raw) : iot_data_alloc_null ();
+      return (raw <= INT64_MAX) ? iot_data_alloc_i64 (-1 - (int64_t) raw) : iot_data_null;
     }
   }
   assert (false);
@@ -309,41 +323,31 @@ static iot_data_t *cbor_definite_bytestring_to_iot_data (const cbor_item_t *item
   assert (cbor_bytestring_is_definite (item));
   size_t length = cbor_bytestring_length (item);
   cbor_mutable_data data = cbor_bytestring_handle (item);
-  if (!data)
-  {
-    assert (false);
-    return NULL;
-  }
-  return iot_data_alloc_binary (data, (uint32_t) length, IOT_DATA_COPY);
+  if (!data && length) return NULL;
+  return iot_data_alloc_binary (length ? data : NULL, (uint32_t) length, IOT_DATA_COPY);
 }
 
 static iot_data_t *cbor_indefinite_bytestring_to_iot_data (const cbor_item_t *item)
 {
   assert (cbor_bytestring_is_indefinite (item));
   size_t chunk_count = cbor_bytestring_chunk_count (item);
-  char * data = NULL;
-  size_t data_size = 0;
-  size_t write_offset = 0;
   cbor_item_t **chunks = cbor_bytestring_chunks_handle (item);
-  for (size_t i=0; i<chunk_count;i++)
+  size_t data_size = 0;
+  for (size_t i = 0; i < chunk_count; i++) // Validate chunks and total size, so data allocated once
   {
-    const cbor_item_t *chunk = chunks[i];
-    if (!cbor_isa_bytestring (chunk))
-    {
-      assert (false);
-      goto error;
-    }
-    size_t chunk_size = cbor_bytestring_length (chunk);
-    const cbor_mutable_data chunk_data = cbor_bytestring_handle (chunk);
-    data_size += chunk_size;
-    data = realloc (data, data_size);
-    memcpy (data + write_offset, chunk_data, chunk_size);
+    if (!cbor_isa_bytestring (chunks[i])) return NULL;
+    data_size += cbor_bytestring_length (chunks[i]);
+  }
+  if (data_size == 0) return iot_data_alloc_binary (NULL, 0u, IOT_DATA_REF);
+  uint8_t * data = malloc (data_size);
+  size_t write_offset = 0;
+  for (size_t i = 0; i < chunk_count; i++)
+  {
+    size_t chunk_size = cbor_bytestring_length (chunks[i]);
+    if (chunk_size) memcpy (data + write_offset, cbor_bytestring_handle (chunks[i]), chunk_size);
     write_offset += chunk_size;
   }
   return iot_data_alloc_binary (data, (uint32_t) data_size, IOT_DATA_TAKE);
-error:
-  free (data);
-  return NULL;
 }
 
 static iot_data_t *cbor_bytestring_to_iot_data (const cbor_item_t *item)
@@ -357,13 +361,9 @@ static iot_data_t *cbor_definite_string_to_iot_data (const cbor_item_t *item)
   assert (cbor_string_is_definite (item));
   size_t length = cbor_string_length (item);
   const cbor_mutable_data data = cbor_string_handle (item);
-  if (!data)
-  {
-    assert (false);
-    return NULL;
-  }
+  if (!data && length) return NULL;
   char *str = malloc (length + 1);
-  memcpy (str, data, length);
+  if (length) memcpy (str, data, length);
   str[length] = '\0';
   return iot_data_alloc_string (str, IOT_DATA_TAKE);
 }
@@ -372,31 +372,24 @@ static iot_data_t *cbor_indefinite_string_to_iot_data (const cbor_item_t *item)
 {
   assert (cbor_string_is_indefinite (item));
   size_t chunk_count = cbor_string_chunk_count (item);
-  if (chunk_count == 0) return iot_data_alloc_string ("", IOT_DATA_REF);
-  char * data = NULL;
-  size_t data_size = 1; // For null terminator
-  size_t write_offset = 0;
   cbor_item_t **chunks = cbor_string_chunks_handle (item);
-  for (size_t i=0; i<chunk_count;i++)
+  size_t data_size = 0;
+  for (size_t i = 0; i < chunk_count; i++) // Validate chunks and total size, so string allocated once
   {
-    const cbor_item_t *chunk = chunks[i];
-    if (!cbor_isa_string (chunk))
-    {
-      assert (false);
-      goto error;
-    }
-    size_t chunk_size = cbor_string_length (chunk);
-    const cbor_mutable_data chunk_data = cbor_string_handle (chunk);
-    data_size += chunk_size;
-    data = realloc (data, data_size);
-    memcpy (data + write_offset, chunk_data, chunk_size);
+    if (!cbor_isa_string (chunks[i])) return NULL;
+    data_size += cbor_string_length (chunks[i]);
+  }
+  if (data_size == 0) return iot_data_alloc_string ("", IOT_DATA_REF);
+  char * data = malloc (data_size + 1); // Plus null terminator
+  size_t write_offset = 0;
+  for (size_t i = 0; i < chunk_count; i++)
+  {
+    size_t chunk_size = cbor_string_length (chunks[i]);
+    if (chunk_size) memcpy (data + write_offset, cbor_string_handle (chunks[i]), chunk_size);
     write_offset += chunk_size;
   }
-  data[data_size-1] = '\0';
+  data[data_size] = '\0';
   return iot_data_alloc_string (data, IOT_DATA_TAKE);
-error:
-  free (data);
-  return NULL;
 }
 
 static iot_data_t *cbor_string_to_iot_data (const cbor_item_t *item)
@@ -413,13 +406,12 @@ static iot_data_t *cbor_array_to_iot_data (const cbor_item_t *item)
   for (size_t i=0; i<size; i++)
   {
     cbor_item_t *element_item = cbor_array_get (item, i);
-    assert (element_item);
-    iot_data_t *element_data = cbor_to_iot_data (element_item);
-    cbor_decref (&element_item);
-    if (!element_data)
+    iot_data_t *element_data = element_item ? cbor_to_iot_data (element_item) : NULL;
+    if (element_item) cbor_decref (&element_item);
+    if (!element_data) // Unsupported element, so fail
     {
-      assert (false);
-      element_data = iot_data_alloc_null();
+      iot_data_free (iot_array);
+      return NULL;
     }
     iot_data_vector_add (iot_array, i , element_data);
   }
@@ -435,16 +427,12 @@ static iot_data_t *cbor_map_to_iot_data (const cbor_item_t *item)
   {
     struct cbor_pair pair = cbor_map_handle (item)[i];
     iot_data_t *key = cbor_to_iot_data (pair.key);
-    if (!key)
+    iot_data_t *value = key ? cbor_to_iot_data (pair.value) : NULL;
+    if (!value) // Unsupported key or value, so fail
     {
-      assert (false);
-      continue;
-    }
-    iot_data_t *value = cbor_to_iot_data (pair.value);
-    if (!value)
-    {
-      assert (false);
-      continue;
+      iot_data_free (key);
+      iot_data_free (iot_map);
+      return NULL;
     }
     iot_data_map_add (iot_map, key, value);
   }
@@ -477,9 +465,8 @@ static iot_data_t *cbor_float_ctrl_to_iot_data (const cbor_item_t *item)
   if (cbor_float_ctrl_is_ctrl (item))
   {
     if (cbor_is_bool (item)) return iot_data_alloc_bool (cbor_get_bool (item));
-    if (cbor_is_null (item)) return iot_data_alloc_null ();
-    assert (false);
-    return NULL;
+    if (cbor_is_null (item) || cbor_is_undef (item)) return iot_data_null;
+    return NULL; // Other simple values not supported
   }
 
   switch (cbor_float_get_width (item))
@@ -493,7 +480,6 @@ static iot_data_t *cbor_float_ctrl_to_iot_data (const cbor_item_t *item)
     default:
       break;
   }
-  assert (false);
   return NULL;
 }
 
@@ -520,7 +506,6 @@ static iot_data_t *cbor_to_iot_data (const cbor_item_t *item)
     default:
       break;
   }
-  assert (false);
   return NULL;
 }
 

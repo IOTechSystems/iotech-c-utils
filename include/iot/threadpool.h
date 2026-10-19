@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 IOTech Ltd
+// Copyright (c) 2020-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -30,7 +30,7 @@ typedef struct iot_threadpool_t iot_threadpool_t;
  * The function to allocate memory and initialise a thread pool. This function does not return until all
  * threads have initialised successfully.
  *
- * @param num_threads        Number of threads to be created in the threadpool
+ * @param num_threads        Number of threads to be created in the threadpool (must be greater than zero)
  * @param max_jobs           Maximum number of jobs to queue (before blocking)
  * @param default_prio       Default priority for created threads (not set if -1)
  * @param affinity           Processor affinity for pool threads (not set if less than zero)

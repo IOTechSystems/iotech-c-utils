@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2023 IOTech Ltd
+// Copyright (c) 2023-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -15,11 +15,26 @@ typedef struct iot_block_t
   struct iot_block_t * next;
 } iot_block_t;
 
+typedef struct iot_block_batch_t // Header of a batch of blocks in the shared block cache, held in the first block
+{
+  iot_block_t block;                 // Links blocks within the batch
+  struct iot_block_batch_t * batch;  // Next batch in the shared cache
+  uint32_t count;                    // Number of blocks in the batch
+} iot_block_batch_t;
+
 typedef struct iot_cache_head_t
 {
   alignas(2 * sizeof(void*)) iot_block_t * node; // CMPXCHG16B can crash if struct is not 16 byte aligned on 64bit systems
   uintptr_t tag;
 } iot_cache_head_t;
+
+// Rehash flag carried in top bit of refs, atomic as hash calculated lazily by iot_data_hash on (possibly shared) data.
+// Held in refs rather than a separate field so that iot_data_t fits in 16 bytes on 32 bit systems.
+
+#define IOT_DATA_MAX_DEPTH 256u // Maximum nesting depth for data parsed from JSON, YAML or XML
+
+#define IOT_DATA_REHASH 0x80000000u
+#define IOT_DATA_REFS_MASK (~IOT_DATA_REHASH)
 
 typedef union iot_data_base_t
 {
@@ -30,7 +45,7 @@ typedef union iot_data_base_t
 struct iot_data_t
 {
   iot_data_base_t base;
-  _Atomic uint32_t refs;
+  _Atomic uint32_t refs; // Reference count, top bit (IOT_DATA_REHASH) records whether hash needs recalculating
   uint32_t hash;
   iot_data_type_t type;
   iot_data_type_t element_type;
@@ -40,9 +55,9 @@ struct iot_data_t
   bool heap : 1;
   bool constant : 1;
   bool composed : 1;
-  bool rehash : 1;
   bool tag1 : 1;
   bool tag2 : 1;
+  bool tag3 : 1;
 };
 
 typedef struct iot_string_holder_t

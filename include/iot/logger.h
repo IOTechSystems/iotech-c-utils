@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2022 IOTech Ltd
+// Copyright (c) 2018-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -64,8 +64,9 @@ typedef void (*iot_log_free_fn_t) (void *ctx);
  * @brief Allocate memory and initialize logger component
  *
  * The function to allocate memory and initialize logger component. The logger component logs messages to console
+ * (errors and warnings to stderr, other messages to stdout), flushed after each message
  *
- * @param name        Identifier to use for logging
+ * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level
  * @param self_start  'true' will start the logger after initialization
  * @return            Pointer to the logger component created
@@ -76,14 +77,15 @@ extern iot_logger_t * iot_logger_alloc (const char * name, iot_loglevel_t level,
 /**
  * @brief Allocate memory and initialize file logger component
  *
- * The function to allocate memory and initialize file logger component. The logger component logs messages to a file
+ * The function to allocate memory and initialize file logger component. The logger component logs messages to a file,
+ * which is appended to, and flushed after each message
  *
- * @param name        Identifier to use for logging
+ * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level
  * @param self_start  'true' will start the logger after initialization
  * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
  * @param pathname    File and location of the logfile
- * @return            Pointer to the logger component created
+ * @return            Pointer to the logger component created, or NULL if the file could not be opened
  */
 extern iot_logger_t * iot_logger_alloc_file (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *pathname);
 #endif
@@ -93,13 +95,13 @@ extern iot_logger_t * iot_logger_alloc_file (const char * name, iot_loglevel_t l
  *
  * The function to allocate memory and initialize UDP logger component. The logger component logs messages to a UDP port
  *
- * @param name        Identifier to use for logging
+ * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level
  * @param self_start  'true' will start the logger after initialization
  * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
- * @param host        Address to send data - NULL means broadcast
+ * @param host        IPv4 address or host name to send data - NULL means broadcast
  * @param port        Port on which to send data
- * @return            Pointer to the logger component created
+ * @return            Pointer to the logger component created, or NULL if host could not be resolved
  */
 extern iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t level, bool self_start, iot_logger_t * next, const char *host, uint16_t port);
 
@@ -108,7 +110,7 @@ extern iot_logger_t * iot_logger_alloc_udp (const char * name, iot_loglevel_t le
  *
  * The function to allocate memory and initialize logger component to use custom defined log function.
  *
- * @param name        Identifier to use for logging
+ * @param name        Identifier to use for logging, if NULL "default" is used
  * @param level       Log level, Messages are filtered for logging based on the log level set
  * @param self_start  'true' will start the logger after initialization
  * @param next        Another logger component, this logger component must be pre-initialized. May be NULL
@@ -213,7 +215,7 @@ extern const char * iot_logger_level_to_string (iot_loglevel_t level);
 /**
  * @brief Add next logger to a logger (for chained logging)
  * @param logger Logger
- * @param next Next logger
+ * @param next Next logger, or NULL to remove next logger. May be changed while logging, the effective log level is updated
  */
 extern void iot_logger_set_next (iot_logger_t * logger, iot_logger_t * next);
 
