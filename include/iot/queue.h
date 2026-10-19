@@ -54,19 +54,24 @@ void iot_queue_free (iot_queue_t *q);
 /**
  * @brief Add an element to the queue. If the queue is full, block until space is available
  *
- * The queue takes ownership of the element. If the queue is stopped while full, the element is freed.
+ * The queue always takes ownership of the element, whether or not it is added. If the queue is stopped while full,
+ * the element is freed and false returned, so the caller must not free the element (unlike iot_queue_try_enqueue).
  *
  * @param q       Pointer to a queue
  * @param element The element to add to the queue
- * @return bool   Whether the element was added, false if the queue was stopped while full
+ * @return bool   Whether the element was added, false if the queue was stopped while full (element freed)
  */
 bool iot_queue_enqueue (iot_queue_t *q, iot_data_t *element);
 
 /**
  * @brief Add an element to the queue. If the queue is full, return false
+ *
+ * The queue takes ownership of the element only if it is added. If false is returned, the element is not freed and
+ * remains owned by the caller, which must free it (unlike iot_queue_enqueue).
+ *
  * @param q       Pointer to a queue
  * @param element The element to add to the queue
- * @return bool   Whether the operation was successful
+ * @return bool   Whether the element was added, false if the queue was full (element still owned by caller)
  */
 bool iot_queue_try_enqueue (iot_queue_t *q, iot_data_t *element);
 

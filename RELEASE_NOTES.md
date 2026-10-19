@@ -122,7 +122,7 @@
 - The scheduler now uses a monotonic clock (except on Zephyr and macOS), so schedules no longer stall when the system clock is stepped back (or run early when stepped forward). `iot_time_nsecs` now follows the system clock if stepped back by more than one second, rather than advancing by one nanosecond per call until the clock caught up
 - Removed use of `ATOMIC_VAR_INIT`, which is removed in C23
 - `iot_store_config_list` now returns NULL if the directory cannot be read (previously crashed), and only lists files with a `.json` extension (previously matched any character before `json`, such as `abcxjson`). `iot/store.h` now includes `iot/data.h`
-- `iot_queue_enqueue` now returns whether the element was added, freeing the element if the queue is stopped while full (previously leaked)
+- `iot_queue_enqueue` now returns whether the element was added, freeing the element if the queue is stopped while full (previously leaked). Note that `iot_queue_try_enqueue` does not free the element when it returns false, so the caller still owns it; both are now documented
 - `iot_logger_default` initialisation is now thread safe, and the default logger is named "default" (previously logged with a null name)
 - `iot_container_delete_component` now stops and frees the component without the container lock held (previously deadlocked if stopping waited on a thread using the container)
 - `iot_container_start` and `iot_container_stop` no longer hold the container lock while starting or stopping components (previously deadlocked if a component added, deleted or lazily loaded components when started or stopped)
