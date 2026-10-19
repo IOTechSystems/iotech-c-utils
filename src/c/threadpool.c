@@ -171,12 +171,9 @@ static void * iot_threadpool_thread (void * arg)
           priority = job.priority;
         }
       }
-      else if (priority != default_param.sched_priority) // If required, restore default thread scheduling
+      else if ((priority != default_param.sched_priority) && (pthread_setschedparam (tid, default_policy, &default_param) == 0)) // If required, restore default thread scheduling
       {
-        if (pthread_setschedparam (tid, default_policy, &default_param) == 0)
-        {
-          priority = default_param.sched_priority;
-        }
+        priority = default_param.sched_priority;
       }
       (job.function) (job.arg); // Run job
       iot_log_trace (pool->logger, "Thread %" PRIu16 " completed job %" PRIu32, th->id, job.id);

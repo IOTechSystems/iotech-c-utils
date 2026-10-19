@@ -316,7 +316,7 @@ static void * iot_scheduler_thread (void * arg)
 
 static iot_data_t * iot_scheduler_get_stats (iot_component_t * comp)
 {
-  iot_scheduler_t * scheduler = (iot_scheduler_t *) comp;
+  const iot_scheduler_t * scheduler = (const iot_scheduler_t *) comp;
   iot_data_t * result = iot_data_alloc_map (IOT_DATA_STRING);
   iot_component_lock (comp);
   iot_data_map_add (result, IOT_DATA_STATIC(iot_scheduler_consts.active_queue_key), iot_data_alloc_ui32 (iot_data_map_size (scheduler->queue)));

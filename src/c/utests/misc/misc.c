@@ -157,7 +157,8 @@ static void test_uuid_generate (void)
 static void test_uuid_fork (void)
 {
   // A forked child process does not generate the same UUIDs as its parent
-  iot_uuid_t parent, child;
+  iot_uuid_t parent;
+  iot_uuid_t child;
   int fds[2];
   iot_uuid_generate (parent);
   CU_ASSERT_FATAL (pipe (fds) == 0)

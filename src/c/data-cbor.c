@@ -163,10 +163,6 @@ static void iot_data_dump_cbor (iot_cbor_holder_t * holder, const iot_data_t * d
       iot_cbor_holder_check_size (holder, 1);
       holder->data[holder->index++] = iot_data_bool (data) ? 0xf5 : 0xf4;
       break;
-    case IOT_DATA_POINTER: // Pointer values cannot be represented, so written as null
-      iot_cbor_holder_check_size (holder, 1);
-      holder->data[holder->index++] = 0xf6;
-      break;
     case IOT_DATA_STRING:
     {
       const char *str = iot_data_string (data);
@@ -175,6 +171,7 @@ static void iot_data_dump_cbor (iot_cbor_holder_t * holder, const iot_data_t * d
       iot_data_cbor_write_bytes (holder, str, len);
       break;
     }
+    case IOT_DATA_POINTER: // Pointer values cannot be represented, so written as null
     case IOT_DATA_NULL:
       iot_cbor_holder_check_size (holder, 1);
       holder->data[holder->index++] = 0xf6;

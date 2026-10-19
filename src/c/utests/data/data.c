@@ -6499,7 +6499,8 @@ static void test_data_float_hash (void)
   static const double vals[] = { -1.5, 1.1, 1.9, -1.0e300, 1.0e300, 0.0, -0.0, INFINITY, -INFINITY };
   for (uint32_t i = 0; i < sizeof (vals) / sizeof (vals[0]); i++)
   {
-    iot_data_static_t s32, s64;
+    iot_data_static_t s32;
+    iot_data_static_t s64;
     iot_data_t * f32 = iot_data_alloc_f32 ((float) vals[i]);
     iot_data_t * f64 = iot_data_alloc_f64 (vals[i]);
     CU_ASSERT (iot_data_hash (f32) == iot_data_hash (iot_data_alloc_const_f32 (&s32, (float) vals[i])))
@@ -7060,7 +7061,8 @@ static bool test_address_writable (const void * addr)
   FILE * maps = fopen ("/proc/self/maps", "r");
   while (maps && fgets (line, sizeof (line), maps))
   {
-    uintptr_t start, end;
+    uintptr_t start;
+    uintptr_t end;
     char perms[5];
     if (sscanf (line, "%" SCNxPTR "-%" SCNxPTR " %4s", &start, &end, perms) == 3 && (uintptr_t) addr >= start && (uintptr_t) addr < end)
     {

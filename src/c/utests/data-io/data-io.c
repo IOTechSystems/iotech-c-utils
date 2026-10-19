@@ -78,7 +78,6 @@ static void test_data_to_json (void)
   CU_ASSERT (json != NULL)
   if (json)
   {
-    // printf ("JSON: %s\n", json);
     CU_ASSERT (strcmp (json, "{\"Array\":[0,1,2,3],\"Binary\":\"AAECAw==\",\"Boolean\":true,\"Escaped\":\"abc\\t\\n123\\u000b\\u001fxyz\",\"NULL\":null,\"Name\":\"Lilith\",\"UInt32\":1}") == 0)
   }
   iot_data_free (map);

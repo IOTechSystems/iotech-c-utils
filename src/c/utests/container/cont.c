@@ -675,7 +675,7 @@ typedef struct test_slow_t
   iot_component_t component;
   pthread_t tid;
   bool starting_called;
-  bool running_called;
+  bool slow_running_called;
   bool running_timeout;
 } test_slow_t;
 
@@ -705,7 +705,7 @@ static void test_slow_starting (iot_component_t * comp)
 
 static void test_slow_running (iot_component_t * comp, bool timeout)
 {
-  ((test_slow_t*) comp)->running_called = true;
+  ((test_slow_t*) comp)->slow_running_called = true;
   ((test_slow_t*) comp)->running_timeout = timeout;
 }
 
@@ -734,7 +734,7 @@ static void test_slow_start_wait (void)
   iot_container_start (cont);
   CU_ASSERT (slow->starting_called)
   CU_ASSERT (slow->component.state == IOT_COMPONENT_RUNNING)
-  CU_ASSERT (slow->running_called && ! slow->running_timeout)
+  CU_ASSERT (slow->slow_running_called && ! slow->running_timeout)
   iot_container_free (cont);
 }
 

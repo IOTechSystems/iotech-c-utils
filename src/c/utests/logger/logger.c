@@ -231,6 +231,7 @@ static void cunit_logger_udp_long (void)
 {
   // Long messages are truncated to the log buffer (ending with newline), not sent beyond it (checked by valgrind)
   int sock = socket (AF_INET, SOCK_DGRAM, 0);
+  CU_ASSERT_FATAL (sock >= 0)
   struct sockaddr_in addr = { .sin_family = AF_INET, .sin_addr.s_addr = htonl (INADDR_LOOPBACK) };
   socklen_t alen = sizeof (addr);
   const struct timeval timeout = { .tv_sec = 5 };

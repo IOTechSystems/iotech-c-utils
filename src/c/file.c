@@ -93,7 +93,7 @@ static bool iot_file_update_binary (const char * path, const uint8_t * binary, s
     fd = mkstemp (tmp_path); // Unique temporary file in same directory, so rename is atomic
     if (fd != -1)
     {
-      if (fchown (fd, st.st_uid, st.st_gid) != 0) {} // Keep ownership of replaced file (only possible if privileged)
+      if (fchown (fd, st.st_uid, st.st_gid) != 0) { /* Ignored */ } // Keep ownership of replaced file (only possible if privileged)
       if (fchmod (fd, st.st_mode & 07777) != 0) // Keep permissions of replaced file
       {
         close (fd);

@@ -1904,7 +1904,7 @@ static void iot_data_inc_dec (iot_data_t * data, bool inc)
     case IOT_DATA_INT16: inc ? val->i16++ : val->i16--; data->hash = (uint32_t) val->i16; break;
     case IOT_DATA_UINT16: inc ? val->ui16++ : val->ui16--; data->hash = (uint32_t) val->ui16; break;
     case IOT_DATA_INT32: inc ? val->i32++ : val->i32--; data->hash = (uint32_t) val->i32; break;
-    case IOT_DATA_UINT32: inc ? val->ui32++ : val->ui32--; data->hash = (uint32_t) val->ui32; break;
+    case IOT_DATA_UINT32: inc ? val->ui32++ : val->ui32--; data->hash = val->ui32; break;
     case IOT_DATA_INT64: inc ? val->i64++ : val->i64--; data->hash = (uint32_t) val->i64; break;
     case IOT_DATA_UINT64: inc ? val->ui64++ : val->ui64--; data->hash = (uint32_t) val->ui64; break;
     case IOT_DATA_FLOAT32: inc ? val->f32++ : val->f32--; data->hash = iot_data_hash_f32 (val->f32); break;
