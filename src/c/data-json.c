@@ -376,7 +376,7 @@ static bool iot_json_number_valid (const char * str)
 #undef IOT_JSON_DIGIT
 }
 
-static iot_data_t * iot_data_primitive_from_json (iot_json_ctx_t * ctx, const iot_json_tok_t * token)
+static iot_data_t * iot_data_primitive_from_json (const iot_json_ctx_t * ctx, const iot_json_tok_t * token)
 {
   iot_data_t * ret = NULL;
   char * str = iot_data_string_from_json_token (ctx->json, token);
