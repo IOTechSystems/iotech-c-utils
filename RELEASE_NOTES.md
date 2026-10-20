@@ -146,3 +146,4 @@
 - Lazy data hash calculation no longer takes a process wide lock, so threads hashing different data do not contend
 - Logging along a logger chain now stops at the first logger after which no logger logs at the message level, without locking or taking references, and no longer increments the default logger reference count on every message
 - Components are now loaded without a container lock held, so threads can find and load components while another component is being created (previously a component that waited on a thread looking up a component not yet loaded deadlocked). A component being loaded by another thread is waited for, and cyclic references between components loaded by different threads are detected and logged rather than deadlocking. Cyclic references are now also detected when loading components with `iot_container_init`
+- Oracle Linux support updated to version 10
