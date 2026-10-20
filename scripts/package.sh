@@ -156,8 +156,8 @@ case ${SYSTEM} in
         CBOR_DEP="libcbor"
         ATOMIC_DEP="libatomic"
       ;;
-      oraclelinux-9)
-        RPM_DIST=el9
+      oraclelinux-10)
+        RPM_DIST=el10
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
         ATOMIC_DEP="libatomic"
