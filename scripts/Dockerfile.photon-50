@@ -1,0 +1,16 @@
+FROM photon:5.0
+ENV SYSTEM="photon-50"
+LABEL MAINTAINER="IOTech <support@iotechsys.com>"
+RUN tdnf remove -y toybox && tdnf update -y && tdnf install -y wget gcc glibc-devel linux-api-headers binutils make git cmake tar gzip rpm rpm-build ruby libyaml-devel
+# Photon 5 libcbor packages are built with sanitizers (ASan/UBSan), so build a static PIC libcbor without them
+RUN git clone --depth 1 --branch v0.11.0 https://github.com/PJK/libcbor.git /tmp/libcbor && \
+  cmake -S /tmp/libcbor -B /tmp/libcbor/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DSANITIZE=OFF -DWITH_EXAMPLES=OFF && \
+  cmake --build /tmp/libcbor/build && cmake --install /tmp/libcbor/build && rm -rf /tmp/libcbor
+RUN gem install --no-document fpm
+COPY VERSION /iotech-iot/
+COPY RELEASE_NOTES.md /iotech-iot/
+COPY src /iotech-iot/src/
+COPY include /iotech-iot/include/
+COPY scripts /iotech-iot/scripts/
+WORKDIR /iotech-iot
+ENTRYPOINT ["/iotech-iot/scripts/wrapper.sh", "/iotech-iot/scripts/linux.sh", "-utest"]
