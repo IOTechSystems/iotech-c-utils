@@ -215,15 +215,32 @@ int iot_thread_current_get_priority (void)
   return iot_thread_get_priority (pthread_self ());
 }
 
+// Skip trying to re-set the priority if it hasn't changed. Only valid if thread scheduling is only changed by these functions
+#define IOT_THREAD_DEFAULT_SCHEDULING -2 // Set to non real time scheduling by iot_thread_current_set_scheduling
+static __thread int iot_thread_self_priority = IOT_THREAD_NO_PRIORITY;
+
 bool iot_thread_set_priority (pthread_t thread, int priority)
 {
+  bool self = pthread_equal (thread, pthread_self ());
+  if (self && (priority == iot_thread_self_priority)) return true;
   struct sched_param param = { .sched_priority = priority };
-  return (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
+  bool ok = (pthread_setschedparam (thread, SCHED_FIFO, &param) == 0);
+  if (self && ok) iot_thread_self_priority = priority;
+  return ok;
 }
 
 bool iot_thread_current_set_priority (int priority)
 {
   return iot_thread_set_priority (pthread_self (), priority);
+}
+
+bool iot_thread_current_set_scheduling (int policy, const struct sched_param * param)
+{
+  if (policy == SCHED_FIFO) return iot_thread_current_set_priority (param->sched_priority);
+  if (iot_thread_self_priority == IOT_THREAD_DEFAULT_SCHEDULING) return true;
+  bool ok = (pthread_setschedparam (pthread_self (), policy, param) == 0);
+  if (ok) iot_thread_self_priority = IOT_THREAD_DEFAULT_SCHEDULING;
+  return ok;
 }
 
 void iot_mutex_init (pthread_mutex_t * mutex)
