@@ -3334,16 +3334,6 @@ void iot_data_strcat_escape (iot_string_holder_t * holder, const char * add, boo
   holder->free -= adj_len;
 }
 
-static inline void iot_data_strcat (iot_string_holder_t * holder, const char * add)
-{
-  iot_data_strcat_escape (holder, add, true);
-}
-
-static inline void iot_data_add_quote (iot_string_holder_t * holder)
-{
-  iot_data_strcat_escape (holder, "\"", false);
-}
-
 iot_data_t * iot_data_copy (const iot_data_t * data)
 {
   iot_data_t * ret = NULL;
@@ -3691,11 +3681,6 @@ static inline iot_node_t * iot_node_uncle (const iot_node_t * node)
 {
   iot_node_t * gp = iot_node_grandparent (node);
   return gp ? ((node->parent == gp->left) ? gp->right : gp->left) : NULL;
-}
-
-static inline iot_node_t * iot_node_sibling (const iot_node_t * node)
-{
-  return IS_LEFT (node) ? node->parent->right : node->parent->left;
 }
 
 static inline iot_node_t * iot_node_alloc (iot_node_t * parent, iot_data_t * key, iot_data_t * value)

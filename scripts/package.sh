@@ -146,8 +146,8 @@ case ${SYSTEM} in
     esac
 
     case ${SYSTEM} in
-      photon-40)
-        RPM_DIST=ph4
+      photon-50)
+        RPM_DIST=ph5
         YAML_DEP="libyaml"
       ;;
       fedora-44)
@@ -156,8 +156,8 @@ case ${SYSTEM} in
         CBOR_DEP="libcbor"
         ATOMIC_DEP="libatomic"
       ;;
-      oraclelinux-9)
-        RPM_DIST=el9
+      oraclelinux-10)
+        RPM_DIST=el10
         YAML_DEP="libyaml"
         CBOR_DEP="libcbor"
         ATOMIC_DEP="libatomic"
@@ -178,7 +178,7 @@ case ${SYSTEM} in
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends ${YAML_DEP} --depends ${CBOR_DEP} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}}
+      --depends ${YAML_DEP} ${CBOR_DEP:+--depends ${CBOR_DEP}} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}}
 
     ${FPM} -s dir -t rpm -n iotech-iot-${PKG_VER}-dev -v "${VER}" --iteration "$((REL_VER+1))" \
       -C _CPack_Packages/Linux/TGZ/iotech-iot-${PKG_VER}-${VER}_${OS_ARCH} \
@@ -199,7 +199,7 @@ case ${SYSTEM} in
       --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends ${YAML_DEP} --depends ${CBOR_DEP} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}} \
+      --depends ${YAML_DEP} ${CBOR_DEP:+--depends ${CBOR_DEP}} ${ATOMIC_DEP:+--depends ${ATOMIC_DEP}} \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm ./*.tar.gz

@@ -52,6 +52,8 @@ static bool stopping_called = false;
 
 static int suite_init (void)
 {
+  // logger_config resolves ${USER}, which may not be set (e.g. in a container)
+  setenv ("USER", "utest", 0);
   return 0;
 }
 
@@ -133,7 +135,7 @@ static void test_delete_component (void)
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
 
   comp = iot_container_find_component (cont, "logger");
-  CU_ASSERT (comp != NULL)
+  CU_ASSERT_FATAL (comp != NULL)
   iot_component_set_running_callback (comp, test_logger_running_callback);
   iot_component_set_stopping_callback (comp, test_logger_stopping_callback);
   iot_container_start (cont);
@@ -457,6 +459,7 @@ static void test_component_read_reconfig (void)
   iot_component_factory_add (iot_logger_factory ());
   iot_container_add_component (cont, IOT_LOGGER_TYPE, "logger", logger_config);
   iot_component_t * comp = iot_container_find_component (cont, "logger");
+  CU_ASSERT_FATAL (comp != NULL)
   iot_data_t * before = iot_component_read (comp);
   iot_data_t * update = iot_data_from_json ("{\"Level\":\"Debug\"}");
   CU_ASSERT (iot_component_reconfig (comp, cont, update))

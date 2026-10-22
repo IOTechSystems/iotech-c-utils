@@ -148,3 +148,6 @@
 - Components are now loaded without a container lock held, so threads can find and load components while another component is being created (previously a component that waited on a thread looking up a component not yet loaded deadlocked). A component being loaded by another thread is waited for, and cyclic references between components loaded by different threads are detected and logged rather than deadlocking. Cyclic references are now also detected when loading components with `iot_container_init`
 - `iot_thread_set_priority` skips the system call when a thread sets its own priority to its current value
 - Fixed threadpool jobs running at the wrong priority if a previous job changed its thread's priority, for jobs with and without a priority set
+- Oracle Linux support updated to version 10 (x86_64 only, as libcbor-devel is not available for aarch64)
+- Photon OS support updated to version 5.0. libcbor is statically linked on Photon, as the Photon 5.0 libcbor packages are built with sanitizers
+- Support removed for Clear Linux
