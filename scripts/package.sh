@@ -163,7 +163,7 @@ case ${SYSTEM} in
         ATOMIC_DEP="libatomic"
       ;;
       opensuse-16.*)
-        FPM=fpm.ruby2.5
+        FPM=fpm.ruby3.4
         YAML_DEP="libyaml-0-2"
         CBOR_DEP="libcbor0_11"
       ;;
