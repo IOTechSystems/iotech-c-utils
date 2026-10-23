@@ -133,7 +133,7 @@ case ${SYSTEM} in
         OS_ARCH=aarch64
         ;;
       arm32)
-        if [ "${SYSTEM}" = "opensuse-15.6" ]
+        if [ "${SYSTEM}" = "opensuse-16.0" ]
         then
           OS_ARCH=armv7hl
         else
@@ -162,10 +162,10 @@ case ${SYSTEM} in
         CBOR_DEP="libcbor"
         ATOMIC_DEP="libatomic"
       ;;
-      opensuse-15.*)
-        FPM=fpm.ruby2.5
+      opensuse-16.*)
+        FPM=fpm.ruby3.4
         YAML_DEP="libyaml-0-2"
-        CBOR_DEP="libcbor0_10"
+        CBOR_DEP="libcbor0_11"
       ;;
     esac
 
