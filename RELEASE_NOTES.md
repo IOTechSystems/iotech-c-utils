@@ -149,3 +149,4 @@
 - Oracle Linux support updated to version 10 (x86_64 only, as libcbor-devel is not available for aarch64)
 - Photon OS support updated to version 5.0. libcbor is statically linked on Photon, as the Photon 5.0 libcbor packages are built with sanitizers
 - Support removed for Clear Linux
+- OpenSUSE support updated to version 16.0
