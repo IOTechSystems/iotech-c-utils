@@ -117,7 +117,6 @@ static void * iot_threadpool_thread (void * arg)
   struct sched_param default_param;
   int default_policy;
   pthread_getschedparam (tid, &default_policy, &default_param); // Save default thread scheduling
-  int priority = default_param.sched_priority;
   char name[IOT_PRCTL_NAME_MAX];
   iot_component_state_t state;
   bool pending_delete = false;
@@ -164,16 +163,13 @@ static void * iot_threadpool_thread (void * arg)
       pool->working++;
       if (pool->working > pool->working_max) pool->working_max = pool->working;
       iot_component_unlock (comp);
-      if (job.priority != IOT_THREAD_NO_PRIORITY)
+      if (job.priority != IOT_THREAD_NO_PRIORITY) // If required, set thread priority (a no-op if unchanged, previous job may have changed it)
       {
-        if ((job.priority != priority) && iot_thread_set_priority (tid, job.priority)) // If required, set thread priority
-        {
-          priority = job.priority;
-        }
+        iot_thread_set_priority (tid, job.priority);
       }
-      else if ((priority != default_param.sched_priority) && (pthread_setschedparam (tid, default_policy, &default_param) == 0)) // If required, restore default thread scheduling
+      else // If required, restore default thread scheduling (a no-op if unchanged, previous job may have changed it)
       {
-        priority = default_param.sched_priority;
+        iot_thread_current_set_scheduling (default_policy, &default_param);
       }
       (job.function) (job.arg); // Run job
       iot_log_trace (pool->logger, "Thread %" PRIu16 " completed job %" PRIu32, th->id, job.id);
