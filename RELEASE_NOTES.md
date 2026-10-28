@@ -151,6 +151,7 @@
 - Oracle Linux support updated to version 10 (x86_64 only, as libcbor-devel is not available for aarch64)
 - Photon OS support updated to version 5.0. libcbor is statically linked on Photon, as the Photon 5.0 libcbor packages are built with sanitizers
 - Support removed for Clear Linux
+- OpenSUSE support updated to version 16.0
 - Added function `iot_data_vector_flatten` to strictly flatten a nested vector to an array or typed vector, checking it against given dimensions (or those of the vector). Unlike `iot_data_vector_to_array`, elements are never dropped: the result is NULL if the vector does not match the dimensions or an element cannot be converted
 - Added function `iot_data_to_dimensions` to validate and convert a vector or integer array of dimensions to an IOT_DATA_UINT32 array
 - Added function `iot_data_dimensions_total` to get the total number of elements for an array of dimensions
