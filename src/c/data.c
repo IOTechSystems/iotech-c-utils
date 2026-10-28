@@ -2801,8 +2801,8 @@ uint32_t iot_data_vector_size (const iot_data_t * vector)
   return ((const iot_data_vector_t*) vector)->size;
 }
 
-// Depth of vector nesting. A vector is only regarded as multi-dimensional if all its elements are vectors of the
-// same depth. Stops at the first element that is not a vector, so does not walk vectors of values.
+// Depth of vector nesting. A vector is only regarded as multi-dimensional if all its elements are vectors (or arrays,
+// as last dimension slices) of the same depth. Stops at the first element that is neither, so does not walk vectors of values.
 
 static uint32_t iot_data_vector_depth (const iot_data_vector_t * vector)
 {
@@ -2810,7 +2810,9 @@ static uint32_t iot_data_vector_depth (const iot_data_vector_t * vector)
   for (uint32_t i = 0; i < vector->size; i++)
   {
     const iot_data_t * element = vector->values[i];
-    uint32_t dp = (element && (element->type == IOT_DATA_VECTOR)) ? iot_data_vector_depth ((const iot_data_vector_t*) element) : 0u;
+    uint32_t dp = 0u;
+    if (element && (element->type == IOT_DATA_VECTOR)) dp = iot_data_vector_depth ((const iot_data_vector_t*) element);
+    else if (element && (element->type == IOT_DATA_ARRAY)) dp = 1u;
     if (i == 0u) depth = dp;
     if ((dp == 0u) || (dp != depth))
     {
@@ -2822,17 +2824,29 @@ static uint32_t iot_data_vector_depth (const iot_data_vector_t * vector)
 }
 
 // Check vector sizes at each level are the same, recording them in dims (UINT32_MAX if not yet set). Within depth,
-// all elements are known to be vectors.
+// all elements are known to be vectors, or arrays at the last level.
 
-static bool iot_data_vector_dims (const iot_data_vector_t * vector, uint32_t * dims, uint32_t depth)
+static bool iot_data_vector_dims (const iot_data_t * slice, uint32_t * dims, uint32_t depth)
 {
-  if (*dims == UINT32_MAX) *dims = vector->size;
-  bool ok = (*dims == vector->size);
-  for (uint32_t i = 0; ok && (depth > 1u) && (i < vector->size); i++)
+  bool is_vector = (slice->type == IOT_DATA_VECTOR);
+  uint32_t size = is_vector ? ((const iot_data_vector_t*) slice)->size : ((const iot_data_array_t*) slice)->length;
+  if (*dims == UINT32_MAX) *dims = size;
+  bool ok = (*dims == size);
+  for (uint32_t i = 0; ok && is_vector && (depth > 1u) && (i < size); i++)
   {
-    ok = iot_data_vector_dims ((const iot_data_vector_t*) vector->values[i], dims + 1, depth - 1u);
+    ok = iot_data_vector_dims (((const iot_data_vector_t*) slice)->values[i], dims + 1, depth - 1u);
   }
   return ok;
+}
+
+// Product of dimensions, false if it exceeds UINT32_MAX
+
+static bool iot_data_dims_product (const uint32_t * dims, uint32_t ndims, uint32_t * total)
+{
+  uint64_t product = 1u;
+  for (uint32_t i = 0; (i < ndims) && (product <= UINT32_MAX); i++) product *= dims[i];
+  *total = (product <= UINT32_MAX) ? (uint32_t) product : 0u;
+  return (product <= UINT32_MAX);
 }
 
 iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total)
@@ -2843,10 +2857,8 @@ iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * t
   uint32_t * dims = malloc (depth * sizeof (uint32_t));
   memset (dims, 0xff, depth * sizeof (uint32_t)); // All UINT32_MAX (not yet set)
   *total = 0u;
-  if (iot_data_vector_dims ((const iot_data_vector_t*) vector, dims, depth))
+  if (iot_data_vector_dims (vector, dims, depth) && iot_data_dims_product (dims, depth, total))
   {
-    *total = 1u;
-    for (uint32_t i = 0; i < depth; i++) *total *= dims[i];
     dimarray = iot_data_alloc_array (dims, depth, IOT_DATA_UINT32, IOT_DATA_TAKE);
   }
   else
@@ -2854,6 +2866,169 @@ iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * t
     free (dims);
   }
   return dimarray;
+}
+
+iot_data_t * iot_data_to_dimensions (const iot_data_t * dims, uint32_t * total)
+{
+  assert (total);
+  iot_data_t * result = NULL;
+  uint32_t ndims = 0u;
+  *total = 0u;
+  if (dims && (dims->type == IOT_DATA_VECTOR)) ndims = ((const iot_data_vector_t*) dims)->size;
+  else if (dims && (dims->type == IOT_DATA_ARRAY) && (dims->element_type < IOT_DATA_FLOAT32)) ndims = ((const iot_data_array_t*) dims)->length;
+  if (ndims)
+  {
+    uint32_t * values = malloc (ndims * sizeof (uint32_t));
+    bool valid = true;
+    for (uint32_t i = 0; valid && (i < ndims); i++)
+    {
+      iot_data_union_t dim = { .ui64 = 0 };
+      iot_data_type_t type;
+      if (dims->type == IOT_DATA_VECTOR)
+      {
+        const iot_data_t * element = ((const iot_data_vector_t*) dims)->values[i];
+        type = element ? element->type : IOT_DATA_NULL;
+        if (type < IOT_DATA_FLOAT32) dim = ((const iot_data_value_t*) element)->value;
+      }
+      else
+      {
+        type = dims->element_type;
+        memcpy (&dim, (const uint8_t*) ((const iot_data_array_t*) dims)->data + i * iot_data_type_sizes[type], iot_data_type_sizes[type]);
+      }
+      // Integer types only, so dimensions such as 3.5 are rejected rather than truncated
+      valid = (type < IOT_DATA_FLOAT32) && iot_data_cast_val (dim, &values[i], type, IOT_DATA_UINT32) && (values[i] > 0u);
+    }
+    if (valid && iot_data_dims_product (values, ndims, total))
+    {
+      result = iot_data_alloc_array (values, ndims, IOT_DATA_UINT32, IOT_DATA_TAKE);
+    }
+    else
+    {
+      free (values);
+    }
+  }
+  return result;
+}
+
+uint32_t iot_data_dimensions_total (const iot_data_t * dims)
+{
+  uint32_t total = 0u;
+  if (dims && (dims->type == IOT_DATA_ARRAY) && (dims->element_type == IOT_DATA_UINT32))
+  {
+    const iot_data_array_t * array = (const iot_data_array_t*) dims;
+    if (array->length) iot_data_dims_product (array->data, array->length, &total);
+  }
+  return total;
+}
+
+typedef struct iot_data_flatten_t
+{
+  const uint32_t * dims;
+  uint32_t ndims;
+  iot_data_type_t etype; // Element type
+  uint8_t * buff;        // Element buffer for an array result
+  iot_data_t * vector;   // Element vector for a vector result
+  uint32_t esize;        // Element size for an array result
+  uint32_t index;        // Next element index
+} iot_data_flatten_t;
+
+static bool iot_data_flatten_element (iot_data_flatten_t * ctx, const iot_data_t * element)
+{
+  bool ok = (element != NULL);
+  if (ok && ctx->vector)
+  {
+    bool slice = (element->type == IOT_DATA_VECTOR) || (element->type == IOT_DATA_ARRAY);
+    ok = (ctx->etype == IOT_DATA_MULTI) ? !slice : (element->type == ctx->etype);
+    if (ok) iot_data_vector_add (ctx->vector, ctx->index, iot_data_add_ref (element));
+  }
+  else if (ok)
+  {
+    ok = (element->type <= IOT_DATA_BOOL) && iot_data_cast (element, ctx->etype, ctx->buff + ctx->index * ctx->esize);
+  }
+  ctx->index++;
+  return ok;
+}
+
+static bool iot_data_flatten_array (iot_data_flatten_t * ctx, const iot_data_array_t * array)
+{
+  bool ok = true;
+  uint8_t * out = ctx->buff + ctx->index * ctx->esize;
+  iot_data_type_t atype = array->base.element_type;
+  if (atype == ctx->etype)
+  {
+    if (array->length) memcpy (out, array->data, array->length * ctx->esize);
+  }
+  else
+  {
+    uint32_t asize = iot_data_type_sizes[atype];
+    for (uint32_t i = 0; ok && (i < array->length); i++)
+    {
+      iot_data_union_t element; // Copied as array elements are only aligned for their own type
+      memcpy (&element, (const uint8_t*) array->data + i * asize, asize);
+      ok = iot_data_cast_val (element, out + i * ctx->esize, atype, ctx->etype);
+    }
+  }
+  ctx->index += array->length;
+  return ok;
+}
+
+// Flatten one level of a nested vector in row-major order, checking it against the dimensions
+
+static bool iot_data_flatten_level (iot_data_flatten_t * ctx, const iot_data_t * slice, uint32_t level)
+{
+  bool last = (level + 1u == ctx->ndims);
+  bool ok = false;
+  if (slice && (slice->type == IOT_DATA_ARRAY))
+  {
+    const iot_data_array_t * array = (const iot_data_array_t*) slice;
+    ok = last && ctx->buff && (array->length == ctx->dims[level]) && iot_data_flatten_array (ctx, array);
+  }
+  else if (slice && (slice->type == IOT_DATA_VECTOR))
+  {
+    const iot_data_vector_t * vector = (const iot_data_vector_t*) slice;
+    ok = (vector->size == ctx->dims[level]);
+    for (uint32_t i = 0; ok && (i < vector->size); i++)
+    {
+      ok = last ? iot_data_flatten_element (ctx, vector->values[i]) : iot_data_flatten_level (ctx, vector->values[i], level + 1u);
+    }
+  }
+  return ok;
+}
+
+iot_data_t * iot_data_vector_flatten (const iot_data_t * vector, const iot_data_t * dims, const iot_typecode_t * type)
+{
+  assert (vector && (vector->type == IOT_DATA_VECTOR) && type);
+  assert (((type->type == IOT_DATA_ARRAY) && (type->element_type <= IOT_DATA_BOOL)) || (type->type == IOT_DATA_VECTOR));
+  iot_data_t * result = NULL;
+  uint32_t total = 0u;
+  iot_data_t * found = dims ? NULL : iot_data_vector_dimensions (vector, &total);
+  if (dims) total = iot_data_dimensions_total (dims);
+  else dims = found;
+  if (dims && ((total > 0u) || (dims == found))) // Given dimensions must be valid (so a UINT32 array), found dimensions may contain zero
+  {
+    const iot_data_array_t * dimarray = (const iot_data_array_t*) dims;
+    iot_data_flatten_t ctx = { .dims = dimarray->data, .ndims = dimarray->length, .etype = type->element_type };
+    if (type->type == IOT_DATA_ARRAY)
+    {
+      ctx.esize = iot_data_type_sizes[ctx.etype];
+      ctx.buff = calloc (total ? total : 1u, ctx.esize);
+    }
+    else
+    {
+      ctx.vector = iot_data_alloc_typed_vector (total, ctx.etype);
+    }
+    if (iot_data_flatten_level (&ctx, vector, 0u))
+    {
+      result = ctx.vector ? ctx.vector : iot_data_alloc_array (ctx.buff, total, ctx.etype, IOT_DATA_TAKE);
+    }
+    else
+    {
+      free (ctx.buff);
+      iot_data_free (ctx.vector);
+    }
+  }
+  iot_data_free (found);
+  return result;
 }
 
 static uint32_t iot_data_vector_elements (const iot_data_t * vector, iot_data_type_t type, bool recurse, bool castable)

@@ -6698,6 +6698,242 @@ static void test_data_vector_dimensions_shapes (void)
   }
 }
 
+// Vector of two int32[3] arrays, as an array leaf matrix
+static iot_data_t * alloc_array_matrix (int32_t * row1, uint32_t len1, int32_t * row2, uint32_t len2)
+{
+  iot_data_t * vector = iot_data_alloc_vector (2u);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_array (row1, len1, IOT_DATA_INT32, IOT_DATA_COPY));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_array (row2, len2, IOT_DATA_INT32, IOT_DATA_COPY));
+  return vector;
+}
+
+static void check_json (const iot_data_t * data, const char * expected)
+{
+  char * json = data ? iot_data_to_json (data) : NULL;
+  CU_ASSERT ((json == NULL) == (expected == NULL))
+  if (json && expected) CU_ASSERT (strcmp (json, expected) == 0)
+  free (json);
+}
+
+static void test_data_vector_dimensions_arrays (void)
+{
+  // Arrays are slices of the last dimension
+  static int32_t row1[] = { 1, 2, 3 };
+  static int32_t row2[] = { 4, 5, 6 };
+  uint32_t total = 99u;
+  iot_data_t * vector = alloc_array_matrix (row1, 3u, row2, 3u);
+  iot_data_t * dims = iot_data_vector_dimensions (vector, &total);
+  check_json (dims, "[2,3]");
+  CU_ASSERT (total == 6u)
+  iot_data_free (dims);
+
+  // Nested within a vector
+  iot_data_t * outer = iot_data_alloc_vector (1u);
+  iot_data_vector_add (outer, 0u, vector);
+  dims = iot_data_vector_dimensions (outer, &total);
+  check_json (dims, "[1,2,3]");
+  CU_ASSERT (total == 6u)
+  iot_data_free (dims);
+  iot_data_free (outer);
+
+  // Arrays of differing lengths
+  vector = alloc_array_matrix (row1, 3u, row2, 2u);
+  dims = iot_data_vector_dimensions (vector, &total);
+  CU_ASSERT (dims == NULL)
+  CU_ASSERT (total == 0u)
+  iot_data_free (vector);
+
+  // Arrays mixed with values, so one dimensional
+  vector = iot_data_alloc_vector (2u);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_array (row1, 3u, IOT_DATA_INT32, IOT_DATA_COPY));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_i32 (4));
+  dims = iot_data_vector_dimensions (vector, &total);
+  check_json (dims, "[2]");
+  CU_ASSERT (total == 2u)
+  iot_data_free (dims);
+  iot_data_free (vector);
+}
+
+static void test_data_to_dimensions (void)
+{
+  static const struct { const char * json; const char * dims; uint32_t total; } cases[] =
+  {
+    { "[2,3]", "[2,3]", 6u }, { "[1]", "[1]", 1u }, { "[4294967295]", "[4294967295]", 4294967295u }, { "[65535,65537]", "[65535,65537]", 4294967295u },
+    { "[]", NULL, 0u }, { "[0,2]", NULL, 0u }, { "[2,-1]", NULL, 0u }, { "[2.0]", NULL, 0u }, { "[3.5]", NULL, 0u }, { "[\"2\"]", NULL, 0u },
+    { "[true]", NULL, 0u }, { "[null]", NULL, 0u }, { "[[2]]", NULL, 0u }, { "[4294967296]", NULL, 0u }, { "[65536,65536]", NULL, 0u }, { "2", NULL, 0u }
+  };
+  for (uint32_t i = 0; i < sizeof (cases) / sizeof (cases[0]); i++)
+  {
+    iot_data_t * data = iot_data_from_json (cases[i].json);
+    uint32_t total = 99u;
+    iot_data_t * dims = iot_data_to_dimensions (data, &total);
+    check_json (dims, cases[i].dims);
+    CU_ASSERT (total == cases[i].total)
+    if (dims) CU_ASSERT (iot_data_array_type (dims) == IOT_DATA_UINT32)
+    iot_data_free (dims);
+    iot_data_free (data);
+  }
+  uint32_t total = 99u;
+  CU_ASSERT (iot_data_to_dimensions (NULL, &total) == NULL)
+  CU_ASSERT (total == 0u)
+
+  // Integer arrays are accepted, floating point arrays are not
+  static uint8_t u8dims[] = { 2u, 3u };
+  static int64_t i64dims[] = { 4, 5 };
+  static float fdims[] = { 2.0f, 3.0f };
+  iot_data_t * array = iot_data_alloc_array (u8dims, 2u, IOT_DATA_UINT8, IOT_DATA_REF);
+  iot_data_t * dims = iot_data_to_dimensions (array, &total);
+  check_json (dims, "[2,3]");
+  CU_ASSERT (total == 6u)
+  iot_data_free (dims);
+  iot_data_free (array);
+  array = iot_data_alloc_array (i64dims, 2u, IOT_DATA_INT64, IOT_DATA_REF);
+  dims = iot_data_to_dimensions (array, &total);
+  check_json (dims, "[4,5]");
+  CU_ASSERT (total == 20u)
+  iot_data_free (dims);
+  iot_data_free (array);
+  array = iot_data_alloc_array (fdims, 2u, IOT_DATA_FLOAT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_to_dimensions (array, &total) == NULL)
+  CU_ASSERT (total == 0u)
+  iot_data_free (array);
+}
+
+static void test_data_dimensions_total (void)
+{
+  static uint32_t dims23[] = { 2u, 3u };
+  static uint32_t dims20[] = { 2u, 0u };
+  static uint32_t overflow[] = { 65536u, 65536u };
+  static int32_t idims[] = { 2, 3 };
+  iot_data_t * dims = iot_data_alloc_array (dims23, 2u, IOT_DATA_UINT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_dimensions_total (dims) == 6u)
+  iot_data_free (dims);
+  dims = iot_data_alloc_array (dims20, 2u, IOT_DATA_UINT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_dimensions_total (dims) == 0u)
+  iot_data_free (dims);
+  dims = iot_data_alloc_array (overflow, 2u, IOT_DATA_UINT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_dimensions_total (dims) == 0u)
+  iot_data_free (dims);
+  dims = iot_data_alloc_array (dims23, 0u, IOT_DATA_UINT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_dimensions_total (dims) == 0u)
+  iot_data_free (dims);
+  dims = iot_data_alloc_array (idims, 2u, IOT_DATA_INT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_dimensions_total (dims) == 0u)
+  iot_data_free (dims);
+  dims = iot_data_from_json ("[2,3]");
+  CU_ASSERT (iot_data_dimensions_total (dims) == 0u)
+  iot_data_free (dims);
+  CU_ASSERT (iot_data_dimensions_total (NULL) == 0u)
+}
+
+static void test_data_vector_flatten (void)
+{
+  static uint32_t dims23[] = { 2u, 3u };
+  static uint32_t dims22[] = { 2u, 2u };
+  static int32_t row1[] = { 1, 2, 3 };
+  static int32_t row2[] = { 4, 5, 6 };
+  static uint8_t urow[] = { 4u, 5u, 6u };
+  static float frow[] = { 4.0f, 5.0f, 6.5f };
+  const iot_typecode_t i32_array = { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_INT32 };
+  const iot_typecode_t f32_array = { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_FLOAT32 };
+  const iot_typecode_t str_vector = { .type = IOT_DATA_VECTOR, .element_type = IOT_DATA_STRING };
+  const iot_typecode_t multi_vector = { .type = IOT_DATA_VECTOR, .element_type = IOT_DATA_MULTI };
+  iot_data_t * dims = iot_data_alloc_array (dims23, 2u, IOT_DATA_UINT32, IOT_DATA_REF);
+  iot_data_t * sdims = iot_data_alloc_array (dims22, 2u, IOT_DATA_UINT32, IOT_DATA_REF);
+
+  // Nested values are flattened in row-major order and cast to the element type
+  iot_data_t * vector = iot_data_from_json ("[[1,2,3],[4,5,6]]");
+  iot_data_t * result = iot_data_vector_flatten (vector, dims, &i32_array);
+  check_json (result, "[1,2,3,4,5,6]");
+  CU_ASSERT (result && iot_data_array_type (result) == IOT_DATA_INT32)
+  iot_data_free (result);
+  result = iot_data_vector_flatten (vector, dims, &f32_array);
+  CU_ASSERT (result && iot_data_array_type (result) == IOT_DATA_FLOAT32 && iot_data_array_length (result) == 6u)
+  iot_data_free (result);
+  result = iot_data_vector_flatten (vector, NULL, &i32_array); // Dimensions from the vector
+  check_json (result, "[1,2,3,4,5,6]");
+  iot_data_free (result);
+  iot_data_free (vector);
+
+  // Array slices are copied, or cast if of another type
+  vector = alloc_array_matrix (row1, 3u, row2, 3u);
+  result = iot_data_vector_flatten (vector, dims, &i32_array);
+  check_json (result, "[1,2,3,4,5,6]");
+  iot_data_free (result);
+  result = iot_data_vector_flatten (vector, NULL, &f32_array);
+  CU_ASSERT (result && iot_data_array_type (result) == IOT_DATA_FLOAT32 && iot_data_array_length (result) == 6u)
+  iot_data_free (result);
+  CU_ASSERT (iot_data_vector_flatten (vector, dims, &str_vector) == NULL) // Array slices only for an array result
+  iot_data_free (vector);
+  vector = iot_data_alloc_vector (2u);
+  iot_data_vector_add (vector, 0u, iot_data_alloc_array (row1, 3u, IOT_DATA_INT32, IOT_DATA_COPY));
+  iot_data_vector_add (vector, 1u, iot_data_alloc_array (urow, 3u, IOT_DATA_UINT8, IOT_DATA_COPY));
+  result = iot_data_vector_flatten (vector, dims, &i32_array);
+  check_json (result, "[1,2,3,4,5,6]");
+  iot_data_free (result);
+  iot_data_vector_add (vector, 1u, iot_data_alloc_array (frow, 3u, IOT_DATA_FLOAT32, IOT_DATA_COPY));
+  result = iot_data_vector_flatten (vector, dims, &f32_array);
+  CU_ASSERT (result && iot_data_array_length (result) == 6u && ((const float*) iot_data_address (result))[5] == 6.5f)
+  iot_data_free (result);
+  iot_data_free (vector);
+
+  // Values not matching the dimensions, or with elements that cannot be cast, are rejected
+  static const char * invalid[] = { "[[1,2,3],[4,5]]", "[[1,2],[3,4],[5,6]]", "[[1,2,3],[4,5,\"x\"]]", "[[1,2,3],[4,5,[6]]]", "[1,2,3,4,5,6]", "[[[1,2,3]],[[4,5,6]]]" };
+  for (uint32_t i = 0; i < sizeof (invalid) / sizeof (invalid[0]); i++)
+  {
+    vector = iot_data_from_json (invalid[i]);
+    CU_ASSERT (iot_data_vector_flatten (vector, dims, &i32_array) == NULL)
+    iot_data_free (vector);
+  }
+  vector = iot_data_from_json ("[[1,2,3],[4,5,300]]");
+  CU_ASSERT (iot_data_vector_flatten (vector, dims, &(iot_typecode_t) { .type = IOT_DATA_ARRAY, .element_type = IOT_DATA_UINT8 }) == NULL)
+  iot_data_free (vector);
+  vector = alloc_array_matrix (row1, 3u, row2, 2u);
+  CU_ASSERT (iot_data_vector_flatten (vector, dims, &i32_array) == NULL)
+  CU_ASSERT (iot_data_vector_flatten (vector, NULL, &i32_array) == NULL)
+  iot_data_free (vector);
+
+  // Ragged or irregular values are rejected when the dimensions are taken from the vector
+  static const char * irregular[] = { "[[1,2,3],[4,5]]", "[[1],2]", "[[1,2],[[3,4]]]" };
+  for (uint32_t i = 0; i < sizeof (irregular) / sizeof (irregular[0]); i++)
+  {
+    vector = iot_data_from_json (irregular[i]);
+    CU_ASSERT (iot_data_vector_flatten (vector, NULL, &i32_array) == NULL)
+    iot_data_free (vector);
+  }
+
+  // Invalid dimensions are rejected
+  vector = iot_data_from_json ("[[1,2,3],[4,5,6]]");
+  iot_data_t * bad = iot_data_from_json ("[2,3]"); // Not a UINT32 array
+  CU_ASSERT (iot_data_vector_flatten (vector, bad, &i32_array) == NULL)
+  iot_data_free (bad);
+  iot_data_free (vector);
+
+  // String vectors require string elements
+  vector = iot_data_from_json ("[[\"a\",\"b\"],[\"c\",\"d\"]]");
+  result = iot_data_vector_flatten (vector, sdims, &str_vector);
+  check_json (result, "[\"a\",\"b\",\"c\",\"d\"]");
+  CU_ASSERT (result && iot_data_restricted_element_type (result) == IOT_DATA_STRING)
+  iot_data_free (result);
+  iot_data_free (vector);
+  vector = iot_data_from_json ("[[\"a\",\"b\"],[\"c\",4]]");
+  CU_ASSERT (iot_data_vector_flatten (vector, sdims, &str_vector) == NULL)
+  result = iot_data_vector_flatten (vector, sdims, &multi_vector); // Any element type
+  check_json (result, "[\"a\",\"b\",\"c\",4]");
+  iot_data_free (result);
+  iot_data_free (vector);
+
+  // Empty vector, with dimensions from the vector
+  vector = iot_data_from_json ("[]");
+  result = iot_data_vector_flatten (vector, NULL, &i32_array);
+  CU_ASSERT (result && iot_data_array_length (result) == 0u)
+  iot_data_free (result);
+  iot_data_free (vector);
+
+  iot_data_free (sdims);
+  iot_data_free (dims);
+}
+
 static void test_list_push_list_self (void)
 {
   // Pushing a list onto itself duplicates its contents, for all ownership modes
@@ -7892,6 +8128,10 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_map_empty_reuse", test_data_map_empty_reuse);
   CU_add_test (suite, "data_vector_compact_order", test_data_vector_compact_order);
   CU_add_test (suite, "data_vector_dimensions_shapes", test_data_vector_dimensions_shapes);
+  CU_add_test (suite, "data_vector_dimensions_arrays", test_data_vector_dimensions_arrays);
+  CU_add_test (suite, "data_to_dimensions", test_data_to_dimensions);
+  CU_add_test (suite, "data_dimensions_total", test_data_dimensions_total);
+  CU_add_test (suite, "data_vector_flatten", test_data_vector_flatten);
   CU_add_test (suite, "list_push_list_self", test_list_push_list_self);
   CU_add_test (suite, "data_vector_to_vector_multi", test_data_vector_to_vector_multi);
   CU_add_test (suite, "data_hash_duplicates", test_data_hash_duplicates);

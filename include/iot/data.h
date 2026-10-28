@@ -2613,14 +2613,47 @@ extern iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_da
 
 /**
  * @brief Returns the dimensions of a vector representing a multi dimensional array.
- *        Note that a vector must contain only other vectors to be considered an array slice
- *        and each non vector element, must contain the same number of elements.
+ *        Note that a vector must contain only other vectors (or arrays, as slices of the last dimension) to be
+ *        considered an array slice, and each slice at the same level must contain the same number of elements.
  *
  * @param vector  The vector
  * @param total   Pointer to an integer set to the total number of elements in the array (multiplication of dimensions). Set to zero if vector structure invalid
- * @return        An array of IOT_DATA_UINT32 containing the array dimensions, or NULL if vector structure invalid
+ * @return        An array of IOT_DATA_UINT32 containing the array dimensions, or NULL if vector structure invalid or the total exceeds UINT32_MAX
  */
 extern iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total);
+
+/**
+ * @brief Converts a dimensions value to an array of dimensions. Each dimension must be a positive integer value
+ *        (of any integer type), and the product of the dimensions must not exceed UINT32_MAX.
+ *
+ * @param dims   Vector (or integer array) of dimensions
+ * @param total  Pointer to an integer set to the product of the dimensions, or zero if dims is invalid
+ * @return       An array of IOT_DATA_UINT32 containing the dimensions, or NULL if dims is invalid
+ */
+extern iot_data_t * iot_data_to_dimensions (const iot_data_t * dims, uint32_t * total);
+
+/**
+ * @brief Returns the total number of elements for an array of dimensions (product of the dimensions)
+ *
+ * @param dims  An array of IOT_DATA_UINT32 dimensions, as returned by iot_data_to_dimensions or iot_data_vector_dimensions
+ * @return      The total number of elements, or zero if dims is NULL, not a non empty IOT_DATA_UINT32 array, or the total exceeds UINT32_MAX
+ */
+extern uint32_t iot_data_dimensions_total (const iot_data_t * dims);
+
+/**
+ * @brief Flattens a nested vector, in row-major order, into an array (basic element types) or a typed vector,
+ *        checking it against the given dimensions. Each level must be a vector, or for an array result at the last
+ *        level optionally an array, whose length matches the dimension for that level. For an array result every
+ *        element must be castable to the element type. For a vector result every element must be of the element
+ *        type, or any type other than a vector or array if the element type is IOT_DATA_MULTI. If any check fails,
+ *        NULL is returned: elements are never dropped.
+ *
+ * @param vector  The nested vector
+ * @param dims    An array of IOT_DATA_UINT32 dimensions with a non zero total, or NULL to take the dimensions from the vector
+ * @param type    Typecode of the result: IOT_DATA_ARRAY with a basic element type, or IOT_DATA_VECTOR with its element type
+ * @return        The flattened array or vector, or NULL if the vector does not match the dimensions
+ */
+extern iot_data_t * iot_data_vector_flatten (const iot_data_t * vector, const iot_data_t * dims, const iot_typecode_t * type);
 
 /**
  * @brief Transforms one data type to another. Tf the data type is already of the required type then the same
