@@ -132,14 +132,6 @@ case ${SYSTEM} in
       arm64)
         OS_ARCH=aarch64
         ;;
-      arm32)
-        if [ "${SYSTEM}" = "opensuse-16.0" ]
-        then
-          OS_ARCH=armv7hl
-        else
-          OS_ARCH=armhf
-        fi
-        ;;
       *)
         OS_ARCH=${BARCH}
         ;;
