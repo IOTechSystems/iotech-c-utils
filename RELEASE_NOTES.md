@@ -157,3 +157,4 @@
 - Added function `iot_data_dimensions_total` to get the total number of elements for an array of dimensions
 - `iot_data_vector_dimensions` now treats arrays as slices of the last dimension, so a vector of two 3 element arrays has dimensions [2,3] rather than [2]
 - `iot_data_vector_dimensions` now returns NULL if the total number of elements exceeds UINT32_MAX, rather than an overflowed total
+- `iot_data_vector_to_array`, `iot_data_vector_to_vector` and `iot_data_vector_element_count` now treat contained arrays as last dimension slices when recursing, so their elements are converted or counted (consistent with `iot_data_vector_dimensions`)

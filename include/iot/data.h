@@ -1904,7 +1904,7 @@ extern uint32_t iot_data_vector_size (const iot_data_t * vector);
  * @brief Get the number of elements of a given type in a vector
  * @param vector  Input vector
  * @param type    Type of elements to count (IOT_DATA_MULTI to count all types)
- * @param recurse Whether to recurse to contained vectors or count them as an element
+ * @param recurse Whether to recurse to contained vectors and arrays (counting their elements), or count them as an element
  * @return        Number of contained elements of given type
  */
 extern uint32_t iot_data_vector_element_count (const iot_data_t * vector, iot_data_type_t type, bool recurse);
@@ -2585,7 +2585,7 @@ extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t
  *
  * @param vector  The vector to transform
  * @param type    The data element type for the created array
- * @param recurse Whether to recurse to contained vectors
+ * @param recurse Whether to recurse to contained vectors and arrays (as last dimension slices)
  * @return        The newly created array containing the vector elements, may be empty
  */
 extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse);
@@ -2603,10 +2603,11 @@ extern iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const io
  * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements
  * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty vector is returned.
  * If type is IOT_DATA_MULTI, all elements are referenced in the new vector (flattening contained vectors if recurse set).
+ * If recurse is set, the elements of contained arrays are added as values (of the array element type for IOT_DATA_MULTI).
  *
  * @param vector  The vector to transform
  * @param type    The data element type for the created vector
- * @param recurse Whether to recurse to contained vectors
+ * @param recurse Whether to recurse to contained vectors and arrays (as last dimension slices)
  * @return        The newly created vector, may be empty
  */
 extern iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type_t type, bool recurse);

@@ -6923,15 +6923,78 @@ static void test_data_vector_flatten (void)
   iot_data_free (result);
   iot_data_free (vector);
 
-  // Empty vector, with dimensions from the vector
+  // Empty vector, with dimensions from the vector. Empty arrays have NULL data
   vector = iot_data_from_json ("[]");
   result = iot_data_vector_flatten (vector, NULL, &i32_array);
-  CU_ASSERT (result && iot_data_array_length (result) == 0u)
+  CU_ASSERT (result && iot_data_array_length (result) == 0u && iot_data_address (result) == NULL)
+  iot_data_free (result);
+  iot_data_free (vector);
+  vector = iot_data_from_json ("[[],[]]");
+  result = iot_data_vector_flatten (vector, NULL, &i32_array);
+  CU_ASSERT (result && iot_data_array_length (result) == 0u && iot_data_address (result) == NULL)
   iot_data_free (result);
   iot_data_free (vector);
 
+  // Dimensions in a referenced array that is not aligned for uint32_t
+  uint8_t buff[2u * sizeof (uint32_t) + 1u];
+  memcpy (buff + 1, dims23, sizeof (dims23));
+  iot_data_t * udims = iot_data_alloc_array (buff + 1, 2u, IOT_DATA_UINT32, IOT_DATA_REF);
+  CU_ASSERT (iot_data_dimensions_total (udims) == 6u)
+  vector = iot_data_from_json ("[[1,2,3],[4,5,6]]");
+  result = iot_data_vector_flatten (vector, udims, &i32_array);
+  check_json (result, "[1,2,3,4,5,6]");
+  iot_data_free (result);
+  iot_data_free (vector);
+  iot_data_free (udims);
+
   iot_data_free (sdims);
   iot_data_free (dims);
+}
+
+static void test_data_vector_convert_arrays (void)
+{
+  // When recursing, arrays are last dimension slices, consistent with iot_data_vector_dimensions
+  static int32_t row1[] = { 1, -2, 3 };
+  static int32_t row2[] = { 4, 5, 6 };
+  uint32_t total = 0u;
+  iot_data_t * vector = alloc_array_matrix (row1, 3u, row2, 3u);
+  iot_data_t * dims = iot_data_vector_dimensions (vector, &total);
+  CU_ASSERT (total == 6u)
+  iot_data_free (dims);
+
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_INT32, true) == total)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_MULTI, true) == total)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_UINT8, true) == 0u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_ARRAY, true) == 0u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_ARRAY, false) == 2u)
+  CU_ASSERT (iot_data_vector_element_count (vector, IOT_DATA_INT32, false) == 0u)
+
+  iot_data_t * result = iot_data_vector_to_array (vector, IOT_DATA_INT32, true);
+  check_json (result, "[1,-2,3,4,5,6]");
+  iot_data_free (result);
+  result = iot_data_vector_to_array (vector, IOT_DATA_UINT8, true); // Elements that cannot be cast are dropped
+  check_json (result, "[1,3,4,5,6]");
+  CU_ASSERT (iot_data_array_type (result) == IOT_DATA_UINT8)
+  iot_data_free (result);
+  result = iot_data_vector_to_array (vector, IOT_DATA_INT32, false);
+  CU_ASSERT (iot_data_array_length (result) == 0u)
+  iot_data_free (result);
+
+  result = iot_data_vector_to_vector (vector, IOT_DATA_INT32, true);
+  check_json (result, "[1,-2,3,4,5,6]");
+  CU_ASSERT (iot_data_vector_type (result) == IOT_DATA_INT32)
+  iot_data_free (result);
+  result = iot_data_vector_to_vector (vector, IOT_DATA_UINT8, true);
+  check_json (result, "[1,3,4,5,6]");
+  iot_data_free (result);
+  result = iot_data_vector_to_vector (vector, IOT_DATA_MULTI, true);
+  check_json (result, "[1,-2,3,4,5,6]");
+  CU_ASSERT (iot_data_type (iot_data_vector_get (result, 0u)) == IOT_DATA_INT32)
+  iot_data_free (result);
+  result = iot_data_vector_to_vector (vector, IOT_DATA_MULTI, false); // Arrays referenced if not recursing
+  CU_ASSERT (iot_data_vector_size (result) == 2u && iot_data_vector_get (result, 0u) == iot_data_vector_get (vector, 0u))
+  iot_data_free (result);
+  iot_data_free (vector);
 }
 
 static void test_list_push_list_self (void)
@@ -8132,6 +8195,7 @@ void cunit_data_test_init (void)
   CU_add_test (suite, "data_to_dimensions", test_data_to_dimensions);
   CU_add_test (suite, "data_dimensions_total", test_data_dimensions_total);
   CU_add_test (suite, "data_vector_flatten", test_data_vector_flatten);
+  CU_add_test (suite, "data_vector_convert_arrays", test_data_vector_convert_arrays);
   CU_add_test (suite, "list_push_list_self", test_list_push_list_self);
   CU_add_test (suite, "data_vector_to_vector_multi", test_data_vector_to_vector_multi);
   CU_add_test (suite, "data_hash_duplicates", test_data_hash_duplicates);
