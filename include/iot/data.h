@@ -1904,7 +1904,7 @@ extern uint32_t iot_data_vector_size (const iot_data_t * vector);
  * @brief Get the number of elements of a given type in a vector
  * @param vector  Input vector
  * @param type    Type of elements to count (IOT_DATA_MULTI to count all types)
- * @param recurse Whether to recurse to contained vectors or count them as an element
+ * @param recurse Whether to recurse to contained vectors and arrays (counting their elements), or count them as an element
  * @return        Number of contained elements of given type
  */
 extern uint32_t iot_data_vector_element_count (const iot_data_t * vector, iot_data_type_t type, bool recurse);
@@ -2585,7 +2585,7 @@ extern bool iot_typecode_equal (const iot_typecode_t * tc1, const iot_typecode_t
  *
  * @param vector  The vector to transform
  * @param type    The data element type for the created array
- * @param recurse Whether to recurse to contained vectors
+ * @param recurse Whether to recurse to contained vectors and arrays (as last dimension slices)
  * @return        The newly created array containing the vector elements, may be empty
  */
 extern iot_data_t * iot_data_vector_to_array (const iot_data_t * vector, iot_data_type_t type, bool recurse);
@@ -2603,24 +2603,58 @@ extern iot_data_t * iot_data_vector_to_list (const iot_data_t * vector, const io
  * @brief Converts a vector to a vector, vector elements must be castable to the target type, vector elements
  * that cannot be cast are ignored. If no vector elements can be cast to the required type an empty vector is returned.
  * If type is IOT_DATA_MULTI, all elements are referenced in the new vector (flattening contained vectors if recurse set).
+ * If recurse is set, the elements of contained arrays are added as values (of the array element type for IOT_DATA_MULTI).
  *
  * @param vector  The vector to transform
  * @param type    The data element type for the created vector
- * @param recurse Whether to recurse to contained vectors
+ * @param recurse Whether to recurse to contained vectors and arrays (as last dimension slices)
  * @return        The newly created vector, may be empty
  */
 extern iot_data_t * iot_data_vector_to_vector (const iot_data_t * vector, iot_data_type_t type, bool recurse);
 
 /**
  * @brief Returns the dimensions of a vector representing a multi dimensional array.
- *        Note that a vector must contain only other vectors to be considered an array slice
- *        and each non vector element, must contain the same number of elements.
+ *        Note that a vector must contain only other vectors (or arrays, as slices of the last dimension) to be
+ *        considered an array slice, and each slice at the same level must contain the same number of elements.
  *
  * @param vector  The vector
  * @param total   Pointer to an integer set to the total number of elements in the array (multiplication of dimensions). Set to zero if vector structure invalid
- * @return        An array of IOT_DATA_UINT32 containing the array dimensions, or NULL if vector structure invalid
+ * @return        An array of IOT_DATA_UINT32 containing the array dimensions, or NULL if vector structure invalid or the total exceeds UINT32_MAX
  */
 extern iot_data_t * iot_data_vector_dimensions (const iot_data_t * vector, uint32_t * total);
+
+/**
+ * @brief Converts a dimensions value to an array of dimensions. Each dimension must be a positive integer value
+ *        (of any integer type), and the product of the dimensions must not exceed UINT32_MAX.
+ *
+ * @param dims   Vector (or integer array) of dimensions
+ * @param total  Pointer to an integer set to the product of the dimensions, or zero if dims is invalid
+ * @return       An array of IOT_DATA_UINT32 containing the dimensions, or NULL if dims is invalid
+ */
+extern iot_data_t * iot_data_to_dimensions (const iot_data_t * dims, uint32_t * total);
+
+/**
+ * @brief Returns the total number of elements for an array of dimensions (product of the dimensions)
+ *
+ * @param dims  An array of IOT_DATA_UINT32 dimensions, as returned by iot_data_to_dimensions or iot_data_vector_dimensions
+ * @return      The total number of elements, or zero if dims is NULL, not a non empty IOT_DATA_UINT32 array, or the total exceeds UINT32_MAX
+ */
+extern uint32_t iot_data_dimensions_total (const iot_data_t * dims);
+
+/**
+ * @brief Flattens a nested vector, in row-major order, into an array (basic element types) or a typed vector,
+ *        checking it against the given dimensions. Each level must be a vector, or for an array result at the last
+ *        level optionally an array, whose length matches the dimension for that level. For an array result every
+ *        element must be castable to the element type. For a vector result every element must be of the element
+ *        type, or any type other than a vector or array if the element type is IOT_DATA_MULTI. If any check fails,
+ *        NULL is returned: elements are never dropped.
+ *
+ * @param vector  The nested vector
+ * @param dims    An array of IOT_DATA_UINT32 dimensions with a non zero total, or NULL to take the dimensions from the vector
+ * @param type    Typecode of the result: IOT_DATA_ARRAY with a basic element type, or IOT_DATA_VECTOR with its element type
+ * @return        The flattened array or vector, or NULL if the vector does not match the dimensions
+ */
+extern iot_data_t * iot_data_vector_flatten (const iot_data_t * vector, const iot_data_t * dims, const iot_typecode_t * type);
 
 /**
  * @brief Transforms one data type to another. Tf the data type is already of the required type then the same
