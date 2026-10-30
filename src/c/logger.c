@@ -170,6 +170,12 @@ void iot_logger_set_level (iot_logger_t * logger, iot_loglevel_t level)
   iot_logger_relevel (impl, logger->component.state == IOT_COMPONENT_RUNNING); // Chain levels updated even if not running
 }
 
+iot_loglevel_t iot_logger_get_level (const iot_logger_t * logger)
+{
+  assert (logger);
+  return ((const iot_logger_impl_t *) logger)->mylevel;
+}
+
 iot_logger_t * iot_logger_alloc_custom (const char * name, iot_loglevel_t level, bool start, iot_logger_t * next, iot_log_function_t impl, void * ctx, iot_log_free_fn_t freectx)
 {
   assert (impl);
