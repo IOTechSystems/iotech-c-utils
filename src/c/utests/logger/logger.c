@@ -405,6 +405,28 @@ static void cunit_logger_chain_no_container (void)
   iot_logger_free (b);
 }
 
+static void cunit_logger_get_level (void)
+{
+  // Level of logger is that set, not the effective level including chained loggers
+  iot_logger_t * b = iot_logger_alloc_custom ("b", IOT_LOG_WARN, true, NULL, cunit_count_log_b, NULL, NULL);
+  iot_logger_t * a = iot_logger_alloc_custom ("a", IOT_LOG_ERROR, true, b, cunit_count_log_a, NULL, NULL);
+  CU_ASSERT (a->level == IOT_LOG_WARN)
+  CU_ASSERT (iot_logger_get_level (a) == IOT_LOG_ERROR)
+  iot_logger_set_level (a, IOT_LOG_NONE);
+  CU_ASSERT (a->level == IOT_LOG_WARN)
+  CU_ASSERT (iot_logger_get_level (a) == IOT_LOG_NONE)
+  iot_logger_set_level (a, IOT_LOG_DEBUG);
+  CU_ASSERT (a->level == IOT_LOG_DEBUG)
+  CU_ASSERT (iot_logger_get_level (a) == IOT_LOG_DEBUG)
+  iot_logger_stop (a);
+  CU_ASSERT (iot_logger_get_level (a) == IOT_LOG_NONE)
+  iot_logger_start (a);
+  CU_ASSERT (iot_logger_get_level (a) == IOT_LOG_DEBUG)
+  CU_ASSERT (iot_logger_get_level (b) == IOT_LOG_WARN)
+  iot_logger_free (a);
+  iot_logger_free (b);
+}
+
 static void cunit_logger_chain_level (void)
 {
   // Messages pass along chain to any later logger at level, including one not started, and stop when none is
@@ -567,6 +589,7 @@ void cunit_logger_test_init (void)
   CU_add_test (suite, "logger_udp_host", cunit_logger_udp_host);
   CU_add_test (suite, "logger_chain_no_container", cunit_logger_chain_no_container);
   CU_add_test (suite, "logger_chain_level", cunit_logger_chain_level);
+  CU_add_test (suite, "logger_get_level", cunit_logger_get_level);
   CU_add_test (suite, "logger_default_next_refs", cunit_logger_default_next_refs);
   CU_add_test (suite, "logger_set_next_concurrent", cunit_logger_set_next_concurrent);
   CU_add_test (suite, "logger_default_concurrent", cunit_logger_default_concurrent);

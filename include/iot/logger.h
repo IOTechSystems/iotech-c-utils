@@ -199,6 +199,17 @@ extern void iot_log__va_log (iot_logger_t * logger, iot_loglevel_t level, const 
 extern void iot_logger_set_level (iot_logger_t *logger, iot_loglevel_t level);
 
 /**
+ * @brief  Get log level of the logger
+ *
+ * Unlike the logger level member, which is the effective level including that of any chained loggers, this is the
+ * level of the logger only, as last set (IOT_LOG_NONE while the logger is stopped)
+ *
+ * @param logger  Pointer to the logger
+ * @return        Log level of the logger
+ */
+extern iot_loglevel_t iot_logger_get_level (const iot_logger_t *logger);
+
+/**
  * @brief Parse string into log level
  * @param str level string
  * @return log level corresponding to the string, or IOT_LOGLEVEL_DEFAULT
