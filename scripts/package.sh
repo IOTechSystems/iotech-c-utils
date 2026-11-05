@@ -101,7 +101,7 @@ case ${SYSTEM} in
       --description "${DESC_MAIN}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
       --exclude include --exclude docs --exclude examples \
-      --depends libyaml-0-2 --depends ${CBOR}
+      --depends libyaml-0-2 --depends ${CBOR} --depends libatomic1
 
     ${FPM} -s dir -t deb -n iotech-iot-${PKG_VER}-dev -v "${VER}" \
       --deb-no-default-config-files --deb-changelog ../../RELEASE_NOTES.md \
@@ -122,7 +122,7 @@ case ${SYSTEM} in
       --deb-priority "optional" --category "devel" --prefix /opt/iotech/iot/${PKG_VER} \
       --description "${DESC_DBG}" \
       --vendor "IOTech" --maintainer "${MAINT_EMAIL}" \
-      --depends libyaml-0-2 --depends ${CBOR} \
+      --depends libyaml-0-2 --depends ${CBOR} --depends libatomic1 \
       --conflicts iotech-iot-${PKG_VER} --conflicts iotech-iot-${PKG_VER}-dev
 
     rm ./*.tar.gz
